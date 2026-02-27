@@ -1,0 +1,241 @@
+[
+    {
+        "weight":  8,
+        "flavor":  {
+                       "detail":  "The sky filed a small complaint against exterior work.",
+                       "success_line":  "Rainfront helped more than expected.",
+                       "neutral_line":  "Rainfront existed and the day adapted.",
+                       "impact_line":  "Outdoor jobs pay less and slip more.",
+                       "headline":  "Light Rain, Heavy Opinions",
+                       "fail_line":  "Rainfront complicated things with polite efficiency."
+                   },
+        "name":  "Rainfront",
+        "id":  "event-rain",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "outdoor":  0.9,
+                                             "roof":  0.88
+                                         },
+                     "riskDeltaByTag":  {
+                                            "outdoor":  0.08
+                                        }
+                 }
+    },
+    {
+        "weight":  5,
+        "flavor":  {
+                       "detail":  "The hardware store blinked first.",
+                       "success_line":  "Hardware Sale helped more than expected.",
+                       "neutral_line":  "Hardware Sale existed and the day adapted.",
+                       "impact_line":  "Tools are cheaper today.",
+                       "headline":  "Storewide Sale",
+                       "fail_line":  "Hardware Sale complicated things with polite efficiency."
+                   },
+        "name":  "Hardware Sale",
+        "id":  "event-sale",
+        "mods":  {
+                     "toolPriceMult":  0.85
+                 }
+    },
+    {
+        "weight":  6,
+        "flavor":  {
+                       "detail":  "Clipboards multiplied overnight.",
+                       "success_line":  "Surprise Inspection helped more than expected.",
+                       "neutral_line":  "Surprise Inspection existed and the day adapted.",
+                       "impact_line":  "Technical jobs carry more risk.",
+                       "headline":  "Inspectors Active",
+                       "fail_line":  "Surprise Inspection complicated things with polite efficiency."
+                   },
+        "name":  "Surprise Inspection",
+        "id":  "event-inspection",
+        "mods":  {
+                     "riskDeltaByTag":  {
+                                            "civic":  0.1,
+                                            "electrical":  0.12
+                                        }
+                 }
+    },
+    {
+        "weight":  4,
+        "flavor":  {
+                       "detail":  "Boards are calm and paint dries before second thoughts.",
+                       "success_line":  "Dry Heat helped more than expected.",
+                       "neutral_line":  "Dry Heat existed and the day adapted.",
+                       "impact_line":  "Outdoor jobs trend safer.",
+                       "headline":  "Dry Wind Day",
+                       "fail_line":  "Dry Heat complicated things with polite efficiency."
+                   },
+        "name":  "Dry Heat",
+        "id":  "event-heat",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "outdoor":  1.05
+                                         },
+                     "riskDeltaByTag":  {
+                                            "outdoor":  -0.04
+                                        }
+                 }
+    },
+    {
+        "weight":  4,
+        "flavor":  {
+                       "detail":  "Anything with wiring now prefers caution.",
+                       "success_line":  "Grid Flicker helped more than expected.",
+                       "neutral_line":  "Grid Flicker existed and the day adapted.",
+                       "impact_line":  "Electrical jobs often resolve neutral.",
+                       "headline":  "Power Grid Stutters",
+                       "fail_line":  "Grid Flicker complicated things with polite efficiency."
+                   },
+        "name":  "Grid Flicker",
+        "id":  "event-grid",
+        "mods":  {
+                     "forceNeutralTags":  [
+                                              "electrical"
+                                          ],
+                     "riskDeltaByTag":  {
+                                            "electrical":  0.1
+                                        }
+                 }
+    },
+    {
+        "weight":  3,
+        "flavor":  {
+                       "detail":  "Civic clients suddenly answer emails.",
+                       "success_line":  "Community Push helped more than expected.",
+                       "neutral_line":  "Community Push existed and the day adapted.",
+                       "impact_line":  "Civic jobs pay better and feel steadier.",
+                       "headline":  "Neighborhood Volunteer Week",
+                       "fail_line":  "Community Push complicated things with polite efficiency."
+                   },
+        "name":  "Community Push",
+        "id":  "event-charity",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "civic":  1.1
+                                         },
+                     "riskDeltaByTag":  {
+                                            "civic":  -0.03
+                                        }
+                 }
+    },
+    {
+        "weight":  4,
+        "flavor":  {
+                       "detail":  "Fasteners arrive emotionally, not physically.",
+                       "success_line":  "Late Freight helped more than expected.",
+                       "neutral_line":  "Late Freight existed and the day adapted.",
+                       "impact_line":  "Commercial framing runs hotter.",
+                       "headline":  "Supply Trucks Delayed",
+                       "fail_line":  "Late Freight complicated things with polite efficiency."
+                   },
+        "name":  "Late Freight",
+        "id":  "event-freight",
+        "mods":  {
+                     "riskDeltaByTag":  {
+                                            "commercial":  0.07,
+                                            "framing":  0.05
+                                        }
+                 }
+    },
+    {
+        "weight":  3,
+        "flavor":  {
+                       "detail":  "Posts and anchors negotiate with mud.",
+                       "success_line":  "Soft Ground helped more than expected.",
+                       "neutral_line":  "Soft Ground existed and the day adapted.",
+                       "impact_line":  "Outdoor anchoring is less stable.",
+                       "headline":  "Ground Still Damp",
+                       "fail_line":  "Soft Ground complicated things with polite efficiency."
+                   },
+        "name":  "Soft Ground",
+        "id":  "event-soft-ground",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "outdoor":  0.93
+                                         },
+                     "riskDeltaByTag":  {
+                                            "outdoor":  0.05
+                                        }
+                 }
+    },
+    {
+        "weight":  3,
+        "flavor":  {
+                       "detail":  "Everyone wants improvements before lunch.",
+                       "success_line":  "Local Hype helped more than expected.",
+                       "neutral_line":  "Local Hype existed and the day adapted.",
+                       "impact_line":  "Commercial payouts rise a bit.",
+                       "headline":  "Influencer Visits Small Business District",
+                       "fail_line":  "Local Hype complicated things with polite efficiency."
+                   },
+        "name":  "Local Hype",
+        "id":  "event-hype",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "commercial":  1.08
+                                         }
+                 }
+    },
+    {
+        "weight":  5,
+        "flavor":  {
+                       "detail":  "No sirens, no surprises, just tools and time.",
+                       "success_line":  "Quiet Day helped more than expected.",
+                       "neutral_line":  "Quiet Day existed and the day adapted.",
+                       "impact_line":  "Indoor finish work is safer.",
+                       "headline":  "Oddly Calm Morning",
+                       "fail_line":  "Quiet Day complicated things with polite efficiency."
+                   },
+        "name":  "Quiet Day",
+        "id":  "event-quiet",
+        "mods":  {
+                     "riskDeltaByTag":  {
+                                            "indoor":  -0.05,
+                                            "finish":  -0.04
+                                        }
+                 }
+    },
+    {
+        "weight":  2,
+        "flavor":  {
+                       "detail":  "Morale rose by two glazed points.",
+                       "success_line":  "Donut Drop helped more than expected.",
+                       "neutral_line":  "Donut Drop existed and the day adapted.",
+                       "impact_line":  "General work steadies and finish clients tip.",
+                       "headline":  "Donuts at Every Site",
+                       "fail_line":  "Donut Drop complicated things with polite efficiency."
+                   },
+        "name":  "Donut Drop",
+        "id":  "event-donuts",
+        "mods":  {
+                     "payoutMultByTag":  {
+                                             "finish":  1.04
+                                         },
+                     "riskDeltaByTag":  {
+                                            "general":  -0.03
+                                        }
+                 }
+    },
+    {
+        "weight":  3,
+        "flavor":  {
+                       "detail":  "Sightlines are mostly rumors.",
+                       "success_line":  "Fog Belt helped more than expected.",
+                       "neutral_line":  "Fog Belt existed and the day adapted.",
+                       "impact_line":  "Outdoor work trends neutral.",
+                       "headline":  "Morning Fog Lingers",
+                       "fail_line":  "Fog Belt complicated things with polite efficiency."
+                   },
+        "name":  "Fog Belt",
+        "id":  "event-fog",
+        "mods":  {
+                     "forceNeutralTags":  [
+                                              "outdoor"
+                                          ],
+                     "riskDeltaByTag":  {
+                                            "outdoor":  0.04
+                                        }
+                 }
+    }
+]

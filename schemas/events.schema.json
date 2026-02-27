@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 12,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "weight", "mods", "flavor"],
+    "properties": {
+      "id": { "type": "string", "minLength": 2 },
+      "name": { "type": "string", "minLength": 2 },
+      "weight": { "type": "integer", "minimum": 1 },
+      "mods": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "payoutMultByTag": {
+            "type": "object",
+            "additionalProperties": { "type": "number", "minimum": 0.1, "maximum": 2 }
+          },
+          "riskDeltaByTag": {
+            "type": "object",
+            "additionalProperties": { "type": "number", "minimum": -0.5, "maximum": 0.5 }
+          },
+          "forceNeutralTags": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 2 }
+          },
+          "toolPriceMult": { "type": "number", "minimum": 0.1, "maximum": 2 }
+        }
+      },
+      "flavor": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["headline", "detail", "impact_line", "success_line", "fail_line", "neutral_line"],
+        "properties": {
+          "headline": { "type": "string", "minLength": 2 },
+          "detail": { "type": "string", "minLength": 2 },
+          "impact_line": { "type": "string", "minLength": 2 },
+          "success_line": { "type": "string", "minLength": 2 },
+          "fail_line": { "type": "string", "minLength": 2 },
+          "neutral_line": { "type": "string", "minLength": 2 }
+        }
+      }
+    }
+  }
+}

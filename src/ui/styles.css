@@ -1,0 +1,93 @@
+:root {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  line-height: 1.35;
+  color: #151515;
+  background: radial-gradient(circle at top left, #f4f8ff, #efece7 45%, #e4dfd5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  border: 1px solid #1f1f1f;
+  background: #f8f4ea;
+  color: #1f1f1f;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.screen {
+  padding: 1rem;
+  max-width: 1250px;
+  margin: 0 auto;
+}
+
+.title-screen {
+  min-height: 100vh;
+  display: grid;
+  gap: 0.85rem;
+  place-content: center;
+  text-align: center;
+}
+
+.main-top {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.main-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.9rem 0;
+}
+
+.card {
+  border: 1px solid #1f1f1f;
+  background: #fffef8;
+  border-radius: 12px;
+  padding: 0.85rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.list-item {
+  border: 1px dashed #656565;
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+
+.stack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.notice {
+  color: #7c1e0a;
+}
+
+.report {
+  max-height: 38vh;
+  overflow: auto;
+}
+
+@media (max-width: 990px) {
+  .main-top {
+    grid-template-columns: 1fr;
+  }
+}

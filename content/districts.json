@@ -1,0 +1,26 @@
+[
+  {
+    "id": "residential",
+    "name": "Residential",
+    "tier": 1,
+    "flavor": {
+      "description": "Porches, fences, and well-meaning weekend projects."
+    }
+  },
+  {
+    "id": "small-commercial",
+    "name": "Small Commercial",
+    "tier": 2,
+    "flavor": {
+      "description": "Shops, studios, and coffee-powered deadlines."
+    }
+  },
+  {
+    "id": "civic-lite",
+    "name": "Civic Lite",
+    "tier": 3,
+    "flavor": {
+      "description": "Tiny public projects with very sincere committees."
+    }
+  }
+]

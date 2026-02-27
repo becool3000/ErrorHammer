@@ -1,0 +1,790 @@
+[
+    {
+        "durabilityCost":  2,
+        "id":  "job-001",
+        "repGainSuccess":  3,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  110,
+        "requiredTools":  [
+                              "hammer",
+                              "screwdriver"
+                          ],
+        "name":  "Porch Rail Tighten",
+        "risk":  0.18,
+        "flavor":  {
+                       "neutral_line":  "Porch Rail Tighten improved in the emotionally measurable ways.",
+                       "success_line":  "Porch Rail Tighten no longer looks experimental.",
+                       "client_quote":  "Can we make this railing less suspenseful?",
+                       "fail_line":  "Porch Rail Tighten remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "outdoor",
+                     "finish"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  2,
+        "id":  "job-002",
+        "repGainSuccess":  3,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  95,
+        "requiredTools":  [
+                              "hammer",
+                              "level"
+                          ],
+        "name":  "Mailbox Post Reset",
+        "risk":  0.16,
+        "flavor":  {
+                       "neutral_line":  "Mailbox Post Reset improved in the emotionally measurable ways.",
+                       "success_line":  "Mailbox Post Reset no longer looks experimental.",
+                       "client_quote":  "My mailbox leans like it has opinions.",
+                       "fail_line":  "Mailbox Post Reset remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "outdoor",
+                     "framing"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-003",
+        "repGainSuccess":  4,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  125,
+        "requiredTools":  [
+                              "drill",
+                              "level"
+                          ],
+        "name":  "Kitchen Shelf Mount",
+        "risk":  0.2,
+        "flavor":  {
+                       "neutral_line":  "Kitchen Shelf Mount improved in the emotionally measurable ways.",
+                       "success_line":  "Kitchen Shelf Mount no longer looks experimental.",
+                       "client_quote":  "I would like gravity to stop winning.",
+                       "fail_line":  "Kitchen Shelf Mount remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "finish",
+                     "indoor"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  2,
+        "id":  "job-004",
+        "repGainSuccess":  4,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  118,
+        "requiredTools":  [
+                              "wrench",
+                              "screwdriver"
+                          ],
+        "name":  "Leaky Tap Trim",
+        "risk":  0.22,
+        "flavor":  {
+                       "neutral_line":  "Leaky Tap Trim improved in the emotionally measurable ways.",
+                       "success_line":  "Leaky Tap Trim no longer looks experimental.",
+                       "client_quote":  "The sink keeps applauding at 2 AM.",
+                       "fail_line":  "Leaky Tap Trim remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "plumbing",
+                     "indoor"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-005",
+        "repGainSuccess":  4,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  135,
+        "requiredTools":  [
+                              "hammer",
+                              "saw"
+                          ],
+        "name":  "Fence Panel Patch",
+        "risk":  0.25,
+        "flavor":  {
+                       "neutral_line":  "Fence Panel Patch improved in the emotionally measurable ways.",
+                       "success_line":  "Fence Panel Patch no longer looks experimental.",
+                       "client_quote":  "One fence plank has chosen freedom.",
+                       "fail_line":  "Fence Panel Patch remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "outdoor",
+                     "framing"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  2,
+        "id":  "job-006",
+        "repGainSuccess":  3,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  105,
+        "requiredTools":  [
+                              "screwdriver",
+                              "level"
+                          ],
+        "name":  "Closet Door Align",
+        "risk":  0.14,
+        "flavor":  {
+                       "neutral_line":  "Closet Door Align improved in the emotionally measurable ways.",
+                       "success_line":  "Closet Door Align no longer looks experimental.",
+                       "client_quote":  "The closet door only closes during holidays.",
+                       "fail_line":  "Closet Door Align remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "indoor",
+                     "finish"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  2,
+        "id":  "job-007",
+        "repGainSuccess":  3,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  112,
+        "requiredTools":  [
+                              "utility-knife",
+                              "caulk-gun"
+                          ],
+        "name":  "Drywall Corner Rescue",
+        "risk":  0.21,
+        "flavor":  {
+                       "neutral_line":  "Drywall Corner Rescue improved in the emotionally measurable ways.",
+                       "success_line":  "Drywall Corner Rescue no longer looks experimental.",
+                       "client_quote":  "This corner is trying very hard.",
+                       "fail_line":  "Drywall Corner Rescue remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "indoor",
+                     "finish"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-008",
+        "repGainSuccess":  5,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  145,
+        "requiredTools":  [
+                              "ladder",
+                              "drill"
+                          ],
+        "name":  "Attic Ladder Brace",
+        "risk":  0.28,
+        "flavor":  {
+                       "neutral_line":  "Attic Ladder Brace improved in the emotionally measurable ways.",
+                       "success_line":  "Attic Ladder Brace no longer looks experimental.",
+                       "client_quote":  "The attic entrance currently negotiates with ankles.",
+                       "fail_line":  "Attic Ladder Brace remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "roof",
+                     "outdoor"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-009",
+        "repGainSuccess":  4,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  138,
+        "requiredTools":  [
+                              "saw",
+                              "hammer"
+                          ],
+        "name":  "Deck Board Swap",
+        "risk":  0.24,
+        "flavor":  {
+                       "neutral_line":  "Deck Board Swap improved in the emotionally measurable ways.",
+                       "success_line":  "Deck Board Swap no longer looks experimental.",
+                       "client_quote":  "One deck board squeaks in protest.",
+                       "fail_line":  "Deck Board Swap remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "outdoor",
+                     "framing"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  2,
+        "id":  "job-010",
+        "repGainSuccess":  3,
+        "staminaCost":  2,
+        "tier":  1,
+        "basePayout":  98,
+        "requiredTools":  [
+                              "caulk-gun",
+                              "utility-knife"
+                          ],
+        "name":  "Bathroom Caulk Reboot",
+        "risk":  0.17,
+        "flavor":  {
+                       "neutral_line":  "Bathroom Caulk Reboot improved in the emotionally measurable ways.",
+                       "success_line":  "Bathroom Caulk Reboot no longer looks experimental.",
+                       "client_quote":  "The tub edge is auditioning for geology.",
+                       "fail_line":  "Bathroom Caulk Reboot remains interpretive with structural ambition."
+                   },
+        "districtId":  "residential",
+        "tags":  [
+                     "indoor",
+                     "seal"
+                 ],
+        "repLossFail":  1
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-011",
+        "repGainSuccess":  5,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  175,
+        "requiredTools":  [
+                              "level",
+                              "drill"
+                          ],
+        "name":  "Cafe Counter Shim",
+        "risk":  0.26,
+        "flavor":  {
+                       "neutral_line":  "Cafe Counter Shim improved in the emotionally measurable ways.",
+                       "success_line":  "Cafe Counter Shim no longer looks experimental.",
+                       "client_quote":  "Our espresso machine likes to slide south.",
+                       "fail_line":  "Cafe Counter Shim remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "commercial",
+                     "finish"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-012",
+        "repGainSuccess":  6,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  190,
+        "requiredTools":  [
+                              "ladder",
+                              "drill"
+                          ],
+        "name":  "Shop Sign Rehang",
+        "risk":  0.29,
+        "flavor":  {
+                       "neutral_line":  "Shop Sign Rehang improved in the emotionally measurable ways.",
+                       "success_line":  "Shop Sign Rehang no longer looks experimental.",
+                       "client_quote":  "The sign now points at a cloud.",
+                       "fail_line":  "Shop Sign Rehang remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "outdoor",
+                     "commercial"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-013",
+        "repGainSuccess":  6,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  205,
+        "requiredTools":  [
+                              "drill",
+                              "saw"
+                          ],
+        "name":  "Office Partition Fix",
+        "risk":  0.31,
+        "flavor":  {
+                       "neutral_line":  "Office Partition Fix improved in the emotionally measurable ways.",
+                       "success_line":  "Office Partition Fix no longer looks experimental.",
+                       "client_quote":  "Two cubicles became one by accident.",
+                       "fail_line":  "Office Partition Fix remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "indoor",
+                     "framing"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-014",
+        "repGainSuccess":  5,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  182,
+        "requiredTools":  [
+                              "wrench",
+                              "caulk-gun"
+                          ],
+        "name":  "Bakery Sink Clamp",
+        "risk":  0.27,
+        "flavor":  {
+                       "neutral_line":  "Bakery Sink Clamp improved in the emotionally measurable ways.",
+                       "success_line":  "Bakery Sink Clamp no longer looks experimental.",
+                       "client_quote":  "The prep sink wiggles with conviction.",
+                       "fail_line":  "Bakery Sink Clamp remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "plumbing",
+                     "commercial"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-015",
+        "repGainSuccess":  7,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  220,
+        "requiredTools":  [
+                              "drill",
+                              "stud-finder"
+                          ],
+        "name":  "Studio Light Track",
+        "risk":  0.33,
+        "flavor":  {
+                       "neutral_line":  "Studio Light Track improved in the emotionally measurable ways.",
+                       "success_line":  "Studio Light Track no longer looks experimental.",
+                       "client_quote":  "Half the lamps have trust issues.",
+                       "fail_line":  "Studio Light Track remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "electrical",
+                     "indoor"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-016",
+        "repGainSuccess":  5,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  188,
+        "requiredTools":  [
+                              "drill",
+                              "level"
+                          ],
+        "name":  "Retail Shelf Anchor",
+        "risk":  0.25,
+        "flavor":  {
+                       "neutral_line":  "Retail Shelf Anchor improved in the emotionally measurable ways.",
+                       "success_line":  "Retail Shelf Anchor no longer looks experimental.",
+                       "client_quote":  "The shelf leans toward impulse purchases.",
+                       "fail_line":  "Retail Shelf Anchor remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "commercial",
+                     "finish"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-017",
+        "repGainSuccess":  6,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  196,
+        "requiredTools":  [
+                              "wrench",
+                              "hammer"
+                          ],
+        "name":  "Warehouse Door Tune",
+        "risk":  0.3,
+        "flavor":  {
+                       "neutral_line":  "Warehouse Door Tune improved in the emotionally measurable ways.",
+                       "success_line":  "Warehouse Door Tune no longer looks experimental.",
+                       "client_quote":  "The loading door sings at dawn.",
+                       "fail_line":  "Warehouse Door Tune remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "commercial",
+                     "mechanical"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-018",
+        "repGainSuccess":  7,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  210,
+        "requiredTools":  [
+                              "ladder",
+                              "wrench"
+                          ],
+        "name":  "Patio Awning Joint",
+        "risk":  0.34,
+        "flavor":  {
+                       "neutral_line":  "Patio Awning Joint improved in the emotionally measurable ways.",
+                       "success_line":  "Patio Awning Joint no longer looks experimental.",
+                       "client_quote":  "The awning now flaps motivationally.",
+                       "fail_line":  "Patio Awning Joint remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "outdoor",
+                     "roof"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-019",
+        "repGainSuccess":  5,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  170,
+        "requiredTools":  [
+                              "utility-knife",
+                              "caulk-gun"
+                          ],
+        "name":  "Mini Clinic Trim",
+        "risk":  0.23,
+        "flavor":  {
+                       "neutral_line":  "Mini Clinic Trim improved in the emotionally measurable ways.",
+                       "success_line":  "Mini Clinic Trim no longer looks experimental.",
+                       "client_quote":  "The wall trim has several dialects.",
+                       "fail_line":  "Mini Clinic Trim remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "indoor",
+                     "finish"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-020",
+        "repGainSuccess":  6,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  200,
+        "requiredTools":  [
+                              "hammer",
+                              "level"
+                          ],
+        "name":  "Co-Op Ramp Brace",
+        "risk":  0.28,
+        "flavor":  {
+                       "neutral_line":  "Co-Op Ramp Brace improved in the emotionally measurable ways.",
+                       "success_line":  "Co-Op Ramp Brace no longer looks experimental.",
+                       "client_quote":  "The ramp says maybe to wheelchairs.",
+                       "fail_line":  "Co-Op Ramp Brace remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "outdoor",
+                     "framing"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-021",
+        "repGainSuccess":  7,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  214,
+        "requiredTools":  [
+                              "saw",
+                              "drill"
+                          ],
+        "name":  "Workshop Vent Frame",
+        "risk":  0.32,
+        "flavor":  {
+                       "neutral_line":  "Workshop Vent Frame improved in the emotionally measurable ways.",
+                       "success_line":  "Workshop Vent Frame no longer looks experimental.",
+                       "client_quote":  "The vent opening became abstract.",
+                       "fail_line":  "Workshop Vent Frame remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "commercial",
+                     "framing"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  3,
+        "id":  "job-022",
+        "repGainSuccess":  5,
+        "staminaCost":  3,
+        "tier":  2,
+        "basePayout":  185,
+        "requiredTools":  [
+                              "hammer",
+                              "wrench"
+                          ],
+        "name":  "Parking Bollard Reset",
+        "risk":  0.27,
+        "flavor":  {
+                       "neutral_line":  "Parking Bollard Reset improved in the emotionally measurable ways.",
+                       "success_line":  "Parking Bollard Reset no longer looks experimental.",
+                       "client_quote":  "One bollard now greets cars diagonally.",
+                       "fail_line":  "Parking Bollard Reset remains interpretive with structural ambition."
+                   },
+        "districtId":  "small-commercial",
+        "tags":  [
+                     "outdoor",
+                     "civic"
+                 ],
+        "repLossFail":  2
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-023",
+        "repGainSuccess":  8,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  245,
+        "requiredTools":  [
+                              "hammer",
+                              "drill",
+                              "level"
+                          ],
+        "name":  "Library Step Reinforce",
+        "risk":  0.34,
+        "flavor":  {
+                       "neutral_line":  "Library Step Reinforce improved in the emotionally measurable ways.",
+                       "success_line":  "Library Step Reinforce no longer looks experimental.",
+                       "client_quote":  "The front step currently teaches humility.",
+                       "fail_line":  "Library Step Reinforce remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "finish"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-024",
+        "repGainSuccess":  8,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  260,
+        "requiredTools":  [
+                              "wrench",
+                              "drill",
+                              "saw"
+                          ],
+        "name":  "Park Bench Retrofit",
+        "risk":  0.36,
+        "flavor":  {
+                       "neutral_line":  "Park Bench Retrofit improved in the emotionally measurable ways.",
+                       "success_line":  "Park Bench Retrofit no longer looks experimental.",
+                       "client_quote":  "Bench number three has trust issues.",
+                       "fail_line":  "Park Bench Retrofit remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "outdoor"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-025",
+        "repGainSuccess":  8,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  252,
+        "requiredTools":  [
+                              "drill",
+                              "level",
+                              "caulk-gun"
+                          ],
+        "name":  "Community Hall Rail",
+        "risk":  0.33,
+        "flavor":  {
+                       "neutral_line":  "Community Hall Rail improved in the emotionally measurable ways.",
+                       "success_line":  "Community Hall Rail no longer looks experimental.",
+                       "client_quote":  "The handrail ends mid-conversation.",
+                       "fail_line":  "Community Hall Rail remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "indoor"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  5,
+        "id":  "job-026",
+        "repGainSuccess":  9,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  275,
+        "requiredTools":  [
+                              "ladder",
+                              "utility-knife",
+                              "drill"
+                          ],
+        "name":  "Bus Shelter Panel",
+        "risk":  0.38,
+        "flavor":  {
+                       "neutral_line":  "Bus Shelter Panel improved in the emotionally measurable ways.",
+                       "success_line":  "Bus Shelter Panel no longer looks experimental.",
+                       "client_quote":  "Rain currently enters from all strategic angles.",
+                       "fail_line":  "Bus Shelter Panel remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "outdoor"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-027",
+        "repGainSuccess":  8,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  268,
+        "requiredTools":  [
+                              "wrench",
+                              "screwdriver",
+                              "level"
+                          ],
+        "name":  "Rec Center Door Set",
+        "risk":  0.35,
+        "flavor":  {
+                       "neutral_line":  "Rec Center Door Set improved in the emotionally measurable ways.",
+                       "success_line":  "Rec Center Door Set no longer looks experimental.",
+                       "client_quote":  "This door both drags and drifts.",
+                       "fail_line":  "Rec Center Door Set remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "mechanical"
+                 ],
+        "repLossFail":  3
+    },
+    {
+        "durabilityCost":  5,
+        "id":  "job-028",
+        "repGainSuccess":  9,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  282,
+        "requiredTools":  [
+                              "stud-finder",
+                              "drill",
+                              "utility-knife"
+                          ],
+        "name":  "Public Kiosk Cable Cover",
+        "risk":  0.39,
+        "flavor":  {
+                       "neutral_line":  "Public Kiosk Cable Cover improved in the emotionally measurable ways.",
+                       "success_line":  "Public Kiosk Cable Cover no longer looks experimental.",
+                       "client_quote":  "The kiosk wiring resembles spaghetti literature.",
+                       "fail_line":  "Public Kiosk Cable Cover remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "electrical"
+                 ],
+        "repLossFail":  4
+    },
+    {
+        "durabilityCost":  5,
+        "id":  "job-029",
+        "repGainSuccess":  9,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  290,
+        "requiredTools":  [
+                              "saw",
+                              "hammer",
+                              "level"
+                          ],
+        "name":  "Footbridge Deck Strip",
+        "risk":  0.4,
+        "flavor":  {
+                       "neutral_line":  "Footbridge Deck Strip improved in the emotionally measurable ways.",
+                       "success_line":  "Footbridge Deck Strip no longer looks experimental.",
+                       "client_quote":  "The bridge plank hums under pressure.",
+                       "fail_line":  "Footbridge Deck Strip remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "outdoor"
+                 ],
+        "repLossFail":  4
+    },
+    {
+        "durabilityCost":  4,
+        "id":  "job-030",
+        "repGainSuccess":  8,
+        "staminaCost":  4,
+        "tier":  3,
+        "basePayout":  255,
+        "requiredTools":  [
+                              "hammer",
+                              "drill",
+                              "stud-finder"
+                          ],
+        "name":  "Town Notice Board Rebuild",
+        "risk":  0.34,
+        "flavor":  {
+                       "neutral_line":  "Town Notice Board Rebuild improved in the emotionally measurable ways.",
+                       "success_line":  "Town Notice Board Rebuild no longer looks experimental.",
+                       "client_quote":  "Announcements deserve less tilt and more dignity.",
+                       "fail_line":  "Town Notice Board Rebuild remains interpretive with structural ambition."
+                   },
+        "districtId":  "civic-lite",
+        "tags":  [
+                     "civic",
+                     "outdoor"
+                 ],
+        "repLossFail":  3
+    }
+]

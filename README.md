@@ -1,4 +1,4 @@
-﻿# Error Hammer
+# Error Hammer
 ## Planning Status (2026-02-27)
 1. Active lane chain is `PLN-002 -> BLD-002 -> TW-002 -> VF-002 -> DOC-002`.
 2. Current board state is `PLN-002` done, `BLD-002` ready, and downstream cards blocked by dependency.
@@ -9,6 +9,14 @@
 2. Required quality-gate commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 3. CI must run the same four command gates in `.github/workflows/ci.yml`.
 4. Deterministic architecture constraints remain mandatory: pure core resolver flow, seeded RNG path, and UI orchestration-only state interactions.
+
+## Run Instructions
+1. Install dependencies: `npm install`
+2. Validate content: `npm run content:validate`
+3. Compile generated bundle: `npm run content:compile`
+4. Run tests: `npm test`
+5. Build production bundle: `npm run build`
+6. Start local dev server: `npm run dev`
 
 ## Lane Ownership Snapshot
 1. Planner owns scope, constraints, acceptance criteria, and handoff cards.

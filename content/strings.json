@@ -1,0 +1,11 @@
+{
+  "title": "Error Hammer",
+  "subtitle": "You do the work. The work happens.",
+  "continueMissing": "No save found. Time to found a tiny empire.",
+  "dayReportTitle": "End of Day Report",
+  "storeTitle": "Tool Store",
+  "companyTitle": "Company",
+  "assignmentHint": "Assign contracts, then confirm day.",
+  "noContracts": "No contracts available for this board.",
+  "neutralLogFallback": "The work progressed at the speed of weather."
+}

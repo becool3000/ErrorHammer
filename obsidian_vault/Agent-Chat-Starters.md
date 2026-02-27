@@ -1,4 +1,4 @@
-﻿# Agent Chat Starters
+# Agent Chat Starters
 
 Last updated: 2026-02-27
 

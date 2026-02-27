@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "subtitle",
+    "continueMissing",
+    "dayReportTitle",
+    "storeTitle",
+    "companyTitle",
+    "assignmentHint",
+    "noContracts",
+    "neutralLogFallback"
+  ],
+  "properties": {
+    "title": { "type": "string", "minLength": 2 },
+    "subtitle": { "type": "string", "minLength": 2 },
+    "continueMissing": { "type": "string", "minLength": 2 },
+    "dayReportTitle": { "type": "string", "minLength": 2 },
+    "storeTitle": { "type": "string", "minLength": 2 },
+    "companyTitle": { "type": "string", "minLength": 2 },
+    "assignmentHint": { "type": "string", "minLength": 2 },
+    "noContracts": { "type": "string", "minLength": 2 },
+    "neutralLogFallback": { "type": "string", "minLength": 2 }
+  }
+}

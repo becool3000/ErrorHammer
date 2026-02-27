@@ -1,0 +1,132 @@
+[
+  {
+    "id": "hammer",
+    "name": "Hammer",
+    "tier": 1,
+    "price": 45,
+    "maxDurability": 30,
+    "tags": ["framing", "general"],
+    "flavor": {
+      "description": "The classic argument with nails.",
+      "quip_buy": "You bought confidence with a wooden handle.",
+      "quip_break": "The hammer retired after a long career in impact studies."
+    }
+  },
+  {
+    "id": "screwdriver",
+    "name": "Screwdriver",
+    "tier": 1,
+    "price": 35,
+    "maxDurability": 35,
+    "tags": ["fastener", "general"],
+    "flavor": {
+      "description": "Turns tiny doubts into tight decisions.",
+      "quip_buy": "You bought a polite spiral persuader.",
+      "quip_break": "The tip became modern art."
+    }
+  },
+  {
+    "id": "wrench",
+    "name": "Wrench",
+    "tier": 1,
+    "price": 55,
+    "maxDurability": 40,
+    "tags": ["plumbing", "mechanical"],
+    "flavor": {
+      "description": "For nuts, bolts, and life adjustments.",
+      "quip_buy": "You bought leverage and a mild shoulder workout.",
+      "quip_break": "The wrench now mostly resembles intent."
+    }
+  },
+  {
+    "id": "drill",
+    "name": "Drill",
+    "tier": 2,
+    "price": 140,
+    "maxDurability": 45,
+    "tags": ["fastener", "electrical"],
+    "flavor": {
+      "description": "Makes holes where plans become real.",
+      "quip_buy": "You bought a very loud yes.",
+      "quip_break": "The drill now hums only in memory."
+    }
+  },
+  {
+    "id": "saw",
+    "name": "Saw",
+    "tier": 2,
+    "price": 120,
+    "maxDurability": 38,
+    "tags": ["framing", "finish"],
+    "flavor": {
+      "description": "Cuts boards and overconfidence to size.",
+      "quip_buy": "You bought straight lines with a side of sawdust.",
+      "quip_break": "The saw has entered a contemplative, toothless phase."
+    }
+  },
+  {
+    "id": "ladder",
+    "name": "Ladder",
+    "tier": 2,
+    "price": 110,
+    "maxDurability": 50,
+    "tags": ["outdoor", "roof"],
+    "flavor": {
+      "description": "Temporary altitude with permanent responsibility.",
+      "quip_buy": "You bought seventeen opportunities to hold still.",
+      "quip_break": "The ladder is now two short ladders and a lesson."
+    }
+  },
+  {
+    "id": "level",
+    "name": "Level",
+    "tier": 2,
+    "price": 70,
+    "maxDurability": 45,
+    "tags": ["finish", "inspection"],
+    "flavor": {
+      "description": "A bubble with strong opinions.",
+      "quip_buy": "You bought objective truth in a plastic tube.",
+      "quip_break": "The bubble escaped and took geometry with it."
+    }
+  },
+  {
+    "id": "caulk-gun",
+    "name": "Caulk Gun",
+    "tier": 2,
+    "price": 80,
+    "maxDurability": 42,
+    "tags": ["finish", "seal"],
+    "flavor": {
+      "description": "Makes gaps disappear and corners believable.",
+      "quip_buy": "You bought a paste launcher for tiny diplomacy.",
+      "quip_break": "The trigger now negotiates only with itself."
+    }
+  },
+  {
+    "id": "utility-knife",
+    "name": "Utility Knife",
+    "tier": 1,
+    "price": 50,
+    "maxDurability": 28,
+    "tags": ["finish", "general"],
+    "flavor": {
+      "description": "For clean cuts and rough schedules.",
+      "quip_buy": "You bought precision with a pocket clip.",
+      "quip_break": "The blade retired to paper-only ambitions."
+    }
+  },
+  {
+    "id": "stud-finder",
+    "name": "Stud Finder",
+    "tier": 3,
+    "price": 180,
+    "maxDurability": 55,
+    "tags": ["inspection", "electrical"],
+    "flavor": {
+      "description": "Beeps confidently near walls and occasionally near hope.",
+      "quip_buy": "You bought electronic wall gossip.",
+      "quip_break": "It now identifies only emotional support beams."
+    }
+  }
+]

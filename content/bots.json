@@ -1,0 +1,32 @@
+[
+  {
+    "id": "doug",
+    "name": "Doug",
+    "weights": {
+      "wCash": 1.1,
+      "wRep": 0.6,
+      "wRiskAvoid": 0.3,
+      "wToolBuy": 1.2
+    },
+    "flavorLines": [
+      "Doug bought another drill because the first drill looked lonely.",
+      "Doug says risk is just excitement with paperwork.",
+      "Doug arrives early, then improvises the rest."
+    ]
+  },
+  {
+    "id": "marlene",
+    "name": "Marlene",
+    "weights": {
+      "wCash": 0.9,
+      "wRep": 1.2,
+      "wRiskAvoid": 1.3,
+      "wToolBuy": 0.5
+    },
+    "flavorLines": [
+      "Marlene carries a checklist and a backup checklist.",
+      "Marlene treats clean corners like a moral duty.",
+      "Marlene declines chaos on principle."
+    ]
+  }
+]
