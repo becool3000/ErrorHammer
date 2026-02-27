@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tasks.md",
+                "file": "Agent-Chat-Starters.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Tasks"
+              "title": "Agent-Chat-Starters"
             }
           }
         ]
@@ -185,16 +185,16 @@
   },
   "active": "59c34bd3d92ca70e",
   "lastOpenFiles": [
+    "Decisions.md",
+    "ElementsPackSpec.md",
+    "Tasks.md",
     "Agent-Chat-Starters.md",
     "00-Index.md",
     "Vision.md",
-    "Tasks.md",
     "archive/Migration-Legacy-2026-02-27.md",
     "archive/Migration-From-TinySand-2026-02-27.md",
-    "Decisions.md",
     "archive/Tasks-Post-PLN040-Closeout-2026-02-24.md",
     "ElementSystem.md",
-    "ElementsPackSpec.md",
     "archive/Testing-Pre-RadsV1-2026-02-16.md",
     "archive/Tasks-Pre-RadsV1-2026-02-16.md",
     "archive/Tasks-Garden-D1-D2-Detail-2026-02-15.md",

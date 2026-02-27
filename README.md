@@ -18,6 +18,12 @@
 5. Build production bundle: `npm run build`
 6. Start local dev server: `npm run dev`
 
+## Testing
+1. Execute deterministic automated scenarios: `npm test`
+2. Execute schema/content gates: `npm run content:validate` then `npm run content:compile`
+3. `TW-002` deterministic scenarios `EH-TW-001..EH-TW-016` are implemented in `tests/tw_scenarios.test.ts`
+4. Scenario assertions use day-resolution fields: `outcome`, `cashDelta`, `repDelta`, `staminaBefore`, `staminaAfter`, `toolDurabilityBefore`, `toolDurabilityAfter`, and `logLine`
+
 ## Lane Ownership Snapshot
 1. Planner owns scope, constraints, acceptance criteria, and handoff cards.
 2. Builder owns implementation under approved file scope plus CI workflow exception (`PLN-002`).

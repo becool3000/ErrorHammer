@@ -1,4 +1,4 @@
-﻿# Decisions
+# Decisions
 ## Active Decisions
 1. Runtime target is a browser-first web app (`itch` HTML5 first), implemented with React + TypeScript + Vite.
 2. Gameplay resolution is deterministic and seed-driven; gameplay randomness must flow only through `src/core/rng.ts`.

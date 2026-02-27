@@ -1,4 +1,4 @@
-﻿# Content Pack Spec
+# Content Pack Spec
 ## Current Source Of Truth
 1. Gameplay content definitions live in `content/*.json`.
 2. Validation schemas live in `schemas/*.schema.json`.

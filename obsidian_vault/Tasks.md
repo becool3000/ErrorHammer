@@ -1,4 +1,4 @@
-﻿# Tasks
+# Tasks
 ## Current Focus
 1. `PLN-002` planning lock is complete for `Spec.md` MVP bootstrap execution.
 2. Execute `BLD-002` as the active Builder full-scope bootstrap pass.
