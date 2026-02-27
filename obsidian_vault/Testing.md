@@ -5,6 +5,7 @@
 3. Content quality gate is `npm run content:validate`.
 4. Content bundle gate is `npm run content:compile`.
 5. Determinism contract baseline is seeded resolver parity using fixed day seeds and identical intent sets.
+6. Bootstrap verification chain status is complete for `TW-002` and `VF-002` (2026-02-27).
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -87,7 +88,7 @@ Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-016`.
 2. Run `npm run content:validate`.
 3. Run `npm run content:compile`.
 
-## Manual Smoke Steps (handoff to `VF-002`)
+## Manual Smoke Steps (executed by `VF-002`)
 1. Start app with `npm run dev` and open the local URL.
 2. Start a new game and assign at least one valid contract.
 3. Resolve a day and confirm report lines and ledger deltas render.
@@ -105,3 +106,5 @@ Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-016`.
 8. `VF-002` deterministic replay evidence A (generated bundle): `daySeed=424242`, `contractId=D1-C1-job-003`, `digestA=c26a700e`, `digestB=c26a700e`, `sameDigest=true`, `sameResolutions=true`, `sameDayLog=true`.
 9. `VF-002` deterministic replay evidence B (positive-path in-memory bundle): `daySeed=123456`, `digestA=7bd317db`, `digestB=7bd317db`, `sameDigest=true`, `sameResolutions=true`, `sameDayLog=true`, `playerOutcome=success`.
 10. `VF-002` manual smoke evidence (headless): dev server URL probe PASS (`http://127.0.0.1:4173` returned `200` with root mount), UI flow smoke via store actions PASS (`New Game` -> assign/confirm day -> report data present -> `Store`/`Company` navigation stable -> simulated refresh + `Continue` restored saved game with matching day).
+11. `DOC-002` evidence date: 2026-02-27.
+12. `DOC-002` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to final verified runtime and board state.

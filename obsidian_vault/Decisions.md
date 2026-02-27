@@ -18,7 +18,7 @@
 16. Tone constraints are mandatory content requirements: each job and event includes `success_line`, `fail_line`, and `neutral_line`.
 17. Zustand is the UI state layer; resolver/core modules remain gameplay source of truth.
 18. Lane workflow source of truth remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
-19. Active card chain for current bootstrap execution is `PLN-002 -> BLD-002 -> TW-002 -> VF-002 -> DOC-002`.
+19. Bootstrap execution chain for this baseline is `PLN-002 -> BLD-002 -> TW-002 -> VF-002 -> DOC-002`.
 20. Full `Spec.md` MVP bootstrap scope ships in one Builder card (`BLD-002`) unless superseded by a future Planner card.
 21. TestWriter owns deterministic behavior tests; Builder provides harness wiring and only minimal smoke scaffolds.
 22. WIP limit remains one `IN_PROGRESS` card per lane.
@@ -26,6 +26,8 @@
 24. Planner-approved Builder lane exception for `BLD-002`: create `.github/workflows/ci.yml` for command-gate CI.
 25. Root implementation path remains `g:\ErrorHammer`; `Spec.md` folder naming example does not require a repo rename.
 26. Archive history from the prior legacy source project is retired for this repo and replaced by a single migration snapshot note.
+27. Bootstrap lane closeout status as of 2026-02-27 is `DONE` for `BLD-002`, `TW-002`, `VF-002`, and `DOC-002`.
+28. Verified behavior source of truth for bootstrap closeout is `obsidian_vault/Testing.md` command, replay, and smoke evidence.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
