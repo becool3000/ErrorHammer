@@ -100,4 +100,8 @@ Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-016`.
 3. `TW-001` evidence: superseded by `TW-002`.
 4. `TW-002` automated evidence date: 2026-02-27.
 5. `TW-002` command evidence: `npm test` PASS (`27` tests), `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`).
-6. `VF-002` evidence: pending.
+6. `VF-002` evidence date: 2026-02-27.
+7. `VF-002` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`5` files, `27` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-D1mm2bDQ.css`, `dist/assets/index-CqLYUXQk.js`).
+8. `VF-002` deterministic replay evidence A (generated bundle): `daySeed=424242`, `contractId=D1-C1-job-003`, `digestA=c26a700e`, `digestB=c26a700e`, `sameDigest=true`, `sameResolutions=true`, `sameDayLog=true`.
+9. `VF-002` deterministic replay evidence B (positive-path in-memory bundle): `daySeed=123456`, `digestA=7bd317db`, `digestB=7bd317db`, `sameDigest=true`, `sameResolutions=true`, `sameDayLog=true`, `playerOutcome=success`.
+10. `VF-002` manual smoke evidence (headless): dev server URL probe PASS (`http://127.0.0.1:4173` returned `200` with root mount), UI flow smoke via store actions PASS (`New Game` -> assign/confirm day -> report data present -> `Store`/`Company` navigation stable -> simulated refresh + `Continue` restored saved game with matching day).

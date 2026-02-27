@@ -23,6 +23,7 @@
 2. Execute schema/content gates: `npm run content:validate` then `npm run content:compile`
 3. `TW-002` deterministic scenarios `EH-TW-001..EH-TW-016` are implemented in `tests/tw_scenarios.test.ts`
 4. Scenario assertions use day-resolution fields: `outcome`, `cashDelta`, `repDelta`, `staminaBefore`, `staminaAfter`, `toolDurabilityBefore`, `toolDurabilityAfter`, and `logLine`
+5. Latest verifier evidence for `VF-002` is recorded in `obsidian_vault/Testing.md` (run date: `2026-02-27`).
 
 ## Lane Ownership Snapshot
 1. Planner owns scope, constraints, acceptance criteria, and handoff cards.
