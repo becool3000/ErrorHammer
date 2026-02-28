@@ -1,0 +1,132 @@
+[
+  {
+    "id": "anchor-set",
+    "name": "Anchor Set",
+    "price": 18,
+    "tags": ["general", "fastener"],
+    "flavor": {
+      "description": "A box of tiny promises for walls with trust issues.",
+      "quip_buy": "You bought several little commitments."
+    }
+  },
+  {
+    "id": "board-pack",
+    "name": "Board Pack",
+    "price": 32,
+    "tags": ["framing", "outdoor"],
+    "flavor": {
+      "description": "Straight lumber with a modest sense of destiny.",
+      "quip_buy": "You bought planks and future splinters."
+    }
+  },
+  {
+    "id": "concrete-mix",
+    "name": "Concrete Mix",
+    "price": 24,
+    "tags": ["general", "outdoor"],
+    "flavor": {
+      "description": "Powdered permanence in a practical bag.",
+      "quip_buy": "You bought a future rock."
+    }
+  },
+  {
+    "id": "fastener-box",
+    "name": "Fastener Box",
+    "price": 16,
+    "tags": ["fastener", "general"],
+    "flavor": {
+      "description": "Screws, bolts, and tiny pieces of authority.",
+      "quip_buy": "You bought industrial punctuation."
+    }
+  },
+  {
+    "id": "hinge-pack",
+    "name": "Hinge Pack",
+    "price": 22,
+    "tags": ["mechanical", "finish"],
+    "flavor": {
+      "description": "Metal elbows for doors and cabinets with ambitions.",
+      "quip_buy": "You bought several quiet pivots."
+    }
+  },
+  {
+    "id": "junction-box",
+    "name": "Junction Box",
+    "price": 21,
+    "tags": ["electrical", "inspection"],
+    "flavor": {
+      "description": "A legal place for wires to have feelings.",
+      "quip_buy": "You bought approved tiny housing for electricity."
+    }
+  },
+  {
+    "id": "paint-sleeve",
+    "name": "Paint Sleeve",
+    "price": 12,
+    "tags": ["finish", "seal"],
+    "flavor": {
+      "description": "Color management for surfaces that need closure.",
+      "quip_buy": "You bought a small apology for the wall."
+    }
+  },
+  {
+    "id": "pipe-kit",
+    "name": "Pipe Kit",
+    "price": 28,
+    "tags": ["plumbing", "mechanical"],
+    "flavor": {
+      "description": "Fittings, elbows, and controlled wet intentions.",
+      "quip_buy": "You bought several future right angles."
+    }
+  },
+  {
+    "id": "roof-patch",
+    "name": "Roof Patch",
+    "price": 30,
+    "tags": ["roof", "seal"],
+    "flavor": {
+      "description": "Sticky optimism for elevated leaks.",
+      "quip_buy": "You bought weather negotiations."
+    }
+  },
+  {
+    "id": "safety-kit",
+    "name": "Safety Kit",
+    "price": 14,
+    "tags": ["inspection", "general"],
+    "flavor": {
+      "description": "Tape, covers, and the paperwork version of caution.",
+      "quip_buy": "You bought several less dramatic outcomes."
+    }
+  },
+  {
+    "id": "sealant-tube",
+    "name": "Sealant Tube",
+    "price": 15,
+    "tags": ["seal", "finish"],
+    "flavor": {
+      "description": "A squeezable argument against drafts and drips.",
+      "quip_buy": "You bought adhesive diplomacy."
+    }
+  },
+  {
+    "id": "wire-spool",
+    "name": "Wire Spool",
+    "price": 26,
+    "tags": ["electrical", "fastener"],
+    "flavor": {
+      "description": "Coiled certainty for walls full of secrets.",
+      "quip_buy": "You bought very organized lightning."
+    }
+  },
+  {
+    "id": "trim-kit",
+    "name": "Trim Kit",
+    "price": 20,
+    "tags": ["finish", "framing"],
+    "flavor": {
+      "description": "Corners, strips, and a second chance at neatness.",
+      "quip_buy": "You bought decorative seriousness."
+    }
+  }
+]

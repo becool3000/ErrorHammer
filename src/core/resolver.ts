@@ -6,11 +6,15 @@ import {
   getRiskValue,
   isForcedNeutral
 } from "./economy";
+import { evaluateBotPlan, simulateBotDay } from "./bots";
 import { createRng, hashSeed } from "./rng";
+import { SAVE_VERSION } from "./save";
+import { createBotSkills, createInitialShopSupplies, createInitialSkills, createInitialWorkday, digestState, prepareForNextDay } from "./playerFlow";
 import {
   ActorState,
   AssignmentIntent,
   BotProfile,
+  ContractInstance,
   ContentBundle,
   DayLog,
   EventDef,
@@ -19,6 +23,7 @@ import {
   JobDef,
   Resolution,
   ResolverResult,
+  SkillId,
   ToolDef
 } from "./types";
 
@@ -44,6 +49,9 @@ export function createInitialGameState(bundle: ContentBundle, seed = 1): GameSta
     districtUnlocks: unlockDistricts(bundle, 1),
     staminaMax: 4,
     stamina: 4,
+    fuel: 8,
+    fuelMax: 12,
+    skills: createInitialSkills(),
     tools: {
       [hammer.id]: {
         toolId: hammer.id,
@@ -61,13 +69,18 @@ export function createInitialGameState(bundle: ContentBundle, seed = 1): GameSta
   });
 
   return {
+    saveVersion: SAVE_VERSION,
     day: 1,
     seed,
     player,
     bots,
     contractBoard,
     activeEventIds,
-    log: []
+    log: [],
+    activeJob: null,
+    shopSupplies: createInitialShopSupplies(),
+    truckSupplies: {},
+    workday: createInitialWorkday(1, 0)
   };
 }
 
@@ -318,10 +331,22 @@ export function resolveDay(
 
   const nextDay = state.day + 1;
   const nextEventIds = pickEventIds(bundle, nextDay, state.seed);
+  const nextEvents = nextEventIds
+    .map((id) => bundle.events.find((event) => event.id === id))
+    .filter((event): event is EventDef => Boolean(event));
   const nextBoard = generateContractBoard(bundle, nextDay, hashSeed(state.seed, nextDay), {
     districtIds: resetPlayer.districtUnlocks,
     maxTier: resetPlayer.companyLevel + 1
   });
+  const purchasePhase = applyBotPurchasesForNextDay(
+    resetBots,
+    bundle.bots,
+    bundle,
+    nextBoard,
+    nextEvents,
+    hashSeed(state.seed, "bot-buy", nextDay)
+  );
+  dayLog.push(...purchasePhase.purchaseLogs);
 
   const resolutions = [...winnerResolutions, ...lostResolutions].sort((a, b) => {
     const contractOrder = a.contractId.localeCompare(b.contractId);
@@ -332,13 +357,18 @@ export function resolveDay(
   });
 
   const nextState: GameState = {
+    saveVersion: state.saveVersion,
     day: nextDay,
     seed: state.seed,
     player: resetPlayer,
-    bots: resetBots,
+    bots: purchasePhase.bots,
     contractBoard: nextBoard,
     activeEventIds: nextEventIds,
-    log: [...state.log, ...dayLog].slice(-300)
+    log: [...state.log, ...dayLog].slice(-300),
+    activeJob: state.activeJob,
+    shopSupplies: { ...state.shopSupplies },
+    truckSupplies: { ...state.truckSupplies },
+    workday: createInitialWorkday(nextDay, state.workday.fatigue.debt)
   };
 
   return {
@@ -349,7 +379,79 @@ export function resolveDay(
   };
 }
 
+export function endShift(state: GameState, bundle: ContentBundle): ResolverResult {
+  const nextState = prepareForNextDay(state);
+  nextState.activeEventIds = pickEventIds(bundle, nextState.day, nextState.seed);
+  const pricingEvents = nextState.activeEventIds
+    .map((id) => bundle.events.find((event) => event.id === id))
+    .filter((event): event is EventDef => Boolean(event));
+
+  const dayLog: DayLog[] = [];
+  const profileById = new Map(bundle.bots.map((bot) => [bot.id, bot]));
+  const updatedBots: ActorState[] = [];
+
+  for (const bot of nextState.bots) {
+    const profile = profileById.get(bot.actorId);
+    if (!profile) {
+      updatedBots.push(bot);
+      continue;
+    }
+
+    const botBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, "bot-board", nextState.day, bot.actorId), {
+      districtIds: bot.districtUnlocks,
+      maxTier: bot.companyLevel + 1
+    });
+    const sim = simulateBotDay(
+      bot,
+      profile,
+      botBoard,
+      bundle,
+      pricingEvents,
+      nextState.day,
+      hashSeed(nextState.seed, "bot-sim", nextState.day, bot.actorId)
+    );
+    applyProgression(sim.bot, bundle);
+    const purchasePhase = applyBotPurchasesForNextDay(
+      [sim.bot],
+      [profile],
+      bundle,
+      botBoard,
+      pricingEvents,
+      hashSeed(nextState.seed, "bot-buy", nextState.day, bot.actorId)
+    );
+    updatedBots.push(purchasePhase.bots[0] ?? sim.bot);
+
+    for (const line of sim.logLines) {
+      dayLog.push({
+        day: state.day,
+        actorId: bot.actorId,
+        message: line
+      });
+    }
+    dayLog.push(...purchasePhase.purchaseLogs.map((entry) => ({ ...entry, day: state.day })));
+  }
+
+  nextState.bots = updatedBots;
+  nextState.contractBoard = nextState.activeJob
+    ? []
+    : generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
+        districtIds: nextState.player.districtUnlocks,
+        maxTier: nextState.player.companyLevel + 1
+      });
+  nextState.log = [...nextState.log, ...dayLog].slice(-300);
+
+  return {
+    nextState,
+    resolutions: [],
+    dayLog,
+    digest: digestState(nextState)
+  };
+}
+
 export function buyTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
+  if (state.activeJob && state.activeJob.location !== "shop") {
+    return state;
+  }
   const tool = bundle.tools.find((item) => item.id === toolId);
   if (!tool) {
     return state;
@@ -378,6 +480,9 @@ export function buyTool(state: GameState, bundle: ContentBundle, toolId: string)
 }
 
 export function repairTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
+  if (state.activeJob && state.activeJob.location !== "shop") {
+    return state;
+  }
   const toolDef = bundle.tools.find((tool) => tool.id === toolId);
   if (!toolDef) {
     return state;
@@ -407,26 +512,101 @@ export function repairTool(state: GameState, bundle: ContentBundle, toolId: stri
 }
 
 export function hireCrew(state: GameState): GameState {
-  if (state.player.crews.length >= 3 || state.player.cash < 450) {
-    return state;
+  return state;
+}
+
+export function applyBotPurchasesForNextDay(
+  bots: ActorState[],
+  profiles: BotProfile[],
+  bundle: ContentBundle,
+  nextBoard: ContractInstance[],
+  pricingEvents: EventDef[],
+  nextDaySeed: number
+): { bots: ActorState[]; purchaseLogs: DayLog[] } {
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const sortedTools = [...bundle.tools].sort((a, b) => a.id.localeCompare(b.id));
+  const nextDay = nextBoard[0]?.expiresDay ?? 0;
+  const logDay = nextDay > 0 ? nextDay - 1 : 0;
+
+  const updatedBots: ActorState[] = [];
+  const purchaseLogs: DayLog[] = [];
+
+  for (const bot of bots) {
+    const profile = profileById.get(bot.actorId) ?? profiles[0];
+    const nextBot = cloneActor(bot);
+    if (!profile) {
+      updatedBots.push(nextBot);
+      continue;
+    }
+
+    const baselinePlan = evaluateBotPlan(nextBot, profile, nextBoard, bundle, nextDay, nextDaySeed, {
+      tieNoise: false
+    });
+
+    const candidates: Array<{ tool: ToolDef; price: number; weightedGain: number }> = [];
+    for (const tool of sortedTools) {
+      const existing = nextBot.tools[tool.id];
+      if (existing && existing.durability > 0) {
+        continue;
+      }
+
+      const price = applyToolPriceModifiers(tool.price, pricingEvents);
+      if (nextBot.cash < price) {
+        continue;
+      }
+
+      const simulated = cloneActor(nextBot);
+      simulated.tools[tool.id] = {
+        toolId: tool.id,
+        durability: tool.maxDurability
+      };
+
+      const candidatePlan = evaluateBotPlan(simulated, profile, nextBoard, bundle, nextDay, nextDaySeed, {
+        tieNoise: false
+      });
+      const scoreGain = candidatePlan.totalScore - baselinePlan.totalScore;
+      const weightedGain = scoreGain * profile.weights.wToolBuy;
+      if (weightedGain < 20) {
+        continue;
+      }
+
+      candidates.push({
+        tool,
+        price,
+        weightedGain
+      });
+    }
+
+    candidates.sort((a, b) => {
+      if (b.weightedGain !== a.weightedGain) {
+        return b.weightedGain - a.weightedGain;
+      }
+      if (a.price !== b.price) {
+        return a.price - b.price;
+      }
+      return a.tool.id.localeCompare(b.tool.id);
+    });
+
+    const choice = candidates[0];
+    if (choice) {
+      nextBot.cash -= choice.price;
+      nextBot.tools[choice.tool.id] = {
+        toolId: choice.tool.id,
+        durability: choice.tool.maxDurability
+      };
+      purchaseLogs.push({
+        day: logDay,
+        actorId: nextBot.actorId,
+        message: `${nextBot.name} bought ${choice.tool.name} for $${choice.price}.`
+      });
+    }
+
+    updatedBots.push(nextBot);
   }
 
-  const nextPlayer = cloneActor(state.player);
-  nextPlayer.cash -= 450;
-  const index = nextPlayer.crews.length + 1;
-  nextPlayer.crews.push({
-    crewId: `crew-${index}`,
-    name: `Crew ${index}`,
-    staminaMax: 6,
-    stamina: 6,
-    efficiency: 0.05,
-    reliability: 0.05,
-    morale: 50
-  });
-
   return {
-    ...state,
-    player: nextPlayer
+    bots: updatedBots,
+    purchaseLogs
   };
 }
 
@@ -451,6 +631,9 @@ function createBotActor(profile: BotProfile, bundle: ContentBundle, seed: number
     districtUnlocks: unlockDistricts(bundle, 1),
     staminaMax: 4,
     stamina: 4,
+    fuel: 8,
+    fuelMax: 12,
+    skills: createBotSkills(getStarterSkillIds(starterTools)),
     tools,
     crews: []
   };
@@ -471,6 +654,32 @@ function pickStarterTools(tools: ToolDef[], randomIndex: number): ToolDef[] {
   return [hammer, alt];
 }
 
+function getStarterSkillIds(tools: ToolDef[]): SkillId[] {
+  const skillIds: SkillId[] = [];
+  const validSkills = new Set<SkillId>([
+    "general",
+    "fastener",
+    "framing",
+    "finish",
+    "plumbing",
+    "electrical",
+    "mechanical",
+    "roof",
+    "seal",
+    "inspection"
+  ]);
+
+  for (const tool of tools) {
+    for (const tag of tool.tags) {
+      if (validSkills.has(tag as SkillId) && !skillIds.includes(tag as SkillId)) {
+        skillIds.push(tag as SkillId);
+      }
+    }
+  }
+
+  return skillIds;
+}
+
 function hydrateActorMap(state: GameState): Map<string, ActorState> {
   const entries: Array<[string, ActorState]> = [[state.player.actorId, cloneActor(state.player)]];
   for (const bot of state.bots) {
@@ -483,6 +692,7 @@ function cloneActor(actor: ActorState): ActorState {
   return {
     ...actor,
     districtUnlocks: [...actor.districtUnlocks],
+    skills: { ...actor.skills },
     tools: Object.fromEntries(
       Object.entries(actor.tools).map(([toolId, value]) => [toolId, { toolId: value.toolId, durability: value.durability }])
     ),

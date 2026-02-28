@@ -23,14 +23,9 @@ export function Company() {
 
       <section className="card">
         <h3>Crews</h3>
-        {game.player.crews.length === 0 ? <p>No crews hired yet.</p> : null}
-        {game.player.crews.map((crew) => (
-          <p key={crew.crewId}>
-            {crew.name} | stamina {crew.stamina}/{crew.staminaMax}
-          </p>
-        ))}
-        <button onClick={() => hireCrew()} disabled={game.player.crews.length >= 3 || game.player.cash < 450}>
-          Hire Crew ($450)
+        <p>{bundle.strings.crewDeferred}</p>
+        <button onClick={() => hireCrew()} disabled>
+          Hire Crew (Deferred)
         </button>
       </section>
 

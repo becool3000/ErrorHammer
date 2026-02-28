@@ -1,11 +1,23 @@
 {
   "title": "Error Hammer",
   "subtitle": "You do the work. The work happens.",
-  "continueMissing": "No save found. Time to found a tiny empire.",
-  "dayReportTitle": "End of Day Report",
-  "storeTitle": "Tool Store",
+  "continueMissing": "No compatible save found. Time to found a tiny empire.",
+  "continueIncompatible": "Old save detected. This build needs a fresh run for the new job flow.",
+  "dayReportTitle": "Field Log",
+  "storeTitle": "Home Shop",
   "companyTitle": "Company",
-  "assignmentHint": "Assign contracts, then confirm day.",
+  "supplierTitle": "Supplier",
+  "workdayTitle": "Workday",
+  "assignmentHint": "Accept one contract, then work it in half-hour chunks.",
   "noContracts": "No contracts available for this board.",
-  "neutralLogFallback": "The work progressed at the speed of weather."
+  "neutralLogFallback": "The work progressed at the speed of weather.",
+  "crewDeferred": "Crews are deferred during the phased-job refactor.",
+  "fuelLabel": "Fuel",
+  "homeSuppliesTitle": "Home Supplies",
+  "truckSuppliesTitle": "Truck Supplies",
+  "siteSuppliesTitle": "Site Supplies",
+  "skillsTitle": "Skills",
+  "activeJobTitle": "Active Job",
+  "boardTitle": "Contract Board",
+  "overtimeLabel": "Overtime"
 }

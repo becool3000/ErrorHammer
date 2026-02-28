@@ -11,5 +11,5 @@ if (!result.ok) {
 
 const bundle = result.bundle!;
 console.log(
-  `[content:validate] OK tools=${bundle.tools.length} jobs=${bundle.jobs.length} events=${bundle.events.length} districts=${bundle.districts.length} bots=${bundle.bots.length}`
+  `[content:validate] OK tools=${bundle.tools.length} jobs=${bundle.jobs.length} events=${bundle.events.length} districts=${bundle.districts.length} bots=${bundle.bots.length} supplies=${bundle.supplies.length}`
 );

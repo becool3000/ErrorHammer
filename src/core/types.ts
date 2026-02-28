@@ -1,5 +1,53 @@
 export type Outcome = "success" | "fail" | "neutral" | "lost";
 
+export type SkillId =
+  | "travel"
+  | "procurement"
+  | "organization"
+  | "negotiation"
+  | "general"
+  | "fastener"
+  | "framing"
+  | "finish"
+  | "plumbing"
+  | "electrical"
+  | "mechanical"
+  | "roof"
+  | "seal"
+  | "inspection";
+
+export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+
+export type LocationId = "shop" | "supplier" | "job-site";
+
+export type TaskId =
+  | "load_from_shop"
+  | "travel_to_supplier"
+  | "checkout_supplies"
+  | "travel_to_job_site"
+  | "pickup_site_supplies"
+  | "do_work"
+  | "collect_payment"
+  | "return_to_shop"
+  | "store_leftovers";
+
+export type TaskStance = "rush" | "standard" | "careful";
+
+export type TaskTimeOutcome = "fast" | "standard" | "delayed" | "rework";
+
+export type TaskQualityOutcome = "excellent" | "solid" | "sloppy" | "botched";
+
+export interface SupplyDef {
+  id: string;
+  name: string;
+  price: number;
+  tags: string[];
+  flavor: {
+    description: string;
+    quip_buy: string;
+  };
+}
+
 export interface ToolDef {
   id: string;
   name: string;
@@ -14,6 +62,11 @@ export interface ToolDef {
   };
 }
 
+export interface JobMaterialNeed {
+  supplyId: string;
+  quantity: number;
+}
+
 export interface JobDef {
   id: string;
   name: string;
@@ -26,6 +79,8 @@ export interface JobDef {
   repGainSuccess: number;
   repLossFail: number;
   durabilityCost: number;
+  workUnits: number;
+  materialNeeds: JobMaterialNeed[];
   tags: string[];
   flavor: {
     client_quote: string;
@@ -59,6 +114,12 @@ export interface DistrictDef {
   id: string;
   name: string;
   tier: number;
+  travel: {
+    shopToSiteTicks: number;
+    shopToSiteFuel: number;
+    supplierToSiteTicks: number;
+    supplierToSiteFuel: number;
+  };
   flavor: {
     description: string;
   };
@@ -80,12 +141,24 @@ export interface StringsDef {
   title: string;
   subtitle: string;
   continueMissing: string;
+  continueIncompatible: string;
   dayReportTitle: string;
   storeTitle: string;
   companyTitle: string;
+  supplierTitle: string;
+  workdayTitle: string;
   assignmentHint: string;
   noContracts: string;
   neutralLogFallback: string;
+  crewDeferred: string;
+  fuelLabel: string;
+  homeSuppliesTitle: string;
+  truckSuppliesTitle: string;
+  siteSuppliesTitle: string;
+  skillsTitle: string;
+  activeJobTitle: string;
+  boardTitle: string;
+  overtimeLabel: string;
 }
 
 export interface ToolInstance {
@@ -112,6 +185,9 @@ export interface ActorState {
   districtUnlocks: string[];
   staminaMax: number;
   stamina: number;
+  fuel: number;
+  fuelMax: number;
+  skills: Record<SkillId, number>;
   tools: Record<string, ToolInstance>;
   crews: CrewState[];
 }
@@ -155,10 +231,84 @@ export interface DayLog {
   day: number;
   actorId: string;
   contractId?: string;
+  taskId?: TaskId;
   message: string;
 }
 
+export type SupplyInventory = Record<string, number>;
+
+export interface CartLine {
+  supplyId: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface TaskSkillMapping {
+  primary: SkillId;
+  secondary?: SkillId;
+}
+
+export interface ActiveTaskState {
+  taskId: TaskId;
+  label: string;
+  location: LocationId;
+  baseTicks: number;
+  requiredUnits: number;
+  completedUnits: number;
+  qualityBearing: boolean;
+  availableStances: TaskStance[];
+}
+
+export interface FatigueState {
+  debt: number;
+}
+
+export interface WorkdayState {
+  ticksPerDay: number;
+  availableTicks: number;
+  ticksSpent: number;
+  overtimeUsed: number;
+  maxOvertime: number;
+  weekday: Weekday;
+  fatigue: FatigueState;
+}
+
+export interface ActiveJobState {
+  contractId: string;
+  jobId: string;
+  districtId: string;
+  acceptedDay: number;
+  lockedPayout: number;
+  location: LocationId;
+  qualityPoints: number;
+  reworkCount: number;
+  plannedTicks: number;
+  actualTicksSpent: number;
+  materialsReserved: boolean;
+  siteSupplies: SupplyInventory;
+  supplierCart: Record<string, number>;
+  tasks: ActiveTaskState[];
+  outcome?: Outcome;
+}
+
+export interface TaskUnitResult {
+  day: number;
+  taskId: TaskId;
+  stance: TaskStance;
+  timeOutcome: TaskTimeOutcome;
+  qualityOutcome?: TaskQualityOutcome;
+  ticksSpent: number;
+  unitsCompleted: number;
+  qualityPointsDelta: number;
+  skillXpDelta: Partial<Record<SkillId, number>>;
+  reworkAdded: number;
+  location: LocationId;
+  logLines: string[];
+  digest: string;
+}
+
 export interface GameState {
+  saveVersion: number;
   day: number;
   seed: number;
   player: ActorState;
@@ -166,6 +316,10 @@ export interface GameState {
   contractBoard: ContractInstance[];
   activeEventIds: string[];
   log: DayLog[];
+  activeJob: ActiveJobState | null;
+  shopSupplies: SupplyInventory;
+  truckSupplies: SupplyInventory;
+  workday: WorkdayState;
 }
 
 export interface ContentBundle {
@@ -174,6 +328,7 @@ export interface ContentBundle {
   events: EventDef[];
   districts: DistrictDef[];
   bots: BotProfile[];
+  supplies: SupplyDef[];
   strings: StringsDef;
 }
 

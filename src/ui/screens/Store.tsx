@@ -4,7 +4,9 @@ export function Store() {
   const game = useUiStore((state) => state.game);
   const buyTool = useUiStore((state) => state.buyTool);
   const repairTool = useUiStore((state) => state.repairTool);
+  const buyFuel = useUiStore((state) => state.buyFuel);
   const goTo = useUiStore((state) => state.goTo);
+  const notice = useUiStore((state) => state.notice);
 
   if (!game) {
     return (
@@ -15,10 +17,28 @@ export function Store() {
     );
   }
 
+  const atShop = !game.activeJob || game.activeJob.location === "shop";
+
   return (
     <main className="screen">
       <h2>{bundle.strings.storeTitle}</h2>
-      <p>Cash: ${game.player.cash}</p>
+      <p>
+        Cash: ${game.player.cash} | Fuel: {game.player.fuel}/{game.player.fuelMax}
+      </p>
+      {!atShop ? <p className="notice">Return to the shop before using the tool bench.</p> : null}
+
+      <section className="card">
+        <h3>Fuel Pump</h3>
+        <div className="stack-row">
+          <button onClick={() => buyFuel(1)} disabled={!atShop}>
+            Buy 1 Fuel (${6})
+          </button>
+          <button onClick={() => buyFuel(game.player.fuelMax - game.player.fuel)} disabled={!atShop}>
+            Fill Tank
+          </button>
+        </div>
+      </section>
+
       <div className="list">
         {bundle.tools.map((tool) => {
           const owned = game.player.tools[tool.id];
@@ -32,8 +52,10 @@ export function Store() {
                 Durability: {owned ? `${owned.durability}/${tool.maxDurability}` : "not owned"}
               </p>
               <div className="stack-row">
-                <button onClick={() => buyTool(tool.id)}>Buy</button>
-                <button onClick={() => repairTool(tool.id)} disabled={!canRepair}>
+                <button onClick={() => buyTool(tool.id)} disabled={!atShop}>
+                  Buy
+                </button>
+                <button onClick={() => repairTool(tool.id)} disabled={!atShop || !canRepair}>
                   Repair
                 </button>
               </div>
@@ -41,6 +63,20 @@ export function Store() {
           );
         })}
       </div>
+
+      <section className="card">
+        <h3>{bundle.strings.homeSuppliesTitle}</h3>
+        {Object.entries(game.shopSupplies).filter(([, quantity]) => quantity > 0).length === 0 ? <p>No stock on hand.</p> : null}
+        {Object.entries(game.shopSupplies)
+          .filter(([, quantity]) => quantity > 0)
+          .map(([supplyId, quantity]) => (
+            <p key={supplyId}>
+              {supplyId}: {quantity}
+            </p>
+          ))}
+      </section>
+
+      {notice ? <p className="notice">{notice}</p> : null}
       <button onClick={() => goTo("main")}>Back To Main</button>
     </main>
   );

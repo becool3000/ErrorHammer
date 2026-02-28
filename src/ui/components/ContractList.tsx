@@ -1,49 +1,42 @@
-import { ActorState, AssignmentIntent, ContractInstance, JobDef } from "../../core/types";
+import { ActorState, ContractInstance, JobDef } from "../../core/types";
 
 interface ContractListProps {
   contracts: ContractInstance[];
   player: ActorState;
   jobsById: Map<string, JobDef>;
-  pendingAssignments: AssignmentIntent[];
-  onToggle: (contractId: string, assignee?: AssignmentIntent["assignee"]) => void;
+  onAccept: (contractId: string) => void;
 }
 
-export function ContractList({ contracts, player, jobsById, pendingAssignments, onToggle }: ContractListProps) {
+export function ContractList({ contracts, player, jobsById, onAccept }: ContractListProps) {
   return (
     <section className="card">
       <h2>Contract Board</h2>
+      {contracts.length === 0 ? <p>No open contracts this shift.</p> : null}
       {contracts.map((contract) => {
         const job = jobsById.get(contract.jobId);
         if (!job) {
           return null;
         }
 
-        const selectedSelf = pendingAssignments.some(
-          (item) => item.contractId === contract.contractId && item.assignee === "self"
-        );
+        const hasTools = job.requiredTools.every((toolId) => (player.tools[toolId]?.durability ?? 0) > 0);
+        const payout = Math.round(job.basePayout * contract.payoutMult);
 
         return (
           <article key={contract.contractId} className="list-item">
             <h3>{job.name}</h3>
             <p>{job.flavor.client_quote}</p>
             <p>
-              Payout: ${Math.round(job.basePayout * contract.payoutMult)} | Risk: {Math.round(job.risk * 100)}% | Stamina: {job.staminaCost}
+              Payout: ${payout} | Work Units: {job.workUnits} | Risk: {Math.round(job.risk * 100)}%
             </p>
             <p>Tools: {job.requiredTools.join(", ")}</p>
+            <p>
+              Materials:{" "}
+              {job.materialNeeds.map((material) => `${material.supplyId} x${material.quantity}`).join(", ")}
+            </p>
             <div className="stack-row">
-              <button onClick={() => onToggle(contract.contractId, "self")}>
-                {selectedSelf ? "Unassign Self" : "Assign Self"}
+              <button onClick={() => onAccept(contract.contractId)} disabled={!hasTools}>
+                {hasTools ? "Accept Job" : "Missing Tools"}
               </button>
-              {player.crews.map((crew) => {
-                const selectedCrew = pendingAssignments.some(
-                  (item) => item.contractId === contract.contractId && item.assignee === crew.crewId
-                );
-                return (
-                  <button key={crew.crewId} onClick={() => onToggle(contract.contractId, crew.crewId)}>
-                    {selectedCrew ? `Unassign ${crew.name}` : `Assign ${crew.name}`}
-                  </button>
-                );
-              })}
             </div>
           </article>
         );

@@ -5,11 +5,22 @@
   "items": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "name", "tier", "flavor"],
+    "required": ["id", "name", "tier", "travel", "flavor"],
     "properties": {
       "id": { "type": "string", "minLength": 2 },
       "name": { "type": "string", "minLength": 2 },
       "tier": { "type": "integer", "minimum": 1, "maximum": 5 },
+      "travel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shopToSiteTicks", "shopToSiteFuel", "supplierToSiteTicks", "supplierToSiteFuel"],
+        "properties": {
+          "shopToSiteTicks": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "shopToSiteFuel": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "supplierToSiteTicks": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "supplierToSiteFuel": { "type": "integer", "minimum": 1, "maximum": 12 }
+        }
+      },
       "flavor": {
         "type": "object",
         "additionalProperties": false,

@@ -18,6 +18,9 @@ export function loadContentBundle(): ContentBundle {
   if (!Array.isArray(bundle.bots)) {
     throw new Error("Invalid generated content: missing bots[]");
   }
+  if (!Array.isArray(bundle.supplies)) {
+    throw new Error("Invalid generated content: missing supplies[]");
+  }
   if (!bundle.strings || typeof bundle.strings !== "object") {
     throw new Error("Invalid generated content: missing strings");
   }

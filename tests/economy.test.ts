@@ -17,7 +17,9 @@ const bundle: ContentBundle = {
       repGainSuccess: 1,
       repLossFail: 1,
       durabilityCost: 1,
-      tags: ["outdoor"],
+      workUnits: 4,
+      materialNeeds: [{ supplyId: "anchor-set", quantity: 1 }],
+      tags: ["outdoor", "general"],
       flavor: {
         client_quote: "q",
         success_line: "s",
@@ -37,7 +39,9 @@ const bundle: ContentBundle = {
       repGainSuccess: 1,
       repLossFail: 1,
       durabilityCost: 1,
-      tags: ["outdoor"],
+      workUnits: 4,
+      materialNeeds: [{ supplyId: "anchor-set", quantity: 1 }],
+      tags: ["outdoor", "general"],
       flavor: {
         client_quote: "q",
         success_line: "s",
@@ -52,20 +56,47 @@ const bundle: ContentBundle = {
       id: "residential",
       name: "Residential",
       tier: 1,
+      travel: {
+        shopToSiteTicks: 2,
+        shopToSiteFuel: 1,
+        supplierToSiteTicks: 2,
+        supplierToSiteFuel: 1
+      },
       flavor: { description: "desc" }
     }
   ],
   bots: [],
+  supplies: [
+    {
+      id: "anchor-set",
+      name: "Anchor Set",
+      price: 10,
+      tags: ["general"],
+      flavor: { description: "d", quip_buy: "b" }
+    }
+  ],
   strings: {
     title: "a",
     subtitle: "b",
     continueMissing: "c",
-    dayReportTitle: "d",
-    storeTitle: "e",
-    companyTitle: "f",
-    assignmentHint: "g",
-    noContracts: "h",
-    neutralLogFallback: "i"
+    continueIncompatible: "d",
+    dayReportTitle: "e",
+    storeTitle: "f",
+    companyTitle: "g",
+    supplierTitle: "h",
+    workdayTitle: "i",
+    assignmentHint: "j",
+    noContracts: "k",
+    neutralLogFallback: "l",
+    crewDeferred: "m",
+    fuelLabel: "n",
+    homeSuppliesTitle: "o",
+    truckSuppliesTitle: "p",
+    siteSuppliesTitle: "q",
+    skillsTitle: "r",
+    activeJobTitle: "s",
+    boardTitle: "t",
+    overtimeLabel: "u"
   }
 };
 

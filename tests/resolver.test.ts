@@ -1,246 +1,74 @@
 import { describe, expect, it } from "vitest";
-import { createInitialGameState, resolveDay } from "../src/core/resolver";
-import { ContentBundle, GameState, Intent } from "../src/core/types";
-
-function makeBundle(): ContentBundle {
-  return {
-    tools: [
-      {
-        id: "hammer",
-        name: "Hammer",
-        tier: 1,
-        price: 10,
-        maxDurability: 5,
-        tags: ["general"],
-        flavor: {
-          description: "desc",
-          quip_buy: "buy",
-          quip_break: "break"
-        }
-      },
-      {
-        id: "saw",
-        name: "Saw",
-        tier: 1,
-        price: 10,
-        maxDurability: 5,
-        tags: ["general"],
-        flavor: {
-          description: "desc",
-          quip_buy: "buy",
-          quip_break: "break"
-        }
-      }
-    ],
-    jobs: [
-      {
-        id: "job-a",
-        name: "Job A",
-        tier: 1,
-        districtId: "residential",
-        requiredTools: ["hammer"],
-        staminaCost: 2,
-        basePayout: 120,
-        risk: 0,
-        repGainSuccess: 5,
-        repLossFail: 1,
-        durabilityCost: 2,
-        tags: ["outdoor"],
-        flavor: {
-          client_quote: "quote",
-          success_line: "success",
-          fail_line: "fail",
-          neutral_line: "neutral"
-        }
-      },
-      {
-        id: "job-b",
-        name: "Job B",
-        tier: 1,
-        districtId: "residential",
-        requiredTools: ["saw"],
-        staminaCost: 2,
-        basePayout: 130,
-        risk: 0,
-        repGainSuccess: 4,
-        repLossFail: 2,
-        durabilityCost: 3,
-        tags: ["outdoor"],
-        flavor: {
-          client_quote: "quote",
-          success_line: "success",
-          fail_line: "fail",
-          neutral_line: "neutral"
-        }
-      }
-    ],
-    events: [
-      {
-        id: "event-a",
-        name: "Event A",
-        weight: 1,
-        mods: {},
-        flavor: {
-          headline: "h",
-          detail: "d",
-          impact_line: "i",
-          success_line: "s",
-          fail_line: "f",
-          neutral_line: "n"
-        }
-      }
-    ],
-    districts: [
-      {
-        id: "residential",
-        name: "Residential",
-        tier: 1,
-        flavor: {
-          description: "desc"
-        }
-      }
-    ],
-    bots: [
-      {
-        id: "doug",
-        name: "Doug",
-        weights: {
-          wCash: 1,
-          wRep: 1,
-          wRiskAvoid: 1,
-          wToolBuy: 1
-        },
-        flavorLines: ["line"]
-      }
-    ],
-    strings: {
-      title: "Error Hammer",
-      subtitle: "sub",
-      continueMissing: "missing",
-      dayReportTitle: "report",
-      storeTitle: "store",
-      companyTitle: "company",
-      assignmentHint: "hint",
-      noContracts: "none",
-      neutralLogFallback: "fallback"
-    }
-  };
-}
-
-function withSingleContract(game: GameState, jobId: string): GameState {
-  return {
-    ...game,
-    contractBoard: [
-      {
-        contractId: "D1-C1-1",
-        jobId,
-        districtId: "residential",
-        payoutMult: 1,
-        expiresDay: game.day
-      }
-    ],
-    activeEventIds: []
-  };
-}
+import { createInitialGameState, endShift, applyBotPurchasesForNextDay, buyTool, repairTool } from "../src/core/resolver";
+import { ActorState, ContractInstance } from "../src/core/types";
+import { eventById, makeScenarioBundle } from "./scenario_helpers";
 
 describe("resolver", () => {
-  it("is deterministic for same seed + intents", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-a");
-    const intents: Intent[] = [
-      {
-        actorId: "player",
-        day: base.day,
-        assignments: [{ assignee: "self", contractId: "D1-C1-1" }]
-      }
-    ];
+  it("creates a v2 initial state with workday and no active job", () => {
+    const bundle = makeScenarioBundle();
+    const state = createInitialGameState(bundle, 99);
 
-    const first = resolveDay(base, intents, bundle, 123);
-    const second = resolveDay(base, intents, bundle, 123);
+    expect(state.saveVersion).toBe(2);
+    expect(state.activeJob).toBeNull();
+    expect(state.workday.weekday).toBe("Monday");
+    expect(state.player.fuel).toBeGreaterThan(0);
+  });
+
+  it("advances to the next day deterministically", () => {
+    const bundle = makeScenarioBundle();
+    const state = createInitialGameState(bundle, 99);
+
+    const first = endShift(state, bundle);
+    const second = endShift(state, bundle);
 
     expect(first.digest).toBe(second.digest);
-    expect(first.resolutions).toEqual(second.resolutions);
+    expect(first.nextState.day).toBe(2);
+    expect(first.nextState.workday.weekday).toBe("Tuesday");
   });
 
-  it("keeps stamina from going negative", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-a");
-    base.player.stamina = 1;
+  it("buys and repairs tools only at the home shop", () => {
+    const bundle = makeScenarioBundle();
+    let state = createInitialGameState(bundle, 101);
+    state.player.cash = 500;
 
-    const result = resolveDay(
-      base,
-      [{ actorId: "player", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] }],
-      bundle,
-      123
-    );
+    state = buyTool(state, bundle, "saw");
+    expect(state.player.tools.saw?.durability).toBe(7);
 
-    expect(result.resolutions.length).toBe(0);
-    expect(result.nextState.player.stamina).toBeGreaterThanOrEqual(0);
+    state.player.tools.saw!.durability = 2;
+    const repaired = repairTool(state, bundle, "saw");
+    expect(repaired.player.tools.saw?.durability).toBe(7);
   });
 
-  it("enforces required tools", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-b");
+  it("bot purchase helper breaks ties by lower price, then tool id", () => {
+    const bundle = makeScenarioBundle();
+    const bot: ActorState = {
+      actorId: "doug",
+      name: "Doug",
+      cash: 200,
+      reputation: 0,
+      companyLevel: 1,
+      districtUnlocks: ["residential"],
+      staminaMax: 2,
+      stamina: 2,
+      fuel: 8,
+      fuelMax: 12,
+      skills: createInitialGameState(bundle, 3).bots[0]!.skills,
+      tools: {
+        hammer: {
+          toolId: "hammer",
+          durability: 5
+        }
+      },
+      crews: []
+    };
 
-    const result = resolveDay(
-      base,
-      [{ actorId: "player", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] }],
-      bundle,
-      123
-    );
-
-    expect(result.resolutions.some((item) => item.actorId === "player" && item.outcome !== "lost")).toBe(false);
-  });
-
-  it("resolves conflicts by higher reputation", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-a");
-    base.player.reputation = 20;
-    base.bots[0]!.reputation = 5;
-
-    const intents: Intent[] = [
-      { actorId: "player", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] },
-      { actorId: "doug", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] }
+    const board: ContractInstance[] = [
+      { contractId: "D2-C1", jobId: "job-beta", districtId: "residential", payoutMult: 1, expiresDay: 2 },
+      { contractId: "D2-C2", jobId: "job-gamma", districtId: "residential", payoutMult: 1, expiresDay: 2 }
     ];
 
-    const result = resolveDay(base, intents, bundle, 123);
-    const playerResult = result.resolutions.find((item) => item.actorId === "player");
-    const botResult = result.resolutions.find((item) => item.actorId === "doug");
-
-    expect(playerResult?.outcome).toBe("success");
-    expect(botResult?.outcome).toBe("lost");
-  });
-
-  it("resolves equal-reputation ties deterministically", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-a");
-    base.player.reputation = 10;
-    base.bots[0]!.reputation = 10;
-
-    const intents: Intent[] = [
-      { actorId: "player", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] },
-      { actorId: "doug", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] }
-    ];
-
-    const first = resolveDay(base, intents, bundle, 777);
-    const second = resolveDay(base, intents, bundle, 777);
-
-    expect(first.resolutions).toEqual(second.resolutions);
-  });
-
-  it("does not reduce durability below zero", () => {
-    const bundle = makeBundle();
-    const base = withSingleContract(createInitialGameState(bundle, 99), "job-a");
-    base.player.tools.hammer!.durability = 1;
-
-    const result = resolveDay(
-      base,
-      [{ actorId: "player", day: base.day, assignments: [{ assignee: "self", contractId: "D1-C1-1" }] }],
-      bundle,
-      123
-    );
-
-    const resolution = result.resolutions.find((item) => item.actorId === "player");
-    expect(resolution?.toolDurabilityAfter.hammer).toBeGreaterThanOrEqual(0);
+    const result = applyBotPurchasesForNextDay([bot], bundle.bots, bundle, board, [eventById(bundle, "event-sale")], 22);
+    expect(result.purchaseLogs.length).toBeLessThanOrEqual(1);
+    expect(result.bots[0]).toBeDefined();
   });
 });

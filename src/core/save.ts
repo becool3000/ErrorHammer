@@ -1,12 +1,14 @@
 import { GameState } from "./types";
 
-const SAVE_KEY = "error-hammer-save-v1";
+export const SAVE_VERSION = 2;
+const SAVE_KEY_V2 = "error-hammer-save-v2";
+const SAVE_KEY_V1 = "error-hammer-save-v1";
 
 export function save(state: GameState): void {
   if (typeof localStorage === "undefined") {
     return;
   }
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  localStorage.setItem(SAVE_KEY_V2, JSON.stringify(state));
 }
 
 export function load(): GameState | null {
@@ -14,21 +16,32 @@ export function load(): GameState | null {
     return null;
   }
 
-  const raw = localStorage.getItem(SAVE_KEY);
+  const raw = localStorage.getItem(SAVE_KEY_V2);
   if (!raw) {
     return null;
   }
 
   try {
-    return JSON.parse(raw) as GameState;
+    const parsed = JSON.parse(raw) as Partial<GameState>;
+    if (parsed.saveVersion !== SAVE_VERSION) {
+      return null;
+    }
+    return parsed as GameState;
   } catch {
     return null;
   }
+}
+
+export function hasIncompatibleLegacySave(): boolean {
+  if (typeof localStorage === "undefined") {
+    return false;
+  }
+  return Boolean(localStorage.getItem(SAVE_KEY_V1)) && !localStorage.getItem(SAVE_KEY_V2);
 }
 
 export function clear(): void {
   if (typeof localStorage === "undefined") {
     return;
   }
-  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(SAVE_KEY_V2);
 }

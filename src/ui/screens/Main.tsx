@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { applyToolPriceModifiers } from "../../core/economy";
+import { getCurrentTask } from "../../core/playerFlow";
 import { DayReport } from "../components/DayReport";
 import { AssignmentPanel } from "../components/AssignmentPanel";
 import { ContractList } from "../components/ContractList";
@@ -7,12 +9,13 @@ import { bundle, useUiStore } from "../state";
 
 export function Main() {
   const game = useUiStore((state) => state.game);
-  const pendingAssignments = useUiStore((state) => state.pendingAssignments);
-  const toggleAssignment = useUiStore((state) => state.toggleAssignment);
-  const clearAssignments = useUiStore((state) => state.clearAssignments);
-  const confirmDay = useUiStore((state) => state.confirmDay);
+  const accept = useUiStore((state) => state.acceptContract);
+  const setCartQuantity = useUiStore((state) => state.setCartQuantity);
+  const performTask = useUiStore((state) => state.performTaskUnit);
+  const endShift = useUiStore((state) => state.endShift);
   const goTo = useUiStore((state) => state.goTo);
-  const lastResult = useUiStore((state) => state.lastResult);
+  const lastAction = useUiStore((state) => state.lastAction);
+  const notice = useUiStore((state) => state.notice);
 
   const jobsById = useMemo(() => new Map(bundle.jobs.map((job) => [job.id, job])), []);
 
@@ -26,33 +29,41 @@ export function Main() {
   }
 
   const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
+  const currentTask = getCurrentTask(game);
+  const activeJob = game.activeJob;
+  const activeJobDef = activeJob ? jobsById.get(activeJob.jobId) : null;
+  const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
 
   return (
     <main className="screen main-screen">
       <section className="main-top">
-        <StatsPanel day={game.day} player={game.player} activeEvents={activeEvents} />
-        <ContractList
-          contracts={game.contractBoard}
-          player={game.player}
-          jobsById={jobsById}
-          pendingAssignments={pendingAssignments}
-          onToggle={toggleAssignment}
-        />
-        <AssignmentPanel
-          assignments={pendingAssignments}
-          contracts={game.contractBoard}
-          jobsById={jobsById}
-          onClear={clearAssignments}
-          onConfirm={confirmDay}
-        />
+        <StatsPanel day={game.day} player={game.player} workday={game.workday} activeEvents={activeEvents} />
+        {activeJob && activeJobDef ? (
+          <AssignmentPanel
+            activeJob={activeJob}
+            job={activeJobDef}
+            supplies={bundle.supplies}
+            supplyPrices={supplyPrices}
+            truckSupplies={game.truckSupplies}
+            shopSupplies={game.shopSupplies}
+            currentTask={currentTask}
+            lastAction={lastAction}
+            onSetCartQuantity={setCartQuantity}
+            onPerformTask={performTask}
+          />
+        ) : (
+          <ContractList contracts={game.contractBoard} player={game.player} jobsById={jobsById} onAccept={accept} />
+        )}
+        <DayReport game={game} lastAction={lastAction} />
       </section>
 
       <section className="main-actions">
         <button onClick={() => goTo("store")}>Store</button>
         <button onClick={() => goTo("company")}>Company</button>
+        <button onClick={() => endShift()}>End Shift</button>
       </section>
 
-      {lastResult ? <DayReport result={lastResult} /> : null}
+      {notice ? <p className="notice">{notice}</p> : null}
     </main>
   );
 }

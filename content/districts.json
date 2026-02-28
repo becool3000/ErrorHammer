@@ -3,6 +3,12 @@
     "id": "residential",
     "name": "Residential",
     "tier": 1,
+    "travel": {
+      "shopToSiteTicks": 2,
+      "shopToSiteFuel": 1,
+      "supplierToSiteTicks": 2,
+      "supplierToSiteFuel": 1
+    },
     "flavor": {
       "description": "Porches, fences, and well-meaning weekend projects."
     }
@@ -11,6 +17,12 @@
     "id": "small-commercial",
     "name": "Small Commercial",
     "tier": 2,
+    "travel": {
+      "shopToSiteTicks": 3,
+      "shopToSiteFuel": 2,
+      "supplierToSiteTicks": 3,
+      "supplierToSiteFuel": 2
+    },
     "flavor": {
       "description": "Shops, studios, and coffee-powered deadlines."
     }
@@ -19,6 +31,12 @@
     "id": "civic-lite",
     "name": "Civic Lite",
     "tier": 3,
+    "travel": {
+      "shopToSiteTicks": 4,
+      "shopToSiteFuel": 3,
+      "supplierToSiteTicks": 4,
+      "supplierToSiteFuel": 3
+    },
     "flavor": {
       "description": "Tiny public projects with very sincere committees."
     }

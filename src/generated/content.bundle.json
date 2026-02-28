@@ -38,7 +38,13 @@
       },
       "id": "civic-lite",
       "name": "Civic Lite",
-      "tier": 3
+      "tier": 3,
+      "travel": {
+        "shopToSiteFuel": 3,
+        "shopToSiteTicks": 4,
+        "supplierToSiteFuel": 3,
+        "supplierToSiteTicks": 4
+      }
     },
     {
       "flavor": {
@@ -46,7 +52,13 @@
       },
       "id": "residential",
       "name": "Residential",
-      "tier": 1
+      "tier": 1,
+      "travel": {
+        "shopToSiteFuel": 1,
+        "shopToSiteTicks": 2,
+        "supplierToSiteFuel": 1,
+        "supplierToSiteTicks": 2
+      }
     },
     {
       "flavor": {
@@ -54,7 +66,13 @@
       },
       "id": "small-commercial",
       "name": "Small Commercial",
-      "tier": 2
+      "tier": 2,
+      "travel": {
+        "shopToSiteFuel": 2,
+        "shopToSiteTicks": 3,
+        "supplierToSiteFuel": 2,
+        "supplierToSiteTicks": 3
+      }
     }
   ],
   "events": [
@@ -320,6 +338,16 @@
         "success_line": "Porch Rail Tighten no longer looks experimental."
       },
       "id": "job-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Porch Rail Tighten",
       "repGainSuccess": 3,
       "repLossFail": 1,
@@ -333,7 +361,8 @@
         "finish",
         "outdoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 95,
@@ -346,6 +375,16 @@
         "success_line": "Mailbox Post Reset no longer looks experimental."
       },
       "id": "job-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Mailbox Post Reset",
       "repGainSuccess": 3,
       "repLossFail": 1,
@@ -359,7 +398,8 @@
         "framing",
         "outdoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 125,
@@ -372,6 +412,16 @@
         "success_line": "Kitchen Shelf Mount no longer looks experimental."
       },
       "id": "job-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Kitchen Shelf Mount",
       "repGainSuccess": 4,
       "repLossFail": 1,
@@ -385,7 +435,8 @@
         "finish",
         "indoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 118,
@@ -398,6 +449,16 @@
         "success_line": "Leaky Tap Trim no longer looks experimental."
       },
       "id": "job-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "sealant-tube"
+        }
+      ],
       "name": "Leaky Tap Trim",
       "repGainSuccess": 4,
       "repLossFail": 1,
@@ -411,7 +472,8 @@
         "indoor",
         "plumbing"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 135,
@@ -424,6 +486,16 @@
         "success_line": "Fence Panel Patch no longer looks experimental."
       },
       "id": "job-005",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Fence Panel Patch",
       "repGainSuccess": 4,
       "repLossFail": 2,
@@ -437,7 +509,8 @@
         "framing",
         "outdoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 105,
@@ -450,6 +523,16 @@
         "success_line": "Closet Door Align no longer looks experimental."
       },
       "id": "job-006",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Closet Door Align",
       "repGainSuccess": 3,
       "repLossFail": 1,
@@ -463,7 +546,8 @@
         "finish",
         "indoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 112,
@@ -476,6 +560,16 @@
         "success_line": "Drywall Corner Rescue no longer looks experimental."
       },
       "id": "job-007",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Drywall Corner Rescue",
       "repGainSuccess": 3,
       "repLossFail": 1,
@@ -489,7 +583,8 @@
         "finish",
         "indoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 145,
@@ -502,6 +597,16 @@
         "success_line": "Attic Ladder Brace no longer looks experimental."
       },
       "id": "job-008",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "roof-patch"
+        }
+      ],
       "name": "Attic Ladder Brace",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -515,7 +620,8 @@
         "outdoor",
         "roof"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 5
     },
     {
       "basePayout": 138,
@@ -528,6 +634,16 @@
         "success_line": "Deck Board Swap no longer looks experimental."
       },
       "id": "job-009",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Deck Board Swap",
       "repGainSuccess": 4,
       "repLossFail": 2,
@@ -541,7 +657,8 @@
         "framing",
         "outdoor"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 98,
@@ -554,6 +671,16 @@
         "success_line": "Bathroom Caulk Reboot no longer looks experimental."
       },
       "id": "job-010",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "sealant-tube"
+        }
+      ],
       "name": "Bathroom Caulk Reboot",
       "repGainSuccess": 3,
       "repLossFail": 1,
@@ -567,7 +694,8 @@
         "indoor",
         "seal"
       ],
-      "tier": 1
+      "tier": 1,
+      "workUnits": 4
     },
     {
       "basePayout": 175,
@@ -580,6 +708,16 @@
         "success_line": "Cafe Counter Shim no longer looks experimental."
       },
       "id": "job-011",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Cafe Counter Shim",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -593,7 +731,8 @@
         "commercial",
         "finish"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 190,
@@ -606,6 +745,16 @@
         "success_line": "Shop Sign Rehang no longer looks experimental."
       },
       "id": "job-012",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Shop Sign Rehang",
       "repGainSuccess": 6,
       "repLossFail": 2,
@@ -619,7 +768,8 @@
         "commercial",
         "outdoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 205,
@@ -632,6 +782,16 @@
         "success_line": "Office Partition Fix no longer looks experimental."
       },
       "id": "job-013",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Office Partition Fix",
       "repGainSuccess": 6,
       "repLossFail": 2,
@@ -645,7 +805,8 @@
         "framing",
         "indoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 182,
@@ -658,6 +819,16 @@
         "success_line": "Bakery Sink Clamp no longer looks experimental."
       },
       "id": "job-014",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "sealant-tube"
+        }
+      ],
       "name": "Bakery Sink Clamp",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -671,7 +842,8 @@
         "commercial",
         "plumbing"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 220,
@@ -684,6 +856,16 @@
         "success_line": "Studio Light Track no longer looks experimental."
       },
       "id": "job-015",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "junction-box"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "wire-spool"
+        }
+      ],
       "name": "Studio Light Track",
       "repGainSuccess": 7,
       "repLossFail": 3,
@@ -697,7 +879,8 @@
         "electrical",
         "indoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 7
     },
     {
       "basePayout": 188,
@@ -710,6 +893,16 @@
         "success_line": "Retail Shelf Anchor no longer looks experimental."
       },
       "id": "job-016",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Retail Shelf Anchor",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -723,7 +916,8 @@
         "commercial",
         "finish"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 196,
@@ -736,6 +930,16 @@
         "success_line": "Warehouse Door Tune no longer looks experimental."
       },
       "id": "job-017",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "hinge-pack"
+        }
+      ],
       "name": "Warehouse Door Tune",
       "repGainSuccess": 6,
       "repLossFail": 2,
@@ -749,7 +953,8 @@
         "commercial",
         "mechanical"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 210,
@@ -762,6 +967,16 @@
         "success_line": "Patio Awning Joint no longer looks experimental."
       },
       "id": "job-018",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "roof-patch"
+        }
+      ],
       "name": "Patio Awning Joint",
       "repGainSuccess": 7,
       "repLossFail": 3,
@@ -775,7 +990,8 @@
         "outdoor",
         "roof"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 170,
@@ -788,6 +1004,16 @@
         "success_line": "Mini Clinic Trim no longer looks experimental."
       },
       "id": "job-019",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Mini Clinic Trim",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -801,7 +1027,8 @@
         "finish",
         "indoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 200,
@@ -814,6 +1041,16 @@
         "success_line": "Co-Op Ramp Brace no longer looks experimental."
       },
       "id": "job-020",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Co-Op Ramp Brace",
       "repGainSuccess": 6,
       "repLossFail": 2,
@@ -827,7 +1064,8 @@
         "framing",
         "outdoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 214,
@@ -840,6 +1078,16 @@
         "success_line": "Workshop Vent Frame no longer looks experimental."
       },
       "id": "job-021",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Workshop Vent Frame",
       "repGainSuccess": 7,
       "repLossFail": 3,
@@ -853,7 +1101,8 @@
         "commercial",
         "framing"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 7
     },
     {
       "basePayout": 185,
@@ -866,6 +1115,16 @@
         "success_line": "Parking Bollard Reset no longer looks experimental."
       },
       "id": "job-022",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Parking Bollard Reset",
       "repGainSuccess": 5,
       "repLossFail": 2,
@@ -879,7 +1138,8 @@
         "civic",
         "outdoor"
       ],
-      "tier": 2
+      "tier": 2,
+      "workUnits": 6
     },
     {
       "basePayout": 245,
@@ -892,6 +1152,16 @@
         "success_line": "Library Step Reinforce no longer looks experimental."
       },
       "id": "job-023",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "paint-sleeve"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "trim-kit"
+        }
+      ],
       "name": "Library Step Reinforce",
       "repGainSuccess": 8,
       "repLossFail": 3,
@@ -906,7 +1176,8 @@
         "civic",
         "finish"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     },
     {
       "basePayout": 260,
@@ -919,6 +1190,16 @@
         "success_line": "Park Bench Retrofit no longer looks experimental."
       },
       "id": "job-024",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Park Bench Retrofit",
       "repGainSuccess": 8,
       "repLossFail": 3,
@@ -933,7 +1214,8 @@
         "civic",
         "outdoor"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     },
     {
       "basePayout": 252,
@@ -946,6 +1228,16 @@
         "success_line": "Community Hall Rail no longer looks experimental."
       },
       "id": "job-025",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Community Hall Rail",
       "repGainSuccess": 8,
       "repLossFail": 3,
@@ -960,7 +1252,8 @@
         "civic",
         "indoor"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     },
     {
       "basePayout": 275,
@@ -973,6 +1266,16 @@
         "success_line": "Bus Shelter Panel no longer looks experimental."
       },
       "id": "job-026",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Bus Shelter Panel",
       "repGainSuccess": 9,
       "repLossFail": 3,
@@ -987,7 +1290,8 @@
         "civic",
         "outdoor"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     },
     {
       "basePayout": 268,
@@ -1000,6 +1304,16 @@
         "success_line": "Rec Center Door Set no longer looks experimental."
       },
       "id": "job-027",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "hinge-pack"
+        }
+      ],
       "name": "Rec Center Door Set",
       "repGainSuccess": 8,
       "repLossFail": 3,
@@ -1014,7 +1328,8 @@
         "civic",
         "mechanical"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     },
     {
       "basePayout": 282,
@@ -1027,6 +1342,16 @@
         "success_line": "Public Kiosk Cable Cover no longer looks experimental."
       },
       "id": "job-028",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "junction-box"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "wire-spool"
+        }
+      ],
       "name": "Public Kiosk Cable Cover",
       "repGainSuccess": 9,
       "repLossFail": 4,
@@ -1041,7 +1366,8 @@
         "civic",
         "electrical"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 10
     },
     {
       "basePayout": 290,
@@ -1054,6 +1380,16 @@
         "success_line": "Footbridge Deck Strip no longer looks experimental."
       },
       "id": "job-029",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Footbridge Deck Strip",
       "repGainSuccess": 9,
       "repLossFail": 4,
@@ -1068,7 +1404,8 @@
         "civic",
         "outdoor"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 10
     },
     {
       "basePayout": 255,
@@ -1081,6 +1418,16 @@
         "success_line": "Town Notice Board Rebuild no longer looks experimental."
       },
       "id": "job-030",
+      "materialNeeds": [
+        {
+          "quantity": 5,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 5,
+          "supplyId": "fastener-box"
+        }
+      ],
       "name": "Town Notice Board Rebuild",
       "repGainSuccess": 8,
       "repLossFail": 3,
@@ -1095,20 +1442,204 @@
         "civic",
         "outdoor"
       ],
-      "tier": 3
+      "tier": 3,
+      "workUnits": 9
     }
   ],
   "strings": {
-    "assignmentHint": "Assign contracts, then confirm day.",
+    "activeJobTitle": "Active Job",
+    "assignmentHint": "Accept one contract, then work it in half-hour chunks.",
+    "boardTitle": "Contract Board",
     "companyTitle": "Company",
-    "continueMissing": "No save found. Time to found a tiny empire.",
-    "dayReportTitle": "End of Day Report",
+    "continueIncompatible": "Old save detected. This build needs a fresh run for the new job flow.",
+    "continueMissing": "No compatible save found. Time to found a tiny empire.",
+    "crewDeferred": "Crews are deferred during the phased-job refactor.",
+    "dayReportTitle": "Field Log",
+    "fuelLabel": "Fuel",
+    "homeSuppliesTitle": "Home Supplies",
     "neutralLogFallback": "The work progressed at the speed of weather.",
     "noContracts": "No contracts available for this board.",
-    "storeTitle": "Tool Store",
+    "overtimeLabel": "Overtime",
+    "siteSuppliesTitle": "Site Supplies",
+    "skillsTitle": "Skills",
+    "storeTitle": "Home Shop",
     "subtitle": "You do the work. The work happens.",
-    "title": "Error Hammer"
+    "supplierTitle": "Supplier",
+    "title": "Error Hammer",
+    "truckSuppliesTitle": "Truck Supplies",
+    "workdayTitle": "Workday"
   },
+  "supplies": [
+    {
+      "flavor": {
+        "description": "A box of tiny promises for walls with trust issues.",
+        "quip_buy": "You bought several little commitments."
+      },
+      "id": "anchor-set",
+      "name": "Anchor Set",
+      "price": 18,
+      "tags": [
+        "fastener",
+        "general"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Straight lumber with a modest sense of destiny.",
+        "quip_buy": "You bought planks and future splinters."
+      },
+      "id": "board-pack",
+      "name": "Board Pack",
+      "price": 32,
+      "tags": [
+        "framing",
+        "outdoor"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Powdered permanence in a practical bag.",
+        "quip_buy": "You bought a future rock."
+      },
+      "id": "concrete-mix",
+      "name": "Concrete Mix",
+      "price": 24,
+      "tags": [
+        "general",
+        "outdoor"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Screws, bolts, and tiny pieces of authority.",
+        "quip_buy": "You bought industrial punctuation."
+      },
+      "id": "fastener-box",
+      "name": "Fastener Box",
+      "price": 16,
+      "tags": [
+        "fastener",
+        "general"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Metal elbows for doors and cabinets with ambitions.",
+        "quip_buy": "You bought several quiet pivots."
+      },
+      "id": "hinge-pack",
+      "name": "Hinge Pack",
+      "price": 22,
+      "tags": [
+        "finish",
+        "mechanical"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "A legal place for wires to have feelings.",
+        "quip_buy": "You bought approved tiny housing for electricity."
+      },
+      "id": "junction-box",
+      "name": "Junction Box",
+      "price": 21,
+      "tags": [
+        "electrical",
+        "inspection"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Color management for surfaces that need closure.",
+        "quip_buy": "You bought a small apology for the wall."
+      },
+      "id": "paint-sleeve",
+      "name": "Paint Sleeve",
+      "price": 12,
+      "tags": [
+        "finish",
+        "seal"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Fittings, elbows, and controlled wet intentions.",
+        "quip_buy": "You bought several future right angles."
+      },
+      "id": "pipe-kit",
+      "name": "Pipe Kit",
+      "price": 28,
+      "tags": [
+        "mechanical",
+        "plumbing"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Sticky optimism for elevated leaks.",
+        "quip_buy": "You bought weather negotiations."
+      },
+      "id": "roof-patch",
+      "name": "Roof Patch",
+      "price": 30,
+      "tags": [
+        "roof",
+        "seal"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Tape, covers, and the paperwork version of caution.",
+        "quip_buy": "You bought several less dramatic outcomes."
+      },
+      "id": "safety-kit",
+      "name": "Safety Kit",
+      "price": 14,
+      "tags": [
+        "general",
+        "inspection"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "A squeezable argument against drafts and drips.",
+        "quip_buy": "You bought adhesive diplomacy."
+      },
+      "id": "sealant-tube",
+      "name": "Sealant Tube",
+      "price": 15,
+      "tags": [
+        "finish",
+        "seal"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Corners, strips, and a second chance at neatness.",
+        "quip_buy": "You bought decorative seriousness."
+      },
+      "id": "trim-kit",
+      "name": "Trim Kit",
+      "price": 20,
+      "tags": [
+        "finish",
+        "framing"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Coiled certainty for walls full of secrets.",
+        "quip_buy": "You bought very organized lightning."
+      },
+      "id": "wire-spool",
+      "name": "Wire Spool",
+      "price": 26,
+      "tags": [
+        "electrical",
+        "fastener"
+      ]
+    }
+  ],
   "tools": [
     {
       "flavor": {
