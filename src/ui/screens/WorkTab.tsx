@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
 import { formatHours, getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
@@ -11,6 +11,9 @@ interface WorkTabProps {
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const [jobDetailsOpen, setJobDetailsOpen] = useState(true);
+  const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
+  const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
+  const actionTrackRef = useRef<HTMLDivElement | null>(null);
   const game = useUiStore((state) => state.game);
   const lastAction = useUiStore((state) => state.lastAction);
   const performTask = useUiStore((state) => state.performTaskUnit);
@@ -37,6 +40,47 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const activeJob = game.activeJob;
   const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
   const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
+  const taskActions = currentTask
+    ? currentTask.availableStances
+        .map((stance) => ({
+          stance,
+          allowOvertime: false,
+          label: labelForStance(stance)
+        }))
+        .concat(
+          currentTask.availableStances.map((stance) => ({
+            stance,
+            allowOvertime: true,
+            label: `${labelForStance(stance)} + OT`
+          }))
+        )
+    : [];
+
+  useEffect(() => {
+    syncActionCarousel();
+  }, [currentTask?.taskId, taskActions.length]);
+
+  function syncActionCarousel() {
+    const track = actionTrackRef.current;
+    if (!track) {
+      setCanScrollActionsLeft(false);
+      setCanScrollActionsRight(false);
+      return;
+    }
+    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+    setCanScrollActionsLeft(track.scrollLeft > 4);
+    setCanScrollActionsRight(track.scrollLeft < maxScrollLeft - 4);
+  }
+
+  function nudgeActionCarousel(direction: "left" | "right") {
+    const track = actionTrackRef.current;
+    if (!track) {
+      return;
+    }
+    const delta = Math.max(180, Math.floor(track.clientWidth * 0.78)) * (direction === "left" ? -1 : 1);
+    track.scrollBy({ left: delta, behavior: "smooth" });
+    window.setTimeout(() => syncActionCarousel(), 180);
+  }
 
   if (sheetOnly) {
     return activeJob && activeJob.location === "supplier" ? (
@@ -269,30 +313,54 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
-        {currentTask ? <p className="muted-copy">Primary actions stay pinned below for fast shift play.</p> : null}
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
         {currentTask ? (
           <div className="action-carousel">
-            <div className="carousel-track">
-              {currentTask.availableStances.map((stance) => ({
-                stance,
-                allowOvertime: false,
-                label: labelForStance(stance)
-              })).concat(
-                currentTask.availableStances.map((stance) => ({
-                  stance,
-                  allowOvertime: true,
-                  label: `${labelForStance(stance)} + OT`
-                }))
-              ).map((action) => (
+            <div className="action-carousel-header">
+              <span className="eyebrow">Action Carousel</span>
+              <div className="carousel-nav">
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions left"
+                  disabled={!canScrollActionsLeft}
+                  onClick={() => nudgeActionCarousel("left")}
+                >
+                  ◀
+                </button>
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions right"
+                  disabled={!canScrollActionsRight}
+                  onClick={() => nudgeActionCarousel("right")}
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+            <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
+              {taskActions.map((action) => (
                 <button
                   key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
-                  className={action.allowOvertime ? "ghost-button" : "primary-button"}
+                  className={action.allowOvertime ? "ghost-button action-carousel-button" : "primary-button action-carousel-button"}
                   onClick={() => performTask(action.stance, action.allowOvertime)}
                 >
                   {action.label}
                 </button>
               ))}
+            </div>
+            <div className="carousel-indicator-bar" aria-hidden="true">
+              <span className={canScrollActionsLeft ? "carousel-indicator-arrow active" : "carousel-indicator-arrow"}>◀</span>
+              <span className="carousel-indicator-track">
+                <span
+                  className="carousel-indicator-thumb"
+                  style={{
+                    transform: `translateX(${canScrollActionsLeft && !canScrollActionsRight ? "90%" : canScrollActionsRight ? "45%" : "0%"})`
+                  }}
+                />
+              </span>
+              <span className={canScrollActionsRight ? "carousel-indicator-arrow active" : "carousel-indicator-arrow"}>▶</span>
             </div>
           </div>
         ) : null}

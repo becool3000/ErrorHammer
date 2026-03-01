@@ -268,6 +268,9 @@ describe("compact shell ui", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
 
+    expect(screen.queryByText(/Primary actions stay pinned below for fast shift play/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /Scroll task actions left/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Scroll task actions right/i })).toBeTruthy();
     const activeJobToggle = screen.getByRole("button", { name: /Toggle active job details for/i });
     const activeJobPanel = document.getElementById("active-job-panel");
     expect(screen.getByRole("button", { name: /^Job Details$/i })).toBeTruthy();

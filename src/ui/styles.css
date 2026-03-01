@@ -322,6 +322,24 @@ p {
 
 .action-carousel {
   margin-top: 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.action-carousel-header,
+.carousel-nav,
+.carousel-indicator-bar {
+  display: flex;
+  align-items: center;
+}
+
+.action-carousel-header,
+.carousel-indicator-bar {
+  justify-content: space-between;
+}
+
+.carousel-nav {
+  gap: 0.45rem;
 }
 
 .carousel-track {
@@ -337,6 +355,48 @@ p {
   flex: 0 0 auto;
   min-width: 8.5rem;
   scroll-snap-align: start;
+}
+
+.action-carousel-track {
+  padding-inline: 0.1rem;
+}
+
+.action-carousel-button {
+  min-width: min(8.8rem, 42vw);
+}
+
+.carousel-arrow {
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0.35rem;
+}
+
+.carousel-indicator-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 0.45rem;
+  margin: 0 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.carousel-indicator-thumb {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(237, 243, 248, 0.82), rgba(142, 152, 164, 0.72));
+  transition: transform 180ms ease;
+}
+
+.carousel-indicator-arrow {
+  color: rgba(230, 235, 242, 0.35);
+  font-size: 0.82rem;
+}
+
+.carousel-indicator-arrow.active {
+  color: var(--accent-strong);
 }
 
 .task-summary,
