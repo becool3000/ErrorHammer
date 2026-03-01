@@ -68,7 +68,7 @@ describe("compact shell ui", () => {
     fireEvent.click(newGameButton);
 
     expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Work/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/Margo @ Margo Metalworks/)).toBeTruthy();
   });
 
@@ -102,7 +102,7 @@ describe("compact shell ui", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(screen.getByRole("button", { name: /Work/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/No active job/i)).toBeTruthy();
   });
 
@@ -113,7 +113,7 @@ describe("compact shell ui", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /Open Contract Board/i }));
-    expect(screen.getByRole("button", { name: /Contracts/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Contracts$/i, pressed: true })).toBeTruthy();
   });
 
   it("EH-TW-026 and EH-TW-027: selecting and accepting a contract returns focus to Work", () => {
@@ -125,7 +125,7 @@ describe("compact shell ui", () => {
     const acceptButton = screen.getByRole("button", { name: /Accept Job/i });
     fireEvent.click(acceptButton);
 
-    expect(screen.getByRole("button", { name: /Work/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/Current Task/i)).toBeTruthy();
   });
 
@@ -160,7 +160,7 @@ describe("compact shell ui", () => {
       });
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Store/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Store$/i }));
 
     expect(screen.getByText(/tool bench/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Tools" }));
@@ -209,9 +209,9 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /District Access/i }));
     expect(screen.getByRole("dialog", { name: /District Access/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close District Access/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Store/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Store$/i }));
 
-    expect(screen.getByRole("button", { name: /Store/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Store$/i, pressed: true })).toBeTruthy();
     expect(useUiStore.getState().game?.seed).toBe(6060);
   });
 
@@ -270,6 +270,9 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
 
     expect(screen.queryByText(/Primary actions stay pinned below for fast shift play/i)).toBeNull();
+    const workCards = screen.getAllByText(/Current Task|Active Job/i).map((node) => node.textContent);
+    expect(workCards[0]).toBe("Current Task");
+    expect(workCards[1]).toBe("Active Job");
     expect(screen.getByRole("button", { name: /Scroll task actions left/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Scroll task actions right/i })).toBeTruthy();
     const activeJobToggle = screen.getByRole("button", { name: /Toggle active job details for/i });

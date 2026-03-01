@@ -1,10 +1,10 @@
 import { GameTabId } from "../state";
 
-const tabs: Array<{ id: GameTabId; label: string; short: string }> = [
-  { id: "work", label: "Work", short: "Ops" },
-  { id: "contracts", label: "Contracts", short: "Board" },
-  { id: "store", label: "Store", short: "Supply" },
-  { id: "company", label: "Company", short: "Firm" }
+const tabs: Array<{ id: GameTabId; label: string }> = [
+  { id: "work", label: "Work" },
+  { id: "contracts", label: "Contracts" },
+  { id: "store", label: "Store" },
+  { id: "company", label: "Company" }
 ];
 
 interface BottomNavProps {
@@ -23,7 +23,6 @@ export function BottomNav({ activeTab, onChange }: BottomNavProps) {
           aria-pressed={tab.id === activeTab}
         >
           <span>{tab.label}</span>
-          <small>{tab.short}</small>
         </button>
       ))}
     </nav>

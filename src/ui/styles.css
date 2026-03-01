@@ -327,14 +327,12 @@ p {
 }
 
 .action-carousel-header,
-.carousel-nav,
-.carousel-indicator-bar {
+.carousel-nav {
   display: flex;
   align-items: center;
 }
 
-.action-carousel-header,
-.carousel-indicator-bar {
+.action-carousel-header {
   justify-content: space-between;
 }
 
@@ -346,7 +344,6 @@ p {
   display: flex;
   gap: 0.6rem;
   overflow-x: auto;
-  padding-bottom: 0.4rem;
   scroll-padding-inline: 0.65rem;
   scroll-snap-type: x proximity;
 }
@@ -374,34 +371,6 @@ p {
   min-width: 2.35rem;
   min-height: 2.35rem;
   padding: 0.35rem;
-}
-
-.carousel-indicator-track {
-  position: relative;
-  flex: 1 1 auto;
-  height: 0.45rem;
-  margin: 0 0.55rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-
-.carousel-indicator-thumb {
-  display: block;
-  width: 38%;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(237, 243, 248, 0.82), rgba(142, 152, 164, 0.72));
-  transition: transform 180ms ease;
-}
-
-.carousel-indicator-arrow {
-  color: rgba(230, 235, 242, 0.35);
-  font-size: 0.82rem;
-}
-
-.carousel-indicator-arrow.active {
-  color: var(--accent-strong);
 }
 
 .task-summary,
@@ -466,16 +435,13 @@ p {
 }
 
 .tab-button {
-  display: grid;
-  gap: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 3.4rem;
   padding: 0.45rem;
   border-radius: 18px;
   text-align: center;
-}
-
-.tab-button small {
-  color: var(--muted);
 }
 
 .tab-button.active {

@@ -244,6 +244,65 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
 
   return (
     <section className="tab-panel work-tab">
+      <article className="chrome-card inset-card task-focus-card">
+        <div className="section-label-row">
+          <div>
+            <p className="eyebrow">Current Task</p>
+            <h3>{currentTask?.label ?? "Waiting"}</h3>
+          </div>
+          {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
+        </div>
+        {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
+        {currentTask ? (
+          <div className="action-carousel">
+            <div className="action-carousel-header">
+              <span className="eyebrow">Action Carousel</span>
+              <div className="carousel-nav">
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions left"
+                  disabled={!canScrollActionsLeft}
+                  onClick={() => nudgeActionCarousel("left")}
+                >
+                  ◀
+                </button>
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions right"
+                  disabled={!canScrollActionsRight}
+                  onClick={() => nudgeActionCarousel("right")}
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+            <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
+              {taskActions.map((action) => (
+                <button
+                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
+                  className={action.allowOvertime ? "ghost-button action-carousel-button" : "primary-button action-carousel-button"}
+                  onClick={() => performTask(action.stance, action.allowOvertime)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {lastAction ? (
+          <div className="last-action-panel">
+            <strong>{lastAction.title}</strong>
+            <div className="summary-copy">
+              {lastAction.lines.map((line, index) => (
+                <p key={`${lastAction.digest}-${index}`}>{line}</p>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </article>
+
       <article className="hero-card chrome-card active-job-hero">
         <div className="section-label-row">
           <button
@@ -303,77 +362,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </button>
           </div>
         </div>
-      </article>
-
-      <article className="chrome-card inset-card task-focus-card">
-        <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Current Task</p>
-            <h3>{currentTask?.label ?? "Waiting"}</h3>
-          </div>
-          {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
-        </div>
-        {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
-        {currentTask ? (
-          <div className="action-carousel">
-            <div className="action-carousel-header">
-              <span className="eyebrow">Action Carousel</span>
-              <div className="carousel-nav">
-                <button
-                  type="button"
-                  className="icon-button carousel-arrow"
-                  aria-label="Scroll task actions left"
-                  disabled={!canScrollActionsLeft}
-                  onClick={() => nudgeActionCarousel("left")}
-                >
-                  ◀
-                </button>
-                <button
-                  type="button"
-                  className="icon-button carousel-arrow"
-                  aria-label="Scroll task actions right"
-                  disabled={!canScrollActionsRight}
-                  onClick={() => nudgeActionCarousel("right")}
-                >
-                  ▶
-                </button>
-              </div>
-            </div>
-            <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
-              {taskActions.map((action) => (
-                <button
-                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
-                  className={action.allowOvertime ? "ghost-button action-carousel-button" : "primary-button action-carousel-button"}
-                  onClick={() => performTask(action.stance, action.allowOvertime)}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-            <div className="carousel-indicator-bar" aria-hidden="true">
-              <span className={canScrollActionsLeft ? "carousel-indicator-arrow active" : "carousel-indicator-arrow"}>◀</span>
-              <span className="carousel-indicator-track">
-                <span
-                  className="carousel-indicator-thumb"
-                  style={{
-                    transform: `translateX(${canScrollActionsLeft && !canScrollActionsRight ? "90%" : canScrollActionsRight ? "45%" : "0%"})`
-                  }}
-                />
-              </span>
-              <span className={canScrollActionsRight ? "carousel-indicator-arrow active" : "carousel-indicator-arrow"}>▶</span>
-            </div>
-          </div>
-        ) : null}
-        {lastAction ? (
-          <div className="last-action-panel">
-            <strong>{lastAction.title}</strong>
-            <div className="summary-copy">
-              {lastAction.lines.map((line, index) => (
-                <p key={`${lastAction.digest}-${index}`}>{line}</p>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </article>
 
       <div className="sticky-action-bar">
