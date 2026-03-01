@@ -28,6 +28,27 @@
 26. Archive history from the prior legacy source project is retired for this repo and replaced by a single migration snapshot note.
 27. Bootstrap lane closeout status as of 2026-02-27 is `DONE` for `BLD-002`, `TW-002`, `VF-002`, and `DOC-002`.
 28. Verified behavior source of truth for bootstrap closeout is `obsidian_vault/Testing.md` command, replay, and smoke evidence.
+29. Deterministic bot-buy economy execution chain is `PLN-003 -> BLD-003 -> TW-003 -> VF-003 -> DOC-003`.
+30. Resolver order includes a post-resolution bot purchase phase after next-day board generation and before next state persistence.
+31. Bot purchase candidates are tools that are missing or have `durability = 0`, and must be affordable with event-adjusted pricing (`applyToolPriceModifiers`).
+32. Bot purchase scoring reuses `evaluateBotPlan` with `tieNoise=false` for baseline and simulated tool states.
+33. Bot purchase threshold rule is `weightedGain = scoreGain * wToolBuy`, and purchase requires `weightedGain >= 20`.
+34. Bot purchase tie-break order is `weightedGain desc`, then `price asc`, then `toolId asc`.
+35. Bot purchase limit is one tool per bot per day.
+36. Purchase visibility is mandatory via day log lines in format `"{botName} bought {toolName} for ${price}."`.
+37. Bot-buy lane closeout status as of 2026-02-27 is `DONE` for `BLD-003`, `TW-003`, `VF-003`, and `DOC-003`.
+38. Verified behavior source of truth for bot-buy closeout is `obsidian_vault/Testing.md` command, replay, and smoke evidence.
+39. Itch publish packaging execution chain is `PLN-004 -> BLD-004 -> TW-004 -> VF-004 -> DOC-004`.
+40. Vite production builds must use `base = "./"` so emitted asset URLs remain relative for static HTML hosts such as itch.io.
+41. Itch.io upload artifact is a ZIP of `dist/` contents only; repo root files, `node_modules/`, and source files are excluded.
+42. Itch packaging verification evidence must include both a relative-asset-path check in `dist/index.html` and a ZIP entry-count check.
+43. Compact-shell redesign execution chain is `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005`.
+44. The game UI uses a compact mobile-first shell with bottom-tab navigation for `Work`, `Contracts`, `Store`, and `Company`.
+45. `Work` is the default post-load destination and keeps the active job, current task, and primary task actions in the top-level mobile viewport.
+46. Secondary information such as job details, inventory, field log, district details, crew status, competitor news, and supplier cart details must render in overlays instead of long primary-page stacks.
+47. Store interaction uses segmented compact sections (`Fuel`, `Tools`, `Stock`) and must visibly lock transactional actions when the player is away from the shop.
+48. The visual direction for the shell is a dark industrial palette: matte black and gunmetal surfaces, silver accents, restrained motion, and compact card density.
+49. Compact-shell verification must include automated tab/overlay interaction coverage plus mobile-width smoke evidence.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
