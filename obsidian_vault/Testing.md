@@ -9,6 +9,7 @@
 7. Bot-buy verification chain status is complete for `TW-003` and `VF-003` (2026-02-27).
 8. Itch packaging verification chain status is complete for `TW-004` and `VF-004` (2026-02-28).
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
+10. The Name + Hour flow lane `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is in flight; deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-040..EH-TW-042` plus UI quick-buy scenario `EH-TW-039`.
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -21,6 +22,7 @@
 1. Scenario assertions are explicit and deterministic.
 2. Assertions use day-resolution fields for resolver behavior and stable UI state transitions for compact-shell behavior.
 3. UI-shell assertions verify active tab, visible compact controls, modal/sheet open state, and preserved gameplay state.
+4. New scenarios `EH-TW-039..EH-TW-042` expand the deterministic contract to cover quick-buy discovery, title-name persistence, quick-buy success, and quick-buy rejection cases.
 
 ## Automated Scenario Definitions (`TW-005` additions)
 1. `EH-TW-023`
@@ -71,6 +73,26 @@ Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-033`.
 Sequence: Render a supplier-state work view and open the supplier sheet from the sticky action bar.
 Pass criteria: the contextual `Open Supplies` action is visible and opens the supplier dialog.
 Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-034`.
+13. `EH-TW-039`
+Sequence: Seed the compact shell with a contract that needs a missing tool, visit `Contracts`, and quick-buy the tool.
+Pass criteria: the Quick Tool Buy card lists the missing tool, the `Quick Buy Tools` button is visible and enabled, the quick-buy notice appears after purchase, and the Accept button becomes actionable without opening a new board.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-039`.
+14. `EH-TW-040`
+Sequence: Use `quickBuyMissingTools` with a player/company name pair and a contract that requests a tool not in the kit.
+Pass criteria: the returned payload acknowledges the missing tool list, the resulting GameState keeps the provided name/company values, and the log contains the company string.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-040`.
+15. `EH-TW-041`
+Sequence: Quick buy a missing tool with sufficient cash/time.
+Pass criteria: cash decreases by the computed cost, ticks spent increases by two per tool, and the contract board remains locked.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-041`.
+16. `EH-TW-042`
+Sequence: Attempt the same quick buy with insufficient cash and insufficient hours.
+Pass criteria: the action returns a notice about cash or hours and leaves the GameState untouched.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-042`.
+17. `EH-TW-043`
+Sequence: Enter the title screen, type both player and company names, start a new game, then return to the title screen.
+Pass criteria: the UI store captures each trimmed value (title inputs stay non-empty) and the title inputs re-render with those names when control returns to the title screen, keeping `New Game` disabled until both fields are non-empty.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-043`.
 
 ## Automated Execution Steps (`TW-002` through `TW-005`)
 1. Run `npm test`.
@@ -79,15 +101,19 @@ Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-034`.
 
 ## Manual Smoke Steps (current verifier baseline)
 1. Start app with `npm run dev` and open the local URL.
-2. Start a new game and confirm the compact shell opens on `Work`.
-3. Accept a contract from `Contracts` and confirm `Work` shows the current task block.
-4. Visit `Store` and `Company` through bottom navigation and confirm segmented/detail navigation is stable.
-5. Trigger a supplier-state path and confirm the supplier sheet opens.
-6. Refresh and use `Continue` to verify the save/load path.
+2. At the title screen, enter both Player and Company names, ensure `New Game` enables, and confirm the shell header/log reflect the written names plus hour metrics.
+3. Accept a contract that needs a missing tool, use the Quick Tool Buy card, and verify the notice reports the purchased tools, hours drop by 0.5 increments per tool, and the board remains hidden while Accept becomes available.
+4. After a contract acceptance, confirm `Work` displays the current task block and shows time in hours (not ticks) on the hero and assignment panels.
+5. Visit `Store` and `Company` via bottom tabs to confirm store locks when off-site and the company tab keeps only a hero ledger plus modal-trigger buttons for districts, crews, and news.
+6. Trigger a supplier-state path and confirm the supplier sheet opens.
+7. Refresh and use `Continue` to verify the save/load path.
+8. Return to the title screen (via the UI store or by reloading), verify both name inputs keep the last trimmed values, and confirm `New Game` remains disabled until both fields are non-empty so the fields gate the compact shell launch.
 
 ## Evidence Log
 1. `VF-005` evidence date: 2026-03-01.
-2. `VF-005` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`7` files, `39` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-naNfZNwA.css`, `dist/assets/index-DMSJvpJc.js`).
+2. `VF-005` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`7` files, `44` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-De6LOkjX.css`, `dist/assets/index-CBn5CYlm.js`).
 3. `VF-005` compact-shell evidence: title start path PASS, continue path PASS, work-to-contracts CTA PASS, contract accept-to-work PASS, store segmentation PASS, off-shop lock-state PASS, company modal PASS, supplier sheet PASS.
-4. `DOC-005` evidence date: 2026-03-01.
-5. `DOC-005` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to verified compact-shell behavior and board state.
+4. `EH-TW-043` evidence: automated UI shell scenario verifies title inputs retain typed names between returns to the title screen, new-game gating honors trimmed input presence, and the compact shell header/log shows the stored names (`tests/ui_shell.test.tsx`).
+5. `DOC-005` evidence date: 2026-03-01.
+6. `DOC-005` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to verified compact-shell behavior and board state.
+7. `PLN-006` planning evidence date: 2026-03-01; added new planner narrative, lane chain placeholder (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`), and acceptance criteria in the vault.

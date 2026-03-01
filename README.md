@@ -1,8 +1,9 @@
 # Error Hammer
 ## Status (2026-03-01)
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
-2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `39` tests), and `npm run build`.
+2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `44` tests), and `npm run build`.
 3. Deterministic replay, mobile-shell UI evidence, and itch packaging evidence are recorded in `obsidian_vault/Testing.md`.
+4. Name + Hour flow planning chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is active and currently in the Planner lane.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
@@ -20,17 +21,17 @@
 5. Do not zip the repo root, `node_modules/`, or source files; the upload archive must contain only the built `dist/` contents.
 
 ## Usage
-1. Start at the title screen and choose `New Game` or `Continue` (single-slot `localStorage` save).
+1. Start at the title screen, fill both Player and Company name fields, and only then can `New Game` begin; the chosen names persist into the compact shell header, log, and quick-buy notices.
 2. After load, the app opens a compact bottom-tab shell with `Work`, `Contracts`, `Store`, and `Company`.
 3. `Work` keeps the active job, current task, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Field Log`, and supplier cart details open in overlays.
-4. `Contracts` uses a horizontal selection carousel and returns you to `Work` after a successful accept.
-5. `Store` uses segmented compact sections for `Fuel`, `Tools`, and `Stock` and blocks shop actions when the player is away from the shop.
-6. `Company` shows compact overview cards with modal detail views for district access, crews, and competitor news.
+4. Time is reported in half-hour units, the header and work cards call them “Hours,” and quick buys charge one hour (two ticks) per tool before any contract acceptance.
+5. `Contracts` shows a horizontal carousel, highlights missing tools, disables `Accept Job` until stocked, and offers a quick-buy step that summarizes hours plus cash before redirecting back to `Work`.
+6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the details only render inside those modals.
 
 ## Testing
-1. Deterministic scenario suite `EH-TW-001..EH-TW-021` remains in `tests/tw_scenarios.test.ts`.
+1. Deterministic scenario suite `EH-TW-001..EH-TW-043` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-040..EH-TW-042` covering quick-buy variations and the new `EH-TW-043` covering title-name persistence/state.
 2. Packaging assertion `EH-TW-022` remains in `tests/vite_config.test.ts`.
-3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` are implemented in `tests/ui_shell.test.tsx`.
+3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus title-screen persistence scenario `EH-TW-043` are implemented in `tests/ui_shell.test.tsx`.
 4. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 5. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 6. Latest verifier run date is 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
