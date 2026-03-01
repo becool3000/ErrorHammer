@@ -59,6 +59,9 @@ export function GameShell() {
       <Modal open={activeModal === "inventory"} title="Inventory" onClose={closeModal}>
         <WorkTab modalView="inventory" />
       </Modal>
+      <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal}>
+        <WorkTab modalView="skills" />
+      </Modal>
       <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
         <WorkTab modalView="field-log" />
       </Modal>

@@ -6,7 +6,7 @@ import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
-  modalView?: "job-details" | "inventory" | "field-log" | "active-events";
+  modalView?: "job-details" | "inventory" | "skills" | "field-log" | "active-events";
   sheetOnly?: boolean;
 }
 
@@ -185,7 +185,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   }
 
   if (modalView === "inventory") {
-    const skillRows = getSkillDisplayRows(game.player).slice(0, 8);
     return (
       <section className="stack-block">
         <article className="chrome-card inset-card">
@@ -196,6 +195,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <InventoryPanel label="Site" inventory={activeJob?.siteSupplies ?? {}} />
           </div>
         </article>
+      </section>
+    );
+  }
+
+  if (modalView === "skills") {
+    const skillRows = getSkillDisplayRows(game.player).slice(0, 8);
+    return (
+      <section className="stack-block">
         <article className="chrome-card inset-card">
           <p className="eyebrow">Skill Ledger</p>
           <div className="chip-grid">
@@ -205,7 +212,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               </span>
             ))}
           </div>
+        </article>
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Shift Context</p>
           <p className="muted-copy">Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>
+          <div className="metric-grid two-up">
+            <span>Stamina {game.player.stamina}/{game.player.staminaMax}</span>
+            <span>Rep {game.player.reputation}</span>
+          </div>
         </article>
       </section>
     );
@@ -249,6 +263,12 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (!activeJob || !job) {
     return (
       <section className="tab-panel work-tab">
+        <OperatorCard
+          playerName={game.player.name}
+          companyName={game.player.companyName}
+          onOpenInventory={() => openModal("inventory")}
+          onOpenSkills={() => openModal("skills")}
+        />
         <article className="hero-card chrome-card">
           <p className="eyebrow">Work Queue</p>
           <h2>No active job</h2>
@@ -279,6 +299,13 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
 
   return (
     <section className="tab-panel work-tab">
+      <OperatorCard
+        playerName={game.player.name}
+        companyName={game.player.companyName}
+        onOpenInventory={() => openModal("inventory")}
+        onOpenSkills={() => openModal("skills")}
+      />
+
       <article className="chrome-card inset-card task-focus-card">
         <div className="section-label-row">
           <div>
@@ -419,9 +446,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <button className="ghost-button" onClick={() => openModal("job-details")}>
               Job Details
             </button>
-            <button className="ghost-button" onClick={() => openModal("inventory")}>
-              Inventory
-            </button>
             <button className="ghost-button" onClick={() => openModal("field-log")}>
               Field Log
             </button>
@@ -473,6 +497,36 @@ function EventCueCard({
             </div>
           </article>
         ))}
+      </div>
+    </article>
+  );
+}
+
+function OperatorCard({
+  playerName,
+  companyName,
+  onOpenInventory,
+  onOpenSkills
+}: {
+  playerName: string;
+  companyName: string;
+  onOpenInventory: () => void;
+  onOpenSkills: () => void;
+}) {
+  return (
+    <article className="chrome-card inset-card operator-card">
+      <div>
+        <p className="eyebrow">Operator</p>
+        <h3>{playerName}</h3>
+        <p className="muted-copy">{companyName}</p>
+      </div>
+      <div className="action-row operator-actions">
+        <button className="ghost-button" onClick={onOpenInventory}>
+          Inventory
+        </button>
+        <button className="ghost-button" onClick={onOpenSkills}>
+          Skills
+        </button>
       </div>
     </article>
   );

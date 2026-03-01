@@ -286,6 +286,19 @@ p {
   justify-content: flex-start;
 }
 
+.operator-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.operator-actions {
+  margin-top: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .material-needs-block {
   margin-top: 0.85rem;
 }
@@ -711,6 +724,11 @@ p {
 
   .inventory-columns {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .operator-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .title-panel {

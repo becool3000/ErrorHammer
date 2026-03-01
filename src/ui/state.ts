@@ -18,7 +18,7 @@ export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "contracts" | "store" | "company";
 export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
 export type StoreSectionId = "fuel" | "tools" | "stock";
-export type ActiveModalId = null | "job-details" | "inventory" | "field-log" | "active-events" | "districts" | "crews" | "news";
+export type ActiveModalId = null | "job-details" | "inventory" | "skills" | "field-log" | "active-events" | "districts" | "crews" | "news";
 export type ActiveSheetId = null | "supplies";
 
 export interface ActionSummary {

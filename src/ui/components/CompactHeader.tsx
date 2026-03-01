@@ -38,9 +38,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           <span className="summary-toggle-copy header-summary-copy">
             <span className="eyebrow">{tabLabels[activeTab]}</span>
             <h1 className="summary-toggle-title">Day {game.day}</h1>
-            <span className="header-subtitle">
-              {game.workday.weekday} shift - {game.player.name} @ {game.player.companyName}
-            </span>
+            <span className="header-subtitle">{game.workday.weekday} shift</span>
           </span>
           <span className="chip">{detailsOpen ? "Hide" : "Show"}</span>
         </button>

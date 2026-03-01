@@ -69,7 +69,8 @@ describe("compact shell ui", () => {
 
     expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
-    expect(screen.getByText(/Margo @ Margo Metalworks/)).toBeTruthy();
+    expect(screen.getByText(/^Margo$/)).toBeTruthy();
+    expect(screen.getByText(/Margo Metalworks/)).toBeTruthy();
   });
 
   it("EH-TW-043: title form retains typed names and repopulates after returning to the title screen", () => {
@@ -142,6 +143,21 @@ describe("compact shell ui", () => {
 
     expect(screen.queryByRole("dialog", { name: /Field Log/i })).toBeNull();
     expect(useUiStore.getState().activeTab).toBe("work");
+  });
+
+  it("EH-TW-054: operator card exposes inventory and skills modals", () => {
+    const game = createInitialGameState(bundle, 4041);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inventory$/i }));
+    expect(screen.getByRole("dialog", { name: /Inventory/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Close Inventory/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /^Skills$/i }));
+    expect(screen.getByRole("dialog", { name: /Skills/i })).toBeTruthy();
+    expect(screen.getByText(/Skill Ledger/i)).toBeTruthy();
   });
 
   it("EH-TW-030 and EH-TW-031: store sections switch and off-shop state disables actions", () => {
