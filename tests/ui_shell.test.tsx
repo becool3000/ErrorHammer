@@ -30,7 +30,9 @@ function resetUi() {
     selectedContractId: null,
     game: null,
     lastAction: null,
-    notice: ""
+    notice: "",
+    titlePlayerName: "",
+    titleCompanyName: ""
   });
 }
 
@@ -211,6 +213,49 @@ describe("compact shell ui", () => {
 
     expect(screen.getByRole("button", { name: /Store/i, pressed: true })).toBeTruthy();
     expect(useUiStore.getState().game?.seed).toBe(6060);
+  });
+
+  it("EH-TW-047: company crew modal hires the first unlocked crew deterministically", () => {
+    const game = createInitialGameState(bundle, 6061);
+    game.player.companyLevel = 2;
+    useUiStore.setState({ screen: "game", game, activeTab: "company", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Crew Status/i }));
+    expect(screen.getByRole("dialog", { name: /Crew Status/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Hire Crew$/i }));
+
+    expect(screen.getByRole("button", { name: /June joined the crew roster/i })).toBeTruthy();
+    expect(screen.getByText(/^June$/)).toBeTruthy();
+    expect(useUiStore.getState().game?.player.crews[0]?.crewId).toBe("crew-1");
+  });
+
+  it("EH-TW-048: work tab shows event cues and assignee controls for hired crews", () => {
+    const game = buildAcceptableGame(6062);
+    game.player.companyLevel = 2;
+    game.player.crews = [
+      {
+        crewId: "crew-1",
+        name: "June",
+        staminaMax: 6,
+        stamina: 6,
+        efficiency: 1,
+        reliability: 1,
+        morale: 2
+      }
+    ];
+    game.activeEventIds = ["event-rain"];
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    expect(screen.getByText(/Light Rain, Heavy Opinions/i)).toBeTruthy();
+    expect(screen.getByText(/Outdoor jobs pay less and slip more/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /June \(6\/6\)/i }));
+
+    expect(useUiStore.getState().game?.activeJob?.assignee).toBe("crew-1");
   });
 
   it("EH-TW-034: supplier-state jobs expose the supplies bottom sheet", () => {

@@ -6,8 +6,10 @@ import {
   getCurrentTask,
   getSkillRank,
   getTaskTimeChances,
+  hireCrew,
   performTaskUnit,
   quickBuyMissingTools,
+  setActiveJobAssignee,
   setSupplierCartQuantity
 } from "../src/core/playerFlow";
 import { clear as clearSave, hasIncompatibleLegacySave, load as loadSave, save as saveState } from "../src/core/save";
@@ -408,6 +410,75 @@ describe("TW-004 deterministic scenario suite", () => {
     const timeResult = quickBuyMissingTools(lowTime, timeBundle, quickBuyContract.contractId);
     expect(timeResult.notice).toContain("hours");
     expect(timeResult.nextState).toBe(lowTime);
+  });
+
+  it("EH-TW-044: crew hiring is gated by company level and fills the first open slot deterministically", () => {
+    const bundle = makeScenarioBundle();
+    const state = createInitialGameState(bundle, 2900);
+    const blocked = hireCrew(state);
+    expect(blocked.notice).toContain("level 2");
+    expect(blocked.nextState).toBe(state);
+
+    state.player.companyLevel = 2;
+    const hired = hireCrew(state);
+    expect(hired.payload?.crewId).toBe("crew-1");
+    expect(hired.payload?.name).toBe("June");
+    expect(hired.nextState.player.crews).toHaveLength(1);
+    expect(hired.nextState.log.at(-1)?.message).toContain("June");
+  });
+
+  it("EH-TW-045: assigned crew spends stamina on first work commit and task logs name the assignee", () => {
+    const { bundle, state } = fastForwardToTask(3000, "job-alpha-contract", "do_work");
+    state.player.companyLevel = 2;
+    const hired = hireCrew(state).nextState;
+    const assigned = setActiveJobAssignee(hired, "crew-1");
+    const result = performTaskUnit(assigned.nextState, bundle, "standard", true);
+
+    expect(result.nextState.player.crews[0]?.stamina).toBe(4);
+    expect(result.nextState.activeJob?.staminaCommitted).toBe(true);
+    expect(result.payload?.logLines.some((line) => line.includes("June:"))).toBe(true);
+  });
+
+  it("EH-TW-046: loaded v4 saves default the active job assignee to self", () => {
+    const originalLocalStorage = (globalThis as Record<string, unknown>).localStorage;
+    const store = new Map<string, string>();
+
+    Object.defineProperty(globalThis, "localStorage", {
+      value: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => store.set(key, value),
+        removeItem: (key: string) => store.delete(key)
+      },
+      configurable: true
+    });
+
+    try {
+      const { state } = acceptJob(3100, "job-alpha-contract");
+      const legacyShape = {
+        ...state,
+        activeJob: state.activeJob
+          ? {
+              ...state.activeJob,
+              assignee: undefined,
+              staminaCommitted: undefined
+            }
+          : null
+      };
+      store.set("error-hammer-save-v2", JSON.stringify(legacyShape));
+      const loaded = loadSave();
+
+      expect(loaded?.activeJob?.assignee).toBe("self");
+      expect(loaded?.activeJob?.staminaCommitted).toBe(false);
+    } finally {
+      if (originalLocalStorage === undefined) {
+        Reflect.deleteProperty(globalThis, "localStorage");
+      } else {
+        Object.defineProperty(globalThis, "localStorage", {
+          value: originalLocalStorage,
+          configurable: true
+        });
+      }
+    }
   });
 
   it("EH-TW-013: normalized content bundle has expected keys and stable ordering", async () => {

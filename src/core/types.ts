@@ -292,6 +292,8 @@ export interface ActiveJobState {
   jobId: string;
   districtId: string;
   acceptedDay: number;
+  assignee: "self" | string;
+  staminaCommitted: boolean;
   lockedPayout: number;
   location: LocationId;
   qualityPoints: number;

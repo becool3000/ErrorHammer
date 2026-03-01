@@ -1,3 +1,4 @@
+import { normalizeGameState } from "./playerFlow";
 import { GameState } from "./types";
 
 export const SAVE_VERSION = 4;
@@ -26,7 +27,10 @@ export function load(): GameState | null {
     if (parsed.saveVersion !== SAVE_VERSION) {
       return null;
     }
-    return parsed as GameState;
+    if (!parsed.player || typeof parsed.day !== "number" || typeof parsed.seed !== "number") {
+      return null;
+    }
+    return normalizeGameState(parsed);
   } catch {
     return null;
   }

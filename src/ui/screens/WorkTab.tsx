@@ -13,6 +13,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const game = useUiStore((state) => state.game);
   const lastAction = useUiStore((state) => state.lastAction);
   const performTask = useUiStore((state) => state.performTaskUnit);
+  const setJobAssignee = useUiStore((state) => state.setJobAssignee);
   const endShift = useUiStore((state) => state.endShift);
   const openModal = useUiStore((state) => state.openModal);
   const openSheet = useUiStore((state) => state.openSheet);
@@ -23,6 +24,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   }
 
   const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
+  const eventCueRows = useMemo(
+    () =>
+      activeEvents.map((event) => ({
+        event,
+        cues: deriveEventCueTags(event)
+      })),
+    [activeEvents]
+  );
   const currentTask = getCurrentTask(game);
   const activeJob = game.activeJob;
   const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
@@ -171,6 +180,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <span>Overtime left {Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed)}</span>
           </div>
         </article>
+        <EventCueCard eventCueRows={eventCueRows} />
         <div className="sticky-action-bar">
           <button className="primary-button wide-button" onClick={() => endShift()}>
             End Shift
@@ -197,6 +207,23 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
           <span>Rework {activeJob.reworkCount}</span>
         </div>
+        <div className="detail-block">
+          <strong>Assigned To</strong>
+          <div className="chip-grid">
+            <button className={activeJob.assignee === "self" ? "primary-button" : "ghost-button"} onClick={() => setJobAssignee("self")}>
+              {game.player.name} ({game.player.stamina}/{game.player.staminaMax})
+            </button>
+            {game.player.crews.map((crew) => (
+              <button
+                key={crew.crewId}
+                className={activeJob.assignee === crew.crewId ? "primary-button" : "ghost-button"}
+                onClick={() => setJobAssignee(crew.crewId)}
+              >
+                {crew.name} ({crew.stamina}/{crew.staminaMax})
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="action-row wrap-row">
           <button className="ghost-button" onClick={() => openModal("job-details")}>
             Job Details
@@ -209,6 +236,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </button>
         </div>
       </article>
+      <EventCueCard eventCueRows={eventCueRows} />
 
       <article className="chrome-card inset-card task-focus-card">
         <div className="section-label-row">
@@ -275,6 +303,43 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   );
 }
 
+function EventCueCard({
+  eventCueRows
+}: {
+  eventCueRows: Array<{ event: (typeof bundle.events)[number]; cues: string[] }>;
+}) {
+  return (
+    <article className="chrome-card inset-card">
+      <div className="section-label-row">
+        <div>
+          <p className="eyebrow">Shift Cues</p>
+          <h3>Active Events</h3>
+        </div>
+        <span className="chip">{eventCueRows.length}</span>
+      </div>
+      {eventCueRows.length === 0 ? <p className="muted-copy">No active event modifiers today.</p> : null}
+      <div className="stack-list">
+        {eventCueRows.map(({ event, cues }) => (
+          <article key={event.id} className="task-summary">
+            <div className="section-label-row tight-row">
+              <strong>{event.flavor.headline}</strong>
+              <span>{event.name}</span>
+            </div>
+            <p className="muted-copy">{event.flavor.impact_line}</p>
+            <div className="chip-grid">
+              {cues.map((cue) => (
+                <span key={`${event.id}-${cue}`} className="chip large-chip">
+                  {cue}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 function TaskSummary({ task, currentTaskId }: { task: ActiveTaskState; currentTaskId: string | null }) {
   const complete = task.requiredUnits === 0 || task.completedUnits >= task.requiredUnits;
   const progress = task.requiredUnits === 0 ? 100 : Math.round((task.completedUnits / task.requiredUnits) * 100);
@@ -324,4 +389,21 @@ function labelForStance(stance: TaskStance): string {
     return "Careful";
   }
   return "Standard";
+}
+
+function deriveEventCueTags(event: (typeof bundle.events)[number]): string[] {
+  const cues: string[] = [];
+  for (const tag of Object.keys(event.mods.payoutMultByTag ?? {})) {
+    cues.push(`${tag} payout`);
+  }
+  for (const tag of Object.keys(event.mods.riskDeltaByTag ?? {})) {
+    cues.push(`${tag} risk`);
+  }
+  for (const tag of event.mods.forceNeutralTags ?? []) {
+    cues.push(`${tag} neutral`);
+  }
+  if (event.mods.toolPriceMult !== undefined) {
+    cues.push("tool prices");
+  }
+  return cues.length > 0 ? cues : ["general conditions"];
 }

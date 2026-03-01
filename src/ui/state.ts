@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
-import { buyFuel, quickBuyMissingTools, formatHours, performTaskUnit, setSupplierCartQuantity, acceptContract } from "../core/playerFlow";
+import {
+  buyFuel,
+  quickBuyMissingTools,
+  formatHours,
+  performTaskUnit,
+  setSupplierCartQuantity,
+  acceptContract,
+  hireCrew as hireCrewFlow,
+  setActiveJobAssignee
+} from "../core/playerFlow";
 import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from "../core/save";
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
 import { GameState, TaskStance } from "../core/types";
@@ -32,8 +41,6 @@ interface UiState {
   titleCompanyName: string;
   setTitlePlayerName: (name: string) => void;
   setTitleCompanyName: (name: string) => void;
-  titlePlayerName: string;
-  titleCompanyName: string;
   newGame: (playerName?: string, companyName?: string, seed?: number) => void;
   continueGame: () => void;
   returnToTitle: () => void;
@@ -54,6 +61,7 @@ interface UiState {
   repairTool: (toolId: string) => void;
   quickBuyTools: (contractId: string) => void;
   hireCrew: () => void;
+  setJobAssignee: (assignee: "self" | string) => void;
 }
 
 const bundle = loadContentBundle();
@@ -284,7 +292,30 @@ export const useUiStore = create<UiState>((set, get) => ({
   },
 
   hireCrew: () => {
-    set({ notice: bundle.strings.crewDeferred });
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    const result = hireCrewFlow(current);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      lastAction: result.payload ? toSummary("Crew Hire", [`${result.payload.name} is now on the roster.`], result.digest) : get().lastAction,
+      notice: result.notice ?? ""
+    });
+  },
+
+  setJobAssignee: (assignee) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    const result = setActiveJobAssignee(current, assignee);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      notice: result.notice ?? ""
+    });
   }
 }));
 

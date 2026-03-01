@@ -1,3 +1,4 @@
+import { getCrewCapacity } from "../../core/playerFlow";
 import { bundle, useUiStore } from "../state";
 
 interface CompanyTabProps {
@@ -33,14 +34,60 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
   }
 
   if (modalView === "crews") {
+    const crewCapacity = getCrewCapacity();
+    const canHire = game.player.companyLevel >= 2 && game.player.crews.length < crewCapacity;
     return (
-      <article className="chrome-card inset-card">
-        <p className="eyebrow">Crews</p>
-        <p>{bundle.strings.crewDeferred}</p>
-        <button className="ghost-button" onClick={() => hireCrew()} disabled>
-          Hire Crew (Deferred)
-        </button>
-      </article>
+      <section className="stack-block">
+        <article className="chrome-card inset-card">
+          <div className="section-label-row">
+            <div>
+              <p className="eyebrow">Crew Roster</p>
+              <h3>
+                {game.player.crews.length}/{crewCapacity} filled
+              </h3>
+            </div>
+            <span className="chip">Level {game.player.companyLevel}</span>
+          </div>
+          <p className="muted-copy">
+            {game.player.companyLevel >= 2
+              ? "Hire one steady extra set of hands at a time."
+              : "Reach company level 2 to unlock the first crew slot."}
+          </p>
+          <button className="ghost-button" onClick={() => hireCrew()} disabled={!canHire}>
+            {game.player.crews.length >= crewCapacity ? "Crew Cap Reached" : "Hire Crew"}
+          </button>
+        </article>
+        <div className="stack-list">
+          {Array.from({ length: crewCapacity }, (_, index) => game.player.crews[index] ?? null).map((crew, index) =>
+            crew ? (
+              <article key={crew.crewId} className="chrome-card inset-card">
+                <div className="section-label-row tight-row">
+                  <strong>{crew.name}</strong>
+                  <span className="chip">
+                    Stamina {crew.stamina}/{crew.staminaMax}
+                  </span>
+                </div>
+                <div className="metric-grid two-up">
+                  <span>Efficiency {crew.efficiency}</span>
+                  <span>Reliability {crew.reliability}</span>
+                  <span>Morale {crew.morale}</span>
+                  <span>Slot {index + 1}</span>
+                </div>
+              </article>
+            ) : (
+              <article key={`open-slot-${index + 1}`} className="chrome-card inset-card">
+                <div className="section-label-row tight-row">
+                  <strong>Open Slot {index + 1}</strong>
+                  <span className="chip muted">{game.player.companyLevel >= 2 ? "Ready" : "Locked"}</span>
+                </div>
+                <p className="muted-copy">
+                  {game.player.companyLevel >= 2 ? "This crew slot is ready to hire." : "Progress the company to unlock this slot."}
+                </p>
+              </article>
+            )
+          )}
+        </div>
+      </section>
     );
   }
 

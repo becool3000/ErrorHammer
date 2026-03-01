@@ -4,6 +4,7 @@ import {
   ActorState,
   ContentBundle,
   ContractInstance,
+  CrewState,
   DayLog,
   DistrictDef,
   EventDef,
@@ -114,6 +115,40 @@ const TASK_ORDER: TaskId[] = [
   "collect_payment",
   "return_to_shop",
   "store_leftovers"
+];
+
+const CREW_TEMPLATES: Array<{
+  crewId: string;
+  name: string;
+  staminaMax: number;
+  efficiency: number;
+  reliability: number;
+  morale: number;
+}> = [
+  {
+    crewId: "crew-1",
+    name: "June",
+    staminaMax: 6,
+    efficiency: 1,
+    reliability: 1,
+    morale: 2
+  },
+  {
+    crewId: "crew-2",
+    name: "Mina",
+    staminaMax: 6,
+    efficiency: 2,
+    reliability: 1,
+    morale: 1
+  },
+  {
+    crewId: "crew-3",
+    name: "Ivo",
+    staminaMax: 7,
+    efficiency: 1,
+    reliability: 2,
+    morale: 1
+  }
 ];
 
 export const BASE_DAY_TICKS = 16;
@@ -262,6 +297,8 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     jobId: picked.job.id,
     districtId: picked.job.districtId,
     acceptedDay: state.day,
+    assignee: "self",
+    staminaCommitted: false,
     lockedPayout,
     location: "shop",
     qualityPoints: 0,
@@ -284,6 +321,97 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
   return {
     nextState,
     payload: cloneActiveJob(nextState.activeJob),
+    digest: digestState(nextState)
+  };
+}
+
+export function getCrewCapacity(): number {
+  return CREW_TEMPLATES.length;
+}
+
+export function normalizeGameState(state: Partial<GameState>): GameState {
+  const normalizedPlayer = {
+    ...state.player!,
+    crews: (state.player?.crews ?? []).map((crew) => ({
+      ...crew,
+      stamina: crew.stamina ?? crew.staminaMax
+    }))
+  };
+
+  return {
+    ...(state as GameState),
+    player: normalizedPlayer,
+    activeJob: state.activeJob
+      ? {
+          ...state.activeJob,
+          assignee: state.activeJob.assignee ?? "self",
+          staminaCommitted: state.activeJob.staminaCommitted ?? false
+        }
+      : null
+  };
+}
+
+export function hireCrew(state: GameState): StateTransitionResult<CrewState> {
+  if (state.player.companyLevel < 2) {
+    return { nextState: state, notice: "Reach company level 2 before hiring a crew.", digest: digestState(state) };
+  }
+
+  if (state.player.crews.length >= CREW_TEMPLATES.length) {
+    return { nextState: state, notice: "All crew slots are already filled.", digest: digestState(state) };
+  }
+
+  const openTemplate = CREW_TEMPLATES.find((template) => !state.player.crews.some((crew) => crew.crewId === template.crewId));
+  if (!openTemplate) {
+    return { nextState: state, notice: "All crew slots are already filled.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  const nextCrew: CrewState = {
+    crewId: openTemplate.crewId,
+    name: openTemplate.name,
+    staminaMax: openTemplate.staminaMax,
+    stamina: openTemplate.staminaMax,
+    efficiency: openTemplate.efficiency,
+    reliability: openTemplate.reliability,
+    morale: openTemplate.morale
+  };
+  nextState.player.crews = [...nextState.player.crews, nextCrew];
+
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: `${nextCrew.name} joined the company roster.`
+  });
+
+  return {
+    nextState,
+    payload: { ...nextCrew },
+    notice: `${nextCrew.name} joined the crew roster.`,
+    digest: digestState(nextState)
+  };
+}
+
+export function setActiveJobAssignee(state: GameState, assignee: "self" | string): StateTransitionResult<ActiveJobState> {
+  if (!state.activeJob) {
+    return { nextState: state, notice: "No active job to assign.", digest: digestState(state) };
+  }
+
+  if (assignee !== "self" && !state.player.crews.some((crew) => crew.crewId === assignee)) {
+    return { nextState: state, notice: "That crew is unavailable.", digest: digestState(state) };
+  }
+
+  const workTask = state.activeJob.tasks.find((task) => task.taskId === "do_work");
+  if (state.activeJob.staminaCommitted || (workTask?.completedUnits ?? 0) > 0) {
+    return { nextState: state, notice: "The assignee is locked once work starts.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  nextState.activeJob!.assignee = assignee;
+
+  return {
+    nextState,
+    payload: cloneActiveJob(nextState.activeJob),
+    notice: `${getAssigneeDisplayName(nextState.player, assignee)} is set for this job.`,
     digest: digestState(nextState)
   };
 }
@@ -340,6 +468,11 @@ export function performTaskUnit(
   const district = bundle.districts.find((entry) => entry.id === state.activeJob?.districtId);
   if (!job || !district) {
     return { nextState: state, notice: "Active job data is incomplete.", digest: digestState(state) };
+  }
+
+  const assignee = getJobAssignee(state.player, state.activeJob.assignee);
+  if (!assignee) {
+    return { nextState: state, notice: "Assigned crew is unavailable.", digest: digestState(state) };
   }
 
   const effectiveStance = activeTask.qualityBearing ? stance : "standard";
@@ -434,6 +567,9 @@ export function performTaskUnit(
       }
       break;
     case "do_work":
+      if (!nextState.activeJob!.staminaCommitted) {
+        commitActiveJobStamina(nextState, job, logLines);
+      }
       if (timing.timeOutcome !== "rework" && !nextState.activeJob!.materialsReserved) {
         if (!reserveMaterials(nextState.truckSupplies, job.materialNeeds)) {
           return { nextState: state, notice: "The truck is short on materials.", digest: digestState(state) };
@@ -466,7 +602,7 @@ export function performTaskUnit(
       break;
   }
 
-  const taskLogLines = logLines.map((line) => line.trim()).filter(Boolean);
+  const taskLogLines = logLines.map((line) => formatAssigneeLogLine(assignee.name, line.trim())).filter(Boolean);
   for (const line of taskLogLines) {
     appendLog(nextState, {
       day: nextState.day,
@@ -507,6 +643,11 @@ export function prepareForNextDay(state: GameState): GameState {
   const recovery = getRecoveryForWeekday(getWeekday(nextState.day));
   nextState.workday.fatigue.debt = Math.max(0, nextState.workday.fatigue.debt - recovery);
   nextState.workday = createInitialWorkday(nextState.day, nextState.workday.fatigue.debt);
+  nextState.player.stamina = nextState.player.staminaMax;
+  nextState.player.crews = nextState.player.crews.map((crew) => ({
+    ...crew,
+    stamina: crew.staminaMax
+  }));
 
   if (nextState.activeJob && nextState.activeJob.location !== "shop" && Object.keys(nextState.truckSupplies).length > 0) {
     moveAllSupplies(nextState.truckSupplies, nextState.activeJob.siteSupplies);
@@ -845,6 +986,10 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
 
 function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: ActiveTaskState, job: JobDef): string | null {
   const activeJob = state.activeJob!;
+  const assignee = getJobAssignee(state.player, activeJob.assignee);
+  if (!assignee) {
+    return "The assigned crew is unavailable.";
+  }
   switch (task.taskId) {
     case "load_from_shop":
       return activeJob.location === "shop" ? null : "Return to the shop before loading supplies.";
@@ -877,6 +1022,9 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
       if (activeJob.location !== "job-site") {
         return "Travel to the job site first.";
       }
+      if (!activeJob.staminaCommitted && assignee.stamina < job.staminaCost) {
+        return `${assignee.name} does not have enough stamina for the work.`;
+      }
       if (!hasUsableTools(state.player, job.requiredTools)) {
         return "Missing usable tools for the work.";
       }
@@ -899,6 +1047,38 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
     case "store_leftovers":
       return activeJob.location === "shop" ? null : "Return to the shop before storing leftovers.";
   }
+}
+
+function commitActiveJobStamina(state: GameState, job: JobDef, logLines: string[]): void {
+  const activeJob = state.activeJob!;
+  const assignee = getJobAssignee(state.player, activeJob.assignee);
+  if (!assignee || activeJob.staminaCommitted) {
+    return;
+  }
+  assignee.stamina = Math.max(0, assignee.stamina - job.staminaCost);
+  activeJob.staminaCommitted = true;
+  logLines.push(`${assignee.name} committed ${job.staminaCost} stamina to ${job.name}.`);
+}
+
+function getJobAssignee(actor: ActorState, assignee: "self" | string): { name: string; stamina: number } | ActorState | CrewState | null {
+  if (assignee === "self") {
+    return actor;
+  }
+  return actor.crews.find((crew) => crew.crewId === assignee) ?? null;
+}
+
+function getAssigneeDisplayName(actor: ActorState, assignee: "self" | string): string {
+  if (assignee === "self") {
+    return actor.name;
+  }
+  return actor.crews.find((crew) => crew.crewId === assignee)?.name ?? assignee;
+}
+
+function formatAssigneeLogLine(assigneeName: string, line: string): string {
+  if (!line) {
+    return line;
+  }
+  return `${assigneeName}: ${line}`;
 }
 
 function hasOutstandingSupplierStop(activeJob: ActiveJobState): boolean {
