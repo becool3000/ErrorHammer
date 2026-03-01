@@ -35,7 +35,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           aria-controls="workday-status-panel"
           onClick={() => setDetailsOpen((open) => !open)}
         >
-          <span className="summary-toggle-copy">
+          <span className="summary-toggle-copy header-summary-copy">
             <span className="eyebrow">{tabLabels[activeTab]}</span>
             <h1 className="summary-toggle-title">Day {game.day}</h1>
             <span className="header-subtitle">

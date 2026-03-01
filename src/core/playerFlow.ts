@@ -1002,7 +1002,9 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
       if (activeJob.location !== "supplier") {
         return "Travel to the supplier first.";
       }
-      return Object.values(activeJob.supplierCart).every((quantity) => quantity <= 0) ? "Add items to the cart first." : null;
+      return Object.values(activeJob.supplierCart).every((quantity) => quantity <= 0)
+        ? describeSupplierCartNeed(bundle, job, state.truckSupplies)
+        : null;
     case "travel_to_job_site":
       if (activeJob.location === "job-site") {
         return "Already at the job site.";
@@ -1156,6 +1158,20 @@ function getMaterialShortfall(materialNeeds: JobDef["materialNeeds"], inventory:
     }
   }
   return shortfall;
+}
+
+function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory: SupplyInventory): string {
+  const shortfall = getMaterialShortfall(job.materialNeeds, inventory);
+  const lines = Object.entries(shortfall)
+    .map(([supplyId, quantity]) => {
+      const supplyName = bundle.supplies.find((entry) => entry.id === supplyId)?.name ?? supplyId;
+      return `${quantity}x ${supplyName}`;
+    })
+    .slice(0, 4);
+  if (lines.length === 0) {
+    return "Use +/- in Supplies to add the needed items to the supplier cart before checkout.";
+  }
+  return `Use +/- in Supplies to add these items before checkout: ${lines.join(", ")}.`;
 }
 
 function getTimeMods(stance: TaskStance): { fast: number; rework: number; delay: number } {

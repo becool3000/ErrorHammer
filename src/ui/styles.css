@@ -201,6 +201,11 @@ p {
   gap: 0.2rem;
 }
 
+.header-summary-copy {
+  justify-items: center;
+  text-align: center;
+}
+
 .hud-button {
   flex: 0 0 auto;
   min-width: 8rem;
@@ -264,6 +269,15 @@ p {
 
 .notice-action {
   cursor: pointer;
+}
+
+.task-inline-notice {
+  margin-top: 0.15rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 120, 94, 0.35);
+  background: rgba(133, 58, 41, 0.2);
+  color: #f0c1b3;
 }
 
 .tab-stage,

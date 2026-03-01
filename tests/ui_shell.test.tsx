@@ -315,6 +315,40 @@ describe("compact shell ui", () => {
     expect(headerPanel?.className.includes("open")).toBe(false);
   });
 
+  it("EH-TW-052: supplier cart guidance appears inline in the current-task card", () => {
+    const game = buildAcceptableGame(6065);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        activeTab: "work",
+        game: {
+          ...current,
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "supplier",
+                supplierCart: {},
+                tasks: current.activeJob.tasks.map((task) =>
+                  task.taskId === "load_from_shop" || task.taskId === "travel_to_supplier"
+                    ? { ...task, completedUnits: task.requiredUnits || 1 }
+                    : task
+                )
+              }
+            : null
+        }
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
+    expect(screen.getByText(/Use \+\/- in Supplies to add/i)).toBeTruthy();
+    expect(screen.queryAllByText(/Use \+\/- in Supplies to add/i).length).toBe(1);
+  });
+
   it("EH-TW-034: supplier-state jobs expose the supplies bottom sheet", () => {
     const game = buildAcceptableGame(7070);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });

@@ -19,6 +19,7 @@ export function GameShell() {
   const clearNotice = useUiStore((state) => state.clearNotice);
   const goToTab = useUiStore((state) => state.goToTab);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
+  const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Use +/- in Supplies");
 
   if (!game) {
     return (
@@ -37,7 +38,7 @@ export function GameShell() {
   return (
     <main className="screen-shell app-shell">
       <CompactHeader game={game} activeTab={activeTab} />
-      {notice ? (
+      {notice && !suppressNoticeBanner ? (
         <button className="notice-banner notice-action" onClick={() => clearNotice()}>
           {notice}
         </button>

@@ -16,6 +16,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const actionTrackRef = useRef<HTMLDivElement | null>(null);
   const game = useUiStore((state) => state.game);
   const lastAction = useUiStore((state) => state.lastAction);
+  const notice = useUiStore((state) => state.notice);
   const performTask = useUiStore((state) => state.performTaskUnit);
   const setJobAssignee = useUiStore((state) => state.setJobAssignee);
   const endShift = useUiStore((state) => state.endShift);
@@ -55,6 +56,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           }))
         )
     : [];
+  const supplierCartNotice = notice.startsWith("Use +/- in Supplies") ? notice : "";
 
   useEffect(() => {
     syncActionCarousel();
@@ -252,11 +254,11 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
+        {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
         {currentTask ? (
           <div className="action-carousel">
             <div className="action-carousel-header">
-              <span className="eyebrow">Action Carousel</span>
               <div className="carousel-nav">
                 <button
                   type="button"
