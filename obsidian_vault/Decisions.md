@@ -63,6 +63,9 @@
 61. Gameplay depth planning chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is the active post-`DOC-006` lane chain for `main`.
 62. `BLD-007` is verified closed: active jobs default to `assignee = "self"`, crew hires follow the fixed roster order `crew-1 -> crew-2 -> crew-3`, and assignee stamina is committed once on first work execution rather than per later task step.
 63. `TW-007`, `VF-007`, and `DOC-007` are complete as of 2026-03-01, and their verification/documentation source of truth remains `obsidian_vault/Testing.md` plus README usage/testing sections.
+64. `PLN-008` opens a rolling Builder session for iterative UI/UX work on `main` using a single active Builder card (`BLD-008`) instead of repeated Planner handoffs for each small batch.
+65. `BLD-008` uses small frequent `[Builder]` commits, remains `IN_PROGRESS` until the user explicitly ends the session, and defers `TW-008`, `VF-008`, and `DOC-008` until that explicit close command.
+66. Builder may ship UI/UX improvements and directly supporting refinements during `BLD-008`, but must pause for Planner input before introducing new gameplay systems, economy/progression rule changes, material content expansion, or broader product redesign.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.

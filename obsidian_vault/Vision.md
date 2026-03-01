@@ -33,10 +33,11 @@
 9. Evidence details are recorded in `obsidian_vault/Testing.md`.
 
 ## Next Focus
-1. `DOC-007` closes the crew + event depth chain on `main`.
-2. The verified baseline now includes deterministic crew hiring, active-job assignee selection, save-safe assignee defaults, and `Work`-hero event cue visibility.
-3. Keep this documented baseline as the handoff anchor for the next planner-defined chain.
-4. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirement in follow-on scope.
+1. `PLN-008` opens a rolling Builder session for iterative UI/UX refinement on `main`.
+2. The verified baseline remains the closed `DOC-007` state until the rolling Builder session is explicitly ended and re-verified.
+3. The next active work is not a one-shot feature chain; it is an ongoing `BLD-008` UI/UX polish loop with small frequent commits and a pause-on-feature-drift rule.
+4. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements while Builder iterates.
+5. Defer TestWriter, Verifier, and Documenter closeout until the user explicitly ends the rolling Builder session.
 
 ## Archive
 1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.

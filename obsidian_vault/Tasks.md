@@ -3,8 +3,10 @@
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is fully closed on `main`.
 2. Name + Hour chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is fully closed on `main`.
 3. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is fully closed on `main`.
-4. Lane cards `BLD-007`, `TW-007`, `VF-007`, and `DOC-007` are complete with recorded exit evidence.
-5. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
+4. `PLN-008` is now active and defines a rolling Builder session for ongoing UI/UX iteration on `main`.
+5. `BLD-008` is the only active `IN_PROGRESS` lane card and remains open until the user explicitly ends the Builder session.
+6. `TW-008`, `VF-008`, and `DOC-008` stay deferred until the rolling Builder session is closed.
+7. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-01.
@@ -53,6 +55,11 @@ Snapshot date: 2026-03-01.
 | TW-007  | TestWriter | DONE       | P1       | BLD-007    | `Deterministic crew/event scenarios`                                       | Added deterministic scenarios `EH-TW-044..EH-TW-049` for crew hire gating, assignee stamina/lock behavior, save-safe defaults, crew-modal hiring, and work-tab event cues.                               |
 | VF-007  | Verifier   | DONE       | P1       | TW-007     | `Crew + event verification checklist`                                      | Verified `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`; all `EH-TW-044..EH-TW-049` checks passed and no validated bug patch was required.                        |
 | DOC-007 | Documenter | DONE       | P1       | VF-007     | `Document crew + event depth`                                              | Synced README usage/testing sections and vault artifacts to the verified crew workflow, event cues, scenario coverage, and `VF-007` evidence.                                                              |
+| PLN-008 | Planner    | DONE       | P1       | DOC-007    | `Rolling Builder session planning lock for ongoing UI/UX iteration`        | `Vision.md`, `Decisions.md`, `Tasks.md`, and `README.md` updated with a decision-complete rolling `BLD-008` handoff, session guardrails, and explicit close conditions.                                   |
+| BLD-008 | Builder    | IN_PROGRESS| P1       | PLN-008    | `Rolling UI/UX iteration session`                                          | Session remains active until the user explicitly says Builder is done; Builder ships small `[Builder]` commits, stays within UI/UX plus directly supporting refinements, and pauses on feature drift.      |
+| TW-008  | TestWriter | READY      | P1       | BLD-008    | `Deterministic coverage for final BLD-008 session delta`                   | Trigger only after the user closes `BLD-008`; convert the final Builder delta into deterministic scenarios, pass/fail criteria, and any manual UX smoke steps.                                            |
+| VF-008  | Verifier   | READY      | P1       | TW-008     | `Verification closeout for final BLD-008 session delta`                    | Trigger only after `TW-008`; run the command checklist, execute the `TW-008` scenarios, patch only validated defects, and record evidence tied to the final Builder batch set.                            |
+| DOC-008 | Documenter | READY      | P1       | VF-008     | `Documentation sync for final BLD-008 session delta`                       | Trigger only after `VF-008`; sync README/vault notes to the final verified UI/UX behavior and close the rolling session chain.                                                                             |
 
 ### Supersession Archive
 | Superseded Card | Replacement Card | Date | Reason |
@@ -185,3 +192,51 @@ Status: Planned on 2026-03-01 after the Name + Hour chain (`PLN-006 -> BLD-006 -
 3. TestWriter: complete (`TW-007`).
 4. Verifier: complete (`VF-007`).
 5. Documenter: complete (`DOC-007`).
+
+## [TASK] Rolling Builder Session (`PLN-008`)
+Status: Active on 2026-03-01 after `DOC-007` closed the crew + event depth chain.
+
+### Problem Statement
+1. The project needs sustained UI/UX iteration without reopening Planner for every small adjustment.
+2. A normal one-card feature chain would create unnecessary handoff overhead for incremental polish work.
+3. Without explicit guardrails, open-ended UI refinement can drift into gameplay or content changes that should be separately planned and verified.
+
+### Goals
+1. Create one long-running Builder session for many small UI/UX improvements on `main`.
+2. Keep Builder shipping small, focused `[Builder]` commits while preserving current deterministic gameplay behavior.
+3. Defer TestWriter, Verifier, and Documenter until the user explicitly ends the Builder session.
+4. Make the stop conditions and pause conditions explicit so Builder can work autonomously without scope confusion.
+
+### Constraints
+1. Builder scope is UI/UX first: layout, hierarchy, navigation clarity, copy, affordances, interaction polish, and visual cleanup.
+2. Small supporting changes outside `src/ui/**` are allowed only when required to make the UX work cleanly and without introducing new gameplay scope.
+3. Builder must preserve pure core logic in `src/core/**`, route randomness through seeded `rng.ts`, and keep UI state transitions resolver-driven.
+4. Builder must pause for Planner input before adding gameplay systems, economy/progression rule changes, substantial new content scope, or broader product redesign.
+5. Later lanes do not begin until the user explicitly ends `BLD-008`.
+
+### Risks
+1. Scope creep can turn UI/UX polish into feature work without a fresh planning decision.
+2. A long-running Builder session can accumulate verification debt if commit intent is not kept clear.
+3. Fast UI iteration can leak business logic into components if resolver boundaries are not enforced.
+4. README/vault summaries can temporarily lag the in-progress Builder state until the session is formally closed.
+
+### Deliverables
+1. A rolling `BLD-008` lane card marked `IN_PROGRESS` with explicit session-close evidence.
+2. A Builder handoff that authorizes repeated small UI/UX commits without repeated Planner restarts.
+3. Explicit deferred follow-on cards `TW-008`, `VF-008`, and `DOC-008` that activate only after user-directed session close.
+
+### Builder Handoff (`BLD-008`)
+1. Prioritize player-facing clarity first: navigation, affordances, spacing, hierarchy, copy, and state visibility.
+2. Prefer small focused edits that each improve one part of the experience rather than broad rewrites.
+3. If a UI problem requires a narrow supporting code change outside the UI layer, implement the smallest change that preserves current gameplay rules.
+4. Commit frequently on `main` with `[Builder]` messages that describe the UI/UX intent of the batch.
+5. Keep a short running handoff summary after each batch so the final `TW-008` pass can identify what changed.
+6. Pause and ask for Planner input before adding gameplay systems, changing economy/progression/event math, expanding content scope, or drifting into product redesign.
+7. When the user explicitly says the Builder session is done, stop implementation and hand off the consolidated session delta to `TW-008`.
+
+### Exit Evidence
+1. Planner: complete (`PLN-008`).
+2. Builder: still active (`BLD-008`) until explicit user close.
+3. TestWriter: deferred (`TW-008`) until `BLD-008` closes.
+4. Verifier: deferred (`VF-008`) until `TW-008` closes.
+5. Documenter: deferred (`DOC-008`) until `VF-008` closes.

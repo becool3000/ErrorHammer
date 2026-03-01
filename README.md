@@ -41,4 +41,5 @@
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
 2. Handoff source of truth is `obsidian_vault/Tasks.md` under `Active Lane Board (Kanban)`.
 3. WIP limit remains one `IN_PROGRESS` card per lane.
-4. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.
+4. `PLN-008` opens a rolling Builder session for iterative UI/UX work: `BLD-008` stays active until the user explicitly ends it, and only then does the lane flow resume with `TW-008 -> VF-008 -> DOC-008`.
+5. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.
