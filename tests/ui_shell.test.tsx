@@ -251,11 +251,61 @@ describe("compact shell ui", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
 
+    fireEvent.click(screen.getByRole("button", { name: /Active Events 1/i }));
+    expect(screen.getByRole("dialog", { name: /Active Events/i })).toBeTruthy();
     expect(screen.getByText(/Light Rain, Heavy Opinions/i)).toBeTruthy();
     expect(screen.getByText(/Outdoor jobs pay less and slip more/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Close Active Events/i }));
     fireEvent.click(screen.getByRole("button", { name: /June \(6\/6\)/i }));
 
     expect(useUiStore.getState().game?.activeJob?.assignee).toBe("crew-1");
+  });
+
+  it("EH-TW-050: active job details collapse and reopen from the job summary row", () => {
+    const game = buildAcceptableGame(6063);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    const activeJobToggle = screen.getByRole("button", { name: /Toggle active job details for/i });
+    const activeJobPanel = document.getElementById("active-job-panel");
+    expect(screen.getByRole("button", { name: /^Job Details$/i })).toBeTruthy();
+    expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("false");
+
+    fireEvent.click(activeJobToggle);
+    expect(activeJobToggle.getAttribute("aria-expanded")).toBe("false");
+    expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("true");
+    expect(activeJobPanel?.className.includes("open")).toBe(false);
+
+    fireEvent.click(activeJobToggle);
+    expect(activeJobToggle.getAttribute("aria-expanded")).toBe("true");
+    expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("false");
+    expect(activeJobPanel?.className.includes("open")).toBe(true);
+    expect(screen.getByRole("button", { name: /^Job Details$/i })).toBeTruthy();
+  });
+
+  it("EH-TW-051: workday HUD details collapse and reopen from the header summary", () => {
+    const game = createInitialGameState(bundle, 6064);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+
+    const headerToggle = screen.getByRole("button", { name: /Toggle workday details for Day 1/i });
+    const headerPanel = document.getElementById("workday-status-panel");
+    expect(screen.getByText(/Cash \$300/i)).toBeTruthy();
+    expect(headerPanel?.getAttribute("aria-hidden")).toBe("false");
+
+    fireEvent.click(headerToggle);
+    expect(headerToggle.getAttribute("aria-expanded")).toBe("false");
+    expect(headerPanel?.getAttribute("aria-hidden")).toBe("true");
+    expect(headerPanel?.className.includes("open")).toBe(false);
+
+    fireEvent.click(headerToggle);
+    expect(headerToggle.getAttribute("aria-expanded")).toBe("true");
+    expect(headerPanel?.getAttribute("aria-hidden")).toBe("false");
+    expect(headerPanel?.className.includes("open")).toBe(true);
+    expect(screen.getByText(/Cash \$300/i)).toBeTruthy();
   });
 
   it("EH-TW-034: supplier-state jobs expose the supplies bottom sheet", () => {

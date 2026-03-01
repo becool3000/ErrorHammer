@@ -1,15 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
 import { formatHours, getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
-  modalView?: "job-details" | "inventory" | "field-log";
+  modalView?: "job-details" | "inventory" | "field-log" | "active-events";
   sheetOnly?: boolean;
 }
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(true);
   const game = useUiStore((state) => state.game);
   const lastAction = useUiStore((state) => state.lastAction);
   const performTask = useUiStore((state) => state.performTaskUnit);
@@ -158,6 +159,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     );
   }
 
+  if (modalView === "active-events") {
+    return (
+      <section className="stack-block">
+        <EventCueCard eventCueRows={eventCueRows} />
+      </section>
+    );
+  }
+
   if (!activeJob || !job) {
     return (
       <section className="tab-panel work-tab">
@@ -180,7 +189,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <span>Overtime left {Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed)}</span>
           </div>
         </article>
-        <EventCueCard eventCueRows={eventCueRows} />
         <div className="sticky-action-bar">
           <button className="primary-button wide-button" onClick={() => endShift()}>
             End Shift
@@ -194,49 +202,64 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     <section className="tab-panel work-tab">
       <article className="hero-card chrome-card active-job-hero">
         <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Active Job</p>
-            <h2>{job.name}</h2>
-          </div>
+          <button
+            type="button"
+            className="summary-toggle summary-toggle-block"
+            aria-label={`Toggle active job details for ${job.name}`}
+            aria-expanded={jobDetailsOpen}
+            aria-controls="active-job-panel"
+            onClick={() => setJobDetailsOpen((open) => !open)}
+          >
+            <span className="summary-toggle-copy">
+              <span className="eyebrow">Active Job</span>
+              <span className="summary-toggle-title">{job.name}</span>
+            </span>
+            <span className="chip">{jobDetailsOpen ? "Hide" : "Show"}</span>
+          </button>
           <span className="chip">{activeJob.location}</span>
         </div>
-        <p className="muted-copy">{job.flavor.client_quote}</p>
-        <div className="metric-grid two-up">
-          <span>Payout ${activeJob.lockedPayout}</span>
-          <span>Quality {activeJob.qualityPoints}</span>
-          <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
-          <span>Rework {activeJob.reworkCount}</span>
-        </div>
-        <div className="detail-block">
-          <strong>Assigned To</strong>
-          <div className="chip-grid">
-            <button className={activeJob.assignee === "self" ? "primary-button" : "ghost-button"} onClick={() => setJobAssignee("self")}>
-              {game.player.name} ({game.player.stamina}/{game.player.staminaMax})
-            </button>
-            {game.player.crews.map((crew) => (
-              <button
-                key={crew.crewId}
-                className={activeJob.assignee === crew.crewId ? "primary-button" : "ghost-button"}
-                onClick={() => setJobAssignee(crew.crewId)}
-              >
-                {crew.name} ({crew.stamina}/{crew.staminaMax})
+        <div
+          id="active-job-panel"
+          className={jobDetailsOpen ? "collapsible-panel open" : "collapsible-panel"}
+          aria-hidden={!jobDetailsOpen}
+        >
+          <p className="muted-copy">{job.flavor.client_quote}</p>
+          <div className="metric-grid two-up">
+            <span>Payout ${activeJob.lockedPayout}</span>
+            <span>Quality {activeJob.qualityPoints}</span>
+            <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
+            <span>Rework {activeJob.reworkCount}</span>
+          </div>
+          <div className="detail-block">
+            <strong>Assigned To</strong>
+            <div className="chip-grid">
+              <button className={activeJob.assignee === "self" ? "primary-button" : "ghost-button"} onClick={() => setJobAssignee("self")}>
+                {game.player.name} ({game.player.stamina}/{game.player.staminaMax})
               </button>
-            ))}
+              {game.player.crews.map((crew) => (
+                <button
+                  key={crew.crewId}
+                  className={activeJob.assignee === crew.crewId ? "primary-button" : "ghost-button"}
+                  onClick={() => setJobAssignee(crew.crewId)}
+                >
+                  {crew.name} ({crew.stamina}/{crew.staminaMax})
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="action-row wrap-row">
+            <button className="ghost-button" onClick={() => openModal("job-details")}>
+              Job Details
+            </button>
+            <button className="ghost-button" onClick={() => openModal("inventory")}>
+              Inventory
+            </button>
+            <button className="ghost-button" onClick={() => openModal("field-log")}>
+              Field Log
+            </button>
           </div>
         </div>
-        <div className="action-row wrap-row">
-          <button className="ghost-button" onClick={() => openModal("job-details")}>
-            Job Details
-          </button>
-          <button className="ghost-button" onClick={() => openModal("inventory")}>
-            Inventory
-          </button>
-          <button className="ghost-button" onClick={() => openModal("field-log")}>
-            Field Log
-          </button>
-        </div>
       </article>
-      <EventCueCard eventCueRows={eventCueRows} />
 
       <article className="chrome-card inset-card task-focus-card">
         <div className="section-label-row">

@@ -61,6 +61,9 @@ export function GameShell() {
       <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
         <WorkTab modalView="field-log" />
       </Modal>
+      <Modal open={activeModal === "active-events"} title="Active Events" onClose={closeModal}>
+        <WorkTab modalView="active-events" />
+      </Modal>
       <Modal open={activeModal === "districts"} title={bundle.strings.companyDistrictButton} onClose={closeModal}>
         <CompanyTab modalView="districts" />
       </Modal>
