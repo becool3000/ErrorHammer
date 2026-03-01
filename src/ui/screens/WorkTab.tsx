@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
-import { getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
+import { formatHours, getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
 import { bundle, useUiStore } from "../state";
 
@@ -18,8 +18,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const openSheet = useUiStore((state) => state.openSheet);
   const goToTab = useUiStore((state) => state.goToTab);
   const setCartQuantity = useUiStore((state) => state.setCartQuantity);
-  const [expandedAction, setExpandedAction] = useState(true);
-
   if (!game) {
     return null;
   }
@@ -79,7 +77,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <span>Location {activeJob.location}</span>
             <span>Quality {activeJob.qualityPoints}</span>
             <span>Rework {activeJob.reworkCount}</span>
-            <span>Time {activeJob.actualTicksSpent}/{activeJob.plannedTicks}</span>
+            <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
             <span>Outcome {activeJob.outcome ?? "open"}</span>
           </div>
         </article>
@@ -196,7 +194,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         <div className="metric-grid two-up">
           <span>Payout ${activeJob.lockedPayout}</span>
           <span>Quality {activeJob.qualityPoints}</span>
-          <span>Time {activeJob.actualTicksSpent}/{activeJob.plannedTicks}</span>
+          <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
           <span>Rework {activeJob.reworkCount}</span>
         </div>
         <div className="action-row wrap-row">
@@ -223,32 +221,38 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         {currentTask ? <p className="muted-copy">Primary actions stay pinned below for fast shift play.</p> : null}
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
         {currentTask ? (
-          <div className="stance-grid">
-            {currentTask.availableStances.map((stance) => (
-              <button key={stance} className="primary-button" onClick={() => performTask(stance, false)}>
-                {labelForStance(stance)}
-              </button>
-            ))}
-            {currentTask.availableStances.map((stance) => (
-              <button key={`${stance}-ot`} className="ghost-button" onClick={() => performTask(stance, true)}>
-                {labelForStance(stance)} + OT
-              </button>
-            ))}
+          <div className="action-carousel">
+            <div className="carousel-track">
+              {currentTask.availableStances.map((stance) => ({
+                stance,
+                allowOvertime: false,
+                label: labelForStance(stance)
+              })).concat(
+                currentTask.availableStances.map((stance) => ({
+                  stance,
+                  allowOvertime: true,
+                  label: `${labelForStance(stance)} + OT`
+                }))
+              ).map((action) => (
+                <button
+                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
+                  className={action.allowOvertime ? "ghost-button" : "primary-button"}
+                  onClick={() => performTask(action.stance, action.allowOvertime)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
         {lastAction ? (
           <div className="last-action-panel">
-            <button className="summary-toggle" onClick={() => setExpandedAction((value) => !value)}>
-              {expandedAction ? "Hide" : "Show"} Last Action
-            </button>
-            {expandedAction ? (
-              <div className="summary-copy">
-                <strong>{lastAction.title}</strong>
-                {lastAction.lines.map((line, index) => (
-                  <p key={`${lastAction.digest}-${index}`}>{line}</p>
-                ))}
-              </div>
-            ) : null}
+            <strong>{lastAction.title}</strong>
+            <div className="summary-copy">
+              {lastAction.lines.map((line, index) => (
+                <p key={`${lastAction.digest}-${index}`}>{line}</p>
+              ))}
+            </div>
           </div>
         ) : null}
       </article>

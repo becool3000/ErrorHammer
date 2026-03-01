@@ -7,6 +7,7 @@ import {
   getSkillRank,
   getTaskTimeChances,
   performTaskUnit,
+  quickBuyMissingTools,
   setSupplierCartQuantity
 } from "../src/core/playerFlow";
 import { clear as clearSave, hasIncompatibleLegacySave, load as loadSave, save as saveState } from "../src/core/save";
@@ -63,6 +64,26 @@ function finishCurrentTaskUntilOutcome(state: ReturnType<typeof acceptJob>["stat
   }
 
   return lastResult;
+}
+
+const quickBuyContract = {
+  contractId: "quick-buy-contract",
+  jobId: "job-beta",
+  districtId: "residential",
+  payoutMult: 1,
+  expiresDay: 1
+};
+
+function setupQuickBuyState(seed: number, cash = 500, playerName?: string, companyName?: string) {
+  const scenarioBundle = makeScenarioBundle();
+  const state = createInitialGameState(scenarioBundle, seed, playerName, companyName);
+  state.player.tools = {
+    hammer: { toolId: "hammer", durability: 20 }
+  };
+  state.player.cash = cash;
+  state.contractBoard = [{ ...quickBuyContract }];
+  state.workday = { ...state.workday, ticksSpent: 0 };
+  return { state, bundle: scenarioBundle };
 }
 
 describe("TW-004 deterministic scenario suite", () => {
@@ -351,6 +372,42 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(fueled.nextState.player.tools.saw?.durability).toBe(7);
     expect(fueled.nextState.player.tools.hammer?.durability).toBe(6);
     expect(fueled.nextState.player.fuel).toBeGreaterThan(updated.player.fuel);
+  });
+
+  it("EH-TW-040: quick buy uses player/company names in logs", () => {
+    const { state, bundle } = setupQuickBuyState(2500, 500, "Margo", "Margo Metalworks");
+    const result = quickBuyMissingTools(state, bundle, quickBuyContract.contractId);
+
+    expect(result.payload?.missingTools.map((line) => line.toolName)).toEqual(["Drill"]);
+    expect(result.nextState.player.name).toBe("Margo");
+    expect(result.nextState.player.companyName).toBe("Margo Metalworks");
+    expect(result.nextState.log.some((entry) => entry.message.includes("Margo Metalworks"))).toBe(true);
+  });
+
+  it("EH-TW-041: quick buy spends hours, deducts cash, and keeps the board unchanged", () => {
+    const { state, bundle } = setupQuickBuyState(2600, 600);
+    const initialCash = state.player.cash;
+    const initialTicks = state.workday.ticksSpent;
+    const initialBoard = [...state.contractBoard];
+    const result = quickBuyMissingTools(state, bundle, quickBuyContract.contractId);
+
+    expect(result.payload?.requiredTicks).toBe(2);
+    expect(result.nextState.workday.ticksSpent - initialTicks).toBe(result.payload?.requiredTicks);
+    expect(result.nextState.player.cash).toBe(initialCash - (result.payload?.totalCost ?? 0));
+    expect(result.nextState.contractBoard).toEqual(initialBoard);
+  });
+
+  it("EH-TW-042: quick buy fails when cash or hours are insufficient", () => {
+    const { state: lowCash, bundle: cashBundle } = setupQuickBuyState(2700, 1);
+    const cashResult = quickBuyMissingTools(lowCash, cashBundle, quickBuyContract.contractId);
+    expect(cashResult.notice).toContain("cash");
+    expect(cashResult.nextState).toBe(lowCash);
+
+    const { state: lowTime, bundle: timeBundle } = setupQuickBuyState(2800, 1000);
+    lowTime.workday = { ...lowTime.workday, availableTicks: 0, maxOvertime: 0 };
+    const timeResult = quickBuyMissingTools(lowTime, timeBundle, quickBuyContract.contractId);
+    expect(timeResult.notice).toContain("hours");
+    expect(timeResult.nextState).toBe(lowTime);
   });
 
   it("EH-TW-013: normalized content bundle has expected keys and stable ordering", async () => {

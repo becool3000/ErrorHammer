@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
-import { buyFuel, performTaskUnit, setSupplierCartQuantity, acceptContract } from "../core/playerFlow";
+import { buyFuel, quickBuyMissingTools, formatHours, performTaskUnit, setSupplierCartQuantity, acceptContract } from "../core/playerFlow";
 import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from "../core/save";
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
 import { GameState, TaskStance } from "../core/types";
@@ -9,7 +9,6 @@ export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "contracts" | "store" | "company";
 export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
 export type StoreSectionId = "fuel" | "tools" | "stock";
-export type CompanyPanelId = "overview" | "districts" | "crews" | "news";
 export type ActiveModalId = null | "job-details" | "inventory" | "field-log" | "districts" | "crews" | "news";
 export type ActiveSheetId = null | "supplies";
 
@@ -23,14 +22,19 @@ interface UiState {
   screen: ScreenId;
   activeTab: GameTabId;
   storeSection: StoreSectionId;
-  companyPanel: CompanyPanelId;
   activeModal: ActiveModalId;
   activeSheet: ActiveSheetId;
   selectedContractId: string | null;
   game: GameState | null;
   lastAction: ActionSummary | null;
   notice: string;
-  newGame: (seed?: number) => void;
+  titlePlayerName: string;
+  titleCompanyName: string;
+  setTitlePlayerName: (name: string) => void;
+  setTitleCompanyName: (name: string) => void;
+  titlePlayerName: string;
+  titleCompanyName: string;
+  newGame: (playerName?: string, companyName?: string, seed?: number) => void;
   continueGame: () => void;
   returnToTitle: () => void;
   goToTab: (tab: GameTabId) => void;
@@ -39,7 +43,6 @@ interface UiState {
   openSheet: (sheet: Exclude<ActiveSheetId, null>) => void;
   closeSheet: () => void;
   setStoreSection: (section: StoreSectionId) => void;
-  setCompanyPanel: (panel: CompanyPanelId) => void;
   selectContract: (contractId: string | null) => void;
   clearNotice: () => void;
   acceptContract: (contractId: string) => void;
@@ -49,10 +52,12 @@ interface UiState {
   buyFuel: (units?: number) => void;
   buyTool: (toolId: string) => void;
   repairTool: (toolId: string) => void;
+  quickBuyTools: (contractId: string) => void;
   hireCrew: () => void;
 }
 
 const bundle = loadContentBundle();
+
 
 function toSummary(title: string, lines: string[], digest: string): ActionSummary {
   return {
@@ -70,29 +75,33 @@ export const useUiStore = create<UiState>((set, get) => ({
   screen: "title",
   activeTab: "work",
   storeSection: "fuel",
-  companyPanel: "overview",
   activeModal: null,
   activeSheet: null,
   selectedContractId: null,
   game: null,
   lastAction: null,
   notice: "",
+  titlePlayerName: "",
+  titleCompanyName: "",
 
-  newGame: (seed?: number) => {
+  newGame: (playerName?: string, companyName?: string, seed?: number) => {
     const nextSeed = seed ?? Math.floor(Date.now() % 1_000_000_000);
-    const game = createInitialGameState(bundle, nextSeed);
+    const resolvedPlayerName = playerName ?? bundle.strings.defaultPlayerName ?? "You";
+    const resolvedCompanyName = companyName ?? bundle.strings.defaultCompanyName ?? "Field Ops";
+    const game = createInitialGameState(bundle, nextSeed, resolvedPlayerName, resolvedCompanyName);
     saveGame(game);
     set({
       screen: "game",
       activeTab: "work",
       storeSection: "fuel",
-      companyPanel: "overview",
       activeModal: null,
       activeSheet: null,
       selectedContractId: getDefaultContractId(game),
       game,
       lastAction: null,
-      notice: ""
+      notice: "",
+      titlePlayerName: resolvedPlayerName,
+      titleCompanyName: resolvedCompanyName
     });
   },
 
@@ -106,12 +115,13 @@ export const useUiStore = create<UiState>((set, get) => ({
       screen: "game",
       activeTab: "work",
       storeSection: "fuel",
-      companyPanel: "overview",
       activeModal: null,
       activeSheet: null,
       selectedContractId: getDefaultContractId(loaded),
       game: loaded,
-      notice: ""
+      notice: "",
+      titlePlayerName: loaded.player.name,
+      titleCompanyName: loaded.player.companyName
     });
   },
 
@@ -129,11 +139,12 @@ export const useUiStore = create<UiState>((set, get) => ({
 
   setStoreSection: (section) => set({ storeSection: section }),
 
-  setCompanyPanel: (panel) => set({ companyPanel: panel }),
 
   selectContract: (contractId) => set({ selectedContractId: contractId }),
 
   clearNotice: () => set({ notice: "" }),
+  setTitlePlayerName: (name) => set({ titlePlayerName: name }),
+  setTitleCompanyName: (name) => set({ titleCompanyName: name }),
 
   acceptContract: (contractId) => {
     const current = get().game;
@@ -246,6 +257,29 @@ export const useUiStore = create<UiState>((set, get) => ({
       game: nextState,
       lastAction: toSummary("Tool Repair", [`Ran a repair cycle for ${toolId}.`], JSON.stringify(nextState.day)),
       notice: ""
+    });
+  },
+
+  quickBuyTools: (contractId) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    const result = quickBuyMissingTools(current, bundle, contractId);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      lastAction: result.payload
+        ? toSummary(
+            "Quick Buy",
+            [
+              `Tools bought: ${result.payload.missingTools.map((line) => line.toolName).join(", ")}`,
+              `Time ${formatHours(result.payload.requiredTicks)}`
+            ],
+            result.digest
+          )
+        : get().lastAction,
+      notice: result.notice ?? ""
     });
   },
 

@@ -1,5 +1,6 @@
 import { ActionSummary } from "../state";
 import { ActiveJobState, ActiveTaskState, JobDef, SupplyDef, SupplyInventory, TaskStance } from "../../core/types";
+import { formatHours } from "../../core/playerFlow";
 
 interface AssignmentPanelProps {
   activeJob: ActiveJobState;
@@ -38,8 +39,8 @@ export function AssignmentPanel({
         {job.name} | locked payout ${activeJob.lockedPayout} | location {activeJob.location}
       </p>
       <p>
-        Quality: {activeJob.qualityPoints} | Rework: {activeJob.reworkCount} | Time: {activeJob.actualTicksSpent}/
-        {activeJob.plannedTicks}
+        Quality: {activeJob.qualityPoints} | Rework: {activeJob.reworkCount} | Time: {formatHours(activeJob.actualTicksSpent)}/
+        {formatHours(activeJob.plannedTicks)}
       </p>
 
       <div className="list">

@@ -8,7 +8,7 @@ describe("resolver", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 99);
 
-    expect(state.saveVersion).toBe(2);
+    expect(state.saveVersion).toBe(4);
     expect(state.activeJob).toBeNull();
     expect(state.workday.weekday).toBe("Monday");
     expect(state.player.fuel).toBeGreaterThan(0);

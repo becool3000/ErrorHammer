@@ -34,7 +34,12 @@ interface ValidAssignment {
   job: JobDef;
 }
 
-export function createInitialGameState(bundle: ContentBundle, seed = 1): GameState {
+export function createInitialGameState(
+  bundle: ContentBundle,
+  seed = 1,
+  playerName = bundle.strings.defaultPlayerName ?? "You",
+  companyName = bundle.strings.defaultCompanyName ?? "Field Ops"
+): GameState {
   const hammer = bundle.tools.find((tool) => tool.id === "hammer") ?? bundle.tools[0];
   if (!hammer) {
     throw new Error("Content bundle has no tools.");
@@ -42,7 +47,8 @@ export function createInitialGameState(bundle: ContentBundle, seed = 1): GameSta
 
   const player: ActorState = {
     actorId: "player",
-    name: "You",
+    name: playerName,
+    companyName,
     cash: 300,
     reputation: 0,
     companyLevel: 1,
@@ -625,6 +631,7 @@ function createBotActor(profile: BotProfile, bundle: ContentBundle, seed: number
   const bot: ActorState = {
     actorId: profile.id,
     name: profile.name,
+    companyName: profile.name,
     cash: 320 + index * 40,
     reputation: 4 + index * 3,
     companyLevel: 1,

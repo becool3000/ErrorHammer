@@ -61,13 +61,13 @@ export function GameShell() {
       <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
         <WorkTab modalView="field-log" />
       </Modal>
-      <Modal open={activeModal === "districts"} title="District Access" onClose={closeModal}>
+      <Modal open={activeModal === "districts"} title={bundle.strings.companyDistrictButton} onClose={closeModal}>
         <CompanyTab modalView="districts" />
       </Modal>
-      <Modal open={activeModal === "crews"} title="Crew Status" onClose={closeModal}>
+      <Modal open={activeModal === "crews"} title={bundle.strings.companyCrewButton} onClose={closeModal}>
         <CompanyTab modalView="crews" />
       </Modal>
-      <Modal open={activeModal === "news"} title="Competitor News" onClose={closeModal}>
+      <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal}>
         <CompanyTab modalView="news" />
       </Modal>
     </main>

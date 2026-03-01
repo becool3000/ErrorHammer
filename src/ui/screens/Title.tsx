@@ -1,4 +1,4 @@
-import { useUiStore } from "../state";
+import { bundle, useUiStore } from "../state";
 
 interface TitleProps {
   title: string;
@@ -9,6 +9,12 @@ export function Title({ title, subtitle }: TitleProps) {
   const newGame = useUiStore((state) => state.newGame);
   const continueGame = useUiStore((state) => state.continueGame);
   const notice = useUiStore((state) => state.notice);
+  const playerName = useUiStore((state) => state.titlePlayerName);
+  const companyName = useUiStore((state) => state.titleCompanyName);
+  const setPlayerName = useUiStore((state) => state.setTitlePlayerName);
+  const setCompanyName = useUiStore((state) => state.setTitleCompanyName);
+
+  const ready = Boolean(playerName.trim() && companyName.trim());
 
   return (
     <main className="title-shell">
@@ -16,8 +22,31 @@ export function Title({ title, subtitle }: TitleProps) {
         <p className="eyebrow">Field Ops Ledger</p>
         <h1>{title}</h1>
         <p className="title-copy">{subtitle}</p>
+        <div className="title-inputs">
+          <label>
+            <span>{bundle.strings.titlePlayerLabel}</span>
+            <input
+              value={playerName}
+              onChange={(event) => setPlayerName(event.target.value)}
+              placeholder={bundle.strings.titlePlayerPlaceholder}
+            />
+          </label>
+          <label>
+            <span>{bundle.strings.titleCompanyLabel}</span>
+            <input
+              value={companyName}
+              onChange={(event) => setCompanyName(event.target.value)}
+              placeholder={bundle.strings.titleCompanyPlaceholder}
+            />
+          </label>
+        </div>
+        <p className="muted-copy">{bundle.strings.titleNameHint}</p>
         <div className="title-actions">
-          <button className="primary-button" onClick={() => newGame()}>
+          <button
+            className="primary-button"
+            onClick={() => newGame(playerName.trim(), companyName.trim())}
+            disabled={!ready}
+          >
             New Game
           </button>
           <button className="ghost-button" onClick={() => continueGame()}>

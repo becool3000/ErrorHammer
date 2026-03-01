@@ -1,5 +1,6 @@
 import { ActorState, EventDef, WorkdayState } from "../../core/types";
-import { getSkillDisplayRows } from "../../core/playerFlow";
+import { getSkillDisplayRows, ticksToHours } from "../../core/playerFlow";
+import { bundle } from "../state";
 
 interface StatsPanelProps {
   day: number;
@@ -10,8 +11,8 @@ interface StatsPanelProps {
 
 export function StatsPanel({ day, player, workday, activeEvents }: StatsPanelProps) {
   const topSkills = getSkillDisplayRows(player).slice(0, 5);
-  const regularRemaining = Math.max(0, workday.availableTicks - workday.ticksSpent);
-  const overtimeRemaining = Math.max(0, workday.maxOvertime - workday.overtimeUsed);
+  const regularRemainingHours = ticksToHours(Math.max(0, workday.availableTicks - workday.ticksSpent));
+  const overtimeRemainingHours = ticksToHours(Math.max(0, workday.maxOvertime - workday.overtimeUsed));
 
   return (
     <section className="card">
@@ -25,7 +26,8 @@ export function StatsPanel({ day, player, workday, activeEvents }: StatsPanelPro
         Fuel: {player.fuel}/{player.fuelMax}
       </p>
       <p>
-        Regular ticks left: {regularRemaining} | Overtime left: {overtimeRemaining}
+        {bundle.strings.hoursLabel} left: {regularRemainingHours.toFixed(1)} | {bundle.strings.overtimeLabel} left:{" "}
+        {overtimeRemainingHours.toFixed(1)}
       </p>
       <p>Fatigue debt: {workday.fatigue.debt}</p>
       <p>Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>

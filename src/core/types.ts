@@ -159,6 +159,19 @@ export interface StringsDef {
   activeJobTitle: string;
   boardTitle: string;
   overtimeLabel: string;
+  hoursLabel: string;
+  titlePlayerLabel: string;
+  titlePlayerPlaceholder: string;
+  titleCompanyLabel: string;
+  titleCompanyPlaceholder: string;
+  titleNameHint: string;
+  quickBuyDescription: string;
+  quickBuyButtonLabel: string;
+  companyDistrictButton: string;
+  companyCrewButton: string;
+  companyNewsButton: string;
+  defaultPlayerName: string;
+  defaultCompanyName: string;
 }
 
 export interface ToolInstance {
@@ -179,6 +192,7 @@ export interface CrewState {
 export interface ActorState {
   actorId: string;
   name: string;
+  companyName: string;
   cash: number;
   reputation: number;
   companyLevel: number;

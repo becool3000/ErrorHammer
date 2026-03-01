@@ -25,7 +25,6 @@ function resetUi() {
     screen: "title",
     activeTab: "work",
     storeSection: "fuel",
-    companyPanel: "overview",
     activeModal: null,
     activeSheet: null,
     selectedContractId: null,
@@ -54,11 +53,45 @@ describe("compact shell ui", () => {
   it("EH-TW-023: New Game enters the compact Work tab shell", () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: "New Game" }));
+    const nameInput = screen.getByLabelText(/Your Name/i);
+    const companyInput = screen.getByLabelText(/Company Name/i);
+    const newGameButton = screen.getByRole("button", { name: "New Game" });
+
+    expect(newGameButton.disabled).toBe(true);
+    fireEvent.change(nameInput, { target: { value: "Margo" } });
+    expect(newGameButton.disabled).toBe(true);
+    fireEvent.change(companyInput, { target: { value: "Margo Metalworks" } });
+    expect(newGameButton.disabled).toBe(false);
+
+    fireEvent.click(newGameButton);
 
     expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Work/i, pressed: true })).toBeTruthy();
+    expect(screen.getByText(/Margo @ Margo Metalworks/)).toBeTruthy();
   });
+
+  it("EH-TW-043: title form retains typed names and repopulates after returning to the title screen", () => {
+    render(<App />);
+
+    const nameInput = screen.getByLabelText(/Your Name/i);
+    const companyInput = screen.getByLabelText(/Company Name/i);
+    const newGameButton = screen.getByRole("button", { name: "New Game" });
+
+    fireEvent.change(nameInput, { target: { value: "Margo" } });
+    fireEvent.change(companyInput, { target: { value: "Margo Metalworks" } });
+    expect(newGameButton.disabled).toBe(false);
+
+    fireEvent.click(newGameButton);
+    act(() => {
+      useUiStore.getState().returnToTitle();
+    });
+
+    const nameInputAfter = screen.getByLabelText(/Your Name/i) as HTMLInputElement;
+    const companyInputAfter = screen.getByLabelText(/Company Name/i) as HTMLInputElement;
+    expect(nameInputAfter.value).toBe("Margo");
+    expect(companyInputAfter.value).toBe("Margo Metalworks");
+  });
+
 
   it("EH-TW-024: Continue restores a save and opens Work", () => {
     const saved = createInitialGameState(bundle, 9001);
@@ -134,11 +167,42 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Shop Stock/i)).toBeTruthy();
   });
 
+  it("EH-TW-039: quick buy button appears when tools are missing", () => {
+    const game = buildAcceptableGame(9090);
+    delete game.player.tools.drill;
+    const drillJob = bundle.jobs.find((job) => job.requiredTools.includes("drill"));
+    const quickBuyContract = drillJob
+      ? {
+          contractId: "ui-quick-buy-contract",
+          jobId: drillJob.id,
+          districtId: drillJob.districtId,
+          payoutMult: 1,
+          expiresDay: 1
+        }
+      : game.contractBoard[0];
+    game.contractBoard = [quickBuyContract];
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: quickBuyContract.contractId });
+
+    render(<App />);
+
+    expect(screen.getByText(/Quick Tool Buy/i)).toBeTruthy();
+    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i });
+    expect(quickBuy.disabled).toBe(false);
+    fireEvent.click(quickBuy);
+    expect(screen.getByText(/Quick bought/i)).toBeTruthy();
+    expect(screen.queryByText(/Quick Tool Buy/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /Accept Job/i }).disabled).toBe(false);
+  });
+
   it("EH-TW-032 and EH-TW-033: company detail modals and bottom nav preserve gameplay state", () => {
     const game = createInitialGameState(bundle, 6060);
     useUiStore.setState({ screen: "game", game, activeTab: "company", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
     render(<App />);
+
+    expect(screen.getByRole("button", { name: /District Access/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Crew Status/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Competitor News/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /District Access/i }));
     expect(screen.getByRole("dialog", { name: /District Access/i })).toBeTruthy();

@@ -32,6 +32,22 @@ export interface StateTransitionResult<T = undefined> {
   digest: string;
 }
 
+export interface QuickBuyToolLine {
+  toolId: string;
+  toolName: string;
+  price: number;
+}
+
+export interface QuickBuyPlan {
+  contractId: string;
+  missingTools: QuickBuyToolLine[];
+  totalCost: number;
+  requiredTicks: number;
+  enoughCash: boolean;
+  enoughTime: boolean;
+  allowed: boolean;
+}
+
 const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SKILL_IDS: SkillId[] = [
   "travel",
@@ -998,16 +1014,17 @@ function getRecoveryForWeekday(weekday: Weekday): number {
 }
 
 function describeTiming(taskId: TaskId, outcome: TaskTimeOutcome, ticksSpent: number): string {
+  const hours = formatHours(ticksSpent);
   if (outcome === "fast") {
-    return `${TASK_LABELS[taskId]} moved fast and spent ${ticksSpent} ticks.`;
+    return `${TASK_LABELS[taskId]} moved fast and spent ${hours}.`;
   }
   if (outcome === "delayed") {
-    return `${TASK_LABELS[taskId]} dragged out to ${ticksSpent} ticks.`;
+    return `${TASK_LABELS[taskId]} dragged out to ${hours}.`;
   }
   if (outcome === "rework") {
-    return `${TASK_LABELS[taskId]} burned ${ticksSpent} ticks and created rework.`;
+    return `${TASK_LABELS[taskId]} burned ${hours} and created rework.`;
   }
-  return `${TASK_LABELS[taskId]} spent ${ticksSpent} ticks.`;
+  return `${TASK_LABELS[taskId]} spent ${hours}.`;
 }
 
 function isTravelTask(taskId: TaskId): boolean {
@@ -1105,4 +1122,114 @@ function clamp(value: number, min: number, max: number): number {
     return max;
   }
   return value;
+}
+
+export function ticksToHours(ticks: number): number {
+  return ticks * 0.5;
+}
+
+export function formatHours(ticks: number): string {
+  return `${ticksToHours(ticks).toFixed(1)} hours`;
+}
+
+export function getQuickBuyPlan(
+  state: GameState,
+  bundle: ContentBundle,
+  contractId: string
+): QuickBuyPlan | null {
+  const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
+  if (!contract) {
+    return null;
+  }
+  const job = bundle.jobs.find((entry) => entry.id === contract.jobId);
+  if (!job) {
+    return null;
+  }
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  const missingTools: QuickBuyToolLine[] = [];
+  for (const toolId of job.requiredTools) {
+    const toolDef = bundle.tools.find((tool) => tool.id === toolId);
+    if (!toolDef) {
+      continue;
+    }
+    const owned = state.player.tools[toolId];
+    if (owned && owned.durability > 0) {
+      continue;
+    }
+    const price = applyToolPriceModifiers(toolDef.price, events);
+    missingTools.push({
+      toolId: toolDef.id,
+      toolName: toolDef.name,
+      price
+    });
+  }
+  const totalCost = missingTools.reduce((sum, entry) => sum + entry.price, 0);
+  const requiredTicks = missingTools.length * 2;
+  const allowed = !state.activeJob || state.activeJob.location === "shop";
+  const enoughCash = state.player.cash >= totalCost;
+  const enoughTime = requiredTicks === 0 ? true : canSpendTicks(state.workday, requiredTicks, true);
+  return {
+    contractId,
+    missingTools,
+    totalCost,
+    requiredTicks,
+    enoughCash,
+    enoughTime,
+    allowed
+  };
+}
+
+export function quickBuyMissingTools(
+  state: GameState,
+  bundle: ContentBundle,
+  contractId: string
+): StateTransitionResult<QuickBuyPlan> {
+  const plan = getQuickBuyPlan(state, bundle, contractId);
+  if (!plan) {
+    return { nextState: state, notice: "Selected contract is unavailable.", digest: digestState(state) };
+  }
+  if (plan.missingTools.length === 0) {
+    return { nextState: state, payload: plan, notice: "Tools already stocked.", digest: digestState(state) };
+  }
+  if (!plan.allowed) {
+    return { nextState: state, payload: plan, notice: "Return to the shop before quick buying tools.", digest: digestState(state) };
+  }
+  if (!plan.enoughCash) {
+    return { nextState: state, payload: plan, notice: "Not enough cash for the quick-buy list.", digest: digestState(state) };
+  }
+  if (!plan.enoughTime) {
+    return { nextState: state, payload: plan, notice: "Not enough hours left for the quick buy.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  nextState.player.cash -= plan.totalCost;
+  for (const entry of plan.missingTools) {
+    const toolDef = bundle.tools.find((tool) => tool.id === entry.toolId);
+    if (!toolDef) {
+      continue;
+    }
+    nextState.player.tools[entry.toolId] = {
+      toolId: toolDef.id,
+      durability: toolDef.maxDurability
+    };
+  }
+
+  spendTicks(nextState.workday, plan.requiredTicks);
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: `${nextState.player.name} (${nextState.player.companyName}) quick bought ${plan.missingTools
+      .map((entry) => entry.toolName)
+      .join(", ")} for $${plan.totalCost}.`
+  });
+
+  const hoursLabel = plan.requiredTicks > 0 ? ` over ${formatHours(plan.requiredTicks)}` : "";
+  const notice = `Quick bought ${plan.missingTools.length} tool${plan.missingTools.length === 1 ? "" : "s"} for $${plan.totalCost}${hoursLabel}.`;
+
+  return {
+    nextState,
+    payload: plan,
+    notice,
+    digest: digestState(nextState)
+  };
 }

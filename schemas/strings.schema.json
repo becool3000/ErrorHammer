@@ -23,29 +23,157 @@
     "skillsTitle",
     "activeJobTitle",
     "boardTitle",
-    "overtimeLabel"
+    "overtimeLabel",
+    "hoursLabel",
+    "titlePlayerLabel",
+    "titlePlayerPlaceholder",
+    "titleCompanyLabel",
+    "titleCompanyPlaceholder",
+    "titleNameHint",
+    "quickBuyDescription",
+    "quickBuyButtonLabel",
+    "defaultPlayerName",
+    "defaultCompanyName",
+    "companyDistrictButton",
+    "companyCrewButton",
+    "companyNewsButton"
   ],
   "properties": {
-    "title": { "type": "string", "minLength": 2 },
-    "subtitle": { "type": "string", "minLength": 2 },
-    "continueMissing": { "type": "string", "minLength": 2 },
-    "continueIncompatible": { "type": "string", "minLength": 2 },
-    "dayReportTitle": { "type": "string", "minLength": 2 },
-    "storeTitle": { "type": "string", "minLength": 2 },
-    "companyTitle": { "type": "string", "minLength": 2 },
-    "supplierTitle": { "type": "string", "minLength": 2 },
-    "workdayTitle": { "type": "string", "minLength": 2 },
-    "assignmentHint": { "type": "string", "minLength": 2 },
-    "noContracts": { "type": "string", "minLength": 2 },
-    "neutralLogFallback": { "type": "string", "minLength": 2 },
-    "crewDeferred": { "type": "string", "minLength": 2 },
-    "fuelLabel": { "type": "string", "minLength": 2 },
-    "homeSuppliesTitle": { "type": "string", "minLength": 2 },
-    "truckSuppliesTitle": { "type": "string", "minLength": 2 },
-    "siteSuppliesTitle": { "type": "string", "minLength": 2 },
-    "skillsTitle": { "type": "string", "minLength": 2 },
-    "activeJobTitle": { "type": "string", "minLength": 2 },
-    "boardTitle": { "type": "string", "minLength": 2 },
-    "overtimeLabel": { "type": "string", "minLength": 2 }
+    "title": {
+      "type": "string",
+      "minLength": 2
+    },
+    "subtitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "continueMissing": {
+      "type": "string",
+      "minLength": 2
+    },
+    "continueIncompatible": {
+      "type": "string",
+      "minLength": 2
+    },
+    "dayReportTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "storeTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "companyTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "supplierTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "workdayTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "assignmentHint": {
+      "type": "string",
+      "minLength": 2
+    },
+    "noContracts": {
+      "type": "string",
+      "minLength": 2
+    },
+    "neutralLogFallback": {
+      "type": "string",
+      "minLength": 2
+    },
+    "crewDeferred": {
+      "type": "string",
+      "minLength": 2
+    },
+    "fuelLabel": {
+      "type": "string",
+      "minLength": 2
+    },
+    "homeSuppliesTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "truckSuppliesTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "siteSuppliesTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "skillsTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "activeJobTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "boardTitle": {
+      "type": "string",
+      "minLength": 2
+    },
+    "overtimeLabel": {
+      "type": "string",
+      "minLength": 2
+    },
+    "titlePlayerLabel": {
+      "type": "string",
+      "minLength": 2
+    },
+    "titlePlayerPlaceholder": {
+      "type": "string",
+      "minLength": 2
+    },
+    "titleCompanyLabel": {
+      "type": "string",
+      "minLength": 2
+    },
+    "titleCompanyPlaceholder": {
+      "type": "string",
+      "minLength": 2
+    },
+    "titleNameHint": {
+      "type": "string",
+      "minLength": 2
+    },
+    "quickBuyDescription": {
+      "type": "string",
+      "minLength": 2
+    },
+    "defaultPlayerName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultCompanyName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hoursLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "quickBuyButtonLabel": {
+      "type": "string",
+      "minLength": 2
+    },
+    "companyDistrictButton": {
+      "type": "string",
+      "minLength": 2
+    },
+    "companyCrewButton": {
+      "type": "string",
+      "minLength": 2
+    },
+    "companyNewsButton": {
+      "type": "string",
+      "minLength": 2
+    }
   }
 }

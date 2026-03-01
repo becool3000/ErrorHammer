@@ -221,7 +221,20 @@ export function makeScenarioBundle(): ContentBundle {
       skillsTitle: "Skills",
       activeJobTitle: "Active Job",
       boardTitle: "Board",
-      overtimeLabel: "Overtime"
+      overtimeLabel: "Overtime",
+      hoursLabel: "Hours",
+      titlePlayerLabel: "Your Name",
+      titlePlayerPlaceholder: "Field name",
+      titleCompanyLabel: "Company Name",
+      titleCompanyPlaceholder: "Field Co.",
+      titleNameHint: "Both player and company names are required to start.",
+      quickBuyDescription: "Use spare hours to quick buy missing tools before committing to the job.",
+      quickBuyButtonLabel: "Quick Buy Tools",
+      defaultPlayerName: "You",
+      defaultCompanyName: "Field Ops",
+      companyDistrictButton: "District Access",
+      companyCrewButton: "Crew Status",
+      companyNewsButton: "Competitor News"
     }
   };
 }

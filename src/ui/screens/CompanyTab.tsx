@@ -1,12 +1,4 @@
-import { bundle, CompanyPanelId, useUiStore } from "../state";
-import { SegmentedControl } from "../components/SegmentedControl";
-
-const companyPanels: Array<{ id: CompanyPanelId; label: string }> = [
-  { id: "overview", label: "Overview" },
-  { id: "districts", label: "Districts" },
-  { id: "crews", label: "Crews" },
-  { id: "news", label: "News" }
-];
+import { bundle, useUiStore } from "../state";
 
 interface CompanyTabProps {
   modalView?: "districts" | "crews" | "news";
@@ -14,8 +6,6 @@ interface CompanyTabProps {
 
 export function CompanyTab({ modalView }: CompanyTabProps) {
   const game = useUiStore((state) => state.game);
-  const companyPanel = useUiStore((state) => state.companyPanel);
-  const setCompanyPanel = useUiStore((state) => state.setCompanyPanel);
   const openModal = useUiStore((state) => state.openModal);
   const hireCrew = useUiStore((state) => state.hireCrew);
 
@@ -74,39 +64,26 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
           <div>
             <p className="eyebrow">Firm Ledger</p>
             <h2>{bundle.strings.companyTitle}</h2>
+            <p className="muted-copy">{game.player.companyName}</p>
           </div>
           <span className="chip">Level {game.player.companyLevel}</span>
         </div>
-        <SegmentedControl value={companyPanel} options={companyPanels} onChange={setCompanyPanel} label="Company panels" />
         <div className="metric-grid two-up">
           <span>Reputation {game.player.reputation}</span>
           <span>Districts {game.player.districtUnlocks.length}</span>
         </div>
       </article>
 
-      <article className="chrome-card inset-card">
-        <p className="eyebrow">Overview</p>
-        <div className="overview-stack">
-          <button className="compact-row-card action-card" onClick={() => openModal("districts")}>
-            <div>
-              <strong>District Access</strong>
-              <p>{game.player.districtUnlocks.join(", ")}</p>
-            </div>
-            <span className="chip">Open</span>
+      <article className="chrome-card inset-card company-action-card">
+        <div className="action-grid company-action-grid">
+          <button className="primary-button" onClick={() => openModal("districts")}>
+            {bundle.strings.companyDistrictButton}
           </button>
-          <button className="compact-row-card action-card" onClick={() => openModal("crews")}>
-            <div>
-              <strong>Crew Status</strong>
-              <p>{bundle.strings.crewDeferred}</p>
-            </div>
-            <span className="chip">Deferred</span>
+          <button className="ghost-button" onClick={() => openModal("crews")}>
+            {bundle.strings.companyCrewButton}
           </button>
-          <button className="compact-row-card action-card" onClick={() => openModal("news")}>
-            <div>
-              <strong>Competitor News</strong>
-              <p>{bundle.bots[0]?.flavorLines[0] ?? "No headlines."}</p>
-            </div>
-            <span className="chip">Rotate</span>
+          <button className="ghost-button" onClick={() => openModal("news")}>
+            {bundle.strings.companyNewsButton}
           </button>
         </div>
       </article>

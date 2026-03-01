@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { JobDef } from "../../core/types";
+import { getQuickBuyPlan, formatHours } from "../../core/playerFlow";
 import { bundle, useUiStore } from "../state";
 import { ContractCarousel } from "../components/ContractCarousel";
 
@@ -8,6 +9,7 @@ export function ContractsTab() {
   const selectedContractId = useUiStore((state) => state.selectedContractId);
   const selectContract = useUiStore((state) => state.selectContract);
   const accept = useUiStore((state) => state.acceptContract);
+  const quickBuyTools = useUiStore((state) => state.quickBuyTools);
 
   const jobsById = useMemo(() => new Map(bundle.jobs.map((job) => [job.id, job])), []);
 
@@ -40,6 +42,9 @@ export function ContractsTab() {
   const hasTools = job ? job.requiredTools.every((toolId) => (game.player.tools[toolId]?.durability ?? 0) > 0) : false;
   const payout = selected && job ? Math.round(job.basePayout * selected.payoutMult) : 0;
 
+  const quickBuyPlan = selected ? getQuickBuyPlan(game, bundle, selected.contractId) : null;
+  const quickBuyEnabled = Boolean(quickBuyPlan?.missingTools.length) && quickBuyPlan?.allowed && quickBuyPlan?.enoughCash && quickBuyPlan?.enoughTime;
+
   return (
     <section className="tab-panel contracts-tab">
       <article className="chrome-card inset-card">
@@ -57,6 +62,29 @@ export function ContractsTab() {
       </article>
 
       {selected && job ? <ContractDetails contractId={selected.contractId} job={job} payout={payout} hasTools={hasTools} onAccept={accept} /> : null}
+      {quickBuyPlan && quickBuyPlan.missingTools.length > 0 ? (
+        <article className="chrome-card inset-card quick-buy-card">
+          <p className="eyebrow">Quick Tool Buy</p>
+          <p className="muted-copy">Missing {quickBuyPlan.missingTools.map((line) => line.toolName).join(", " )}</p>
+          <p className="muted-copy">{bundle.strings.quickBuyDescription}</p>
+          <div className="chip-grid">
+            <span className="chip">{formatHours(quickBuyPlan.requiredTicks)}</span>
+            <span className="chip">${quickBuyPlan.totalCost}</span>
+            {!quickBuyPlan.enoughCash ? <span className="chip muted">Need more cash</span> : null}
+            {!quickBuyPlan.enoughTime ? <span className="chip muted">Need more hours</span> : null}
+            {!quickBuyPlan.allowed ? <span className="chip muted">Must be at shop</span> : null}
+          </div>
+          <div className="sticky-action-bar inline-actions">
+            <button
+              className="primary-button wide-button"
+              onClick={() => selected && quickBuyTools(selected.contractId)}
+              disabled={!quickBuyEnabled}
+            >
+              {bundle.strings.quickBuyButtonLabel} ({formatHours(quickBuyPlan.requiredTicks)} / ${quickBuyPlan.totalCost})
+            </button>
+          </div>
+        </article>
+      ) : null}
     </section>
   );
 }
