@@ -311,9 +311,9 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                     <span>{row.required} needed</span>
                   </div>
                   <div className="material-need-meta">
-                    <span>On hand {row.onHand}/{row.required}</span>
+                    <span>On hand {row.onHand} of {row.required}</span>
                     {row.inCart > 0 ? <span>In cart {row.inCart}</span> : null}
-                    {row.remaining > 0 ? <span>Missing {row.remaining}</span> : <span>Ready</span>}
+                    {row.remaining > 0 ? <span>Missing {row.remaining}</span> : null}
                   </div>
                 </article>
               ))}
