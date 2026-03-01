@@ -19,7 +19,7 @@ export function GameShell() {
   const clearNotice = useUiStore((state) => state.clearNotice);
   const goToTab = useUiStore((state) => state.goToTab);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
-  const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Use +/- in Supplies");
+  const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout");
 
   if (!game) {
     return (

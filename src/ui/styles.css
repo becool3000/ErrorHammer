@@ -280,6 +280,12 @@ p {
   color: #f0c1b3;
 }
 
+.task-inline-actions {
+  margin-top: 0.55rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
 .tab-stage,
 .tab-panel,
 .stack-block,
@@ -347,11 +353,12 @@ p {
 }
 
 .action-carousel-header {
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .carousel-nav {
   gap: 0.45rem;
+  justify-content: center;
 }
 
 .carousel-track {
@@ -397,6 +404,37 @@ p {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
   padding: 0.8rem;
+}
+
+.supplier-carousel-frame {
+  max-height: 26rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+  scrollbar-width: none;
+}
+
+.supplier-carousel-frame::-webkit-scrollbar {
+  display: none;
+}
+
+.supplier-carousel-rail {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.supplier-card {
+  align-items: stretch;
+}
+
+.supplier-card-copy {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.supplier-info-button {
+  min-width: 3.6rem;
+  padding: 0.45rem 0.7rem;
 }
 
 .task-summary.current {

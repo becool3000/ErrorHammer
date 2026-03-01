@@ -345,11 +345,11 @@ describe("compact shell ui", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
-    expect(screen.getByText(/Use \+\/- in Supplies to add/i)).toBeTruthy();
-    expect(screen.queryAllByText(/Use \+\/- in Supplies to add/i).length).toBe(1);
+    expect(screen.getByText(/Add the needed items to the supplier cart before checkout/i)).toBeTruthy();
+    expect(screen.queryAllByText(/Add the needed items to the supplier cart before checkout/i).length).toBe(1);
   });
 
-  it("EH-TW-034: supplier-state jobs expose the supplies bottom sheet", () => {
+  it("EH-TW-034: supplier-state jobs expose the supplier cart sheet and supply info modal", () => {
     const game = buildAcceptableGame(7070);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
@@ -377,7 +377,9 @@ describe("compact shell ui", () => {
       });
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Open Supplies/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Supplier Cart/i }));
     expect(screen.getByRole("dialog", { name: /Supplier/i })).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: /^Info$/i })[0]);
+    expect(screen.getByRole("dialog", { name: /Supply Info|Anchor Set|Board Pack/i })).toBeTruthy();
   });
 });

@@ -1169,9 +1169,9 @@ function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory:
     })
     .slice(0, 4);
   if (lines.length === 0) {
-    return "Use +/- in Supplies to add the needed items to the supplier cart before checkout.";
+    return "Add the needed items to the supplier cart before checkout.";
   }
-  return `Use +/- in Supplies to add these items before checkout: ${lines.join(", ")}.`;
+  return `Add the needed items to the supplier cart before checkout: ${lines.join(", ")}.`;
 }
 
 function getTimeMods(stance: TaskStance): { fast: number; rework: number; delay: number } {

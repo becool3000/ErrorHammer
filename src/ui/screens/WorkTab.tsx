@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
 import { formatHours, getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
+import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
@@ -11,6 +12,7 @@ interface WorkTabProps {
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
+  const [selectedSupplyId, setSelectedSupplyId] = useState<string | null>(null);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
   const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
   const actionTrackRef = useRef<HTMLDivElement | null>(null);
@@ -56,7 +58,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           }))
         )
     : [];
-  const supplierCartNotice = notice.startsWith("Use +/- in Supplies") ? notice : "";
+  const supplierCartNotice = notice.startsWith("Add the needed items to the supplier cart before checkout") ? notice : "";
+  const selectedSupply = selectedSupplyId ? bundle.supplies.find((supply) => supply.id === selectedSupplyId) ?? null : null;
 
   useEffect(() => {
     syncActionCarousel();
@@ -91,15 +94,20 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <p className="eyebrow">Supplier Cart</p>
           <span className="chip">{Object.keys(activeJob.supplierCart).length} lines</span>
         </div>
-        <div className="drawer-list">
+        <div className="supplier-carousel-frame">
+          <div className="supplier-carousel-rail">
           {bundle.supplies.map((supply) => {
             const quantity = activeJob.supplierCart[supply.id] ?? 0;
             const price = supplyPrices.get(supply.id) ?? supply.price;
             return (
-              <article key={supply.id} className="compact-row-card">
-                <div>
-                  <strong>{supply.name}</strong>
-                  <p>{supply.flavor.description}</p>
+              <article key={supply.id} className="compact-row-card supplier-card">
+                <div className="supplier-card-copy">
+                  <div className="section-label-row tight-row">
+                    <strong>{supply.name}</strong>
+                    <button className="icon-button supplier-info-button" onClick={() => setSelectedSupplyId(supply.id)}>
+                      Info
+                    </button>
+                  </div>
                   <small>${price} each</small>
                 </div>
                 <div className="stepper">
@@ -115,6 +123,23 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             );
           })}
         </div>
+        </div>
+        <Modal open={selectedSupply !== null} title={selectedSupply?.name ?? "Supply Info"} onClose={() => setSelectedSupplyId(null)}>
+          {selectedSupply ? (
+            <section className="stack-block">
+              <article className="chrome-card inset-card">
+                <div className="section-label-row">
+                  <div>
+                    <p className="eyebrow">Supply Info</p>
+                    <h3>{selectedSupply.name}</h3>
+                  </div>
+                  <span className="chip">${supplyPrices.get(selectedSupply.id) ?? selectedSupply.price} each</span>
+                </div>
+                <p>{selectedSupply.flavor.description}</p>
+              </article>
+            </section>
+          ) : null}
+        </Modal>
       </section>
     ) : (
       <p className="muted-copy">No supplier stop is active.</p>
@@ -254,8 +279,15 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
-        {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
+        {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
+        {activeJob.location === "supplier" ? (
+          <div className="task-inline-actions">
+            <button className="ghost-button" onClick={() => openSheet("supplies")}>
+              Supplier Cart
+            </button>
+          </div>
+        ) : null}
         {currentTask ? (
           <div className="action-carousel">
             <div className="action-carousel-header">
@@ -367,15 +399,9 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       </article>
 
       <div className="sticky-action-bar">
-        {activeJob.location === "supplier" ? (
-          <button className="ghost-button wide-button" onClick={() => openSheet("supplies")}>
-            Open Supplies
-          </button>
-        ) : (
-          <button className="ghost-button wide-button" onClick={() => goToTab("contracts")}>
-            Contract Board
-          </button>
-        )}
+        <button className="ghost-button wide-button" onClick={() => goToTab("contracts")}>
+          Contract Board
+        </button>
         <button className="primary-button wide-button" onClick={() => endShift()}>
           End Shift
         </button>
