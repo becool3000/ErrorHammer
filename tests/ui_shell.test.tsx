@@ -256,6 +256,7 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Light Rain, Heavy Opinions/i)).toBeTruthy();
     expect(screen.getByText(/Outdoor jobs pay less and slip more/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close Active Events/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Toggle active job details for/i }));
     fireEvent.click(screen.getByRole("button", { name: /June \(6\/6\)/i }));
 
     expect(useUiStore.getState().game?.activeJob?.assignee).toBe("crew-1");
@@ -273,11 +274,6 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("button", { name: /Scroll task actions right/i })).toBeTruthy();
     const activeJobToggle = screen.getByRole("button", { name: /Toggle active job details for/i });
     const activeJobPanel = document.getElementById("active-job-panel");
-    expect(screen.getByRole("button", { name: /^Job Details$/i })).toBeTruthy();
-    expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("false");
-
-    fireEvent.click(activeJobToggle);
-    expect(activeJobToggle.getAttribute("aria-expanded")).toBe("false");
     expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("true");
     expect(activeJobPanel?.className.includes("open")).toBe(false);
 
@@ -286,6 +282,11 @@ describe("compact shell ui", () => {
     expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("false");
     expect(activeJobPanel?.className.includes("open")).toBe(true);
     expect(screen.getByRole("button", { name: /^Job Details$/i })).toBeTruthy();
+
+    fireEvent.click(activeJobToggle);
+    expect(activeJobToggle.getAttribute("aria-expanded")).toBe("false");
+    expect(activeJobPanel?.getAttribute("aria-hidden")).toBe("true");
+    expect(activeJobPanel?.className.includes("open")).toBe(false);
   });
 
   it("EH-TW-051: workday HUD details collapse and reopen from the header summary", () => {
@@ -296,11 +297,6 @@ describe("compact shell ui", () => {
 
     const headerToggle = screen.getByRole("button", { name: /Toggle workday details for Day 1/i });
     const headerPanel = document.getElementById("workday-status-panel");
-    expect(screen.getByText(/Cash \$300/i)).toBeTruthy();
-    expect(headerPanel?.getAttribute("aria-hidden")).toBe("false");
-
-    fireEvent.click(headerToggle);
-    expect(headerToggle.getAttribute("aria-expanded")).toBe("false");
     expect(headerPanel?.getAttribute("aria-hidden")).toBe("true");
     expect(headerPanel?.className.includes("open")).toBe(false);
 
@@ -309,6 +305,11 @@ describe("compact shell ui", () => {
     expect(headerPanel?.getAttribute("aria-hidden")).toBe("false");
     expect(headerPanel?.className.includes("open")).toBe(true);
     expect(screen.getByText(/Cash \$300/i)).toBeTruthy();
+
+    fireEvent.click(headerToggle);
+    expect(headerToggle.getAttribute("aria-expanded")).toBe("false");
+    expect(headerPanel?.getAttribute("aria-hidden")).toBe("true");
+    expect(headerPanel?.className.includes("open")).toBe(false);
   });
 
   it("EH-TW-034: supplier-state jobs expose the supplies bottom sheet", () => {

@@ -10,7 +10,7 @@ interface WorkTabProps {
 }
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
-  const [jobDetailsOpen, setJobDetailsOpen] = useState(true);
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
   const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
   const actionTrackRef = useRef<HTMLDivElement | null>(null);

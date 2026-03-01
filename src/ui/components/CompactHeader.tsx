@@ -17,7 +17,7 @@ interface CompactHeaderProps {
 }
 
 export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
-  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const openModal = useUiStore((state) => state.openModal);
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);

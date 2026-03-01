@@ -359,10 +359,15 @@ p {
 
 .action-carousel-track {
   padding-inline: 0.1rem;
+  scrollbar-width: none;
 }
 
 .action-carousel-button {
   min-width: min(8.8rem, 42vw);
+}
+
+.action-carousel-track::-webkit-scrollbar {
+  display: none;
 }
 
 .carousel-arrow {
