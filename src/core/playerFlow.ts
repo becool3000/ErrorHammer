@@ -228,6 +228,42 @@ export function getCurrentTask(state: GameState): ActiveTaskState | null {
   return null;
 }
 
+export function getVisibleTaskActions(
+  state: GameState,
+  bundle: ContentBundle
+): Array<{ stance: TaskStance; allowOvertime: boolean }> {
+  if (!state.activeJob) {
+    return [];
+  }
+
+  const activeTask = getCurrentTask(state);
+  if (!activeTask) {
+    return [];
+  }
+
+  const job = bundle.jobs.find((entry) => entry.id === state.activeJob?.jobId);
+  const district = bundle.districts.find((entry) => entry.id === state.activeJob?.districtId);
+  if (!job || !district) {
+    return [];
+  }
+
+  const mapping = getTaskSkillMapping(job, activeTask.taskId);
+  const skillRank = getTaskSkillRank(state.player, mapping);
+  const difficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, state.activeEventIds));
+
+  return activeTask.availableStances.flatMap((stance) => {
+    const effectiveStance = activeTask.qualityBearing ? stance : "standard";
+    const timing = resolveTiming(state, job, activeTask, effectiveStance, skillRank, difficulty);
+    if (canSpendTicks(state.workday, timing.ticksSpent, false)) {
+      return [{ stance, allowOvertime: false }];
+    }
+    if (canSpendTicks(state.workday, timing.ticksSpent, true)) {
+      return [{ stance, allowOvertime: true }];
+    }
+    return [];
+  });
+}
+
 export function getJobByContract(state: GameState, bundle: ContentBundle, contractId: string): { contract: ContractInstance; job: JobDef } | null {
   const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
   if (!contract) {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
-import { formatHours, getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
+import { formatHours, getCurrentTask, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
 import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
@@ -61,19 +61,10 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       })
     : [];
   const taskActions = currentTask
-    ? currentTask.availableStances
-        .map((stance) => ({
-          stance,
-          allowOvertime: false,
-          label: labelForStance(stance)
-        }))
-        .concat(
-          currentTask.availableStances.map((stance) => ({
-            stance,
-            allowOvertime: true,
-            label: `${labelForStance(stance)} + OT`
-          }))
-        )
+    ? getVisibleTaskActions(game, bundle).map((action) => ({
+        ...action,
+        label: action.allowOvertime ? `${labelForStance(action.stance)} + OT` : labelForStance(action.stance)
+      }))
     : [];
   const supplierCartNotice = notice.startsWith("Add the needed items to the supplier cart before checkout") ? notice : "";
   const selectedSupply = selectedSupplyId ? bundle.supplies.find((supply) => supply.id === selectedSupplyId) ?? null : null;

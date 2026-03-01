@@ -350,6 +350,55 @@ describe("compact shell ui", () => {
     expect(screen.queryAllByText(/Add the needed items to the supplier cart before checkout/i).length).toBe(1);
   });
 
+  it("EH-TW-053: overtime buttons appear only when the visible action needs overtime", () => {
+    const game = buildAcceptableGame(6066);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        activeTab: "work",
+        game: {
+          ...current,
+          workday: {
+            ...current.workday,
+            availableTicks: 1,
+            ticksSpent: 1,
+            overtimeUsed: 0
+          },
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "job-site",
+                tasks: current.activeJob.tasks.map((task) =>
+                  task.taskId === "load_from_shop" ||
+                  task.taskId === "travel_to_supplier" ||
+                  task.taskId === "checkout_supplies" ||
+                  task.taskId === "travel_to_job_site" ||
+                  task.taskId === "pickup_site_supplies"
+                    ? { ...task, completedUnits: task.requiredUnits }
+                    : task
+                )
+              }
+            : null
+        }
+      });
+    });
+
+    expect(screen.queryByRole("button", { name: /^Standard$/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Careful$/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /Standard \+ OT/i })).toBeTruthy();
+    const visibleActionButtons = screen
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim() ?? "")
+      .filter((label) => /Rush|Standard|Careful/.test(label));
+    expect(visibleActionButtons.length).toBeGreaterThan(0);
+    expect(visibleActionButtons.every((label) => label.includes("+ OT"))).toBe(true);
+  });
+
   it("EH-TW-034: supplier-state jobs expose the supplier cart sheet and supply info modal", () => {
     const game = buildAcceptableGame(7070);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
