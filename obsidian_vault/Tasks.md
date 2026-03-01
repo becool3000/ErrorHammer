@@ -6,7 +6,8 @@
 4. `PLN-008` is now active and defines a rolling Builder session for ongoing UI/UX iteration on `main`.
 5. `BLD-008` is the only active `IN_PROGRESS` lane card and remains open until the user explicitly ends the Builder session.
 6. `TW-008`, `VF-008`, and `DOC-008` stay deferred until the rolling Builder session is closed.
-7. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
+7. `PLN-009` is planned and queued outside the rolling `BLD-008` UI session; it must not start until the user explicitly pivots from `BLD-008` or closes that session.
+8. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-01.
@@ -60,6 +61,11 @@ Snapshot date: 2026-03-01.
 | TW-008  | TestWriter | READY      | P1       | BLD-008    | `Deterministic coverage for final BLD-008 session delta`                   | Trigger only after the user closes `BLD-008`; convert the final Builder delta into deterministic scenarios, pass/fail criteria, and any manual UX smoke steps.                                            |
 | VF-008  | Verifier   | READY      | P1       | TW-008     | `Verification closeout for final BLD-008 session delta`                    | Trigger only after `TW-008`; run the command checklist, execute the `TW-008` scenarios, patch only validated defects, and record evidence tied to the final Builder batch set.                            |
 | DOC-008 | Documenter | READY      | P1       | VF-008     | `Documentation sync for final BLD-008 session delta`                       | Trigger only after `VF-008`; sync README/vault notes to the final verified UI/UX behavior and close the rolling session chain.                                                                             |
+| PLN-009 | Planner    | DONE       | P1       | PLN-008    | `Skill level-up visibility, Operator Level, and progression popup system`  | `Vision.md`, `Decisions.md`, and `Tasks.md` updated with a decision-complete progression handoff; the chain is explicitly queued outside active `BLD-008`.                                                 |
+| BLD-009 | Builder    | READY      | P1       | PLN-009    | `Implement skill levels, Operator Level, and progression popups`           | Add pure level-threshold helpers, derived Operator Level, work-shell/operator-card progression UI, deterministic popup queueing, and save-safe progression rendering without perk unlocks or new RNG.      |
+| TW-009  | TestWriter | READY      | P1       | BLD-009    | `Deterministic progression math and popup scenarios`                       | Add pure threshold math assertions, scenario coverage for XP/skill/operator popup ordering, and UI-shell coverage for skill/Operator displays plus popup queue behavior.                                  |
+| VF-009  | Verifier   | READY      | P1       | TW-009     | `Progression system verification checklist`                                | Run validate/compile/test/build, verify popup order/escalation plus level displays, and patch only validated defects in permitted files.                                                                   |
+| DOC-009 | Documenter | READY      | P1       | VF-009     | `Document progression visibility and popup system`                         | Sync README/vault notes to verified skill-level, Operator Level, and popup behavior after `VF-009` closes.                                                                                                |
 
 ### Supersession Archive
 | Superseded Card | Replacement Card | Date | Reason |
@@ -240,3 +246,91 @@ Status: Active on 2026-03-01 after `DOC-007` closed the crew + event depth chain
 3. TestWriter: deferred (`TW-008`) until `BLD-008` closes.
 4. Verifier: deferred (`VF-008`) until `TW-008` closes.
 5. Documenter: deferred (`DOC-008`) until `VF-008` closes.
+
+## [TASK] Skill Level-Up Visibility + Operator Progression (`PLN-009`)
+Status: Planned on 2026-03-01 while `BLD-008` remains active. This chain is queued and must not start until the user explicitly pivots from `BLD-008` or closes that rolling UI session.
+
+### Problem Statement
+1. Raw skill XP already exists in runtime state, but players cannot see an explicit skill level, progress to the next level, or an overall Operator Level summary.
+2. The current hidden `100 XP = 1 rank` math is not suitable as a visible progression model because it does not communicate early-vs-late pacing or progress milestones.
+3. XP gains currently land silently, so the player gets no celebratory feedback when a skill improves or when their broader operator progression increases.
+4. The next implementation must expose progression clearly without adding perk trees, stat unlocks, or non-deterministic reward systems.
+
+### Goals
+1. Make each player skill show a visible Level plus raw XP using a tiered cumulative curve.
+2. Add an Operator Level derived from average raw XP across all tracked player skills.
+3. Add deterministic, presentation-only progression popups for XP gains, skill level-ups, and Operator level-ups.
+4. Keep all progression math pure, save-safe, and compatible with the compact-shell architecture already on `main`.
+
+### Constraints
+1. No new RNG, perk unlocks, payout bonuses, stamina bonuses, or other progression rewards are introduced in this phase.
+2. Gameplay logic must remain pure in `src/core/**`, and UI state transitions must stay resolver/store-driven.
+3. Raw skill XP remains the only persisted source of truth; visible levels and Operator Level are derived at runtime.
+4. Popup queues do not persist across reload and must not replay retroactively on continue/load.
+5. This chain is outside the scope of `BLD-008`; Builder must not silently fold it into the rolling UI session.
+
+### Deliverables
+1. Pure helper functions for threshold translation, progress-to-next-level, and Operator Level derivation from average raw XP.
+2. Player-facing skill displays that show Level and XP rather than ambiguous hidden rank semantics.
+3. An Operator card display that surfaces `Operator Lv X` and related progression context.
+4. A deterministic popup queue with escalating presentation tiers for XP gain, skill level-up, and Operator level-up events.
+5. Deterministic test coverage for threshold math, popup ordering, and shell rendering once later lanes begin.
+
+### Completion Evidence
+#### Builder (`BLD-009`)
+1. Add pure progression helpers that translate raw XP into visible levels with the cumulative thresholds `0, 100, 250, 450, 650, 850, ...` and `+200 XP` for each later level.
+2. Derive Operator Level from average raw XP across all tracked player skills using the same threshold helper functions.
+3. Update player-facing skill displays and the `Work` operator card to show visible Level and XP information while keeping raw XP as the only persisted source of truth.
+4. Enqueue deterministic progression popups after XP-granting actions in this order: one combined XP popup, one popup per skill level-up, then one Operator level-up popup if triggered.
+5. Preserve save/load compatibility, avoid retroactive popup replay on load, and keep the feature free of perks, unlock trees, or new RNG paths.
+
+#### TestWriter (`TW-009`)
+1. Add pure math assertions for threshold boundaries, progress calculations, and Operator Level derivation from average raw XP.
+2. Add deterministic scenario coverage for XP-only gains, skill-threshold crossings, and combined `XP -> skill -> Operator` popup ordering.
+3. Extend UI-shell tests to confirm visible Level/XP rows in the Skills view, Operator Level in the operator card, and deterministic popup queue behavior.
+
+#### Verifier (`VF-009`)
+1. Re-run `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build` after progression changes land.
+2. Manually verify XP-only, skill-level-up, and Operator-level-up action flows, including popup ordering and escalating visual treatment.
+3. Confirm save/load preserves raw XP and derived visible levels without replaying stale popups.
+
+#### Documenter (`DOC-009`)
+1. Sync README usage/testing/workflow notes to the verified progression system once `VF-009` closes.
+2. Update vault summaries to reflect the visible skill levels, Operator Level, popup queue behavior, and final evidence chain.
+
+### Builder Handoff (`BLD-009`)
+1. Add pure helpers under `src/core/**` for `xp -> level`, XP floor/ceiling per level, progress-to-next-level, and Operator Level from average raw XP.
+2. Use the tiered cumulative thresholds `0, 100, 250, 450, 650, 850, ...`; early levels should be faster, then increase by `200 XP` per level from level 5 onward.
+3. Treat raw skill XP as the only persisted progression state; visible skill levels and Operator Level must always be derived from that XP.
+4. Replace player-facing uses of hidden `rank` wording with `level` wording where progression is shown in UI.
+5. Add a compact `Operator Lv X` display to the `Work` shell operator card plus a clearer Skills view that shows skill name, level, raw XP, and progress to the next level.
+6. Generate progression popups by comparing previous and next state after XP-granting actions using existing `TaskUnitResult.skillXpDelta` output.
+7. Queue only one active popup at a time and render multiple events in stable order:
+   1. `XP Earned`
+   2. `Skill Leveled Up`
+   3. `Operator Leveled Up!`
+8. Keep popup copy concise and deterministic:
+   1. XP popup lines like `Procurement +10`
+   2. Skill popup lines like `Procurement reached Lv 2`
+   3. Operator popup lines like `Operator reached Lv 3`
+9. Popups are presentation-only in this phase; do not add perk unlocks, stat bonuses, content packs, or replay-on-load behavior.
+10. Keep the resulting implementation easy for `TW-009` to assert through pure helper tests, scenario tests, and UI-shell tests.
+
+### Risks
+1. Changing the XP-to-level curve changes gameplay pacing because visible level math also drives existing skill effectiveness.
+2. Popup spam could become noisy if every XP grant produces too many separate messages.
+3. Mixed use of `rank` and `level` language could leave the codebase and UI inconsistent if not normalized carefully.
+4. Queue bugs could cause progression popups to drop, duplicate, or render out of order.
+
+### Mitigations
+1. Centralize the threshold curve and progress calculations in one pure helper path under `src/core/**`.
+2. Use one combined XP popup per action rather than one popup per XP delta line item.
+3. Rename player-facing progression language consistently to `level` where the feature is shown.
+4. Drive popup creation from deterministic previous/next state comparison rather than from ad hoc UI-side heuristics.
+
+### Exit Evidence
+1. Planner: complete (`PLN-009`).
+2. Builder: ready (`BLD-009`) but not started until the user explicitly pivots from or closes `BLD-008`.
+3. TestWriter: ready (`TW-009`).
+4. Verifier: ready (`VF-009`).
+5. Documenter: ready (`DOC-009`).

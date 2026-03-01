@@ -66,6 +66,11 @@
 64. `PLN-008` opens a rolling Builder session for iterative UI/UX work on `main` using a single active Builder card (`BLD-008`) instead of repeated Planner handoffs for each small batch.
 65. `BLD-008` uses small frequent `[Builder]` commits, remains `IN_PROGRESS` until the user explicitly ends the session, and defers `TW-008`, `VF-008`, and `DOC-008` until that explicit close command.
 66. Builder may ship UI/UX improvements and directly supporting refinements during `BLD-008`, but must pause for Planner input before introducing new gameplay systems, economy/progression rule changes, material content expansion, or broader product redesign.
+67. `PLN-009` is a separate queued progression chain outside active `BLD-008`; Builder must not silently fold visible skill levels, Operator Level, or progression popups into the rolling UI session without an explicit user pivot or close.
+68. Visible skill levels use a tiered cumulative XP curve: Level `0 = 0 XP`, Level `1 = 100 XP`, Level `2 = 250 XP`, Level `3 = 450 XP`, Level `4 = 650 XP`, Level `5 = 850 XP`, and each later level adds `200 XP`.
+69. Operator Level is derived from average raw XP across all tracked player skills and translated through the same threshold curve as individual skills.
+70. Progression feedback queues in deterministic severity order per action: one combined `XP Earned` popup, then one `Skill Leveled Up` popup per crossed threshold, then one `Operator Leveled Up!` popup if the derived Operator Level increased.
+71. Raw skill XP remains the only persisted progression source of truth; visible levels and popup events are derived at runtime, and popup queues do not persist or replay across save/load.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.

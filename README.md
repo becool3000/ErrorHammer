@@ -4,7 +4,8 @@
 2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `50` tests), and `npm run build`.
 3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
 4. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is complete on `main`.
-5. Deterministic replay, mobile-shell UI evidence, and crew/event verification evidence are recorded in `obsidian_vault/Testing.md`.
+5. `PLN-008` keeps the rolling UI/UX Builder session open on `main`; `PLN-009` is queued separately for visible skill levels, Operator Level, and progression popups.
+6. Deterministic replay, mobile-shell UI evidence, and crew/event verification evidence are recorded in `obsidian_vault/Testing.md`.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
@@ -42,4 +43,5 @@
 2. Handoff source of truth is `obsidian_vault/Tasks.md` under `Active Lane Board (Kanban)`.
 3. WIP limit remains one `IN_PROGRESS` card per lane.
 4. `PLN-008` opens a rolling Builder session for iterative UI/UX work: `BLD-008` stays active until the user explicitly ends it, and only then does the lane flow resume with `TW-008 -> VF-008 -> DOC-008`.
-5. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.
+5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is queued outside that rolling session and must not start until the user explicitly pivots from or closes `BLD-008`.
+6. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.

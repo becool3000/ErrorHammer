@@ -34,10 +34,11 @@
 
 ## Next Focus
 1. `PLN-008` opens a rolling Builder session for iterative UI/UX refinement on `main`.
-2. The verified baseline remains the closed `DOC-007` state until the rolling Builder session is explicitly ended and re-verified.
-3. The next active work is not a one-shot feature chain; it is an ongoing `BLD-008` UI/UX polish loop with small frequent commits and a pause-on-feature-drift rule.
-4. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements while Builder iterates.
-5. Defer TestWriter, Verifier, and Documenter closeout until the user explicitly ends the rolling Builder session.
+2. `PLN-009` is now planned as a queued progression chain for visible skill levels, derived Operator Level, and deterministic XP/level-up popups; it remains outside active `BLD-008` until the user explicitly pivots or closes the rolling UI session.
+3. The verified baseline remains the closed `DOC-007` state until the rolling Builder session is explicitly ended and re-verified.
+4. The next active work is not a one-shot feature chain; it is an ongoing `BLD-008` UI/UX polish loop with small frequent commits and a pause-on-feature-drift rule.
+5. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements while Builder iterates.
+6. Defer TestWriter, Verifier, and Documenter closeout until the user explicitly ends the rolling Builder session.
 
 ## Archive
 1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.
