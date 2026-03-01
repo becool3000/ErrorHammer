@@ -297,7 +297,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
-        {materialNeedRows.length > 0 ? (
+        {activeJob.location === "supplier" && materialNeedRows.length > 0 ? (
           <div className="detail-block material-needs-block">
             <div className="section-label-row tight-row">
               <strong>Needed Supplies</strong>
