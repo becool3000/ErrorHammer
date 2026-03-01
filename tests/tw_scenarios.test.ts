@@ -481,6 +481,22 @@ describe("TW-004 deterministic scenario suite", () => {
     }
   });
 
+  it("EH-TW-049: assignee locks after work starts and crew stamina is not spent twice", () => {
+    const { bundle, state } = fastForwardToTask(3200, "job-alpha-contract", "do_work");
+    state.player.companyLevel = 2;
+    const hired = hireCrew(state).nextState;
+    const assigned = setActiveJobAssignee(hired, "crew-1");
+    const first = performTaskUnit(assigned.nextState, bundle, "standard", true);
+    const staminaAfterFirst = first.nextState.player.crews[0]?.stamina;
+    const second = performTaskUnit(first.nextState, bundle, "standard", true);
+    const reassigned = setActiveJobAssignee(second.nextState, "self");
+
+    expect(staminaAfterFirst).toBe(4);
+    expect(second.nextState.player.crews[0]?.stamina).toBe(staminaAfterFirst);
+    expect(reassigned.notice).toContain("locked");
+    expect(reassigned.nextState.activeJob?.assignee).toBe("crew-1");
+  });
+
   it("EH-TW-013: normalized content bundle has expected keys and stable ordering", async () => {
     const [content, schemas] = await Promise.all([loadRawContent(), loadSchemas()]);
     const result = validateContent(content, schemas);

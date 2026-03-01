@@ -10,6 +10,7 @@
 8. Itch packaging verification chain status is complete for `TW-004` and `VF-004` (2026-02-28).
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
 10. Name + Hour verification chain status is complete for `TW-006` and `VF-006` (2026-03-01); deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-039..EH-TW-043`.
+11. Crew + event TestWriter coverage for `TW-007` is in progress; deterministic coverage now extends through `EH-TW-049` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, and work-hero event cues.
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -22,7 +23,7 @@
 1. Scenario assertions are explicit and deterministic.
 2. Assertions use day-resolution fields for resolver behavior and stable UI state transitions for compact-shell behavior.
 3. UI-shell assertions verify active tab, visible compact controls, modal/sheet open state, and preserved gameplay state.
-4. New scenarios `EH-TW-039..EH-TW-043` expand the deterministic contract to cover quick-buy discovery, title-name persistence, quick-buy success, quick-buy rejection, and title form persistence/gating cases.
+4. New scenarios `EH-TW-039..EH-TW-049` expand the deterministic contract to cover quick-buy discovery, title-name persistence, crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, and event cue visibility in the compact shell.
 
 ## Automated Scenario Definitions (`TW-005` additions)
 1. `EH-TW-023`
@@ -93,6 +94,30 @@ Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-042`.
 Sequence: Enter the title screen, type both player and company names, start a new game, then return to the title screen.
 Pass criteria: the UI store captures each trimmed value (title inputs stay non-empty) and the title inputs re-render with those names when control returns to the title screen, keeping `New Game` disabled until both fields are non-empty.
 Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-043`.
+18. `EH-TW-044`
+Sequence: Call `hireCrew` below level 2, then raise `companyLevel` to `2` and call it again.
+Pass criteria: the first call returns a level-gating notice and leaves state untouched; the second call creates `crew-1` (`June`) in the first open slot and appends a roster log entry.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-044`.
+19. `EH-TW-045`
+Sequence: Hire `crew-1`, assign the active job to that crew, and execute the first `do_work` task step.
+Pass criteria: crew stamina drops by the job stamina cost once, `activeJob.staminaCommitted` becomes `true`, and task log lines are prefixed with the crew name.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-045`.
+20. `EH-TW-046`
+Sequence: Persist a v4 save that lacks `activeJob.assignee` and `activeJob.staminaCommitted`, then load it through the save helpers.
+Pass criteria: load succeeds, `assignee` defaults to `"self"`, and `staminaCommitted` defaults to `false`.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-046`.
+21. `EH-TW-047`
+Sequence: Open the company crew modal in a level-2 shell state and press `Hire Crew`.
+Pass criteria: the modal shows the new roster entry for `June`, the hire notice renders, and the store state remains inside the same shell session.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-047`.
+22. `EH-TW-048`
+Sequence: Seed an accepted-job shell state with an active event and one hired crew, then inspect the `Work` tab and switch the assignee.
+Pass criteria: the `Work` tab renders the event headline plus impact line, and selecting the crew updates `activeJob.assignee` to that `crewId`.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-048`.
+23. `EH-TW-049`
+Sequence: Assign a job to `crew-1`, execute two `do_work` steps, and then attempt to switch the assignee back to `self`.
+Pass criteria: crew stamina is charged only on the first work commit, the second work step preserves the same stamina, and reassignment returns a lock notice while keeping the crew assignee.
+Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-049`.
 
 ## Automated Execution Steps (`TW-002` through `TW-005`)
 1. Run `npm test`.
@@ -108,6 +133,7 @@ Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-043`.
 6. Trigger a supplier-state path and confirm the supplier sheet opens.
 7. Refresh and use `Continue` to verify the save/load path.
 8. Return to the title screen (via the UI store or by reloading), verify both name inputs keep the last trimmed values, and confirm `New Game` remains disabled until both fields are non-empty so the fields gate the compact shell launch.
+9. Reach company level 2, open `Crew Status`, hire the first crew, assign that crew to an accepted job from `Work`, and confirm the `Work` hero keeps the event cue copy visible while the crew stamina line drops on first work commit only.
 
 ## Evidence Log
 1. `VF-005` evidence date: 2026-03-01.

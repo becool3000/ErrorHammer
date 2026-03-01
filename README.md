@@ -30,9 +30,9 @@
 6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the details only render inside those modals.
 
 ## Testing
-1. Deterministic scenario suite `EH-TW-001..EH-TW-043` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-040..EH-TW-042` covering quick-buy variations and the new `EH-TW-043` covering title-name persistence/state.
+1. Deterministic scenario suite `EH-TW-001..EH-TW-049` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-044..EH-TW-049` covering crew hire gating, assignee stamina/lock behavior, and save-safe assignee defaults.
 2. Packaging assertion `EH-TW-022` remains in `tests/vite_config.test.ts`.
-3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus title-screen persistence scenario `EH-TW-043` are implemented in `tests/ui_shell.test.tsx`.
+3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus `EH-TW-043`, `EH-TW-047`, and `EH-TW-048` are implemented in `tests/ui_shell.test.tsx` for title persistence, crew-modal hiring, and work-tab event/assignee cues.
 4. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 5. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 6. Latest verifier closeout is `VF-006` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
