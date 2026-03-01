@@ -31,10 +31,10 @@
 6. Evidence details are recorded in `obsidian_vault/Testing.md`.
 
 ## Next Focus
-1. Advance into `PLN-007` so the next lane chain can unlock the deferred crew workflow and surface event/opportunity cues without breaking the current deterministic shell baseline.
-2. Keep the post-`DOC-006` runtime stable while the next planner handoff defines crew hiring, crew assignment resolution, and work-hero event visibility requirements.
-3. Keep this documented baseline as the handoff anchor for future lane chains.
-4. Preserve deterministic resolver, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, and relative-path packaging requirement in follow-on scope.
+1. `PLN-007` is now the planning lock for the next gameplay-depth chain on `main`.
+2. The next implementation chain focuses on deterministic crew hiring, active-job assignee selection inside the shipped compact shell, and visible work-hero event cues so the company arc advances beyond solo play without changing the seeded runtime contract.
+3. Keep this documented baseline as the handoff anchor for `BLD-007 -> TW-007 -> VF-007 -> DOC-007`.
+4. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirement in follow-on scope.
 
 ## Archive
 1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.

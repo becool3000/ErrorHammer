@@ -50,12 +50,17 @@
 48. The visual direction for the shell is a dark industrial palette: matte black and gunmetal surfaces, silver accents, restrained motion, and compact card density.
 49. Compact-shell verification must include automated tab/overlay interaction coverage plus mobile-width smoke evidence.
 50. Name + Hour flow planning chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` captures the title-screen name/company prompts, hours terminology, quick-buy gating, and modal-only company details while obeying the established lane and handoff rules.
-51. Crew hiring unlock is gated by the first progression milestone (`companyLevel >= 2`), and crews live in `ActorState.crews` (max three); they share the same stamina, tool, durability, and assignment constraints as the player so they feel like deterministic help rather than extra randomness.
-52. Crew assignments must be emitted through `Intent.assignments` with `assignee` set to the crew's `crewId`, routed through the existing stamina tracker, tool gating, and tie-breaker logic in `resolver.ts`, and recorded to the day log with the same message discipline as player tasks.
-53. Active events continue to drive payout/risk modifiers, but their `headline`, `impact_line`, and tag-based clues must also be surfaced on the `Work` tab so the player can plan quick buys; any new event UI reuses event defs and never mutates game randomness or modifiers beyond the existing resolver hooks.
+51. Crew hiring unlock is gated by the first progression milestone (`companyLevel >= 2`), and crews live in `ActorState.crews` (max three); they share the same stamina and job-eligibility constraints as the player so they feel like deterministic help rather than extra randomness.
+52. `PLN-007` crew play is anchored to the shipped active-job shell: accepted jobs carry an explicit assignee (`self` or `crewId`), the compact shell exposes that choice without adding a new screen, and `playerFlow.ts` remains the player-facing execution path for crew work.
+53. Resolver support for non-`self` assignees remains part of the deterministic core contract; Builder may extend or harden that support, but `BLD-007` must not depend on a full return to the legacy board-intent UI.
 54. Title inputs on the title screen must persist trimmed player/company strings in UI state, enforce that `New Game` stays disabled until both fields contain trimmed values, and repopulate those strings whenever control returns to the title screen so the compact shell always reuses the chosen names.
 55. Name + Hour lane closeout status as of 2026-03-01 is `DONE` for `BLD-006`, `TW-006`, `VF-006`, and `DOC-006`.
 56. Verified behavior source of truth for the Name + Hour closeout is `obsidian_vault/Testing.md` command, scenario, and manual smoke evidence.
+57. Crew hiring is deterministic and non-random: the player fills the lowest open crew slot from a fixed three-slot roster/order, and any initial crew stats or labels must come from static data rather than new runtime RNG calls.
+58. Crew work in the compact shell reuses the player's shared tool inventory; `BLD-007` must not introduce crew-specific tool ownership, extra stores, or a second economy path.
+59. Active events continue to drive payout/risk modifiers, but the `Work` hero must surface each live event's `headline`, `impact_line`, and derived tag cue chips so players can plan quick buys and contract choices without digging through logs; the UI remains read-only over existing event defs/modifiers.
+60. `PLN-007` must preserve save/continue continuity on `main`: any new crew or active-job assignee fields need safe defaults for existing saves or an explicit compatibility guard rather than silent corruption.
+61. Gameplay depth planning chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is the active post-`DOC-006` lane chain for `main`.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.

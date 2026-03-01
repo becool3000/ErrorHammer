@@ -2,9 +2,9 @@
 ## Current Focus
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is fully closed on `main`.
 2. Name + Hour chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is fully closed on `main`.
-3. Lane cards `BLD-006`, `TW-006`, `VF-006`, and `DOC-006` are complete with recorded exit evidence.
-4. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
-5. The board is ready for `PLN-007` to start the next gameplay-depth planning handoff.
+3. `PLN-007` gameplay-depth planning is complete and `BLD-007` is the next pull on `main`.
+4. Lane cards `BLD-006`, `TW-006`, and `VF-006` plus planner card `PLN-007` have recorded exit evidence.
+5. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-01.
@@ -48,8 +48,8 @@ Snapshot date: 2026-03-01.
 | TW-006  | TestWriter | DONE       | P0       | BLD-006    | `Deterministic Name + Hour scenarios`                                      | Add `EH-TW-040..EH-TW-042` plus UI quick-buy assertions (`EH-TW-039`) and document expected outcomes.                                                                                                      |
 | VF-006  | Verifier   | DONE       | P0       | TW-006     | `Name + Hour verification checklist`                                       | Run content validate/compile, `npm test`, `npm run build`, and manual/title-name + quick-buy + company tab smoke steps; record results.                                                                    |
 | DOC-006 | Documenter | DONE       | P0       | VF-006     | `Document Name + Hour flow`                                                | Update README usage/testing sections and obsidian vault summaries to capture the new flow, scenarios, and lane chain.                                                                                      |
-| PLN-007 | Planner    | READY      | P1       | PLN-006    | `Gameplay depth planning lock`                                             | Define crew hiring/resolver requirements and event cue acceptance gates so the `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` chain can deepen the loop after the Name + Hour flow closes.            |
-| BLD-007 | Builder    | READY      | P1       | PLN-007    | `Implement crew + event depth`                                             | Add crew unlock/hire flow, resolve crew assignments, and surface active event cues in the compact shell without creating new randomness.                                                                   |
+| PLN-007 | Planner    | DONE       | P1       | PLN-006    | `Gameplay depth planning lock`                                             | `Vision.md`, `Decisions.md`, `Tasks.md`, and `README.md` updated with deterministic crew-hiring, active-job assignee, event-cue scope, risks, deliverables, and a Builder-ready `BLD-007` handoff.         |
+| BLD-007 | Builder    | READY      | P1       | PLN-007    | `Implement crew + event depth`                                             | Add crew unlock/hire flow, active-job assignee support, and work-hero event cues in the compact shell without creating new randomness.                                                                     |
 | TW-007  | TestWriter | READY      | P1       | BLD-007    | `Deterministic crew/event scenarios`                                       | Cover crew hiring, crew assignment resolution, and event cue visibility with new day-resolution scenarios plus updated UI helpers.                                                                         |
 | VF-007  | Verifier   | READY      | P1       | TW-007     | `Crew + event verification checklist`                                      | Re-run content validate/compile, `npm test`, `npm run build`, and execute manual crew hire plus event cue smoke checks; capture evidence of deterministic resolution.                                      |
 | DOC-007 | Documenter | READY      | P1       | VF-007     | `Document crew + event depth`                                              | Sync README usage/testing sections and vault artifacts to describe the new crew workflow, event cues, and associated tests/evidence.                                                                       |
@@ -115,38 +115,64 @@ Status: Completed on 2026-03-01 with all lane cards in `DONE` state.
 5. Documenter: complete (`DOC-005`).
 
 ## [TASK] Gameplay Depth Chain (`PLN-007`)
-Status: READY after the Name + Hour chain (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`) closed on 2026-03-01.
+Status: Planned on 2026-03-01 after the Name + Hour chain (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`) closed on 2026-03-01.
 
 ### Problem Statement
-1. Crew progression is marked as deferred (`bundle.strings.crewDeferred`) even though `Spec.md` calls for up to three crews and `resolver.ts` already tracks crew stamina; the player never hires or assigns crew, so the “rising from solo contractor to small company” arc is incomplete.
+1. Crew progression is marked as deferred (`bundle.strings.crewDeferred`) even though `Spec.md` calls for up to three crews and the runtime already carries `CrewState`; the player never hires or assigns crew, so the "rising from solo contractor to small company" arc is incomplete.
 2. Active events currently only appear in logs, so players miss the chance to plan quick buys or tool purchases around modifiers and tag-based cues before accepting contracts.
 3. The compact shell lacks any explicit signal for the new depth we want to ship, leaving quick-buy tooling and event timing feeling like afterthoughts instead of strategic touchpoints.
+4. The shipped player loop runs through `playerFlow.ts` and one active job at a time, while `resolver.ts` already supports `assignee`; the next Builder handoff must bridge that seam explicitly instead of assuming the old assignment screen still exists.
 
 ### Goals
-1. Replace the crew placeholder with a deterministic crew unlock/hire flow that integrates with the existing `CrewState` data, resolver assignment handling, and company tab UI to show names, stamina, and their role in the ledger.
-2. Surface active event headlines, impact lines, and tag clues on the `Work` tab hero so players can immediately see what modifiers are live and adjust quick-buy or contract choices without scrolling through logs.
-3. Keep the compact shell layout intact, preserve the seeded randomness surface area, and limit the new depth to data we already ship (tools, events, strings) plus deterministic crew naming so no new RNG pathways open.
+1. Replace the crew placeholder with a deterministic crew unlock and hire flow that integrates with the existing `CrewState` data, the active-job shell, and the company tab UI so the player can see names, stamina, and available slots instead of a deferred stub.
+2. Add an explicit assignee choice for the compact shell's active-job flow so accepted jobs can be worked by `self` or one hired crew without introducing a new navigation model or a second contract board.
+3. Surface active event headlines, impact lines, and tag clues on the `Work` tab hero so players can immediately see what modifiers are live and adjust quick-buy or contract choices without scrolling through logs.
+4. Keep the compact shell layout intact, preserve the seeded randomness surface area, and limit the new depth to data already shipped or static runtime constants so no new RNG pathways open.
 
 ### Constraints
-1. Crew assignments must continue to honor `resolver.ts`’s stamina tracker, tool gating, and tie-breakers so the deterministic resolution contract still holds.
+1. Crew assignments must continue to honor the deterministic stamina, tool-gating, and tie-break rules already present in core modules so the resolution contract still holds.
 2. UI additions must live within existing tabs/modals (work hero, company tab) and avoid introducing new navigation shells or full-page screens.
 3. The crew cap remains three; hiring is gated by company progression so we preserve the scrappy vibe and avoid introducing new content files outside `content/strings`.
+4. Existing saves from the verified `DOC-006` baseline must load safely; any new active-job assignee or crew metadata needs defaults or a guarded compatibility path.
+5. Builder scope remains incremental: no new district, tool, event, or bot content packs are required to land `BLD-007`.
+
+### Risks
+1. The current player loop lives in `src/core/playerFlow.ts`, but crew-aware stamina plumbing already exists in `src/core/resolver.ts`; duplicating rules between those paths is the main regression risk for `BLD-007`.
+2. Adding assignee state to the active job can break save/continue or quick-buy gating if the default path for existing saves is not defined up front.
+3. Crew stats (`efficiency`, `reliability`, `morale`) exist in `CrewState` but have no verified gameplay meaning yet; Builder must keep their first-use bonuses small and deterministic so the shell does not drift from the current balance baseline.
+4. Event cues can easily turn into noisy copy if the `Work` hero dumps full event text; Builder needs a compact read-only presentation that preserves the shell's dense mobile layout.
+
+### Deliverables
+1. A deterministic hire action that replaces the deferred crew button, unlocks at `companyLevel >= 2`, fills the lowest open crew slot, persists through save/load, and records a clear log or notice line.
+2. Compact-shell assignee controls that let the player choose `self` or one hired crew for the current accepted job, with a safe default of `self` for old and new saves until changed.
+3. Active-job task execution that spends the selected assignee's stamina, keeps tool/material gating intact, and records assignee-aware log lines without introducing unseeded randomness.
+4. A `Work` hero event-cue block that renders each active event's `headline`, `impact_line`, and concise tag cues derived from existing event modifiers.
+5. Updated company modal content that shows roster slots, live crew stats, unlock gating, and hire CTA state in place of the deferred placeholder.
 
 ### Completion Evidence
 #### Builder (`BLD-007`)
-1. Implement crew unlock/hire logic in `playerFlow.ts` so `hireCrew()` instantiates deterministic crew records once `companyLevel >= 2`, appends crew log entries, and updates `GameState`.
-2. Update `Contracts`/`Work` wiring so crew IDs can appear in assignment selectors and `resolver.ts` resolves crew assignments (stamina reduction, tool wear, log lines) using the existing `Intent.assignee` hooks.
-3. Expand the `Company` modal to show live crew stats and rename the `crewDeferred` string, plus add new strings for the crew roster and event hero messaging.
-4. Surface active event data (headline, impact_line, tag hints) in the `Work` hero so players immediately see modifiers without hunting through field logs.
+1. Implement crew unlock and hire logic in the player-facing flow (`src/core/playerFlow.ts`, `src/core/resolver.ts`, and save-safe state wiring as needed) so hiring at `companyLevel >= 2` creates deterministic crew records, persists them, and records visible evidence in notices/logs.
+2. Add compact-shell assignee selection to the current accepted-job flow so `self` or a hired crew can work the active job, and route stamina/tool usage through the same deterministic gating rules already enforced by core modules.
+3. Replace the deferred crew modal copy with a live roster view that shows slot state, stamina, and hire availability while keeping the `Company` experience modal-only.
+4. Surface active event data (`headline`, `impact_line`, tag cues) in the `Work` hero without changing event generation, modifier math, or the compact shell navigation model.
+5. Preserve `main` save/continue behavior by defaulting existing saves to `self` assignee state and guarding any newly introduced fields.
+
+### Builder Handoff (`BLD-007`)
+1. Start from the shipped compact-shell path, not the old `Main`/assignment-panel route: the player-facing workflow lives in `src/ui/screens/ContractsTab.tsx`, `src/ui/screens/WorkTab.tsx`, `src/ui/screens/CompanyTab.tsx`, `src/ui/state.ts`, and `src/core/playerFlow.ts`.
+2. Treat `src/core/resolver.ts` as the rule reference for crew stamina semantics, but do not rebuild the legacy day-intent screen to make crews playable in this chain.
+3. Add a single active-job assignee field with a safe default of `self`, expose it in the compact shell, and keep quick-buy, accept-contract, and end-shift behavior intact for the no-crew path.
+4. Use a fixed three-slot deterministic roster/order for hires so the feature stays testable without adding new RNG calls or broad content/schema work.
+5. Keep any first-pass crew stat effects small, explicit, and deterministic; if a stat has no verified gameplay effect yet, display it in UI but avoid inventing hidden systems around it.
+6. Leave the board ready for `TW-007` by making assignee changes and event cues easy to assert in unit tests, scenario tests, and UI-shell tests.
 
 #### TestWriter (`TW-007`)
-1. Add deterministic resolver/unit tests covering crew hiring, crew stamina use, and log entries when a crew wins/losses a contract.
-2. Extend scenario suites to include new day-resolution cases (`EH-TW-043..EH-TW-045`) verifying crew unlock gating, assignment success, and event hero text presence.
-3. Update UI-shell scenarios as needed to confirm the `Work` hero surfaces the event headline/impact_line and that company modals list newly hired crews.
+1. Add deterministic unit and scenario coverage for crew hiring, assignee stamina use, assignee-aware log entries, and event hero visibility.
+2. Extend scenario suites with new cases for unlock gating, save-safe default assignee behavior, assignment success, and event cue rendering.
+3. Update UI-shell scenarios as needed to confirm the `Work` hero surfaces event cue text and that company modals list newly hired crews.
 
 #### Verifier (`VF-007`)
 1. Re-run `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build` once crew/event changes land.
-2. Perform a manual crew hire simulation (reach company level 2, hire, assign crew) and confirm resolver logs, stamina drains, and event hero messaging appear deterministically.
+2. Perform a manual crew hire simulation (reach company level 2, hire, assign crew) and confirm stamina drains, logs, and event hero messaging appear deterministically.
 3. Record event cue evidence plus crew assignment data in `obsidian_vault/Testing.md`.
 
 #### Documenter (`DOC-007`)
@@ -154,7 +180,7 @@ Status: READY after the Name + Hour chain (`PLN-006 -> BLD-006 -> TW-006 -> VF-0
 2. Sync `Vision.md`, `Decisions.md`, and `Testing.md` with the crew/event planning chain and its verification evidence.
 
 ### Exit Evidence
-1. Planner: ready (`PLN-007`).
+1. Planner: complete (`PLN-007`).
 2. Builder: ready (`BLD-007`).
 3. TestWriter: ready (`TW-007`).
 4. Verifier: ready (`VF-007`).

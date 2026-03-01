@@ -4,7 +4,7 @@
 2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `44` tests), and `npm run build`.
 3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
 4. Deterministic replay, mobile-shell UI evidence, and Name + Hour verification evidence are recorded in `obsidian_vault/Testing.md`.
-5. Next queued lane chain is `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` for crew and event-depth planning.
+5. `PLN-007` gameplay-depth planning is complete; the next queued implementation pull is `BLD-007` for deterministic crew hiring, active-job assignees, and work-hero event cues.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
