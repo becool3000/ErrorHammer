@@ -49,6 +49,11 @@
 47. Store interaction uses segmented compact sections (`Fuel`, `Tools`, `Stock`) and must visibly lock transactional actions when the player is away from the shop.
 48. The visual direction for the shell is a dark industrial palette: matte black and gunmetal surfaces, silver accents, restrained motion, and compact card density.
 49. Compact-shell verification must include automated tab/overlay interaction coverage plus mobile-width smoke evidence.
+50. Name + Hour flow planning chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` captures the title-screen name/company prompts, hours terminology, quick-buy gating, and modal-only company details while obeying the established lane and handoff rules.
+51. Crew hiring unlock is gated by the first progression milestone (`companyLevel >= 2`), and crews live in `ActorState.crews` (max three); they share the same stamina, tool, durability, and assignment constraints as the player so they feel like deterministic help rather than extra randomness.
+52. Crew assignments must be emitted through `Intent.assignments` with `assignee` set to the crew's `crewId`, routed through the existing stamina tracker, tool gating, and tie-breaker logic in `resolver.ts`, and recorded to the day log with the same message discipline as player tasks.
+53. Active events continue to drive payout/risk modifiers, but their `headline`, `impact_line`, and tag-based clues must also be surfaced on the `Work` tab so the player can plan quick buys; any new event UI reuses event defs and never mutates game randomness or modifiers beyond the existing resolver hooks.
+54. Title inputs on the title screen must persist trimmed player/company strings in UI state, enforce that `New Game` stays disabled until both fields contain trimmed values, and repopulate those strings whenever control returns to the title screen so the compact shell always reuses the chosen names.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.

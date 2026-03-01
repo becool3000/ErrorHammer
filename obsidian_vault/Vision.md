@@ -26,11 +26,13 @@
 2. `VF-005` checklist is complete with PASS results for content validation, content compile, tests, production build, and mobile-width shell checks.
 3. The runtime now uses a black-and-silver industrial dashboard aesthetic with compact cards, bottom navigation, segmented store views, contract carousel selection, and overlay-based detail views.
 4. Evidence details are recorded in `obsidian_vault/Testing.md`.
+5. `EH-TW-043` verifies that the title screen retains trimmed player/company names, disables `New Game` until both fields are populated, and repopulates the fields after returning to the title screen so the compact shell always reflects the chosen names.
 
 ## Next Focus
-1. Open a new Planner card (`PLN-006`) before any additional runtime feature or deployment automation work.
-2. Keep this documented baseline as the handoff anchor for future lane chains.
-3. Preserve deterministic resolver, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, and relative-path packaging requirement in follow-on scope.
+1. Continue planning `PLN-006` for the Name + Hour flow and keep the `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` chain aligned so the builder, test, verifier, and documenter lanes can deliver title-name prompts, hour terminology, quick-buy tooling, and modal-only company details.
+2. Once `PLN-006` hands off, stage `PLN-007` to unlock the deferred crew workflow and surface event/opportunity cues so the loop gains meaningful progression depth plus actionable context before contracts are accepted.
+3. Keep this documented baseline as the handoff anchor for future lane chains.
+4. Preserve deterministic resolver, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, and relative-path packaging requirement in follow-on scope.
 
 ## Archive
 1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.

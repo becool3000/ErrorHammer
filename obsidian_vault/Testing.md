@@ -22,7 +22,7 @@
 1. Scenario assertions are explicit and deterministic.
 2. Assertions use day-resolution fields for resolver behavior and stable UI state transitions for compact-shell behavior.
 3. UI-shell assertions verify active tab, visible compact controls, modal/sheet open state, and preserved gameplay state.
-4. New scenarios `EH-TW-039..EH-TW-042` expand the deterministic contract to cover quick-buy discovery, title-name persistence, quick-buy success, and quick-buy rejection cases.
+4. New scenarios `EH-TW-039..EH-TW-043` expand the deterministic contract to cover quick-buy discovery, title-name persistence, quick-buy success, quick-buy rejection, and title form persistence/gating cases.
 
 ## Automated Scenario Definitions (`TW-005` additions)
 1. `EH-TW-023`
