@@ -1,0 +1,323 @@
+import { useMemo, useState } from "react";
+import { applyToolPriceModifiers } from "../../core/economy";
+import { getCurrentTask, getSkillDisplayRows } from "../../core/playerFlow";
+import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
+import { bundle, useUiStore } from "../state";
+
+interface WorkTabProps {
+  modalView?: "job-details" | "inventory" | "field-log";
+  sheetOnly?: boolean;
+}
+
+export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
+  const game = useUiStore((state) => state.game);
+  const lastAction = useUiStore((state) => state.lastAction);
+  const performTask = useUiStore((state) => state.performTaskUnit);
+  const endShift = useUiStore((state) => state.endShift);
+  const openModal = useUiStore((state) => state.openModal);
+  const openSheet = useUiStore((state) => state.openSheet);
+  const goToTab = useUiStore((state) => state.goToTab);
+  const setCartQuantity = useUiStore((state) => state.setCartQuantity);
+  const [expandedAction, setExpandedAction] = useState(true);
+
+  if (!game) {
+    return null;
+  }
+
+  const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
+  const currentTask = getCurrentTask(game);
+  const activeJob = game.activeJob;
+  const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
+  const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
+
+  if (sheetOnly) {
+    return activeJob && activeJob.location === "supplier" ? (
+      <section className="stack-block">
+        <div className="section-label-row">
+          <p className="eyebrow">Supplier Cart</p>
+          <span className="chip">{Object.keys(activeJob.supplierCart).length} lines</span>
+        </div>
+        <div className="drawer-list">
+          {bundle.supplies.map((supply) => {
+            const quantity = activeJob.supplierCart[supply.id] ?? 0;
+            const price = supplyPrices.get(supply.id) ?? supply.price;
+            return (
+              <article key={supply.id} className="compact-row-card">
+                <div>
+                  <strong>{supply.name}</strong>
+                  <p>{supply.flavor.description}</p>
+                  <small>${price} each</small>
+                </div>
+                <div className="stepper">
+                  <button className="icon-button" onClick={() => setCartQuantity(supply.id, Math.max(0, quantity - 1))}>
+                    -
+                  </button>
+                  <span>{quantity}</span>
+                  <button className="icon-button" onClick={() => setCartQuantity(supply.id, quantity + 1)}>
+                    +
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    ) : (
+      <p className="muted-copy">No supplier stop is active.</p>
+    );
+  }
+
+  if (modalView === "job-details") {
+    return activeJob && job ? (
+      <section className="stack-block">
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Active Job</p>
+          <h3>{job.name}</h3>
+          <p>{job.flavor.client_quote}</p>
+          <div className="metric-grid two-up">
+            <span>Locked Payout ${activeJob.lockedPayout}</span>
+            <span>Location {activeJob.location}</span>
+            <span>Quality {activeJob.qualityPoints}</span>
+            <span>Rework {activeJob.reworkCount}</span>
+            <span>Time {activeJob.actualTicksSpent}/{activeJob.plannedTicks}</span>
+            <span>Outcome {activeJob.outcome ?? "open"}</span>
+          </div>
+        </article>
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Tasks</p>
+          <div className="stack-list">
+            {activeJob.tasks.map((task) => (
+              <TaskSummary key={task.taskId} task={task} currentTaskId={currentTask?.taskId ?? null} />
+            ))}
+          </div>
+        </article>
+      </section>
+    ) : (
+      <p className="muted-copy">No job details available.</p>
+    );
+  }
+
+  if (modalView === "inventory") {
+    const skillRows = getSkillDisplayRows(game.player).slice(0, 8);
+    return (
+      <section className="stack-block">
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Stock</p>
+          <div className="inventory-columns">
+            <InventoryPanel label="Truck" inventory={game.truckSupplies} />
+            <InventoryPanel label="Shop" inventory={game.shopSupplies} />
+            <InventoryPanel label="Site" inventory={activeJob?.siteSupplies ?? {}} />
+          </div>
+        </article>
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Skill Ledger</p>
+          <div className="chip-grid">
+            {skillRows.map((skill) => (
+              <span key={skill.skillId} className="chip large-chip">
+                {skill.skillId} R{skill.rank} ({skill.xp})
+              </span>
+            ))}
+          </div>
+          <p className="muted-copy">Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>
+        </article>
+      </section>
+    );
+  }
+
+  if (modalView === "field-log") {
+    const lines = game.log.slice(-18).reverse();
+    return (
+      <section className="stack-block scroll-block">
+        {lastAction ? (
+          <article className="chrome-card inset-card">
+            <p className="eyebrow">Last Action</p>
+            <h3>{lastAction.title}</h3>
+            {lastAction.lines.map((line, index) => (
+              <p key={`${lastAction.digest}-${index}`}>{line}</p>
+            ))}
+          </article>
+        ) : null}
+        {lines.length === 0 ? <p className="muted-copy">No field log entries yet.</p> : null}
+        {lines.map((entry, index) => (
+          <article key={`${entry.day}-${entry.actorId}-${index}`} className="chrome-card inset-card log-card">
+            <p className="eyebrow">
+              Day {entry.day} | {entry.actorId}
+              {entry.taskId ? ` | ${entry.taskId}` : ""}
+            </p>
+            <p>{entry.message}</p>
+          </article>
+        ))}
+      </section>
+    );
+  }
+
+  if (!activeJob || !job) {
+    return (
+      <section className="tab-panel work-tab">
+        <article className="hero-card chrome-card">
+          <p className="eyebrow">Work Queue</p>
+          <h2>No active job</h2>
+          <p>Pick a contract from the board to get the shift moving.</p>
+          <div className="action-row">
+            <button className="primary-button" onClick={() => goToTab("contracts")}>
+              Open Contract Board
+            </button>
+            <button className="ghost-button" onClick={() => openModal("field-log")}>
+              View Log
+            </button>
+          </div>
+        </article>
+        <article className="chrome-card inset-card compact-metrics">
+          <div className="metric-grid two-up">
+            <span>Fatigue debt {game.workday.fatigue.debt}</span>
+            <span>Overtime left {Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed)}</span>
+          </div>
+        </article>
+        <div className="sticky-action-bar">
+          <button className="primary-button wide-button" onClick={() => endShift()}>
+            End Shift
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="tab-panel work-tab">
+      <article className="hero-card chrome-card active-job-hero">
+        <div className="section-label-row">
+          <div>
+            <p className="eyebrow">Active Job</p>
+            <h2>{job.name}</h2>
+          </div>
+          <span className="chip">{activeJob.location}</span>
+        </div>
+        <p className="muted-copy">{job.flavor.client_quote}</p>
+        <div className="metric-grid two-up">
+          <span>Payout ${activeJob.lockedPayout}</span>
+          <span>Quality {activeJob.qualityPoints}</span>
+          <span>Time {activeJob.actualTicksSpent}/{activeJob.plannedTicks}</span>
+          <span>Rework {activeJob.reworkCount}</span>
+        </div>
+        <div className="action-row wrap-row">
+          <button className="ghost-button" onClick={() => openModal("job-details")}>
+            Job Details
+          </button>
+          <button className="ghost-button" onClick={() => openModal("inventory")}>
+            Inventory
+          </button>
+          <button className="ghost-button" onClick={() => openModal("field-log")}>
+            Field Log
+          </button>
+        </div>
+      </article>
+
+      <article className="chrome-card inset-card task-focus-card">
+        <div className="section-label-row">
+          <div>
+            <p className="eyebrow">Current Task</p>
+            <h3>{currentTask?.label ?? "Waiting"}</h3>
+          </div>
+          {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
+        </div>
+        {currentTask ? <p className="muted-copy">Primary actions stay pinned below for fast shift play.</p> : null}
+        {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
+        {currentTask ? (
+          <div className="stance-grid">
+            {currentTask.availableStances.map((stance) => (
+              <button key={stance} className="primary-button" onClick={() => performTask(stance, false)}>
+                {labelForStance(stance)}
+              </button>
+            ))}
+            {currentTask.availableStances.map((stance) => (
+              <button key={`${stance}-ot`} className="ghost-button" onClick={() => performTask(stance, true)}>
+                {labelForStance(stance)} + OT
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {lastAction ? (
+          <div className="last-action-panel">
+            <button className="summary-toggle" onClick={() => setExpandedAction((value) => !value)}>
+              {expandedAction ? "Hide" : "Show"} Last Action
+            </button>
+            {expandedAction ? (
+              <div className="summary-copy">
+                <strong>{lastAction.title}</strong>
+                {lastAction.lines.map((line, index) => (
+                  <p key={`${lastAction.digest}-${index}`}>{line}</p>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </article>
+
+      <div className="sticky-action-bar">
+        {activeJob.location === "supplier" ? (
+          <button className="ghost-button wide-button" onClick={() => openSheet("supplies")}>
+            Open Supplies
+          </button>
+        ) : (
+          <button className="ghost-button wide-button" onClick={() => goToTab("contracts")}>
+            Contract Board
+          </button>
+        )}
+        <button className="primary-button wide-button" onClick={() => endShift()}>
+          End Shift
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function TaskSummary({ task, currentTaskId }: { task: ActiveTaskState; currentTaskId: string | null }) {
+  const complete = task.requiredUnits === 0 || task.completedUnits >= task.requiredUnits;
+  const progress = task.requiredUnits === 0 ? 100 : Math.round((task.completedUnits / task.requiredUnits) * 100);
+
+  return (
+    <article className={task.taskId === currentTaskId ? "task-summary current" : "task-summary"}>
+      <div className="section-label-row tight-row">
+        <strong>{task.label}</strong>
+        <span>{complete ? "Ready" : `${task.completedUnits}/${task.requiredUnits}`}</span>
+      </div>
+      <div className="progress-track" aria-hidden="true">
+        <span style={{ width: `${complete ? 100 : progress}%` }} />
+      </div>
+      <small>{task.location}</small>
+    </article>
+  );
+}
+
+function InventoryPanel({ label, inventory }: { label: string; inventory: SupplyInventory }) {
+  const entries = Object.entries(inventory).filter(([, quantity]) => quantity > 0);
+  return (
+    <div className="inventory-panel">
+      <strong>{label}</strong>
+      {entries.length === 0 ? <p className="muted-copy">None</p> : null}
+      {entries.map(([supplyId, quantity]) => (
+        <div key={supplyId} className="inventory-line">
+          <span>{supplyId}</span>
+          <span>{quantity}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function renderProgress(task: ActiveTaskState) {
+  if (task.requiredUnits === 0) {
+    return "0/0";
+  }
+  return `${task.completedUnits}/${task.requiredUnits}`;
+}
+
+function labelForStance(stance: TaskStance): string {
+  if (stance === "rush") {
+    return "Rush";
+  }
+  if (stance === "careful") {
+    return "Careful";
+  }
+  return "Standard";
+}

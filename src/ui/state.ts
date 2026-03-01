@@ -5,7 +5,13 @@ import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from ".
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
 import { GameState, TaskStance } from "../core/types";
 
-export type ScreenId = "title" | "main" | "store" | "company";
+export type ScreenId = "title" | "game";
+export type GameTabId = "work" | "contracts" | "store" | "company";
+export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
+export type StoreSectionId = "fuel" | "tools" | "stock";
+export type CompanyPanelId = "overview" | "districts" | "crews" | "news";
+export type ActiveModalId = null | "job-details" | "inventory" | "field-log" | "districts" | "crews" | "news";
+export type ActiveSheetId = null | "supplies";
 
 export interface ActionSummary {
   title: string;
@@ -15,12 +21,27 @@ export interface ActionSummary {
 
 interface UiState {
   screen: ScreenId;
+  activeTab: GameTabId;
+  storeSection: StoreSectionId;
+  companyPanel: CompanyPanelId;
+  activeModal: ActiveModalId;
+  activeSheet: ActiveSheetId;
+  selectedContractId: string | null;
   game: GameState | null;
   lastAction: ActionSummary | null;
   notice: string;
   newGame: (seed?: number) => void;
   continueGame: () => void;
-  goTo: (screen: ScreenId) => void;
+  returnToTitle: () => void;
+  goToTab: (tab: GameTabId) => void;
+  openModal: (modal: Exclude<ActiveModalId, null>) => void;
+  closeModal: () => void;
+  openSheet: (sheet: Exclude<ActiveSheetId, null>) => void;
+  closeSheet: () => void;
+  setStoreSection: (section: StoreSectionId) => void;
+  setCompanyPanel: (panel: CompanyPanelId) => void;
+  selectContract: (contractId: string | null) => void;
+  clearNotice: () => void;
   acceptContract: (contractId: string) => void;
   setCartQuantity: (supplyId: string, quantity: number) => void;
   performTaskUnit: (stance: TaskStance, allowOvertime?: boolean) => void;
@@ -41,8 +62,18 @@ function toSummary(title: string, lines: string[], digest: string): ActionSummar
   };
 }
 
+function getDefaultContractId(game: GameState | null): string | null {
+  return game?.contractBoard[0]?.contractId ?? null;
+}
+
 export const useUiStore = create<UiState>((set, get) => ({
   screen: "title",
+  activeTab: "work",
+  storeSection: "fuel",
+  companyPanel: "overview",
+  activeModal: null,
+  activeSheet: null,
+  selectedContractId: null,
   game: null,
   lastAction: null,
   notice: "",
@@ -52,7 +83,13 @@ export const useUiStore = create<UiState>((set, get) => ({
     const game = createInitialGameState(bundle, nextSeed);
     saveGame(game);
     set({
-      screen: "main",
+      screen: "game",
+      activeTab: "work",
+      storeSection: "fuel",
+      companyPanel: "overview",
+      activeModal: null,
+      activeSheet: null,
+      selectedContractId: getDefaultContractId(game),
       game,
       lastAction: null,
       notice: ""
@@ -65,10 +102,38 @@ export const useUiStore = create<UiState>((set, get) => ({
       set({ notice: hasIncompatibleLegacySave() ? bundle.strings.continueIncompatible : bundle.strings.continueMissing });
       return;
     }
-    set({ screen: "main", game: loaded, notice: "" });
+    set({
+      screen: "game",
+      activeTab: "work",
+      storeSection: "fuel",
+      companyPanel: "overview",
+      activeModal: null,
+      activeSheet: null,
+      selectedContractId: getDefaultContractId(loaded),
+      game: loaded,
+      notice: ""
+    });
   },
 
-  goTo: (screen) => set({ screen }),
+  returnToTitle: () => set({ screen: "title", activeModal: null, activeSheet: null, notice: "" }),
+
+  goToTab: (tab) => set({ activeTab: tab, activeModal: null, activeSheet: null }),
+
+  openModal: (modal) => set({ activeModal: modal, activeSheet: null }),
+
+  closeModal: () => set({ activeModal: null }),
+
+  openSheet: (sheet) => set({ activeSheet: sheet, activeModal: null }),
+
+  closeSheet: () => set({ activeSheet: null }),
+
+  setStoreSection: (section) => set({ storeSection: section }),
+
+  setCompanyPanel: (panel) => set({ companyPanel: panel }),
+
+  selectContract: (contractId) => set({ selectedContractId: contractId }),
+
+  clearNotice: () => set({ notice: "" }),
 
   acceptContract: (contractId) => {
     const current = get().game;
@@ -79,10 +144,14 @@ export const useUiStore = create<UiState>((set, get) => ({
     saveGame(result.nextState);
     set({
       game: result.nextState,
+      activeTab: result.notice ? get().activeTab : "work",
+      selectedContractId: getDefaultContractId(result.nextState),
       lastAction: result.payload
         ? toSummary("Contract Accepted", [`Accepted ${result.payload.jobId} for the field loop.`], result.digest)
         : get().lastAction,
-      notice: result.notice ?? ""
+      notice: result.notice ?? "",
+      activeModal: null,
+      activeSheet: null
     });
   },
 
@@ -109,7 +178,9 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: result.nextState,
       lastAction: result.payload ? toSummary("Task Result", result.payload.logLines, result.payload.digest) : get().lastAction,
-      notice: result.notice ?? ""
+      notice: result.notice ?? "",
+      activeSheet: null,
+      selectedContractId: getDefaultContractId(result.nextState)
     });
   },
 
@@ -127,7 +198,10 @@ export const useUiStore = create<UiState>((set, get) => ({
         result.dayLog.length > 0 ? result.dayLog.map((entry) => entry.message) : [`Advanced to ${result.nextState.workday.weekday}.`],
         result.digest
       ),
-      notice: ""
+      notice: "",
+      activeModal: null,
+      activeSheet: null,
+      selectedContractId: getDefaultContractId(result.nextState)
     });
   },
 

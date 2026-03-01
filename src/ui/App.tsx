@@ -1,8 +1,6 @@
 import { bundle, useUiStore } from "./state";
 import { Title } from "./screens/Title";
-import { Main } from "./screens/Main";
-import { Store } from "./screens/Store";
-import { Company } from "./screens/Company";
+import { GameShell } from "./screens/GameShell";
 
 export function App() {
   const screen = useUiStore((state) => state.screen);
@@ -11,13 +9,5 @@ export function App() {
     return <Title title={bundle.strings.title} subtitle={bundle.strings.subtitle} />;
   }
 
-  if (screen === "store") {
-    return <Store />;
-  }
-
-  if (screen === "company") {
-    return <Company />;
-  }
-
-  return <Main />;
+  return <GameShell />;
 }
