@@ -2,8 +2,8 @@
 ## Current Focus
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is fully closed on `main`.
 2. Name + Hour chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is fully closed on `main`.
-3. `PLN-007` gameplay-depth planning is complete and `BLD-007` is the next pull on `main`.
-4. Lane cards `BLD-006`, `TW-006`, and `VF-006` plus planner card `PLN-007` have recorded exit evidence.
+3. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is fully closed on `main`.
+4. Lane cards `BLD-007`, `TW-007`, `VF-007`, and `DOC-007` are complete with recorded exit evidence.
 5. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
 
 ## Active Lane Board (Kanban)
@@ -49,10 +49,10 @@ Snapshot date: 2026-03-01.
 | VF-006  | Verifier   | DONE       | P0       | TW-006     | `Name + Hour verification checklist`                                       | Run content validate/compile, `npm test`, `npm run build`, and manual/title-name + quick-buy + company tab smoke steps; record results.                                                                    |
 | DOC-006 | Documenter | DONE       | P0       | VF-006     | `Document Name + Hour flow`                                                | Update README usage/testing sections and obsidian vault summaries to capture the new flow, scenarios, and lane chain.                                                                                      |
 | PLN-007 | Planner    | DONE       | P1       | PLN-006    | `Gameplay depth planning lock`                                             | `Vision.md`, `Decisions.md`, `Tasks.md`, and `README.md` updated with deterministic crew-hiring, active-job assignee, event-cue scope, risks, deliverables, and a Builder-ready `BLD-007` handoff.         |
-| BLD-007 | Builder    | READY      | P1       | PLN-007    | `Implement crew + event depth`                                             | Add crew unlock/hire flow, active-job assignee support, and work-hero event cues in the compact shell without creating new randomness.                                                                     |
-| TW-007  | TestWriter | READY      | P1       | BLD-007    | `Deterministic crew/event scenarios`                                       | Cover crew hiring, crew assignment resolution, and event cue visibility with new day-resolution scenarios plus updated UI helpers.                                                                         |
-| VF-007  | Verifier   | READY      | P1       | TW-007     | `Crew + event verification checklist`                                      | Re-run content validate/compile, `npm test`, `npm run build`, and execute manual crew hire plus event cue smoke checks; capture evidence of deterministic resolution.                                      |
-| DOC-007 | Documenter | READY      | P1       | VF-007     | `Document crew + event depth`                                              | Sync README usage/testing sections and vault artifacts to describe the new crew workflow, event cues, and associated tests/evidence.                                                                       |
+| BLD-007 | Builder    | DONE       | P1       | PLN-007    | `Implement crew + event depth`                                             | Added deterministic crew hiring, active-job assignee support, save-safe assignee defaults, and work-hero event cues in the compact shell without introducing new randomness.                               |
+| TW-007  | TestWriter | DONE       | P1       | BLD-007    | `Deterministic crew/event scenarios`                                       | Added deterministic scenarios `EH-TW-044..EH-TW-049` for crew hire gating, assignee stamina/lock behavior, save-safe defaults, crew-modal hiring, and work-tab event cues.                               |
+| VF-007  | Verifier   | DONE       | P1       | TW-007     | `Crew + event verification checklist`                                      | Verified `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`; all `EH-TW-044..EH-TW-049` checks passed and no validated bug patch was required.                        |
+| DOC-007 | Documenter | DONE       | P1       | VF-007     | `Document crew + event depth`                                              | Synced README usage/testing sections and vault artifacts to the verified crew workflow, event cues, scenario coverage, and `VF-007` evidence.                                                              |
 
 ### Supersession Archive
 | Superseded Card | Replacement Card | Date | Reason |
@@ -181,7 +181,7 @@ Status: Planned on 2026-03-01 after the Name + Hour chain (`PLN-006 -> BLD-006 -
 
 ### Exit Evidence
 1. Planner: complete (`PLN-007`).
-2. Builder: ready (`BLD-007`).
-3. TestWriter: ready (`TW-007`).
-4. Verifier: ready (`VF-007`).
-5. Documenter: ready (`DOC-007`).
+2. Builder: complete (`BLD-007`).
+3. TestWriter: complete (`TW-007`).
+4. Verifier: complete (`VF-007`).
+5. Documenter: complete (`DOC-007`).

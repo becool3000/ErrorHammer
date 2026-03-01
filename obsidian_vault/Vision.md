@@ -24,16 +24,18 @@
 ## Verification State (2026-03-01)
 1. `TW-005` compact-shell scenarios `EH-TW-023..EH-TW-034` are complete and passing alongside the existing deterministic gameplay suites.
 2. `TW-006` quick-buy and title-name scenarios `EH-TW-039..EH-TW-043` are complete and passing alongside the existing deterministic gameplay suites.
-3. `VF-006` checklist is complete with PASS results for content validation, content compile, tests, production build, and the title-name, quick-buy, and company-modal smoke checks.
-3. The runtime now uses a black-and-silver industrial dashboard aesthetic with compact cards, bottom navigation, segmented store views, contract carousel selection, and overlay-based detail views.
-4. The active title flow now requires trimmed player/company names before `New Game`, preserves those values when returning to the title screen, and reuses them across shell header, logs, and quick-buy notices.
-5. Time terminology is normalized to hours across the compact shell, and company details remain modal-only from the `Company` tab overview.
-6. Evidence details are recorded in `obsidian_vault/Testing.md`.
+3. `TW-007` crew + event scenarios `EH-TW-044..EH-TW-049` are complete and passing alongside the existing deterministic gameplay suites.
+4. `VF-007` checklist is complete with PASS results for content validation, content compile, tests, production build, and the deterministic crew/event scenario checks.
+5. The runtime now uses a black-and-silver industrial dashboard aesthetic with compact cards, bottom navigation, segmented store views, contract carousel selection, and overlay-based detail views.
+6. The active title flow now requires trimmed player/company names before `New Game`, preserves those values when returning to the title screen, and reuses them across shell header, logs, and quick-buy notices.
+7. Time terminology is normalized to hours across the compact shell, company details remain modal-only from the `Company` tab overview, and crew hiring now unlocks at company level 2 with a deterministic three-slot roster.
+8. The `Work` tab now surfaces active-event headlines, impact lines, and derived cue chips alongside assignee selection for `self` or one hired crew.
+9. Evidence details are recorded in `obsidian_vault/Testing.md`.
 
 ## Next Focus
-1. `PLN-007` is now the planning lock for the next gameplay-depth chain on `main`.
-2. The next implementation chain focuses on deterministic crew hiring, active-job assignee selection inside the shipped compact shell, and visible work-hero event cues so the company arc advances beyond solo play without changing the seeded runtime contract.
-3. Keep this documented baseline as the handoff anchor for `BLD-007 -> TW-007 -> VF-007 -> DOC-007`.
+1. `DOC-007` closes the crew + event depth chain on `main`.
+2. The verified baseline now includes deterministic crew hiring, active-job assignee selection, save-safe assignee defaults, and `Work`-hero event cue visibility.
+3. Keep this documented baseline as the handoff anchor for the next planner-defined chain.
 4. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirement in follow-on scope.
 
 ## Archive

@@ -1,10 +1,10 @@
 # Error Hammer
 ## Status (2026-03-01)
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
-2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `44` tests), and `npm run build`.
+2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `50` tests), and `npm run build`.
 3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
-4. Deterministic replay, mobile-shell UI evidence, and Name + Hour verification evidence are recorded in `obsidian_vault/Testing.md`.
-5. `PLN-007` gameplay-depth planning is complete; the next queued implementation pull is `BLD-007` for deterministic crew hiring, active-job assignees, and work-hero event cues.
+4. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is complete on `main`.
+5. Deterministic replay, mobile-shell UI evidence, and crew/event verification evidence are recorded in `obsidian_vault/Testing.md`.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
@@ -24,10 +24,10 @@
 ## Usage
 1. Start at the title screen, fill both Player and Company name fields, and only then can `New Game` begin; the chosen names persist into the compact shell header, log, and quick-buy notices.
 2. After load, the app opens a compact bottom-tab shell with `Work`, `Contracts`, `Store`, and `Company`.
-3. `Work` keeps the active job, current task, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Field Log`, and supplier cart details open in overlays.
+3. `Work` keeps the active job, current task, assignee selection, active-event cue cards, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Field Log`, and supplier cart details open in overlays.
 4. Time is reported in half-hour units, the header and work cards call them “Hours,” and quick buys charge one hour (two ticks) per tool before any contract acceptance.
 5. `Contracts` shows a horizontal carousel, highlights missing tools, disables `Accept Job` until stocked, and offers a quick-buy step that summarizes hours plus cash before redirecting back to `Work`.
-6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the details only render inside those modals.
+6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the crew modal now shows a three-slot roster, level gating, and deterministic `Hire Crew` behavior once company level reaches 2.
 
 ## Testing
 1. Deterministic scenario suite `EH-TW-001..EH-TW-049` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-044..EH-TW-049` covering crew hire gating, assignee stamina/lock behavior, and save-safe assignee defaults.

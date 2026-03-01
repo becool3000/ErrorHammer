@@ -61,6 +61,8 @@
 59. Active events continue to drive payout/risk modifiers, but the `Work` hero must surface each live event's `headline`, `impact_line`, and derived tag cue chips so players can plan quick buys and contract choices without digging through logs; the UI remains read-only over existing event defs/modifiers.
 60. `PLN-007` must preserve save/continue continuity on `main`: any new crew or active-job assignee fields need safe defaults for existing saves or an explicit compatibility guard rather than silent corruption.
 61. Gameplay depth planning chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is the active post-`DOC-006` lane chain for `main`.
+62. `BLD-007` is verified closed: active jobs default to `assignee = "self"`, crew hires follow the fixed roster order `crew-1 -> crew-2 -> crew-3`, and assignee stamina is committed once on first work execution rather than per later task step.
+63. `TW-007`, `VF-007`, and `DOC-007` are complete as of 2026-03-01, and their verification/documentation source of truth remains `obsidian_vault/Testing.md` plus README usage/testing sections.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
