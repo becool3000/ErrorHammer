@@ -286,6 +286,27 @@ p {
   justify-content: flex-start;
 }
 
+.material-needs-block {
+  margin-top: 0.85rem;
+}
+
+.material-needs-list {
+  gap: 0.55rem;
+}
+
+.material-need-row {
+  padding: 0.7rem 0.8rem;
+}
+
+.material-need-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .tab-stage,
 .tab-panel,
 .stack-block,

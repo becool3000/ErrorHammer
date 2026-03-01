@@ -43,6 +43,23 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const activeJob = game.activeJob;
   const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
   const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
+  const materialNeedRows = job
+    ? job.materialNeeds.map((material) => {
+        const supply = bundle.supplies.find((entry) => entry.id === material.supplyId);
+        const onTruck = game.truckSupplies[material.supplyId] ?? 0;
+        const onSite = activeJob?.siteSupplies[material.supplyId] ?? 0;
+        const inCart = activeJob?.supplierCart[material.supplyId] ?? 0;
+        const onHand = onTruck + onSite;
+        return {
+          supplyId: material.supplyId,
+          name: supply?.name ?? material.supplyId,
+          required: material.quantity,
+          onHand,
+          inCart,
+          remaining: Math.max(0, material.quantity - onHand)
+        };
+      })
+    : [];
   const taskActions = currentTask
     ? currentTask.availableStances
         .map((stance) => ({
@@ -280,6 +297,29 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
+        {materialNeedRows.length > 0 ? (
+          <div className="detail-block material-needs-block">
+            <div className="section-label-row tight-row">
+              <strong>Needed Supplies</strong>
+              <span className="chip">{materialNeedRows.length} lines</span>
+            </div>
+            <div className="stack-list material-needs-list">
+              {materialNeedRows.map((row) => (
+                <article key={row.supplyId} className="task-summary material-need-row">
+                  <div className="section-label-row tight-row">
+                    <strong>{row.name}</strong>
+                    <span>{row.required} needed</span>
+                  </div>
+                  <div className="material-need-meta">
+                    <span>On hand {row.onHand}/{row.required}</span>
+                    {row.inCart > 0 ? <span>In cart {row.inCart}</span> : null}
+                    {row.remaining > 0 ? <span>Missing {row.remaining}</span> : <span>Ready</span>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
         {activeJob.location === "supplier" ? (
           <div className="task-inline-actions">

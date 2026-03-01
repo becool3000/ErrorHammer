@@ -127,6 +127,12 @@ describe("compact shell ui", () => {
 
     expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/Current Task/i)).toBeTruthy();
+    expect(screen.getByText(/Needed Supplies/i)).toBeTruthy();
+    const acceptedJob = useUiStore.getState().game?.activeJob;
+    const acceptedJobDef = acceptedJob ? bundle.jobs.find((job) => job.id === acceptedJob.jobId) : null;
+    const firstNeed = acceptedJobDef?.materialNeeds[0];
+    const firstSupplyName = firstNeed ? bundle.supplies.find((supply) => supply.id === firstNeed.supplyId)?.name : null;
+    expect(firstSupplyName ? screen.getByText(firstSupplyName) : null).toBeTruthy();
   });
 
   it("EH-TW-029: field log modal opens and closes without changing the active tab", () => {
