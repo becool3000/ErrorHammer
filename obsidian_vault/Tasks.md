@@ -1,10 +1,10 @@
 # Tasks
 ## Current Focus
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is fully closed on `main`.
-2. Lane cards `BLD-005`, `TW-005`, `VF-005`, and `DOC-005` are complete with recorded exit evidence.
-3. Planner card `PLN-006` is active for the Name + Hour flow; downstream lanes will follow `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` once this card hands off.
+2. Name + Hour chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is fully closed on `main`.
+3. Lane cards `BLD-006`, `TW-006`, `VF-006`, and `DOC-006` are complete with recorded exit evidence.
 4. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
-5. Documentation and verification updates for `EH-TW-043` are complete, so the board is ready for `PLN-006` to hand off to `BLD-006`.
+5. The board is ready for `PLN-007` to start the next gameplay-depth planning handoff.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-01.
@@ -115,7 +115,7 @@ Status: Completed on 2026-03-01 with all lane cards in `DONE` state.
 5. Documenter: complete (`DOC-005`).
 
 ## [TASK] Gameplay Depth Chain (`PLN-007`)
-Status: Ready once the Name + Hour planning chain (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`) hands off.
+Status: READY after the Name + Hour chain (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`) closed on 2026-03-01.
 
 ### Problem Statement
 1. Crew progression is marked as deferred (`bundle.strings.crewDeferred`) even though `Spec.md` calls for up to three crews and `resolver.ts` already tracks crew stamina; the player never hires or assigns crew, so the “rising from solo contractor to small company” arc is incomplete.

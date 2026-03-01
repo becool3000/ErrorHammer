@@ -2,8 +2,9 @@
 ## Status (2026-03-01)
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
 2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `44` tests), and `npm run build`.
-3. Deterministic replay, mobile-shell UI evidence, and itch packaging evidence are recorded in `obsidian_vault/Testing.md`.
-4. Name + Hour flow planning chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is active and currently in the Planner lane.
+3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
+4. Deterministic replay, mobile-shell UI evidence, and Name + Hour verification evidence are recorded in `obsidian_vault/Testing.md`.
+5. Next queued lane chain is `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` for crew and event-depth planning.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
@@ -34,7 +35,7 @@
 3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus title-screen persistence scenario `EH-TW-043` are implemented in `tests/ui_shell.test.tsx`.
 4. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 5. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
-6. Latest verifier run date is 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
+6. Latest verifier closeout is `VF-006` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.

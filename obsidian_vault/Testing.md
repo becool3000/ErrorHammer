@@ -9,7 +9,7 @@
 7. Bot-buy verification chain status is complete for `TW-003` and `VF-003` (2026-02-27).
 8. Itch packaging verification chain status is complete for `TW-004` and `VF-004` (2026-02-28).
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
-10. The Name + Hour flow lane `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is in flight; deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-040..EH-TW-042` plus UI quick-buy scenario `EH-TW-039`.
+10. Name + Hour verification chain status is complete for `TW-006` and `VF-006` (2026-03-01); deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-039..EH-TW-043`.
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -116,4 +116,6 @@ Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-043`.
 4. `EH-TW-043` evidence: automated UI shell scenario verifies title inputs retain typed names between returns to the title screen, new-game gating honors trimmed input presence, and the compact shell header/log shows the stored names (`tests/ui_shell.test.tsx`).
 5. `DOC-005` evidence date: 2026-03-01.
 6. `DOC-005` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to verified compact-shell behavior and board state.
-7. `PLN-006` planning evidence date: 2026-03-01; added new planner narrative, lane chain placeholder (`PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006`), and acceptance criteria in the vault.
+7. `VF-006` evidence date: 2026-03-01; command gates stayed PASS, quick-buy/title-name/company-modal smoke steps passed, and the closeout evidence remained deterministic.
+8. `DOC-006` evidence date: 2026-03-01.
+9. `DOC-006` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to the verified Name + Hour flow and archived in `obsidian_vault/archive/DOC-006-Closeout-2026-03-01.md`.

@@ -54,6 +54,8 @@
 52. Crew assignments must be emitted through `Intent.assignments` with `assignee` set to the crew's `crewId`, routed through the existing stamina tracker, tool gating, and tie-breaker logic in `resolver.ts`, and recorded to the day log with the same message discipline as player tasks.
 53. Active events continue to drive payout/risk modifiers, but their `headline`, `impact_line`, and tag-based clues must also be surfaced on the `Work` tab so the player can plan quick buys; any new event UI reuses event defs and never mutates game randomness or modifiers beyond the existing resolver hooks.
 54. Title inputs on the title screen must persist trimmed player/company strings in UI state, enforce that `New Game` stays disabled until both fields contain trimmed values, and repopulate those strings whenever control returns to the title screen so the compact shell always reuses the chosen names.
+55. Name + Hour lane closeout status as of 2026-03-01 is `DONE` for `BLD-006`, `TW-006`, `VF-006`, and `DOC-006`.
+56. Verified behavior source of truth for the Name + Hour closeout is `obsidian_vault/Testing.md` command, scenario, and manual smoke evidence.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
