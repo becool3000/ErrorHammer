@@ -10,7 +10,7 @@
 8. Itch packaging verification chain status is complete for `TW-004` and `VF-004` (2026-02-28).
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
 10. Name + Hour verification chain status is complete for `TW-006` and `VF-006` (2026-03-01); deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-039..EH-TW-043`.
-11. Crew + event TestWriter coverage for `TW-007` is in progress; deterministic coverage now extends through `EH-TW-049` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, and work-hero event cues.
+11. Crew + event TestWriter coverage for `TW-007` is complete; deterministic coverage now extends through `EH-TW-049` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, and work-hero event cues.
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -145,3 +145,7 @@ Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-049`.
 7. `VF-006` evidence date: 2026-03-01; command gates stayed PASS, quick-buy/title-name/company-modal smoke steps passed, and the closeout evidence remained deterministic.
 8. `DOC-006` evidence date: 2026-03-01.
 9. `DOC-006` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, `obsidian_vault/Tasks.md`, and `obsidian_vault/Testing.md` synced to the verified Name + Hour flow and archived in `obsidian_vault/archive/DOC-006-Closeout-2026-03-01.md`.
+10. `VF-007` evidence date: 2026-03-01.
+11. `VF-007` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`7` files, `50` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-De6LOkjX.css`, `dist/assets/index-Du6nEY1t.js`).
+12. `VF-007` deterministic scenario evidence: `EH-TW-044` PASS for level gating plus deterministic first-slot hire, `EH-TW-045` PASS for first-commit crew stamina spend and assignee-prefixed logs, `EH-TW-046` PASS for save-safe `assignee="self"` and `staminaCommitted=false` defaults, `EH-TW-047` PASS for company-modal hire flow, `EH-TW-048` PASS for work-tab event cue visibility plus assignee selection, and `EH-TW-049` PASS for assignee lockout with no double stamina spend.
+13. `VF-007` smoke note: verification relied on deterministic unit/UI-shell coverage and command-gate passes in this terminal session; no validated defect required a follow-on core or script patch.

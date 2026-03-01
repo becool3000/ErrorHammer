@@ -35,7 +35,7 @@
 3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus `EH-TW-043`, `EH-TW-047`, and `EH-TW-048` are implemented in `tests/ui_shell.test.tsx` for title persistence, crew-modal hiring, and work-tab event/assignee cues.
 4. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 5. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
-6. Latest verifier closeout is `VF-006` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
+6. Latest verifier closeout is `VF-007` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
