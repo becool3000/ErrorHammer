@@ -50,4 +50,5 @@
 3. WIP limit remains one `IN_PROGRESS` card per lane.
 4. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete on `main`; it closed the rolling UI/UX session with verified collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
 5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`; it added visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
-6. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.
+6. No lane card is currently `IN_PROGRESS`; the next pull should start with Planner defining the next scoped chain.
+7. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.

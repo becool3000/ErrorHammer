@@ -1,45 +1,26 @@
 # Vision
 ## Product Direction
 1. Ship Error Hammer as a text-first construction ladder sim with dry, wholesome humor.
-2. Keep the core loop fast and readable: pick contracts, resolve day, review logs, repeat.
-3. Keep content scalable through JSON packs plus schema validation so new jobs/events/tools can be added safely.
-4. Keep resolution deterministic from seeded RNG so test runs and bug reports are reproducible.
-5. Keep architecture server-ready by using pure intent-resolution modules with no UI-owned gameplay state mutations.
-6. Keep MVP single-player with AI competitors; multiplayer remains explicitly out of scope.
-7. Treat `Spec.md` as the implementation source of truth for bootstrap scope and acceptance gates.
+2. Keep the core loop fast and readable: pick contracts, work the day, review the log, repeat.
+3. Keep gameplay deterministic through seeded RNG and pure core modules under `src/core/**`.
+4. Keep content scalable through JSON packs, schema validation, and a generated runtime bundle.
+5. Keep the UI compact-first: dense mobile shell, clear overlays, minimal navigation friction.
+6. Keep MVP single-player with AI competitors; multiplayer remains out of scope.
 
-## Current Runtime Baseline (`main` workspace, 2026-03-01)
-1. Error Hammer MVP bootstrap is implemented and runnable with React + TypeScript + Vite.
-2. Deterministic runtime modules are active in `src/core/**`: `rng.ts`, `economy.ts`, `bots.ts`, `resolver.ts`, `save.ts`, and `content.ts`.
-3. UI orchestration shell is active in `src/ui/**` with a title screen plus a compact mobile-first game shell using `Work`, `Contracts`, `Store`, and `Company` tabs.
-4. The active gameplay path is compact-first: task actions stay in the `Work` tab while job details, inventory, field log, district details, crew details, competitor news, and supplier cart details render in modals or a bottom sheet.
-5. Content pipeline is active across `content/**`, `schemas/**`, and `scripts/content_validate.ts` + `scripts/content_compile.ts`.
-6. Generated runtime bundle `src/generated/content.bundle.json` is present and tracked for bootstrap baseline reproducibility.
-7. CI workflow `.github/workflows/ci.yml` runs `npm ci`, `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
-8. Verified MVP content minimums are met: `tools=10`, `jobs=30`, `events=12`, `districts=3`, `bots=2`.
-9. Save/continue path uses single-slot `localStorage` helpers in `src/core/save.ts`.
-10. End-of-day resolver includes deterministic bot tool purchases (one max per bot/day) with purchase lines appended to day logs and reports.
-11. Production builds use relative asset paths so HTML uploads load correctly from itch.io ZIP roots.
-
-## Verification State (2026-03-01)
-1. `TW-005` compact-shell scenarios `EH-TW-023..EH-TW-034` are complete and passing alongside the existing deterministic gameplay suites.
-2. `TW-006` quick-buy and title-name scenarios `EH-TW-039..EH-TW-043` are complete and passing alongside the existing deterministic gameplay suites.
-3. `TW-007` crew + event scenarios `EH-TW-044..EH-TW-049` are complete and passing alongside the existing deterministic gameplay suites.
-4. `TW-008` rolling-session closeout scenarios `EH-TW-050..EH-TW-053` are complete and passing alongside the existing deterministic gameplay suites.
-4. `TW-009` progression scenarios `EH-TW-054..EH-TW-061` are complete and passing alongside the existing deterministic gameplay suites.
-5. `VF-009` checklist is complete with PASS results for content validation, content compile, tests, production build, deterministic progression checks, and manual popup-persistence confirmation.
-6. `VF-008` checklist is complete with PASS results for content validation, content compile, tests, production build, and the final rolling-session UI contract for collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
-7. The runtime now uses a black-and-silver industrial dashboard aesthetic with compact cards, bottom navigation, segmented store views, contract carousel selection, and overlay-based detail views.
-8. The active title flow now requires trimmed player/company names before `New Game`, preserves those values when returning to the title screen, and reuses them across shell header, logs, and quick-buy notices.
-9. Time terminology is normalized to hours across the compact shell, company details remain modal-only from the `Company` tab overview, and crew hiring now unlocks at company level 2 with a deterministic three-slot roster.
-10. The `Work` tab now surfaces active-event headlines, impact lines, and derived cue chips alongside assignee selection for `self` or one hired crew; the workday and active-job panels start collapsed, supplier-cart guidance stays inline in `Current Task`, and visible work actions collapse to overtime-only buttons when regular actions no longer fit.
-11. The runtime now exposes visible skill levels, derived Operator Level, expanded skill rows including trade and knowledge skills, and deterministic progression popups that remain visible until the player dismisses them.
-12. Evidence details are recorded in `obsidian_vault/Testing.md`.
+## Current Verified Baseline (`main`, 2026-03-01)
+1. The browser app is live with a compact shell for `Work`, `Contracts`, `Store`, and `Company`.
+2. Secondary views stay in overlays: job details, inventory, skills, field log, district details, crew details, competitor news, and supplier cart details.
+3. Core runtime remains deterministic: seeded RNG, pure resolver/player-flow logic, tracked generated content bundle, and single-slot save/load.
+4. Crew play is verified: deterministic hire order, level-2 unlock, active-job assignee support, shared tools, and first-commit stamina spend.
+5. Final rolling UI session behavior is verified: `Current Task` before `Active Job`, workday and active-job panels collapsed by default, inline supplier-cart guidance, and overtime-only visible stance buttons when regular-hour actions no longer fit.
+6. Progression visibility is verified: visible skill levels, derived Operator Level, expanded readable skill labels, and manual-dismiss progression popups.
+7. Command-gate and scenario evidence lives in [Testing.md](/g:/ErrorHammer/obsidian_vault/Testing.md).
 
 ## Next Focus
-1. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is now closed on `main`; the verified baseline includes the final compact-shell UI/UX pass for collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
-2. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is also closed on `main`; the verified baseline includes visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
-3. Preserve deterministic resolver behavior, tiered progression math, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements in future work.
+1. No lane card is currently `IN_PROGRESS`.
+2. The next pull should start with Planner defining a new scoped chain in [Tasks.md](/g:/ErrorHammer/obsidian_vault/Tasks.md).
+3. Preserve the current deterministic core, compact-shell model, content-pipeline constraints, and save/continue behavior in future work.
 
 ## Archive
-1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.
+1. Closed-chain and verbose board history now lives in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
+2. Historical migration context remains in [Migration-Legacy-2026-02-27.md](/g:/ErrorHammer/obsidian_vault/archive/Migration-Legacy-2026-02-27.md).
