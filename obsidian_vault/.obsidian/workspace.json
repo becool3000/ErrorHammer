@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Agent-Chat-Starters.md",
+                "file": "ElementsPackSpec.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Agent-Chat-Starters"
+              "title": "ElementsPackSpec"
             }
           }
         ]
@@ -185,21 +185,23 @@
   },
   "active": "59c34bd3d92ca70e",
   "lastOpenFiles": [
-    "Decisions.md",
+    "Testing.md",
     "Vision.md",
-    "Agent-Chat-Starters.md",
+    "Decisions.md",
     "Tasks.md",
-    "archive/DOC-006-Closeout-2026-03-01.md",
-    "ElementsPackSpec.md",
+    "Agent-Chat-Starters.md",
     "00-Index.md",
+    "ElementSystem.md",
+    "ElementsPackSpec.md",
+    "archive/Testing-Scenario-Map-2026-03-01.md",
+    "archive/Tasks-Lane-Board-2026-03-01.md",
+    "archive/DOC-006-Closeout-2026-03-01.md",
     "archive/Migration-Legacy-2026-02-27.md",
     "archive/Migration-From-TinySand-2026-02-27.md",
     "archive/Tasks-Post-PLN040-Closeout-2026-02-24.md",
-    "ElementSystem.md",
     "archive/Testing-Pre-RadsV1-2026-02-16.md",
     "archive/Tasks-Pre-RadsV1-2026-02-16.md",
     "archive/Tasks-Garden-D1-D2-Detail-2026-02-15.md",
-    "Testing.md",
     "archive/Testing-Runs-2026-02-14.md",
     "archive/ElementsPackSpec-v1-2026-02-15.md",
     "archive/Tasks-Pack-Theme-CSS-v1-2026-02-14.md",

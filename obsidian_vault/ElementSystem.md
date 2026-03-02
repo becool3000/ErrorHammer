@@ -1,4 +1,4 @@
-﻿# Resolver System
+# Resolver System
 ## Scope
 1. Error Hammer gameplay resolution is pure-function first and UI-agnostic.
 2. Runtime composes deterministic modules under `src/core/**`.
