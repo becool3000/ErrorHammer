@@ -1,5 +1,5 @@
 # Error Hammer
-## Status (2026-03-01)
+## Status (2026-03-02)
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
 2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`8` files, `62` tests), and `npm run build`.
 3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
@@ -7,6 +7,7 @@
 5. Rolling UI/UX session chain `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete on `main`.
 6. Progression visibility chain `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`.
 7. Deterministic replay, mobile-shell UI evidence, rolling-session closeout evidence, and progression verification evidence are recorded in `obsidian_vault/Testing.md`.
+8. Planner chain `PLN-010` is open for supplier quality tiers, explicit supplier checkout selection, and deterministic material-quality effects on completed jobs.
 
 ## Run Instructions
 1. Install dependencies: `npm install`
@@ -50,5 +51,5 @@
 3. WIP limit remains one `IN_PROGRESS` card per lane.
 4. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete on `main`; it closed the rolling UI/UX session with verified collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
 5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`; it added visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
-6. No lane card is currently `IN_PROGRESS`; the next pull should start with Planner defining the next scoped chain.
+6. Planner has now defined `PLN-010`; the next pull should start with `BLD-010` from `obsidian_vault/Tasks.md`.
 7. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.

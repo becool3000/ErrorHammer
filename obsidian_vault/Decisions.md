@@ -18,6 +18,12 @@
 16. Progression popups do not auto-dismiss; the player advances the queue manually.
 17. Player-facing skill labels must use readable names such as `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal`.
 18. `Tasks.md` is the live handoff board, and `Testing.md` is the live evidence summary.
+19. Supplier quality planning chain `PLN-010` adopts exactly three material quality tiers: `low`, `medium`, and `high`.
+20. Supply content must own per-tier prices in data rather than deriving them at runtime from one base price.
+21. Supplier checkout must require explicit player selection for required material quantities by quality tier before `checkout_supplies` can complete.
+22. Material quality must remain deterministic from purchased inventory through reserved job materials and into final completed-job quality effects.
+23. The material-quality calculation must use the actual parts reserved to the job, not the desired cart or leftover truck stock.
+24. `medium` quality is the neutral baseline; `low` and `high` must have visible but bounded effects on completed-job quality so the task-skill system remains primary.
 
 ## Archive
 1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).

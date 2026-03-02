@@ -7,7 +7,7 @@
 5. Keep the UI compact-first: dense mobile shell, clear overlays, minimal navigation friction.
 6. Keep MVP single-player with AI competitors; multiplayer remains out of scope.
 
-## Current Verified Baseline (`main`, 2026-03-01)
+## Current Verified Baseline (`main`, 2026-03-02)
 1. The browser app is live with a compact shell for `Work`, `Contracts`, `Store`, and `Company`.
 2. Secondary views stay in overlays: job details, inventory, skills, field log, district details, crew details, competitor news, and supplier cart details.
 3. Core runtime remains deterministic: seeded RNG, pure resolver/player-flow logic, tracked generated content bundle, and single-slot save/load.
@@ -18,8 +18,9 @@
 
 ## Next Focus
 1. No lane card is currently `IN_PROGRESS`.
-2. The next pull should start with Planner defining a new scoped chain in [Tasks.md](/g:/ErrorHammer/obsidian_vault/Tasks.md).
-3. Preserve the current deterministic core, compact-shell model, content-pipeline constraints, and save/continue behavior in future work.
+2. Planner chain `PLN-010` is now defined for supplier quality tiers, explicit checkout selection, and deterministic material-quality effects on completed jobs.
+3. The next implementation pull should start with `BLD-010` in [Tasks.md](/g:/ErrorHammer/obsidian_vault/Tasks.md).
+4. Preserve the current deterministic core, compact-shell model, content-pipeline constraints, and save/continue behavior while extending supplier and inventory data.
 
 ## Archive
 1. Closed-chain and verbose board history now lives in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
