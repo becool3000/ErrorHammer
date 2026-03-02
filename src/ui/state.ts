@@ -28,6 +28,7 @@ export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "f
 export type StoreSectionId = "fuel" | "tools" | "stock";
 export type ActiveModalId = null | "job-details" | "inventory" | "skills" | "field-log" | "active-events" | "districts" | "crews" | "news";
 export type ActiveSheetId = null | "supplies";
+export type UiTextScale = "default" | "large" | "xlarge";
 
 export interface ActionSummary {
   title: string;
@@ -47,6 +48,35 @@ export interface ProgressPopup {
   createdAtDigest: string;
 }
 
+const UI_PREFS_KEY = "error-hammer-ui-prefs-v1";
+
+function isUiTextScale(value: unknown): value is UiTextScale {
+  return value === "default" || value === "large" || value === "xlarge";
+}
+
+function loadUiTextScalePreference(): UiTextScale {
+  if (typeof localStorage === "undefined") {
+    return "default";
+  }
+  const raw = localStorage.getItem(UI_PREFS_KEY);
+  if (!raw) {
+    return "default";
+  }
+  try {
+    const parsed = JSON.parse(raw) as { uiTextScale?: unknown };
+    return isUiTextScale(parsed.uiTextScale) ? parsed.uiTextScale : "default";
+  } catch {
+    return "default";
+  }
+}
+
+function saveUiTextScalePreference(scale: UiTextScale): void {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+  localStorage.setItem(UI_PREFS_KEY, JSON.stringify({ uiTextScale: scale }));
+}
+
 interface UiState {
   screen: ScreenId;
   activeTab: GameTabId;
@@ -57,10 +87,13 @@ interface UiState {
   game: GameState | null;
   lastAction: ActionSummary | null;
   notice: string;
+  uiTextScale: UiTextScale;
   activeProgressPopup: ProgressPopup | null;
   progressQueue: ProgressPopup[];
   titlePlayerName: string;
   titleCompanyName: string;
+  hydrateUiPrefs: () => void;
+  setUiTextScale: (scale: UiTextScale) => void;
   setTitlePlayerName: (name: string) => void;
   setTitleCompanyName: (name: string) => void;
   newGame: (playerName?: string, companyName?: string, seed?: number) => void;
@@ -188,10 +221,16 @@ export const useUiStore = create<UiState>((set, get) => ({
   game: null,
   lastAction: null,
   notice: "",
+  uiTextScale: loadUiTextScalePreference(),
   activeProgressPopup: null,
   progressQueue: [],
   titlePlayerName: "",
   titleCompanyName: "",
+  hydrateUiPrefs: () => set({ uiTextScale: loadUiTextScalePreference() }),
+  setUiTextScale: (scale) => {
+    saveUiTextScalePreference(scale);
+    set({ uiTextScale: scale });
+  },
 
   newGame: (playerName?: string, companyName?: string, seed?: number) => {
     const nextSeed = seed ?? Math.floor(Date.now() % 1_000_000_000);

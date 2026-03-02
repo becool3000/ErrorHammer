@@ -33,6 +33,7 @@ function resetUi() {
     game: null,
     lastAction: null,
     notice: "",
+    uiTextScale: "default",
     activeProgressPopup: null,
     progressQueue: [],
     titlePlayerName: "",
@@ -85,6 +86,61 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Margo Metalworks/)).toBeTruthy();
     expect(screen.getByText(/Stamina 4\/4/i)).toBeTruthy();
     expect(screen.getByText(/Fatigue 0/i)).toBeTruthy();
+  });
+
+  it("EH-TW-063: defaults to standard text scale when no ui preference exists", () => {
+    render(<App />);
+    const appRoot = document.querySelector(".app-root");
+    expect(appRoot?.getAttribute("data-text-scale")).toBe("default");
+  });
+
+  it("EH-TW-064: selecting text size updates the app scale attribute", () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: "Margo" } });
+    fireEvent.change(screen.getByLabelText(/Company Name/i), { target: { value: "Margo Metalworks" } });
+    fireEvent.click(screen.getByRole("button", { name: "New Game" }));
+
+    fireEvent.click(screen.getByRole("tab", { name: "Large" }));
+    expect(document.querySelector(".app-root")?.getAttribute("data-text-scale")).toBe("large");
+
+    fireEvent.click(screen.getByRole("tab", { name: "XL" }));
+    expect(document.querySelector(".app-root")?.getAttribute("data-text-scale")).toBe("xlarge");
+  });
+
+  it("EH-TW-065: text scale preference persists via localStorage and hydrates on mount", () => {
+    render(<App />);
+
+    act(() => {
+      useUiStore.getState().setUiTextScale("xlarge");
+    });
+    expect(localStorage.getItem("error-hammer-ui-prefs-v1")).toContain("\"xlarge\"");
+
+    cleanup();
+    resetUi();
+    render(<App />);
+
+    expect(document.querySelector(".app-root")?.getAttribute("data-text-scale")).toBe("xlarge");
+  });
+
+  it("EH-TW-066: gameplay flow remains functional after changing text scale", () => {
+    render(<App />);
+
+    act(() => {
+      useUiStore.getState().setUiTextScale("large");
+    });
+
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: "Margo" } });
+    fireEvent.change(screen.getByLabelText(/Company Name/i), { target: { value: "Margo Metalworks" } });
+    fireEvent.click(screen.getByRole("button", { name: "New Game" }));
+
+    expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Store$/i }));
+    expect(screen.getByRole("button", { name: /^Store$/i, pressed: true })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Work$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /View Log/i }));
+    expect(screen.getByRole("dialog", { name: /Field Log/i })).toBeTruthy();
   });
 
   it("EH-TW-043: title form retains typed names and repopulates after returning to the title screen", () => {

@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   font-family: "Bahnschrift", "Arial Narrow", sans-serif;
-  line-height: 1.35;
+  line-height: 1.5;
   color: #e6e9ed;
   background:
     radial-gradient(circle at top, rgba(155, 167, 182, 0.12), transparent 38%),
@@ -12,12 +12,17 @@
   --border: rgba(205, 214, 224, 0.22);
   --border-strong: rgba(225, 232, 240, 0.38);
   --text: #edf1f5;
-  --muted: #9ea7b1;
+  --muted: #b7c0ca;
   --accent: #bfc8d1;
   --accent-strong: #f4f7fa;
   --success: #7e9b86;
   --danger: #a65a48;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+  --ui-scale: 1;
+  --font-body: 1rem;
+  --font-small: 0.94rem;
+  --font-heading: 1.75rem;
+  --line-body: 1.5;
 }
 
 * {
@@ -35,6 +40,27 @@ body {
   background: var(--bg);
 }
 
+.app-root {
+  font-size: calc(var(--font-body) * var(--ui-scale));
+  line-height: var(--line-body);
+}
+
+.app-root[data-text-scale="default"] {
+  --ui-scale: 1;
+}
+
+.app-root[data-text-scale="large"] {
+  --ui-scale: 1.15;
+}
+
+.app-root[data-text-scale="xlarge"] {
+  --ui-scale: 1.3;
+}
+
+.screen-shell {
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+}
+
 button {
   border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(197, 205, 213, 0.16), rgba(110, 119, 129, 0.12));
@@ -43,6 +69,7 @@ button {
   padding: 0.72rem 0.9rem;
   cursor: pointer;
   font: inherit;
+  min-height: 2.75rem;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -158,13 +185,14 @@ p {
 
 .compact-header h1,
 .summary-toggle-title {
-  font-size: 1.75rem;
+  font-size: calc(var(--font-heading) * var(--ui-scale));
   letter-spacing: 0.04em;
 }
 
 .header-subtitle,
 .muted-copy {
   color: var(--muted);
+  font-size: calc(var(--font-small) * var(--ui-scale));
 }
 
 .status-strip {
@@ -235,13 +263,15 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2rem;
+  min-height: 2.75rem;
   padding: 0.38rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid rgba(230, 235, 242, 0.16);
-  background: rgba(201, 209, 219, 0.08);
+  border: 1px solid rgba(230, 235, 242, 0.28);
+  background: rgba(201, 209, 219, 0.16);
   color: var(--accent);
-  font-size: 0.82rem;
+  font-size: calc(0.95rem * var(--ui-scale));
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .large-chip {
@@ -253,7 +283,7 @@ p {
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-size: 0.72rem;
+  font-size: calc(0.88rem * var(--ui-scale));
 }
 
 .notice-banner {
@@ -314,7 +344,7 @@ p {
   gap: 0.7rem;
   margin-top: 0.3rem;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: calc(0.98rem * var(--ui-scale));
 }
 
 .operator-actions {
@@ -345,7 +375,7 @@ p {
   gap: 0.7rem;
   margin-top: 0.5rem;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: calc(0.98rem * var(--ui-scale));
 }
 
 .tab-stage,
@@ -556,6 +586,7 @@ p {
   padding: 0.45rem;
   border-radius: 18px;
   text-align: center;
+  font-size: calc(1rem * var(--ui-scale));
 }
 
 .tab-button.active {
@@ -605,6 +636,11 @@ p {
 
 .segment.active {
   border-color: rgba(237, 243, 248, 0.3);
+}
+
+.text-size-control .segmented-control {
+  margin-top: 0.45rem;
+  margin-bottom: 0.15rem;
 }
 
 .contract-carousel {
@@ -739,6 +775,156 @@ p {
 
 .progress-popup-lines {
   margin-top: 0.7rem;
+}
+
+@media (max-width: 430px) {
+  .title-shell {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .title-panel {
+    padding: 1rem;
+  }
+
+  .title-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell {
+    padding: 0.75rem 0.75rem calc(6.4rem + env(safe-area-inset-bottom));
+  }
+
+  .compact-header,
+  .inset-card,
+  .hero-card,
+  .modal-shell,
+  .sheet-shell {
+    padding: 0.85rem;
+  }
+
+  .section-label-row,
+  .action-row,
+  .tight-row,
+  .compact-row-card,
+  .inventory-line {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .section-label-row > *,
+  .tight-row > * {
+    min-width: 0;
+  }
+
+  .header-summary-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.55rem;
+  }
+
+  .header-summary-copy {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .hud-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .status-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .status-strip span,
+  .chip {
+    min-height: 2.2rem;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+    font-size: calc(0.95rem * var(--ui-scale));
+  }
+
+  .operator-card {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .operator-actions {
+    justify-content: flex-start;
+  }
+
+  .supplier-info-button {
+    min-width: 0;
+  }
+
+  .task-inline-actions button,
+  .action-row button {
+    width: 100%;
+  }
+
+  .overlay-backdrop {
+    padding:
+      max(0.65rem, env(safe-area-inset-top))
+      max(0.65rem, env(safe-area-inset-right))
+      max(0.65rem, env(safe-area-inset-bottom))
+      max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .modal-shell {
+    width: 100%;
+    max-height: min(84vh, 44rem);
+  }
+
+  .sheet-shell {
+    width: 100%;
+    max-height: min(80vh, 40rem);
+  }
+
+  .progress-popup {
+    top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  .sticky-action-bar {
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+    gap: 0.55rem;
+  }
+
+  .bottom-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding:
+      0.4rem
+      max(0.4rem, env(safe-area-inset-right))
+      calc(0.45rem + env(safe-area-inset-bottom))
+      max(0.4rem, env(safe-area-inset-left));
+  }
+
+  .tab-button {
+    min-height: 3.2rem;
+    padding: 0.35rem;
+    border-radius: 14px;
+    font-size: calc(1rem * var(--ui-scale));
+  }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .title-shell {
+    padding: 0.75rem;
+  }
+
+  .app-shell {
+    padding-bottom: 5.3rem;
+  }
+
+  .bottom-nav {
+    bottom: 0.35rem;
+  }
 }
 
 @keyframes progress-popup-in {

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { GameState } from "../../core/types";
 import { ticksToHours } from "../../core/playerFlow";
-import { bundle, useUiStore } from "../state";
-import { GameTabId } from "../state";
+import { bundle, GameTabId, UiTextScale, useUiStore } from "../state";
+import { SegmentedControl } from "./SegmentedControl";
 
 const tabLabels: Record<GameTabId, string> = {
   work: "Work",
@@ -16,9 +16,17 @@ interface CompactHeaderProps {
   activeTab: GameTabId;
 }
 
+const textScaleOptions: Array<{ id: UiTextScale; label: string }> = [
+  { id: "default", label: "Default" },
+  { id: "large", label: "Large" },
+  { id: "xlarge", label: "XL" }
+];
+
 export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const openModal = useUiStore((state) => state.openModal);
+  const uiTextScale = useUiStore((state) => state.uiTextScale);
+  const setUiTextScale = useUiStore((state) => state.setUiTextScale);
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);
   const overtimeHours = ticksToHours(Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed));
@@ -58,6 +66,10 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
       {isFatigued ? (
         <p className="muted-copy">Fatigue from overtime shortens this shift to {totalHours.toFixed(1)} of {baseHours.toFixed(1)} hours.</p>
       ) : null}
+      <div className="text-size-control">
+        <p className="eyebrow">Text Size</p>
+        <SegmentedControl value={uiTextScale} options={textScaleOptions} onChange={setUiTextScale} label="Text size" />
+      </div>
       <div
         id="workday-status-panel"
         className={detailsOpen ? "collapsible-panel open" : "collapsible-panel"}
