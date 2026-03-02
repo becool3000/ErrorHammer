@@ -83,7 +83,7 @@
     "tier": 2,
     "price": 70,
     "maxDurability": 45,
-    "tags": ["finish", "inspection"],
+    "tags": ["finish", "inspection", "concrete"],
     "flavor": {
       "description": "A bubble with strong opinions.",
       "quip_buy": "You bought objective truth in a plastic tube.",
@@ -96,7 +96,7 @@
     "tier": 2,
     "price": 80,
     "maxDurability": 42,
-    "tags": ["finish", "seal"],
+    "tags": ["finish", "seal", "painting"],
     "flavor": {
       "description": "Makes gaps disappear and corners believable.",
       "quip_buy": "You bought a paste launcher for tiny diplomacy.",
@@ -109,7 +109,7 @@
     "tier": 1,
     "price": 50,
     "maxDurability": 28,
-    "tags": ["finish", "general"],
+    "tags": ["finish", "general", "drywall"],
     "flavor": {
       "description": "For clean cuts and rough schedules.",
       "quip_buy": "You bought precision with a pocket clip.",

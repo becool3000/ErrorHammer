@@ -21,7 +21,8 @@
         "districtId":  "residential",
         "tags":  [
                      "outdoor",
-                     "finish"
+                     "finish",
+                     "painting"
                  ],
         "repLossFail":  1
     },
@@ -47,7 +48,8 @@
         "districtId":  "residential",
         "tags":  [
                      "outdoor",
-                     "framing"
+                     "framing",
+                     "concrete"
                  ],
         "repLossFail":  1
     },
@@ -151,7 +153,8 @@
         "districtId":  "residential",
         "tags":  [
                      "indoor",
-                     "finish"
+                     "finish",
+                     "drywall"
                  ],
         "repLossFail":  1
     },

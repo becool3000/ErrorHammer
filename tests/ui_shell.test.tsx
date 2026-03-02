@@ -162,7 +162,7 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Skills$/i }));
     expect(screen.getByRole("dialog", { name: /Skills/i })).toBeTruthy();
     expect(screen.getByText(/Skill Ledger/i)).toBeTruthy();
-    expect(screen.getAllByText(/Avg XP 35/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Avg XP 29/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Travel/i)).toBeTruthy();
     expect(screen.getAllByText(/Lv 1/i).length).toBeGreaterThan(0);
   });

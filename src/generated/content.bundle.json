@@ -359,7 +359,8 @@
       "staminaCost": 2,
       "tags": [
         "finish",
-        "outdoor"
+        "outdoor",
+        "painting"
       ],
       "tier": 1,
       "workUnits": 4
@@ -395,6 +396,7 @@
       "risk": 0.16,
       "staminaCost": 2,
       "tags": [
+        "concrete",
         "framing",
         "outdoor"
       ],
@@ -543,6 +545,7 @@
       "risk": 0.14,
       "staminaCost": 2,
       "tags": [
+        "drywall",
         "finish",
         "indoor"
       ],
@@ -1518,6 +1521,7 @@
       "name": "Concrete Mix",
       "price": 24,
       "tags": [
+        "concrete",
         "general",
         "outdoor"
       ]
@@ -1571,6 +1575,7 @@
       "price": 12,
       "tags": [
         "finish",
+        "painting",
         "seal"
       ]
     },
@@ -1635,6 +1640,7 @@
       "name": "Trim Kit",
       "price": 20,
       "tags": [
+        "drywall",
         "finish",
         "framing"
       ]
@@ -1666,6 +1672,7 @@
       "price": 80,
       "tags": [
         "finish",
+        "painting",
         "seal"
       ],
       "tier": 2
@@ -1729,6 +1736,7 @@
       "name": "Level",
       "price": 70,
       "tags": [
+        "concrete",
         "finish",
         "inspection"
       ],
@@ -1793,6 +1801,7 @@
       "name": "Utility Knife",
       "price": 50,
       "tags": [
+        "drywall",
         "finish",
         "general"
       ],

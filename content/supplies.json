@@ -23,7 +23,7 @@
     "id": "concrete-mix",
     "name": "Concrete Mix",
     "price": 24,
-    "tags": ["general", "outdoor"],
+    "tags": ["general", "outdoor", "concrete"],
     "flavor": {
       "description": "Powdered permanence in a practical bag.",
       "quip_buy": "You bought a future rock."
@@ -63,7 +63,7 @@
     "id": "paint-sleeve",
     "name": "Paint Sleeve",
     "price": 12,
-    "tags": ["finish", "seal"],
+    "tags": ["finish", "seal", "painting"],
     "flavor": {
       "description": "Color management for surfaces that need closure.",
       "quip_buy": "You bought a small apology for the wall."
@@ -123,7 +123,7 @@
     "id": "trim-kit",
     "name": "Trim Kit",
     "price": 20,
-    "tags": ["finish", "framing"],
+    "tags": ["finish", "framing", "drywall"],
     "flavor": {
       "description": "Corners, strips, and a second chance at neatness.",
       "quip_buy": "You bought decorative seriousness."

@@ -35,9 +35,9 @@ describe("progression helpers", () => {
 
     const operator = getOperatorLevel(actor);
 
-    expect(operator.avgXp).toBeGreaterThan(100);
-    expect(operator.avgXp).toBeLessThan(250);
-    expect(operator.level).toBe(1);
+    expect(operator.avgXp).toBeGreaterThan(0);
+    expect(operator.avgXp).toBeLessThan(100);
+    expect(operator.level).toBe(0);
   });
 
   it("builds progression popups in XP, skill, then operator order", () => {
