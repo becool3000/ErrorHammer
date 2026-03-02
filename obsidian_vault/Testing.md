@@ -11,6 +11,7 @@
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
 10. Name + Hour verification chain status is complete for `TW-006` and `VF-006` (2026-03-01); deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-039..EH-TW-043`.
 11. Crew + event TestWriter coverage for `TW-007` is complete; deterministic coverage now extends through `EH-TW-061` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, visible progression math, expanded skill labels, and persistent progress-popups in the compact shell.
+12. Progression + persistent-popup verification chain status is complete for `TW-009` and `VF-009` (2026-03-01).
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -182,3 +183,8 @@ Evidence: `tests/progression.test.ts` test id `EH-TW-061`.
 11. `VF-007` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`7` files, `50` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-De6LOkjX.css`, `dist/assets/index-Du6nEY1t.js`).
 12. `VF-007` deterministic scenario evidence: `EH-TW-044` PASS for level gating plus deterministic first-slot hire, `EH-TW-045` PASS for first-commit crew stamina spend and assignee-prefixed logs, `EH-TW-046` PASS for save-safe `assignee="self"` and `staminaCommitted=false` defaults, `EH-TW-047` PASS for company-modal hire flow, `EH-TW-048` PASS for work-tab event cue visibility plus assignee selection, and `EH-TW-049` PASS for assignee lockout with no double stamina spend.
 13. `VF-007` smoke note: verification relied on deterministic unit/UI-shell coverage and command-gate passes in this terminal session; no validated defect required a follow-on core or script patch.
+14. `VF-009` evidence date: 2026-03-01.
+15. `VF-009` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`8` files, `62` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-DjJcFGTe.css`, `dist/assets/index-CIVj3gH1.js`).
+16. `VF-009` deterministic scenario evidence: `EH-TW-054` PASS for operator-card inventory/skills modal separation plus readable skill labels, `EH-TW-055` PASS for ordered progression popup queueing after XP gain, `EH-TW-056` PASS for manual-dismiss popup persistence, `EH-TW-057` PASS for tiered XP threshold boundaries, `EH-TW-058` PASS for mid-tier progress math, `EH-TW-059` PASS for average-XP Operator Level derivation across the expanded skill pool, `EH-TW-060` PASS for popup helper ordering `xp -> skill-level -> skill-level -> operator-level`, and `EH-TW-061` PASS for acronym-heavy labels including `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal`.
+17. `VF-009` manual smoke evidence: user-confirmed manual verification covered progression popup persistence and explicit manual dismissal behavior in the shell.
+18. `VF-009` bug-fix note: no validated defect was found during verification, so no patch was applied to `src/core/**` or `scripts/**`.

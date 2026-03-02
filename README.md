@@ -1,7 +1,7 @@
 # Error Hammer
 ## Status (2026-03-01)
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
-2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`7` files, `50` tests), and `npm run build`.
+2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`8` files, `62` tests), and `npm run build`.
 3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
 4. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is complete on `main`.
 5. `PLN-008` keeps the rolling UI/UX Builder session open on `main`; `PLN-009` is queued separately for visible skill levels, Operator Level, and progression popups.
@@ -38,7 +38,7 @@
 5. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 6. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 7. Current automated baseline is `8` test files and `62` tests after the latest progression and popup persistence additions.
-8. Latest verifier closeout is `VF-007` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
+8. Latest verifier closeout is `VF-009` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
