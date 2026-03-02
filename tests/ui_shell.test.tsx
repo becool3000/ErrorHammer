@@ -31,6 +31,8 @@ function resetUi() {
     game: null,
     lastAction: null,
     notice: "",
+    activeProgressPopup: null,
+    progressQueue: [],
     titlePlayerName: "",
     titleCompanyName: ""
   });
@@ -151,6 +153,8 @@ describe("compact shell ui", () => {
 
     render(<App />);
 
+    expect(screen.getByText(/Operator Lv 0/i)).toBeTruthy();
+
     fireEvent.click(screen.getByRole("button", { name: /^Inventory$/i }));
     expect(screen.getByRole("dialog", { name: /Inventory/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close Inventory/i }));
@@ -158,6 +162,55 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Skills$/i }));
     expect(screen.getByRole("dialog", { name: /Skills/i })).toBeTruthy();
     expect(screen.getByText(/Skill Ledger/i)).toBeTruthy();
+    expect(screen.getAllByText(/Avg XP 35/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Travel/i)).toBeTruthy();
+    expect(screen.getAllByText(/Lv 1/i).length).toBeGreaterThan(0);
+  });
+
+  it("EH-TW-055: progression popups surface in the shell after an XP-granting task", () => {
+    const game = buildAcceptableGame(4042);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        game: {
+          ...current,
+          player: {
+            ...current.player,
+            skills: Object.fromEntries(Object.keys(current.player.skills).map((skillId) => [skillId, 99])) as typeof current.player.skills
+          },
+          truckSupplies: Object.fromEntries(bundle.supplies.map((supply) => [supply.id, 10])) as typeof current.truckSupplies,
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "job-site",
+                tasks: current.activeJob.tasks.map((task) =>
+                  task.taskId === "load_from_shop" ||
+                  task.taskId === "travel_to_supplier" ||
+                  task.taskId === "checkout_supplies" ||
+                  task.taskId === "travel_to_job_site" ||
+                  task.taskId === "pickup_site_supplies"
+                    ? { ...task, completedUnits: task.requiredUnits }
+                    : task
+                )
+              }
+            : null
+        }
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
+
+    expect(screen.getByText(/XP Earned/i)).toBeTruthy();
+    expect(useUiStore.getState().activeProgressPopup?.kind).toBe("xp");
+    act(() => {
+      useUiStore.getState().dismissProgressPopup();
+    });
+    expect(screen.getByText(/Skill Leveled Up/i)).toBeTruthy();
   });
 
   it("EH-TW-030 and EH-TW-031: store sections switch and off-shop state disables actions", () => {

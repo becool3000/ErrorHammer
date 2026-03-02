@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
-import { formatHours, getCurrentTask, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
+import { formatHours, getCurrentTask, getOperatorLevel, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
 import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
@@ -200,16 +200,31 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   }
 
   if (modalView === "skills") {
-    const skillRows = getSkillDisplayRows(game.player).slice(0, 8);
+    const skillRows = getSkillDisplayRows(game.player);
+    const operatorLevel = getOperatorLevel(game.player);
     return (
       <section className="stack-block">
         <article className="chrome-card inset-card">
           <p className="eyebrow">Skill Ledger</p>
-          <div className="chip-grid">
+          <div className="section-label-row tight-row">
+            <strong>Operator Lv {operatorLevel.level}</strong>
+            <span className="chip">Avg XP {Math.floor(operatorLevel.avgXp)}</span>
+          </div>
+          <div className="stack-list skill-ledger-list">
             {skillRows.map((skill) => (
-              <span key={skill.skillId} className="chip large-chip">
-                {skill.skillId} R{skill.rank} ({skill.xp})
-              </span>
+              <article key={skill.skillId} className="task-summary">
+                <div className="section-label-row tight-row">
+                  <strong>{formatSkillLabel(skill.skillId)}</strong>
+                  <span>Lv {skill.level}</span>
+                </div>
+                <div className="progress-track" aria-hidden="true">
+                  <span style={{ width: `${Math.round(skill.progress * 100)}%` }} />
+                </div>
+                <div className="material-need-meta">
+                  <span>{skill.xp} XP</span>
+                  <span>{skill.needed === null ? "Maxed" : `${Math.round(skill.current)} / ${skill.needed} to next`}</span>
+                </div>
+              </article>
             ))}
           </div>
         </article>
@@ -266,6 +281,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         <OperatorCard
           playerName={game.player.name}
           companyName={game.player.companyName}
+          operatorLevel={getOperatorLevel(game.player)}
           onOpenInventory={() => openModal("inventory")}
           onOpenSkills={() => openModal("skills")}
         />
@@ -302,6 +318,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       <OperatorCard
         playerName={game.player.name}
         companyName={game.player.companyName}
+        operatorLevel={getOperatorLevel(game.player)}
         onOpenInventory={() => openModal("inventory")}
         onOpenSkills={() => openModal("skills")}
       />
@@ -505,20 +522,26 @@ function EventCueCard({
 function OperatorCard({
   playerName,
   companyName,
+  operatorLevel,
   onOpenInventory,
   onOpenSkills
 }: {
   playerName: string;
   companyName: string;
+  operatorLevel: ReturnType<typeof getOperatorLevel>;
   onOpenInventory: () => void;
   onOpenSkills: () => void;
 }) {
   return (
     <article className="chrome-card inset-card operator-card">
-      <div>
+      <div className="operator-copy">
         <p className="eyebrow">Operator</p>
         <h3>{playerName}</h3>
         <p className="muted-copy">{companyName}</p>
+        <div className="operator-meta">
+          <span>Operator Lv {operatorLevel.level}</span>
+          <span>Avg XP {Math.floor(operatorLevel.avgXp)}</span>
+        </div>
       </div>
       <div className="action-row operator-actions">
         <button className="ghost-button" onClick={onOpenInventory}>
@@ -581,6 +604,13 @@ function labelForStance(stance: TaskStance): string {
     return "Careful";
   }
   return "Standard";
+}
+
+function formatSkillLabel(skillId: string): string {
+  return skillId
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
 }
 
 function deriveEventCueTags(event: (typeof bundle.events)[number]): string[] {

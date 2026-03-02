@@ -205,16 +205,81 @@ export function getWeekday(day: number): Weekday {
   return WEEKDAYS[(Math.max(1, day) - 1) % WEEKDAYS.length]!;
 }
 
-export function getSkillRank(actor: ActorState, skillId: SkillId): number {
-  return clamp(Math.floor((actor.skills?.[skillId] ?? 0) / 100), 0, 10);
+export function getXpFloorForLevel(level: number): number {
+  const normalizedLevel = Math.max(0, Math.floor(level));
+  if (normalizedLevel <= 0) {
+    return 0;
+  }
+  if (normalizedLevel === 1) {
+    return 100;
+  }
+  if (normalizedLevel === 2) {
+    return 250;
+  }
+  return 250 + (normalizedLevel - 2) * 200;
 }
 
-export function getSkillDisplayRows(actor: ActorState): Array<{ skillId: SkillId; rank: number; xp: number }> {
+export function getXpCeilingForLevel(level: number): number | null {
+  return getXpFloorForLevel(Math.max(0, Math.floor(level)) + 1);
+}
+
+export function getLevelForXp(xp: number): number {
+  const normalizedXp = Math.max(0, xp);
+  let level = 0;
+  while (normalizedXp >= getXpFloorForLevel(level + 1)) {
+    level += 1;
+  }
+  return level;
+}
+
+export function getLevelProgress(xp: number): { level: number; current: number; needed: number | null; progress: number } {
+  const normalizedXp = Math.max(0, xp);
+  const level = getLevelForXp(normalizedXp);
+  const floor = getXpFloorForLevel(level);
+  const ceiling = getXpCeilingForLevel(level);
+  const current = normalizedXp - floor;
+  const needed = ceiling === null ? null : Math.max(0, ceiling - floor);
+  return {
+    level,
+    current,
+    needed,
+    progress: needed && needed > 0 ? clamp(current / needed, 0, 1) : 1
+  };
+}
+
+export function getOperatorLevel(actor: ActorState): {
+  avgXp: number;
+  level: number;
+  current: number;
+  needed: number | null;
+  progress: number;
+} {
+  const totalXp = SKILL_IDS.reduce((sum, skillId) => sum + (actor.skills?.[skillId] ?? 0), 0);
+  const avgXp = totalXp / SKILL_IDS.length;
+  const progress = getLevelProgress(avgXp);
+  return {
+    avgXp,
+    ...progress
+  };
+}
+
+export function getSkillRank(actor: ActorState, skillId: SkillId): number {
+  return getLevelForXp(actor.skills?.[skillId] ?? 0);
+}
+
+export function getSkillDisplayRows(actor: ActorState): Array<{
+  skillId: SkillId;
+  level: number;
+  xp: number;
+  current: number;
+  needed: number | null;
+  progress: number;
+}> {
   return SKILL_IDS.map((skillId) => ({
     skillId,
-    rank: getSkillRank(actor, skillId),
-    xp: actor.skills[skillId] ?? 0
-  })).sort((a, b) => b.rank - a.rank || a.skillId.localeCompare(b.skillId));
+    xp: actor.skills[skillId] ?? 0,
+    ...getLevelProgress(actor.skills[skillId] ?? 0)
+  })).sort((a, b) => b.level - a.level || b.xp - a.xp || a.skillId.localeCompare(b.skillId));
 }
 
 export function getCurrentTask(state: GameState): ActiveTaskState | null {

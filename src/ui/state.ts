@@ -1,18 +1,20 @@
 import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
 import {
-  buyFuel,
-  quickBuyMissingTools,
+  buyFuel as buyFuelFlow,
+  getLevelForXp,
+  getOperatorLevel,
+  quickBuyMissingTools as quickBuyMissingToolsFlow,
   formatHours,
-  performTaskUnit,
-  setSupplierCartQuantity,
-  acceptContract,
+  performTaskUnit as performTaskUnitFlow,
+  setSupplierCartQuantity as setSupplierCartQuantityFlow,
+  acceptContract as acceptContractFlow,
   hireCrew as hireCrewFlow,
-  setActiveJobAssignee
+  setActiveJobAssignee as setActiveJobAssigneeFlow
 } from "../core/playerFlow";
 import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from "../core/save";
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
-import { GameState, TaskStance } from "../core/types";
+import { GameState, SkillId, TaskStance, TaskUnitResult } from "../core/types";
 
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "contracts" | "store" | "company";
@@ -27,6 +29,18 @@ export interface ActionSummary {
   digest: string;
 }
 
+export type ProgressPopupKind = "xp" | "skill-level" | "operator-level";
+export type ProgressPopupSeverity = "small" | "medium" | "large";
+
+export interface ProgressPopup {
+  id: string;
+  kind: ProgressPopupKind;
+  title: string;
+  lines: string[];
+  severity: ProgressPopupSeverity;
+  createdAtDigest: string;
+}
+
 interface UiState {
   screen: ScreenId;
   activeTab: GameTabId;
@@ -37,6 +51,8 @@ interface UiState {
   game: GameState | null;
   lastAction: ActionSummary | null;
   notice: string;
+  activeProgressPopup: ProgressPopup | null;
+  progressQueue: ProgressPopup[];
   titlePlayerName: string;
   titleCompanyName: string;
   setTitlePlayerName: (name: string) => void;
@@ -52,6 +68,7 @@ interface UiState {
   setStoreSection: (section: StoreSectionId) => void;
   selectContract: (contractId: string | null) => void;
   clearNotice: () => void;
+  dismissProgressPopup: () => void;
   acceptContract: (contractId: string) => void;
   setCartQuantity: (supplyId: string, quantity: number) => void;
   performTaskUnit: (stance: TaskStance, allowOvertime?: boolean) => void;
@@ -66,6 +83,12 @@ interface UiState {
 
 const bundle = loadContentBundle();
 
+function formatSkillLabel(skillId: SkillId): string {
+  return skillId
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
 
 function toSummary(title: string, lines: string[], digest: string): ActionSummary {
   return {
@@ -79,6 +102,79 @@ function getDefaultContractId(game: GameState | null): string | null {
   return game?.contractBoard[0]?.contractId ?? null;
 }
 
+export function buildProgressPopups(previous: GameState, next: GameState, payload?: TaskUnitResult): ProgressPopup[] {
+  if (!payload) {
+    return [];
+  }
+  const xpEntries = Object.entries(payload.skillXpDelta)
+    .filter(([, delta]) => (delta ?? 0) > 0)
+    .sort(([left], [right]) => left.localeCompare(right)) as Array<[SkillId, number]>;
+
+  if (xpEntries.length === 0) {
+    return [];
+  }
+
+  const popups: ProgressPopup[] = [
+    {
+      id: `${payload.digest}:xp`,
+      kind: "xp",
+      title: "XP Earned",
+      lines: xpEntries.map(([skillId, delta]) => `${formatSkillLabel(skillId)} +${delta}`),
+      severity: "small",
+      createdAtDigest: payload.digest
+    }
+  ];
+
+  for (const [skillId] of xpEntries) {
+    const previousLevel = getLevelForXp(previous.player.skills[skillId] ?? 0);
+    const nextLevel = getLevelForXp(next.player.skills[skillId] ?? 0);
+    if (nextLevel > previousLevel) {
+      popups.push({
+        id: `${payload.digest}:skill:${skillId}:${nextLevel}`,
+        kind: "skill-level",
+        title: "Skill Leveled Up",
+        lines: [`${formatSkillLabel(skillId)} reached Lv ${nextLevel}`],
+        severity: "medium",
+        createdAtDigest: payload.digest
+      });
+    }
+  }
+
+  const previousOperatorLevel = getOperatorLevel(previous.player).level;
+  const nextOperatorLevel = getOperatorLevel(next.player).level;
+  if (nextOperatorLevel > previousOperatorLevel) {
+    popups.push({
+      id: `${payload.digest}:operator:${nextOperatorLevel}`,
+      kind: "operator-level",
+      title: "Operator Leveled Up!",
+      lines: [`Operator reached Lv ${nextOperatorLevel}`],
+      severity: "large",
+      createdAtDigest: payload.digest
+    });
+  }
+
+  return popups;
+}
+
+function enqueueProgressPopups(current: Pick<UiState, "activeProgressPopup" | "progressQueue">, incoming: ProgressPopup[]) {
+  if (incoming.length === 0) {
+    return {
+      activeProgressPopup: current.activeProgressPopup,
+      progressQueue: current.progressQueue
+    };
+  }
+  if (!current.activeProgressPopup) {
+    return {
+      activeProgressPopup: incoming[0] ?? null,
+      progressQueue: incoming.slice(1)
+    };
+  }
+  return {
+    activeProgressPopup: current.activeProgressPopup,
+    progressQueue: [...current.progressQueue, ...incoming]
+  };
+}
+
 export const useUiStore = create<UiState>((set, get) => ({
   screen: "title",
   activeTab: "work",
@@ -89,6 +185,8 @@ export const useUiStore = create<UiState>((set, get) => ({
   game: null,
   lastAction: null,
   notice: "",
+  activeProgressPopup: null,
+  progressQueue: [],
   titlePlayerName: "",
   titleCompanyName: "",
 
@@ -108,6 +206,8 @@ export const useUiStore = create<UiState>((set, get) => ({
       game,
       lastAction: null,
       notice: "",
+      activeProgressPopup: null,
+      progressQueue: [],
       titlePlayerName: resolvedPlayerName,
       titleCompanyName: resolvedCompanyName
     });
@@ -128,12 +228,14 @@ export const useUiStore = create<UiState>((set, get) => ({
       selectedContractId: getDefaultContractId(loaded),
       game: loaded,
       notice: "",
+      activeProgressPopup: null,
+      progressQueue: [],
       titlePlayerName: loaded.player.name,
       titleCompanyName: loaded.player.companyName
     });
   },
 
-  returnToTitle: () => set({ screen: "title", activeModal: null, activeSheet: null, notice: "" }),
+  returnToTitle: () => set({ screen: "title", activeModal: null, activeSheet: null, notice: "", activeProgressPopup: null, progressQueue: [] }),
 
   goToTab: (tab) => set({ activeTab: tab, activeModal: null, activeSheet: null }),
 
@@ -151,6 +253,11 @@ export const useUiStore = create<UiState>((set, get) => ({
   selectContract: (contractId) => set({ selectedContractId: contractId }),
 
   clearNotice: () => set({ notice: "" }),
+  dismissProgressPopup: () =>
+    set((state) => ({
+      activeProgressPopup: state.progressQueue[0] ?? null,
+      progressQueue: state.progressQueue.slice(1)
+    })),
   setTitlePlayerName: (name) => set({ titlePlayerName: name }),
   setTitleCompanyName: (name) => set({ titleCompanyName: name }),
 
@@ -159,7 +266,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = acceptContract(current, bundle, contractId);
+    const result = acceptContractFlow(current, bundle, contractId);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -179,7 +286,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = setSupplierCartQuantity(current, supplyId, quantity);
+    const result = setSupplierCartQuantityFlow(current, supplyId, quantity);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -192,14 +299,16 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = performTaskUnit(current, bundle, stance, allowOvertime);
+    const result = performTaskUnitFlow(current, bundle, stance, allowOvertime);
+    const progressUpdates = buildProgressPopups(current, result.nextState, result.payload);
     saveGame(result.nextState);
     set({
       game: result.nextState,
       lastAction: result.payload ? toSummary("Task Result", result.payload.logLines, result.payload.digest) : get().lastAction,
       notice: result.notice ?? "",
       activeSheet: null,
-      selectedContractId: getDefaultContractId(result.nextState)
+      selectedContractId: getDefaultContractId(result.nextState),
+      ...enqueueProgressPopups(get(), progressUpdates)
     });
   },
 
@@ -229,7 +338,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = buyFuel(current, units);
+    const result = buyFuelFlow(current, units);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -273,7 +382,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = quickBuyMissingTools(current, bundle, contractId);
+    const result = quickBuyMissingToolsFlow(current, bundle, contractId);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -310,7 +419,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    const result = setActiveJobAssignee(current, assignee);
+    const result = setActiveJobAssigneeFlow(current, assignee);
     saveGame(result.nextState);
     set({
       game: result.nextState,

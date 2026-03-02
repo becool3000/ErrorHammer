@@ -34,7 +34,7 @@ export function StatsPanel({ day, player, workday, activeEvents }: StatsPanelPro
       <div className="list compact-list">
         {topSkills.map((skill) => (
           <p key={skill.skillId}>
-            {skill.skillId}: rank {skill.rank} ({skill.xp} xp)
+            {skill.skillId}: level {skill.level} ({skill.xp} xp)
           </p>
         ))}
       </div>

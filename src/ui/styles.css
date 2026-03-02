@@ -293,10 +293,28 @@ p {
   gap: 1rem;
 }
 
+.operator-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.operator-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .operator-actions {
   margin-top: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.skill-ledger-list {
+  margin-top: 0.8rem;
 }
 
 .material-needs-block {
@@ -677,6 +695,51 @@ p {
   max-width: 32rem;
   margin: 5rem auto;
   padding: 1.25rem;
+}
+
+.progress-popup {
+  position: sticky;
+  top: 0.8rem;
+  z-index: 25;
+  width: min(100%, 30rem);
+  margin: 0 auto 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  animation: progress-popup-in 180ms ease;
+}
+
+.progress-popup-small {
+  background: linear-gradient(180deg, rgba(42, 48, 57, 0.96), rgba(18, 22, 28, 0.98));
+  border-color: rgba(212, 222, 232, 0.2);
+}
+
+.progress-popup-medium {
+  background: linear-gradient(180deg, rgba(72, 83, 61, 0.94), rgba(27, 35, 24, 0.98));
+  border-color: rgba(178, 208, 168, 0.36);
+}
+
+.progress-popup-large {
+  background: linear-gradient(180deg, rgba(98, 80, 45, 0.94), rgba(46, 31, 12, 0.99));
+  border-color: rgba(237, 207, 138, 0.45);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.4), 0 0 22px rgba(237, 207, 138, 0.16);
+}
+
+.progress-popup-lines {
+  margin-top: 0.7rem;
+}
+
+@keyframes progress-popup-in {
+  from {
+    transform: translateY(-0.4rem) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes sheet-in {

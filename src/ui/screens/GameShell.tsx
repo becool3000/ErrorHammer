@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { bundle, useUiStore } from "../state";
 import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
@@ -17,9 +18,23 @@ export function GameShell() {
   const closeSheet = useUiStore((state) => state.closeSheet);
   const notice = useUiStore((state) => state.notice);
   const clearNotice = useUiStore((state) => state.clearNotice);
+  const activeProgressPopup = useUiStore((state) => state.activeProgressPopup);
+  const progressQueue = useUiStore((state) => state.progressQueue);
+  const dismissProgressPopup = useUiStore((state) => state.dismissProgressPopup);
   const goToTab = useUiStore((state) => state.goToTab);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
   const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout");
+
+  useEffect(() => {
+    if (!activeProgressPopup) {
+      return;
+    }
+    const timeout = window.setTimeout(
+      () => dismissProgressPopup(),
+      activeProgressPopup.severity === "large" ? 3200 : activeProgressPopup.severity === "medium" ? 2400 : 1700
+    );
+    return () => window.clearTimeout(timeout);
+  }, [activeProgressPopup, dismissProgressPopup]);
 
   if (!game) {
     return (
@@ -38,6 +53,32 @@ export function GameShell() {
   return (
     <main className="screen-shell app-shell">
       <CompactHeader game={game} activeTab={activeTab} />
+      {activeProgressPopup ? (
+        <section
+          className={`progress-popup progress-popup-${activeProgressPopup.severity}`}
+          role="status"
+          aria-live="polite"
+          aria-label={activeProgressPopup.title}
+        >
+          <div className="section-label-row tight-row">
+            <div>
+              <p className="eyebrow">Progress</p>
+              <h3>{activeProgressPopup.title}</h3>
+            </div>
+            <div className="section-label-row tight-row">
+              {progressQueue.length > 0 ? <span className="chip">+{progressQueue.length}</span> : null}
+              <button className="icon-button" onClick={() => dismissProgressPopup()} aria-label="Dismiss progress popup">
+                Close
+              </button>
+            </div>
+          </div>
+          <div className="stack-list progress-popup-lines">
+            {activeProgressPopup.lines.map((line, index) => (
+              <p key={`${activeProgressPopup.id}-${index}`}>{line}</p>
+            ))}
+          </div>
+        </section>
+      ) : null}
       {notice && !suppressNoticeBanner ? (
         <button className="notice-banner notice-action" onClick={() => clearNotice()}>
           {notice}
