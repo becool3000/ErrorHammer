@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   acceptContract,
   buyFuel,
+  DAY_LABOR_CONTRACT_ID,
   createInitialWorkday,
   formatSupplyQuality,
   getGasStationStopPlan,
+  getAvailableContractOffers,
   getCurrentTask,
   getSkillRank,
+  getRemainingShiftTicks,
   getSupplyQuantity,
   getTaskTimeChances,
   hireCrew,
@@ -130,6 +133,26 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(state.activeJob?.lockedPayout).toBe(200);
     expect(state.activeJob?.tasks.length).toBeGreaterThan(0);
     expect(state.contractBoard).toEqual([]);
+  });
+
+  it("EH-TW-063: Day Laborer is always offered and pays minimum wage without replacing the active field job", () => {
+    const initial = createInitialGameState(makeScenarioBundle(), 5601);
+    const dayLaborOffer = getAvailableContractOffers(initial, makeScenarioBundle()).find(
+      (offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID
+    );
+    expect(dayLaborOffer).toBeTruthy();
+
+    const accepted = acceptJob(5602, "job-alpha-contract");
+    const beforeActiveJobId = accepted.state.activeJob?.contractId;
+    const beforeRemainingTicks = getRemainingShiftTicks(accepted.state.workday);
+    const beforeCash = accepted.state.player.cash;
+
+    const laborShift = acceptContract(accepted.state, accepted.bundle, DAY_LABOR_CONTRACT_ID);
+
+    expect(laborShift.nextState.activeJob?.contractId).toBe(beforeActiveJobId);
+    expect(laborShift.nextState.player.cash).toBe(beforeCash + Math.round((beforeRemainingTicks * 0.5) * 7.25));
+    expect(getRemainingShiftTicks(laborShift.nextState.workday)).toBe(0);
+    expect(laborShift.notice).toContain("Day Laborer paid");
   });
 
   it("EH-TW-024: supplier checkout deducts cash, adds supplies, advances checkout, and grants procurement XP", () => {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { App } from "../src/ui/App";
 import { useUiStore, bundle } from "../src/ui/state";
+import { DAY_LABOR_CONTRACT_ID } from "../src/core/playerFlow";
 import { SAVE_VERSION } from "../src/core/save";
 import { createInitialGameState } from "../src/core/resolver";
 import { SupplyQuality } from "../src/core/types";
@@ -571,6 +572,31 @@ describe("compact shell ui", () => {
     expect(useUiStore.getState().game?.player.fuel).toBeGreaterThan(0);
     expect(useUiStore.getState().game?.player.cash).toBeLessThan(0);
     expect(screen.getByText(/Gas Station Run added/i)).toBeTruthy();
+  });
+
+  it("EH-TW-063: Contracts tab keeps Day Laborer available while a field job is active", () => {
+    const game = buildAcceptableGame(6068);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      useUiStore.setState({ activeTab: "contracts", selectedContractId: DAY_LABOR_CONTRACT_ID });
+    });
+
+    const before = useUiStore.getState().game!;
+    const beforeCash = before.player.cash;
+    const beforeActiveJobId = before.activeJob?.contractId;
+
+    expect(screen.getByText(/Field board is locked/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Work Day Laborer Shift/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Work Day Laborer Shift/i }));
+
+    const after = useUiStore.getState().game!;
+    expect(after.activeJob?.contractId).toBe(beforeActiveJobId);
+    expect(after.player.cash).toBeGreaterThan(beforeCash);
+    expect(screen.getByText(/Day Laborer paid/i)).toBeTruthy();
   });
 
   it("EH-TW-034: supplier-state jobs expose the supplier cart sheet and supply info modal", () => {

@@ -2,8 +2,10 @@ import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
 import {
   buyFuel as buyFuelFlow,
+  DAY_LABOR_CONTRACT_ID,
   formatSkillLabel,
   getLevelForXp,
+  getAvailableContractOffers,
   getGasStationStopPlan,
   getOperatorLevel,
   quickBuyMissingTools as quickBuyMissingToolsFlow,
@@ -96,7 +98,10 @@ function toSummary(title: string, lines: string[], digest: string): ActionSummar
 }
 
 function getDefaultContractId(game: GameState | null): string | null {
-  return game?.contractBoard[0]?.contractId ?? null;
+  if (!game) {
+    return null;
+  }
+  return getAvailableContractOffers(game, bundle)[0]?.contract.contractId ?? null;
 }
 
 export function buildProgressPopups(previous: GameState, next: GameState, payload?: TaskUnitResult): ProgressPopup[] {
@@ -269,9 +274,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       game: result.nextState,
       activeTab: result.notice ? get().activeTab : "work",
       selectedContractId: getDefaultContractId(result.nextState),
-      lastAction: result.payload
-        ? toSummary("Contract Accepted", [`Accepted ${result.payload.jobId} for the field loop.`], result.digest)
-        : get().lastAction,
+      lastAction:
+        contractId === DAY_LABOR_CONTRACT_ID
+          ? toSummary("Day Laborer", [result.notice ?? "Worked a day-labor shift."], result.digest)
+          : result.payload
+            ? toSummary("Contract Accepted", [`Accepted ${result.payload.jobId} for the field loop.`], result.digest)
+            : get().lastAction,
       notice: result.notice ?? "",
       activeModal: null,
       activeSheet: null

@@ -66,6 +66,12 @@ export interface MaterialQualityResult {
   modifier: number;
 }
 
+export interface ContractOffer {
+  contract: ContractInstance;
+  job: JobDef;
+  alwaysAvailable?: boolean;
+}
+
 const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SKILL_IDS: SkillId[] = [
   "travel",
@@ -189,6 +195,9 @@ export const SHOP_SUPPLIER_FUEL = 1;
 export const GAS_STATION_STOP_TICKS = 2;
 export const FUEL_PRICE = 6;
 export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
+export const DAY_LABOR_CONTRACT_ID = "day-labor-contract";
+export const DAY_LABOR_JOB_ID = "job-day-laborer";
+export const MINIMUM_WAGE_PER_HOUR = 7.25;
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
   low: "Low",
@@ -423,6 +432,9 @@ export function getVisibleTaskActions(
 }
 
 export function getJobByContract(state: GameState, bundle: ContentBundle, contractId: string): { contract: ContractInstance; job: JobDef } | null {
+  if (contractId === DAY_LABOR_CONTRACT_ID) {
+    return getDayLaborOffer(state, bundle);
+  }
   const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
   if (!contract) {
     return null;
@@ -432,6 +444,53 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
     return null;
   }
   return { contract, job };
+}
+
+export function getAvailableContractOffers(state: GameState, bundle: ContentBundle): ContractOffer[] {
+  const offers = state.contractBoard
+    .map((contract) => getJobByContract(state, bundle, contract.contractId))
+    .filter((offer): offer is ContractOffer => Boolean(offer));
+  return [...offers, getDayLaborOffer(state, bundle)];
+}
+
+function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffer {
+  const remainingTicks = getRemainingShiftTicks(state.workday);
+  const hours = ticksToHours(remainingTicks);
+  const payout = Math.max(0, Math.round(hours * MINIMUM_WAGE_PER_HOUR));
+  const fallbackDistrictId = state.activeJob?.districtId ?? state.player.districtUnlocks[0] ?? bundle.districts[0]?.id ?? "residential";
+
+  return {
+    contract: {
+      contractId: DAY_LABOR_CONTRACT_ID,
+      jobId: DAY_LABOR_JOB_ID,
+      districtId: fallbackDistrictId,
+      payoutMult: 1,
+      expiresDay: state.day
+    },
+    job: {
+      id: DAY_LABOR_JOB_ID,
+      name: "Day Laborer",
+      tier: 0,
+      districtId: fallbackDistrictId,
+      requiredTools: [],
+      staminaCost: 0,
+      basePayout: payout,
+      risk: 0,
+      repGainSuccess: 0,
+      repLossFail: 0,
+      durabilityCost: 0,
+      workUnits: Math.max(1, remainingTicks),
+      materialNeeds: [],
+      tags: ["fallback", "cashflow"],
+      flavor: {
+        client_quote: `Take whatever field labor is on offer for ${hours.toFixed(1)} hours at minimum wage.`,
+        success_line: "The shift paid enough to keep the truck moving.",
+        fail_line: "The labor pool sent you home early.",
+        neutral_line: "The shift was forgettable, but the cash cleared."
+      }
+    },
+    alwaysAvailable: true
+  };
 }
 
 export function setSupplierCartQuantity(
@@ -455,6 +514,10 @@ export function setSupplierCartQuantity(
 }
 
 export function acceptContract(state: GameState, bundle: ContentBundle, contractId: string): StateTransitionResult<ActiveJobState> {
+  if (contractId === DAY_LABOR_CONTRACT_ID) {
+    return runDayLaborShift(state, bundle);
+  }
+
   if (state.activeJob) {
     return { nextState: state, notice: "Finish the current job first.", digest: digestState(state) };
   }
@@ -516,6 +579,34 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
   return {
     nextState,
     payload: cloneActiveJob(nextState.activeJob),
+    digest: digestState(nextState)
+  };
+}
+
+export function runDayLaborShift(state: GameState, bundle: ContentBundle): StateTransitionResult {
+  const offer = getDayLaborOffer(state, bundle);
+  const requiredTicks = getRemainingShiftTicks(state.workday);
+  if (requiredTicks <= 0) {
+    return { nextState: state, notice: "No shift hours remain for day labor.", digest: digestState(state) };
+  }
+  if (!canSpendTicks(state.workday, requiredTicks, true)) {
+    return { nextState: state, notice: "No shift hours remain for day labor.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  spendTicks(nextState.workday, requiredTicks);
+  nextState.player.cash += offer.job.basePayout;
+
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: DAY_LABOR_CONTRACT_ID,
+    message: `${nextState.player.name} worked a day-labor shift for ${formatHours(requiredTicks)} and earned $${offer.job.basePayout}.`
+  });
+
+  return {
+    nextState,
+    notice: `Day Laborer paid $${offer.job.basePayout} for ${formatHours(requiredTicks)} at minimum wage.`,
     digest: digestState(nextState)
   };
 }
@@ -1777,6 +1868,10 @@ export function ticksToHours(ticks: number): number {
 
 export function formatHours(ticks: number): string {
   return `${ticksToHours(ticks).toFixed(1)} hours`;
+}
+
+export function getRemainingShiftTicks(workday: WorkdayState): number {
+  return Math.max(0, workday.availableTicks + (workday.maxOvertime - workday.overtimeUsed) - workday.ticksSpent);
 }
 
 export function getQuickBuyPlan(
