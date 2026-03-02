@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React, { act } from "react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { App } from "../src/ui/App";
 import { useUiStore, bundle } from "../src/ui/state";
@@ -52,6 +52,10 @@ describe("compact shell ui", () => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     installLocalStorage();
     resetUi();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("EH-TW-023: New Game enters the compact Work tab shell", () => {
@@ -211,6 +215,56 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/XP Earned/i)).toBeTruthy();
     expect(useUiStore.getState().activeProgressPopup?.kind).toBe("xp");
     expect(useUiStore.getState().progressQueue.length).toBeGreaterThan(0);
+    act(() => {
+      useUiStore.getState().dismissProgressPopup();
+    });
+    expect(screen.getByText(/Skill Leveled Up/i)).toBeTruthy();
+  });
+
+  it("EH-TW-056: progression popups stay visible until manually dismissed", () => {
+    vi.useFakeTimers();
+    const game = buildAcceptableGame(4043);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        game: {
+          ...current,
+          player: {
+            ...current.player,
+            skills: Object.fromEntries(Object.keys(current.player.skills).map((skillId) => [skillId, 99])) as typeof current.player.skills
+          },
+          truckSupplies: Object.fromEntries(bundle.supplies.map((supply) => [supply.id, 10])) as typeof current.truckSupplies,
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "job-site",
+                tasks: current.activeJob.tasks.map((task) =>
+                  task.taskId === "load_from_shop" ||
+                  task.taskId === "travel_to_supplier" ||
+                  task.taskId === "checkout_supplies" ||
+                  task.taskId === "travel_to_job_site" ||
+                  task.taskId === "pickup_site_supplies"
+                    ? { ...task, completedUnits: task.requiredUnits }
+                    : task
+                )
+              }
+            : null
+        }
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
+
+    expect(screen.getByText(/XP Earned/i)).toBeTruthy();
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
+    expect(screen.getByText(/XP Earned/i)).toBeTruthy();
     act(() => {
       useUiStore.getState().dismissProgressPopup();
     });

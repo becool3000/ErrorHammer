@@ -33,10 +33,12 @@
 ## Testing
 1. Deterministic scenario suite `EH-TW-001..EH-TW-049` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-044..EH-TW-049` covering crew hire gating, assignee stamina/lock behavior, and save-safe assignee defaults.
 2. Packaging assertion `EH-TW-022` remains in `tests/vite_config.test.ts`.
-3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus `EH-TW-043`, `EH-TW-047`, and `EH-TW-048` are implemented in `tests/ui_shell.test.tsx` for title persistence, crew-modal hiring, and work-tab event/assignee cues.
-4. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
-5. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
-6. Latest verifier closeout is `VF-007` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
+3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus `EH-TW-043`, `EH-TW-047`, `EH-TW-048`, and `EH-TW-054..EH-TW-056` are implemented in `tests/ui_shell.test.tsx` for title persistence, crew-modal hiring, work-tab event/assignee cues, visible skill labels, and persistent progression popups.
+4. Progression helper coverage `EH-TW-057..EH-TW-061` is in `tests/progression.test.ts` for threshold math, Operator Level averaging, popup ordering, and acronym-heavy skill labels.
+5. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
+6. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
+7. Current automated baseline is `8` test files and `62` tests after the latest progression and popup persistence additions.
+8. Latest verifier closeout is `VF-007` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.

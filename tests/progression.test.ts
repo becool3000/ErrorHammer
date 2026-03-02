@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { loadContentBundle } from "../src/core/content";
-import { getLevelForXp, getLevelProgress, getOperatorLevel } from "../src/core/playerFlow";
+import { formatSkillLabel, getLevelForXp, getLevelProgress, getOperatorLevel } from "../src/core/playerFlow";
 import { createInitialGameState } from "../src/core/resolver";
 import { buildProgressPopups } from "../src/ui/state";
 
 describe("progression helpers", () => {
-  it("maps tiered XP thresholds to visible levels", () => {
+  it("EH-TW-057: tiered XP thresholds map to visible levels deterministically", () => {
     expect(getLevelForXp(0)).toBe(0);
     expect(getLevelForXp(99)).toBe(0);
     expect(getLevelForXp(100)).toBe(1);
@@ -15,7 +15,7 @@ describe("progression helpers", () => {
     expect(getLevelForXp(450)).toBe(3);
   });
 
-  it("reports progress within the current tier", () => {
+  it("EH-TW-058: level progress reports current-tier progress deterministically", () => {
     expect(getLevelProgress(175)).toMatchObject({
       level: 1,
       current: 75,
@@ -23,7 +23,7 @@ describe("progression helpers", () => {
     });
   });
 
-  it("derives operator level from average raw XP instead of the highest skill", () => {
+  it("EH-TW-059: operator level derives from average raw XP instead of the highest skill", () => {
     const actor = createInitialGameState(loadContentBundle(), 5150).player;
     for (const skillId of Object.keys(actor.skills) as Array<keyof typeof actor.skills>) {
       actor.skills[skillId] = 0;
@@ -41,7 +41,7 @@ describe("progression helpers", () => {
     expect(operator.level).toBe(1);
   });
 
-  it("builds progression popups in XP, skill, then operator order", () => {
+  it("EH-TW-060: progression popup helpers emit xp-skill-operator order", () => {
     const bundle = loadContentBundle();
     const previous = createInitialGameState(bundle, 5151);
     const next = createInitialGameState(bundle, 5151);
@@ -77,5 +77,12 @@ describe("progression helpers", () => {
     expect(popups[0]?.lines).toContain("Framing +21");
     expect(popups[1]?.title).toBe("Skill Leveled Up");
     expect(popups.at(-1)?.title).toBe("Operator Leveled Up!");
+  });
+
+  it("EH-TW-061: progression labels preserve acronym-heavy skill names", () => {
+    expect(formatSkillLabel("ai_tools")).toBe("AI Tools");
+    expect(formatSkillLabel("hvac")).toBe("HVAC");
+    expect(formatSkillLabel("cad")).toBe("CAD");
+    expect(formatSkillLabel("sheet_metal")).toBe("Sheet Metal");
   });
 });
