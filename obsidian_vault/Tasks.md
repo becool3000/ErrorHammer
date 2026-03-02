@@ -3,11 +3,10 @@
 1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is fully closed on `main`.
 2. Name + Hour chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is fully closed on `main`.
 3. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is fully closed on `main`.
-4. `PLN-008` is now active and defines a rolling Builder session for ongoing UI/UX iteration on `main`.
-5. `BLD-008` is the only active `IN_PROGRESS` lane card and remains open until the user explicitly ends the Builder session.
-6. `TW-008`, `VF-008`, and `DOC-008` stay deferred until the rolling Builder session is closed.
-7. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is fully closed on `main`.
-8. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
+4. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is fully closed on `main`.
+5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is fully closed on `main`.
+6. No lane card is currently `IN_PROGRESS`.
+7. `obsidian_vault/Tasks.md` `Active Lane Board (Kanban)` remains the handoff source of truth.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-01.
@@ -57,10 +56,10 @@ Snapshot date: 2026-03-01.
 | VF-007  | Verifier   | DONE        | P1       | TW-007     | `Crew + event verification checklist`                                      | Verified `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`; all `EH-TW-044..EH-TW-049` checks passed and no validated bug patch was required.                         |
 | DOC-007 | Documenter | DONE        | P1       | VF-007     | `Document crew + event depth`                                              | Synced README usage/testing sections and vault artifacts to the verified crew workflow, event cues, scenario coverage, and `VF-007` evidence.                                                              |
 | PLN-008 | Planner    | DONE        | P1       | DOC-007    | `Rolling Builder session planning lock for ongoing UI/UX iteration`        | `Vision.md`, `Decisions.md`, `Tasks.md`, and `README.md` updated with a decision-complete rolling `BLD-008` handoff, session guardrails, and explicit close conditions.                                    |
-| BLD-008 | Builder    | IN_PROGRESS | P1       | PLN-008    | `Rolling UI/UX iteration session`                                          | Session remains active until the user explicitly says Builder is done; Builder ships small `[Builder]` commits, stays within UI/UX plus directly supporting refinements, and pauses on feature drift.      |
-| TW-008  | TestWriter | READY       | P1       | BLD-008    | `Deterministic coverage for final BLD-008 session delta`                   | Trigger only after the user closes `BLD-008`; convert the final Builder delta into deterministic scenarios, pass/fail criteria, and any manual UX smoke steps.                                             |
-| VF-008  | Verifier   | READY       | P1       | TW-008     | `Verification closeout for final BLD-008 session delta`                    | Trigger only after `TW-008`; run the command checklist, execute the `TW-008` scenarios, patch only validated defects, and record evidence tied to the final Builder batch set.                             |
-| DOC-008 | Documenter | READY       | P1       | VF-008     | `Documentation sync for final BLD-008 session delta`                       | Trigger only after `VF-008`; sync README/vault notes to the final verified UI/UX behavior and close the rolling session chain.                                                                             |
+| BLD-008 | Builder    | DONE        | P1       | PLN-008    | `Rolling UI/UX iteration session`                                          | Final UI/UX pass shipped with collapsible work panels, inline supplier-cart guidance, refined task ordering, and overtime-only action visibility under the rolling-session guardrails.                     |
+| TW-008  | TestWriter | DONE        | P1       | BLD-008    | `Deterministic coverage for final BLD-008 session delta`                   | Closed the written deterministic contract for `EH-TW-050..EH-TW-053` covering collapsible work panels, supplier-cart guidance, and overtime-only action visibility.                                        |
+| VF-008  | Verifier   | DONE        | P1       | TW-008     | `Verification closeout for final BLD-008 session delta`                    | Verified `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`; recorded PASS evidence for `EH-TW-050..EH-TW-053` and found no validated bug to patch.                  |
+| DOC-008 | Documenter | DONE        | P1       | VF-008     | `Documentation sync for final BLD-008 session delta`                       | Sync README/vault notes to the final verified rolling-session UI contract and close the `PLN-008 -> DOC-008` chain.                                                                                       |
 | PLN-009 | Planner    | DONE        | P1       | PLN-008    | `Skill level-up visibility, Operator Level, and progression popup system`  | `Vision.md`, `Decisions.md`, and `Tasks.md` updated with a decision-complete progression handoff; the chain is explicitly queued outside active `BLD-008`.                                                 |
 | BLD-009 | Builder    | DONE        | P1       | PLN-009    | `Implement skill levels, Operator Level, and progression popups`           | Added tiered level-threshold helpers, derived Operator Level, work-shell/operator-card progression UI, expanded skill labels, and deterministic progression popup queueing without new RNG.                |
 | TW-009  | TestWriter | DONE        | P1       | BLD-009    | `Deterministic progression math and popup scenarios`                       | Added deterministic threshold math, popup ordering, readable skill-label, and persistent-popup assertions through `EH-TW-054..EH-TW-061`.                                                                  |
@@ -200,7 +199,7 @@ Status: Planned on 2026-03-01 after the Name + Hour chain (`PLN-006 -> BLD-006 -
 5. Documenter: complete (`DOC-007`).
 
 ## [TASK] Rolling Builder Session (`PLN-008`)
-Status: Active on 2026-03-01 after `DOC-007` closed the crew + event depth chain.
+Status: Completed on 2026-03-01 after the final `BLD-008 -> TW-008 -> VF-008 -> DOC-008` closeout landed on `main`.
 
 ### Problem Statement
 1. The project needs sustained UI/UX iteration without reopening Planner for every small adjustment.
@@ -242,10 +241,10 @@ Status: Active on 2026-03-01 after `DOC-007` closed the crew + event depth chain
 
 ### Exit Evidence
 1. Planner: complete (`PLN-008`).
-2. Builder: still active (`BLD-008`) until explicit user close.
-3. TestWriter: deferred (`TW-008`) until `BLD-008` closes.
-4. Verifier: deferred (`VF-008`) until `TW-008` closes.
-5. Documenter: deferred (`DOC-008`) until `VF-008` closes.
+2. Builder: complete (`BLD-008`).
+3. TestWriter: complete (`TW-008`).
+4. Verifier: complete (`VF-008`).
+5. Documenter: complete (`DOC-008`).
 
 ## [TASK] Skill Level-Up Visibility + Operator Progression (`PLN-009`)
 Status: Completed on 2026-03-01. This chain was executed and verified on `main` while the rolling `BLD-008` UI session remained open.

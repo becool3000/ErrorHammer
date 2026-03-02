@@ -63,10 +63,10 @@
 61. Gameplay depth planning chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is the active post-`DOC-006` lane chain for `main`.
 62. `BLD-007` is verified closed: active jobs default to `assignee = "self"`, crew hires follow the fixed roster order `crew-1 -> crew-2 -> crew-3`, and assignee stamina is committed once on first work execution rather than per later task step.
 63. `TW-007`, `VF-007`, and `DOC-007` are complete as of 2026-03-01, and their verification/documentation source of truth remains `obsidian_vault/Testing.md` plus README usage/testing sections.
-64. `PLN-008` opens a rolling Builder session for iterative UI/UX work on `main` using a single active Builder card (`BLD-008`) instead of repeated Planner handoffs for each small batch.
-65. `BLD-008` uses small frequent `[Builder]` commits, remains `IN_PROGRESS` until the user explicitly ends the session, and defers `TW-008`, `VF-008`, and `DOC-008` until that explicit close command.
-66. Builder may ship UI/UX improvements and directly supporting refinements during `BLD-008`, but must pause for Planner input before introducing new gameplay systems, economy/progression rule changes, material content expansion, or broader product redesign.
-67. `PLN-009` is a separate queued progression chain outside active `BLD-008`; Builder must not silently fold visible skill levels, Operator Level, or progression popups into the rolling UI session without an explicit user pivot or close.
+64. `PLN-008` opened a rolling Builder session for iterative UI/UX work on `main` using a single Builder card (`BLD-008`) instead of repeated Planner handoffs for each small batch.
+65. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete as of 2026-03-01; the final verified UI contract includes collapsible workday and active-job panels, inline supplier-cart checkout guidance, `Current Task` before `Active Job`, and overtime-only action visibility when regular actions no longer fit.
+66. Builder was allowed to ship UI/UX improvements and directly supporting refinements during `BLD-008`, but the guardrail remained to pause for Planner input before introducing new gameplay systems, economy/progression rule changes, material content expansion, or broader product redesign.
+67. `PLN-009` was planned outside the active `BLD-008` session boundary; its eventual implementation and closeout did not supersede the need to verify and document the final `BLD-008` UI contract separately.
 68. Visible skill levels use a tiered cumulative XP curve: Level `0 = 0 XP`, Level `1 = 100 XP`, Level `2 = 250 XP`, Level `3 = 450 XP`, Level `4 = 650 XP`, Level `5 = 850 XP`, and each later level adds `200 XP`.
 69. Operator Level is derived from average raw XP across all tracked player skills and translated through the same threshold curve as individual skills.
 70. Progression feedback queues in deterministic severity order per action: one combined `XP Earned` popup, then one `Skill Leveled Up` popup per crossed threshold, then one `Operator Leveled Up!` popup if the derived Operator Level increased.
@@ -75,6 +75,7 @@
 73. The tracked skill pool now includes additional trade and knowledge skills beyond the original starter set, including `painting`, `drywall`, `concrete`, `sheet_metal`, `welding`, `hvac`, `engineering`, `architecture`, `cad`, `ai_tools`, `math`, `geometry`, `writing`, and `reading`.
 74. Player-facing skill labels must render readable names for acronym-heavy and multiword skills such as `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal`; raw snake_case ids must not appear in progression UI.
 75. Progression popups do not auto-dismiss; the queue advances only when the player explicitly closes the active popup.
+76. The latest verified rolling-session verifier closeout is `VF-008`, and the latest verified rolling-session documentation closeout is `DOC-008`; their source of truth remains `obsidian_vault/Testing.md` plus README usage/testing/workflow notes.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
