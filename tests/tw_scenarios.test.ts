@@ -141,17 +141,18 @@ describe("TW-004 deterministic scenario suite", () => {
       (offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID
     );
     expect(dayLaborOffer).toBeTruthy();
-    expect(dayLaborOffer?.job.basePayout).toBe(Math.round(8 * 7.25));
-    expect(dayLaborOffer?.job.flavor.client_quote).toContain("8.0 hours");
+    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((getRemainingShiftTicks(initial.workday) * 0.5) * 7.25));
+    expect(dayLaborOffer?.job.flavor.client_quote).toContain(`${(getRemainingShiftTicks(initial.workday) * 0.5).toFixed(1)} hours`);
 
     const accepted = acceptJob(5602, "job-alpha-contract");
     const beforeActiveJobId = accepted.state.activeJob?.contractId;
+    const beforeRemainingTicks = getRemainingShiftTicks(accepted.state.workday);
     const beforeCash = accepted.state.player.cash;
 
     const laborShift = acceptContract(accepted.state, accepted.bundle, DAY_LABOR_CONTRACT_ID);
 
     expect(laborShift.nextState.activeJob?.contractId).toBe(beforeActiveJobId);
-    expect(laborShift.nextState.player.cash).toBe(beforeCash + Math.round(8 * 7.25));
+    expect(laborShift.nextState.player.cash).toBe(beforeCash + Math.round((beforeRemainingTicks * 0.5) * 7.25));
     expect(getRemainingShiftTicks(laborShift.nextState.workday)).toBe(0);
     expect(laborShift.notice).toContain("Day Laborer paid");
   });
@@ -163,8 +164,8 @@ describe("TW-004 deterministic scenario suite", () => {
 
     const dayLaborOffer = getAvailableContractOffers(state, bundle).find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID);
 
-    expect(dayLaborOffer?.job.basePayout).toBe(Math.round(8 * 7.25));
-    expect(dayLaborOffer?.job.flavor.client_quote).toContain("8.0 hours");
+    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((getRemainingShiftTicks(state.workday) * 0.5) * 7.25));
+    expect(dayLaborOffer?.job.flavor.client_quote).toContain("6.0 hours");
   });
 
   it("EH-TW-024: supplier checkout deducts cash, adds supplies, advances checkout, and grants procurement XP", () => {

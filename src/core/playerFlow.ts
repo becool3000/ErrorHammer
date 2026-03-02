@@ -198,7 +198,6 @@ export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
 export const DAY_LABOR_CONTRACT_ID = "day-labor-contract";
 export const DAY_LABOR_JOB_ID = "job-day-laborer";
 export const MINIMUM_WAGE_PER_HOUR = 7.25;
-export const DAY_LABOR_SHIFT_TICKS = BASE_DAY_TICKS;
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
   low: "Low",
@@ -455,7 +454,8 @@ export function getAvailableContractOffers(state: GameState, bundle: ContentBund
 }
 
 function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffer {
-  const hours = ticksToHours(DAY_LABOR_SHIFT_TICKS);
+  const remainingTicks = getRemainingShiftTicks(state.workday);
+  const hours = ticksToHours(remainingTicks);
   const payout = Math.max(0, Math.round(hours * MINIMUM_WAGE_PER_HOUR));
   const fallbackDistrictId = state.activeJob?.districtId ?? state.player.districtUnlocks[0] ?? bundle.districts[0]?.id ?? "residential";
 
@@ -479,7 +479,7 @@ function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffe
       repGainSuccess: 0,
       repLossFail: 0,
       durabilityCost: 0,
-      workUnits: DAY_LABOR_SHIFT_TICKS,
+      workUnits: Math.max(1, remainingTicks),
       materialNeeds: [],
       tags: ["fallback", "cashflow"],
       flavor: {

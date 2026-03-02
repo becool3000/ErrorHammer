@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
 import {
+  BASE_DAY_TICKS,
   buyFuel as buyFuelFlow,
   DAY_LABOR_CONTRACT_ID,
   formatSkillLabel,
@@ -331,7 +332,10 @@ export const useUiStore = create<UiState>((set, get) => ({
         result.dayLog.length > 0 ? result.dayLog.map((entry) => entry.message) : [`Advanced to ${result.nextState.workday.weekday}.`],
         result.digest
       ),
-      notice: "",
+      notice:
+        result.nextState.workday.fatigue.debt > 0 && result.nextState.workday.availableTicks < BASE_DAY_TICKS
+          ? `Fatigue is cutting this shift to ${(result.nextState.workday.availableTicks * 0.5).toFixed(1)} hours after heavy overtime. Stamina still refills each day; fatigue debt only shortens how long you can work.`
+          : "",
       activeModal: null,
       activeSheet: null,
       selectedContractId: getDefaultContractId(result.nextState)

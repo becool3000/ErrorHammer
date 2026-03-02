@@ -83,6 +83,8 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/^Margo$/)).toBeTruthy();
     expect(screen.getByText(/Margo Metalworks/)).toBeTruthy();
+    expect(screen.getByText(/Stamina 4\/4/i)).toBeTruthy();
+    expect(screen.getByText(/Fatigue 0/i)).toBeTruthy();
   });
 
   it("EH-TW-043: title form retains typed names and repopulates after returning to the title screen", () => {
@@ -606,6 +608,21 @@ describe("compact shell ui", () => {
     expect(after.activeJob?.contractId).toBe(beforeActiveJobId);
     expect(after.player.cash).toBeGreaterThan(beforeCash);
     expect(screen.getByText(/Day Laborer paid/i)).toBeTruthy();
+  });
+
+  it("EH-TW-064: ending a fatigue-heavy shift surfaces a notice that explains the shortened next day", () => {
+    const game = createInitialGameState(bundle, 6069);
+    game.workday.ticksSpent = game.workday.availableTicks + 3;
+    game.workday.overtimeUsed = 3;
+    game.workday.fatigue.debt = 3;
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getAllByRole("button", { name: /^End Shift$/i })[0]);
+
+    expect(screen.getByText(/Fatigue is cutting this shift to 7.0 hours after heavy overtime/i)).toBeTruthy();
+    expect(screen.getByText(/Stamina 4\/4/i)).toBeTruthy();
+    expect(screen.getByText(/Fatigue 2/i)).toBeTruthy();
   });
 
   it("EH-TW-034: supplier-state jobs expose the supplier cart sheet and supply info modal", () => {

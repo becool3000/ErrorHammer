@@ -22,7 +22,9 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);
   const overtimeHours = ticksToHours(Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed));
+  const baseHours = ticksToHours(game.workday.ticksPerDay);
   const activeEventCount = game.activeEventIds.length;
+  const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
 
   return (
     <header className="compact-header chrome-card">
@@ -46,21 +48,27 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           Active Events {activeEventCount}
         </button>
       </div>
+      <div className="status-strip" role="list" aria-label="Player HUD">
+        <span role="listitem">Cash ${game.player.cash}</span>
+        <span role="listitem">Fuel {game.player.fuel}/{game.player.fuelMax}</span>
+        <span role="listitem">Stamina {game.player.stamina}/{game.player.staminaMax}</span>
+        <span role="listitem">Fatigue {game.workday.fatigue.debt}</span>
+        <span role="listitem">{bundle.strings.hoursLabel} {remainingHours.toFixed(1)}/{totalHours.toFixed(1)}</span>
+      </div>
+      {isFatigued ? (
+        <p className="muted-copy">Fatigue from overtime shortens this shift to {totalHours.toFixed(1)} of {baseHours.toFixed(1)} hours.</p>
+      ) : null}
       <div
         id="workday-status-panel"
         className={detailsOpen ? "collapsible-panel open" : "collapsible-panel"}
         aria-hidden={!detailsOpen}
       >
         <div className="status-strip" role="list" aria-label="Current status">
-          <span role="listitem">Cash ${game.player.cash}</span>
           <span role="listitem">Rep {game.player.reputation}</span>
-          <span role="listitem">Fuel {game.player.fuel}/{game.player.fuelMax}</span>
-          <span role="listitem">
-            {bundle.strings.hoursLabel} {remainingHours.toFixed(1)}/{totalHours.toFixed(1)}
-          </span>
           <span role="listitem">
             {bundle.strings.overtimeLabel} {overtimeHours.toFixed(1)}
           </span>
+          <span role="listitem">Fatigue debt {game.workday.fatigue.debt}</span>
         </div>
       </div>
     </header>
