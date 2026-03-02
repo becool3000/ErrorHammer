@@ -10,8 +10,9 @@
 8. Itch packaging verification chain status is complete for `TW-004` and `VF-004` (2026-02-28).
 9. Compact-shell verification chain status is complete for `TW-005` and `VF-005` (2026-03-01).
 10. Name + Hour verification chain status is complete for `TW-006` and `VF-006` (2026-03-01); deterministic coverage for title prompts and quick-buy tooling is tracked through `EH-TW-039..EH-TW-043`.
-11. Crew + event TestWriter coverage for `TW-007` is complete; deterministic coverage now extends through `EH-TW-061` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, visible progression math, expanded skill labels, and persistent progress-popups in the compact shell.
+11. Crew + event TestWriter coverage for `TW-007` is complete; deterministic coverage now extends through `EH-TW-061` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, collapsible work-shell panels, supplier-cart guidance, overtime-only action visibility, visible progression math, expanded skill labels, and persistent progress-popups in the compact shell.
 12. Progression + persistent-popup verification chain status is complete for `TW-009` and `VF-009` (2026-03-01).
+13. Rolling UI/UX session closeout coverage for `TW-008` is complete; the compact-shell UI contract now explicitly includes the final `BLD-008` collapse, supplier-cart, and overtime-only action behaviors.
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -24,7 +25,7 @@
 1. Scenario assertions are explicit and deterministic.
 2. Assertions use day-resolution fields for resolver behavior and stable UI state transitions for compact-shell behavior.
 3. UI-shell assertions verify active tab, visible compact controls, modal/sheet open state, and preserved gameplay state.
-4. New scenarios `EH-TW-039..EH-TW-061` expand the deterministic contract to cover quick-buy discovery, title-name persistence, crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, visible progression math, expanded skill-label rendering, and event cue plus progress-popup visibility in the compact shell.
+4. New scenarios `EH-TW-039..EH-TW-061` expand the deterministic contract to cover quick-buy discovery, title-name persistence, crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, collapsible work-shell behavior, supplier-cart guidance, overtime-only action visibility, visible progression math, expanded skill-label rendering, and event cue plus progress-popup visibility in the compact shell.
 
 ## Automated Scenario Definitions (`TW-005` additions)
 1. `EH-TW-023`
@@ -119,35 +120,51 @@ Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-048`.
 Sequence: Assign a job to `crew-1`, execute two `do_work` steps, and then attempt to switch the assignee back to `self`.
 Pass criteria: crew stamina is charged only on the first work commit, the second work step preserves the same stamina, and reassignment returns a lock notice while keeping the crew assignee.
 Evidence: `tests/tw_scenarios.test.ts` test id `EH-TW-049`.
-24. `EH-TW-054`
+24. `EH-TW-050`
+Sequence: Accept a contract, inspect the `Work` tab card order, then toggle the active-job summary row open and closed.
+Pass criteria: `Current Task` renders before `Active Job`, the task carousel shows explicit left/right controls, and the active-job detail panel flips `aria-expanded` plus hidden/open state without mutating gameplay state.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-050`.
+25. `EH-TW-051`
+Sequence: Render `Work` with no active job and toggle the workday header summary row.
+Pass criteria: the workday status panel starts collapsed, opens on click with `aria-expanded=true`, surfaces the day stat chips, and closes again without changing game state.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-051`.
+26. `EH-TW-052`
+Sequence: Force an accepted job into the supplier checkout step with an empty supplier cart, then attempt a standard checkout action.
+Pass criteria: the blocking copy renders once inside `Current Task`, uses the supplier-cart wording, and does not duplicate as a second detached banner.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-052`.
+27. `EH-TW-053`
+Sequence: Force an accepted job into a near-end-of-day job-site step where visible actions require overtime.
+Pass criteria: regular stance buttons are hidden, only `+ OT` stance buttons remain for actions that still fit, and no non-overtime duplicate buttons render for those same stances.
+Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-053`.
+28. `EH-TW-054`
 Sequence: Open the `Work` operator card modals from a fresh shell state.
 Pass criteria: `Inventory` opens stock-only content, `Skills` opens the progression ledger, and the ledger renders explicit level rows plus readable labels including `AI Tools`, `HVAC`, and `CAD`.
 Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-054`.
-25. `EH-TW-055`
+29. `EH-TW-055`
 Sequence: Force an XP-granting `do_work` step from the shell with near-threshold skills.
 Pass criteria: the shell surfaces an `XP Earned` popup first, the UI store records queued follow-on popups, and dismissing the first popup reveals a later `Skill Leveled Up` popup.
 Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-055`.
-26. `EH-TW-056`
+30. `EH-TW-056`
 Sequence: Trigger a progression popup, advance fake time, then inspect the shell before manual dismissal.
 Pass criteria: the active popup remains visible after simulated elapsed time and only advances when the player dismisses it explicitly.
 Evidence: `tests/ui_shell.test.tsx` test id `EH-TW-056`.
-27. `EH-TW-057`
+31. `EH-TW-057`
 Sequence: Evaluate tier thresholds in the progression helpers with fixed XP values.
 Pass criteria: `0 -> Lv 0`, `99 -> Lv 0`, `100 -> Lv 1`, `249 -> Lv 1`, `250 -> Lv 2`, and `450 -> Lv 3`.
 Evidence: `tests/progression.test.ts` test id `EH-TW-057`.
-28. `EH-TW-058`
+32. `EH-TW-058`
 Sequence: Evaluate level-progress math inside a mid-tier XP bucket.
 Pass criteria: `175 XP` reports `Lv 1`, `current = 75`, and `needed = 150`.
 Evidence: `tests/progression.test.ts` test id `EH-TW-058`.
-29. `EH-TW-059`
+33. `EH-TW-059`
 Sequence: Seed uneven raw XP across a broad skill set and derive Operator Level.
 Pass criteria: Operator Level uses average raw XP across all tracked skills, not the highest skill, and therefore lands below the strongest specialization.
 Evidence: `tests/progression.test.ts` test id `EH-TW-059`.
-30. `EH-TW-060`
+34. `EH-TW-060`
 Sequence: Build progression popups from a fixed previous/next state pair with two leveled skills.
 Pass criteria: popup helper emits kinds in deterministic order `xp -> skill-level -> skill-level -> operator-level`.
 Evidence: `tests/progression.test.ts` test id `EH-TW-060`.
-31. `EH-TW-061`
+35. `EH-TW-061`
 Sequence: Format acronym-heavy and multiword skill ids through the shared skill-label helper.
 Pass criteria: labels render as `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal` rather than raw snake_case ids.
 Evidence: `tests/progression.test.ts` test id `EH-TW-061`.
@@ -167,7 +184,10 @@ Evidence: `tests/progression.test.ts` test id `EH-TW-061`.
 7. Refresh and use `Continue` to verify the save/load path.
 8. Return to the title screen (via the UI store or by reloading), verify both name inputs keep the last trimmed values, and confirm `New Game` remains disabled until both fields are non-empty so the fields gate the compact shell launch.
 9. Reach company level 2, open `Crew Status`, hire the first crew, assign that crew to an accepted job from `Work`, and confirm the `Work` hero keeps the event cue copy visible while the crew stamina line drops on first work commit only.
-10. Trigger an XP-granting task from `Work`, confirm the progress popup stays on screen without auto-closing, and verify the next queued popup appears only after pressing `Close`.
+10. Toggle the collapsed `Work` summary row and the collapsed `Active Job` summary row, and confirm each panel opens and closes without changing the underlying game state.
+11. Trigger a supplier-state path, confirm `Supplier Cart` opens from `Current Task`, and verify the blocking supplier-cart guidance appears inline only when checkout is attempted without the needed items.
+12. Force a low-hours job-site state near shift end and confirm only visible `+ OT` actions remain for stances that still fit.
+13. Trigger an XP-granting task from `Work`, confirm the progress popup stays on screen without auto-closing, and verify the next queued popup appears only after pressing `Close`.
 
 ## Evidence Log
 1. `VF-005` evidence date: 2026-03-01.
