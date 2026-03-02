@@ -13,6 +13,7 @@
 11. Crew + event TestWriter coverage for `TW-007` is complete; deterministic coverage now extends through `EH-TW-061` for crew hire gating, assignee spend/lock behavior, save-safe assignee defaults, crew-modal hire flow, collapsible work-shell panels, supplier-cart guidance, overtime-only action visibility, visible progression math, expanded skill labels, and persistent progress-popups in the compact shell.
 12. Progression + persistent-popup verification chain status is complete for `TW-009` and `VF-009` (2026-03-01).
 13. Rolling UI/UX session closeout coverage for `TW-008` is complete; the compact-shell UI contract now explicitly includes the final `BLD-008` collapse, supplier-cart, and overtime-only action behaviors.
+14. Rolling UI/UX session closeout verification chain status is complete for `TW-008` and `VF-008` (2026-03-01).
 
 ## Required Verification Commands
 1. `npm run content:validate`
@@ -210,3 +211,7 @@ Evidence: `tests/progression.test.ts` test id `EH-TW-061`.
 18. `VF-009` bug-fix note: no validated defect was found during verification, so no patch was applied to `src/core/**` or `scripts/**`.
 19. `DOC-009` evidence date: 2026-03-01.
 20. `DOC-009` documentation evidence: `README.md`, `obsidian_vault/Vision.md`, `obsidian_vault/Decisions.md`, and `obsidian_vault/Tasks.md` synced to the verified progression system, expanded skill set, manual-dismiss popup behavior, and current lane-board state.
+21. `VF-008` evidence date: 2026-03-01.
+22. `VF-008` command evidence: `npm run content:validate` PASS (`tools=10 jobs=30 events=12 districts=3 bots=2 supplies=13`), `npm run content:compile` PASS (bundle emitted at `src/generated/content.bundle.json`), `npm test` PASS (`8` files, `62` tests), `npm run build` PASS (Vite build completed with `dist/index.html`, `dist/assets/index-DjJcFGTe.css`, `dist/assets/index-CIVj3gH1.js`).
+23. `VF-008` deterministic scenario evidence: `EH-TW-050` PASS for `Current Task` before `Active Job`, visible carousel arrows, and active-job panel collapse/reopen state; `EH-TW-051` PASS for default-collapsed workday HUD open/close behavior; `EH-TW-052` PASS for single inline supplier-cart checkout guidance; and `EH-TW-053` PASS for overtime-only action visibility when regular actions no longer fit.
+24. `VF-008` smoke note: verification in this terminal session relied on deterministic UI-shell coverage and command-gate passes for the final `BLD-008` delta; no validated defect required a core or script patch.

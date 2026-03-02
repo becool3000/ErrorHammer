@@ -40,7 +40,7 @@
 5. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 6. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 7. Current automated baseline is `8` test files and `62` tests after the latest progression and popup persistence additions.
-8. Latest verifier closeout is `VF-009` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`; that closeout locks the visible skill-level system, expanded skill labels, and manual-dismiss popup behavior.
+8. Latest verifier closeout is `VF-008` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`; that closeout locks the final `BLD-008` UI contract for collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
