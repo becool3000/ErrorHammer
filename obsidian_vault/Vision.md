@@ -25,20 +25,21 @@
 1. `TW-005` compact-shell scenarios `EH-TW-023..EH-TW-034` are complete and passing alongside the existing deterministic gameplay suites.
 2. `TW-006` quick-buy and title-name scenarios `EH-TW-039..EH-TW-043` are complete and passing alongside the existing deterministic gameplay suites.
 3. `TW-007` crew + event scenarios `EH-TW-044..EH-TW-049` are complete and passing alongside the existing deterministic gameplay suites.
-4. `VF-007` checklist is complete with PASS results for content validation, content compile, tests, production build, and the deterministic crew/event scenario checks.
+4. `TW-009` progression scenarios `EH-TW-054..EH-TW-061` are complete and passing alongside the existing deterministic gameplay suites.
+5. `VF-009` checklist is complete with PASS results for content validation, content compile, tests, production build, deterministic progression checks, and manual popup-persistence confirmation.
 5. The runtime now uses a black-and-silver industrial dashboard aesthetic with compact cards, bottom navigation, segmented store views, contract carousel selection, and overlay-based detail views.
 6. The active title flow now requires trimmed player/company names before `New Game`, preserves those values when returning to the title screen, and reuses them across shell header, logs, and quick-buy notices.
 7. Time terminology is normalized to hours across the compact shell, company details remain modal-only from the `Company` tab overview, and crew hiring now unlocks at company level 2 with a deterministic three-slot roster.
 8. The `Work` tab now surfaces active-event headlines, impact lines, and derived cue chips alongside assignee selection for `self` or one hired crew.
-9. Evidence details are recorded in `obsidian_vault/Testing.md`.
+9. The runtime now exposes visible skill levels, derived Operator Level, expanded skill rows including trade and knowledge skills, and deterministic progression popups that remain visible until the player dismisses them.
+10. Evidence details are recorded in `obsidian_vault/Testing.md`.
 
 ## Next Focus
 1. `PLN-008` opens a rolling Builder session for iterative UI/UX refinement on `main`.
-2. `PLN-009` is now planned as a queued progression chain for visible skill levels, derived Operator Level, and deterministic XP/level-up popups; it remains outside active `BLD-008` until the user explicitly pivots or closes the rolling UI session.
-3. The verified baseline remains the closed `DOC-007` state until the rolling Builder session is explicitly ended and re-verified.
-4. The next active work is not a one-shot feature chain; it is an ongoing `BLD-008` UI/UX polish loop with small frequent commits and a pause-on-feature-drift rule.
-5. Preserve deterministic resolver behavior, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements while Builder iterates.
-6. Defer TestWriter, Verifier, and Documenter closeout until the user explicitly ends the rolling Builder session.
+2. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is now closed on `main`; the verified baseline includes visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
+3. The next active work is still the ongoing `BLD-008` UI/UX polish loop with small frequent commits and a pause-on-feature-drift rule until the user explicitly ends that session.
+4. Preserve deterministic resolver behavior, tiered progression math, bot-buy ordering rules, content-pipeline constraints, compact-shell navigation model, save/continue expectations, and relative-path packaging requirements while Builder iterates.
+5. Defer `TW-008`, `VF-008`, and `DOC-008` closeout until the user explicitly ends the rolling Builder session.
 
 ## Archive
 1. Migration snapshot: `obsidian_vault/archive/Migration-Legacy-2026-02-27.md`.

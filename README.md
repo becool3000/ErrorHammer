@@ -25,10 +25,12 @@
 ## Usage
 1. Start at the title screen, fill both Player and Company name fields, and only then can `New Game` begin; the chosen names persist into the compact shell header, log, and quick-buy notices.
 2. After load, the app opens a compact bottom-tab shell with `Work`, `Contracts`, `Store`, and `Company`.
-3. `Work` keeps the active job, current task, assignee selection, active-event cue cards, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Field Log`, and supplier cart details open in overlays.
+3. `Work` keeps the active job, current task, assignee selection, active-event cues, operator summary, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Skills`, `Field Log`, and supplier cart details open in overlays.
 4. Time is reported in half-hour units, the header and work cards call them “Hours,” and quick buys charge one hour (two ticks) per tool before any contract acceptance.
 5. `Contracts` shows a horizontal carousel, highlights missing tools, disables `Accept Job` until stocked, and offers a quick-buy step that summarizes hours plus cash before redirecting back to `Work`.
 6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the crew modal now shows a three-slot roster, level gating, and deterministic `Hire Crew` behavior once company level reaches 2.
+7. The `Skills` modal now shows each tracked skill with `Lv`, raw XP, and progress-to-next-level, while the operator card shows derived `Operator Lv` from average raw XP across the full skill pool.
+8. Progression popups appear in deterministic `XP Earned -> Skill Leveled Up -> Operator Leveled Up!` order and stay visible until the player closes them.
 
 ## Testing
 1. Deterministic scenario suite `EH-TW-001..EH-TW-049` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-044..EH-TW-049` covering crew hire gating, assignee stamina/lock behavior, and save-safe assignee defaults.
@@ -38,12 +40,12 @@
 5. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
 6. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
 7. Current automated baseline is `8` test files and `62` tests after the latest progression and popup persistence additions.
-8. Latest verifier closeout is `VF-009` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`.
+8. Latest verifier closeout is `VF-009` on 2026-03-01 with evidence in `obsidian_vault/Testing.md`; that closeout locks the visible skill-level system, expanded skill labels, and manual-dismiss popup behavior.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
 2. Handoff source of truth is `obsidian_vault/Tasks.md` under `Active Lane Board (Kanban)`.
 3. WIP limit remains one `IN_PROGRESS` card per lane.
 4. `PLN-008` opens a rolling Builder session for iterative UI/UX work: `BLD-008` stays active until the user explicitly ends it, and only then does the lane flow resume with `TW-008 -> VF-008 -> DOC-008`.
-5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is queued outside that rolling session and must not start until the user explicitly pivots from or closes `BLD-008`.
+5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`; it added visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
 6. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.

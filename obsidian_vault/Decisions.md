@@ -71,6 +71,10 @@
 69. Operator Level is derived from average raw XP across all tracked player skills and translated through the same threshold curve as individual skills.
 70. Progression feedback queues in deterministic severity order per action: one combined `XP Earned` popup, then one `Skill Leveled Up` popup per crossed threshold, then one `Operator Leveled Up!` popup if the derived Operator Level increased.
 71. Raw skill XP remains the only persisted progression source of truth; visible levels and popup events are derived at runtime, and popup queues do not persist or replay across save/load.
+72. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete as of 2026-03-01, and its verification source of truth remains `obsidian_vault/Testing.md` plus README usage/testing notes.
+73. The tracked skill pool now includes additional trade and knowledge skills beyond the original starter set, including `painting`, `drywall`, `concrete`, `sheet_metal`, `welding`, `hvac`, `engineering`, `architecture`, `cad`, `ai_tools`, `math`, `geometry`, `writing`, and `reading`.
+74. Player-facing skill labels must render readable names for acronym-heavy and multiword skills such as `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal`; raw snake_case ids must not appear in progression UI.
+75. Progression popups do not auto-dismiss; the queue advances only when the player explicitly closes the active popup.
 
 ## Superseded Decisions
 1. Legacy source project runtime, scenario, and pack decisions are superseded for this repository.
