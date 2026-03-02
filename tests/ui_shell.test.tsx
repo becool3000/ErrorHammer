@@ -456,6 +456,11 @@ describe("compact shell ui", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
 
+    const accepted = useUiStore.getState().game!;
+    const activeJobDef = bundle.jobs.find((job) => job.id === accepted.activeJob?.jobId)!;
+    const firstMaterial = activeJobDef.materialNeeds[0]!;
+    const firstSupply = bundle.supplies.find((supply) => supply.id === firstMaterial.supplyId)!;
+
     act(() => {
       const current = useUiStore.getState().game!;
       useUiStore.setState({
@@ -466,7 +471,9 @@ describe("compact shell ui", () => {
             ? {
                 ...current.activeJob,
                 location: "supplier",
-                supplierCart: {},
+                supplierCart: {
+                  [firstMaterial.supplyId]: { medium: 1 }
+                },
                 tasks: current.activeJob.tasks.map((task) =>
                   task.taskId === "load_from_shop" || task.taskId === "travel_to_supplier"
                     ? { ...task, completedUnits: task.requiredUnits || 1 }
@@ -480,6 +487,8 @@ describe("compact shell ui", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
     expect(screen.queryAllByText(/Allocate the needed items by quality before checkout/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Supplier cart total/i)).toBeTruthy();
+    expect(screen.getByText(`$${firstSupply.prices.medium}`)).toBeTruthy();
   });
 
   it("EH-TW-053: overtime buttons appear only when the visible action needs overtime", () => {

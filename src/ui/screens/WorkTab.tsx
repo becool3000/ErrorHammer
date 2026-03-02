@@ -87,6 +87,21 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       ? notice
       : "";
   const selectedSupply = selectedSupplyId ? bundle.supplies.find((supply) => supply.id === selectedSupplyId) ?? null : null;
+  const supplierCartTotal = activeJob
+    ? materialNeedRows.reduce((sum, row) => {
+        const supply = bundle.supplies.find((entry) => entry.id === row.supplyId);
+        if (!supply) {
+          return sum;
+        }
+        return (
+          sum +
+          SUPPLY_QUALITIES.reduce(
+            (tierSum, quality) => tierSum + row.cartByQuality[quality] * getSupplyUnitPrice(supply, quality, activeEvents),
+            0
+          )
+        );
+      }, 0)
+    : 0;
 
   useEffect(() => {
     syncActionCarousel();
@@ -120,6 +135,10 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         <div className="section-label-row">
           <p className="eyebrow">Supplier Cart</p>
           <span className="chip">{materialNeedRows.length} required lines</span>
+        </div>
+        <div className="material-need-meta">
+          <span>Total checkout cost</span>
+          <span>${supplierCartTotal}</span>
         </div>
         <div className="supplier-carousel-frame">
           <div className="supplier-carousel-rail">
@@ -397,6 +416,10 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <div className="section-label-row tight-row">
               <strong>Needed Supplies</strong>
               <span className="chip">{materialNeedRows.length} lines</span>
+            </div>
+            <div className="material-need-meta">
+              <span>Supplier cart total</span>
+              <span>${supplierCartTotal}</span>
             </div>
             <div className="stack-list material-needs-list">
               {materialNeedRows.map((row) => (
