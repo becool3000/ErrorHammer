@@ -56,6 +56,17 @@ const SKILL_IDS: SkillId[] = [
   "organization",
   "negotiation",
   "general",
+  "sheet_metal",
+  "welding",
+  "hvac",
+  "engineering",
+  "architecture",
+  "cad",
+  "ai_tools",
+  "math",
+  "geometry",
+  "writing",
+  "reading",
   "painting",
   "drywall",
   "concrete",
@@ -206,6 +217,41 @@ export function createInitialShopSupplies(): SupplyInventory {
 
 export function getWeekday(day: number): Weekday {
   return WEEKDAYS[(Math.max(1, day) - 1) % WEEKDAYS.length]!;
+}
+
+const SKILL_LABELS: Record<SkillId, string> = {
+  travel: "Travel",
+  procurement: "Procurement",
+  organization: "Organization",
+  negotiation: "Negotiation",
+  general: "General",
+  sheet_metal: "Sheet Metal",
+  welding: "Welding",
+  hvac: "HVAC",
+  engineering: "Engineering",
+  architecture: "Architecture",
+  cad: "CAD",
+  ai_tools: "AI Tools",
+  math: "Math",
+  geometry: "Geometry",
+  writing: "Writing",
+  reading: "Reading",
+  painting: "Painting",
+  drywall: "Drywall",
+  concrete: "Concrete",
+  fastener: "Fastener",
+  framing: "Framing",
+  finish: "Finish",
+  plumbing: "Plumbing",
+  electrical: "Electrical",
+  mechanical: "Mechanical",
+  roof: "Roof",
+  seal: "Seal",
+  inspection: "Inspection"
+};
+
+export function formatSkillLabel(skillId: SkillId): string {
+  return SKILL_LABELS[skillId] ?? skillId;
 }
 
 export function getXpFloorForLevel(level: number): number {
@@ -801,9 +847,20 @@ function getWorkSkillMapping(job: JobDef): TaskSkillMapping {
     "plumbing",
     "roof",
     "mechanical",
+    "hvac",
+    "sheet_metal",
+    "welding",
+    "engineering",
+    "architecture",
+    "cad",
+    "ai_tools",
+    "math",
+    "geometry",
     "concrete",
     "drywall",
     "painting",
+    "writing",
+    "reading",
     "framing",
     "finish",
     "seal",

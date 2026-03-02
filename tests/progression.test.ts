@@ -28,16 +28,17 @@ describe("progression helpers", () => {
     for (const skillId of Object.keys(actor.skills) as Array<keyof typeof actor.skills>) {
       actor.skills[skillId] = 0;
     }
-    actor.skills.travel = 450;
-    actor.skills.procurement = 450;
-    actor.skills.organization = 450;
+    const boostedSkills = Object.keys(actor.skills).slice(0, 10) as Array<keyof typeof actor.skills>;
+    for (const skillId of boostedSkills) {
+      actor.skills[skillId] = 450;
+    }
     actor.skills.negotiation = 100;
 
     const operator = getOperatorLevel(actor);
 
-    expect(operator.avgXp).toBeGreaterThan(0);
-    expect(operator.avgXp).toBeLessThan(100);
-    expect(operator.level).toBe(0);
+    expect(operator.avgXp).toBeGreaterThan(100);
+    expect(operator.avgXp).toBeLessThan(250);
+    expect(operator.level).toBe(1);
   });
 
   it("builds progression popups in XP, skill, then operator order", () => {

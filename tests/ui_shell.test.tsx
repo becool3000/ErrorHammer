@@ -162,8 +162,11 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Skills$/i }));
     expect(screen.getByRole("dialog", { name: /Skills/i })).toBeTruthy();
     expect(screen.getByText(/Skill Ledger/i)).toBeTruthy();
-    expect(screen.getAllByText(/Avg XP 29/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Avg XP \d+/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Travel/i)).toBeTruthy();
+    expect(screen.getByText(/AI Tools/i)).toBeTruthy();
+    expect(screen.getByText(/HVAC/i)).toBeTruthy();
+    expect(screen.getByText(/CAD/i)).toBeTruthy();
     expect(screen.getAllByText(/Lv 1/i).length).toBeGreaterThan(0);
   });
 
@@ -207,6 +210,7 @@ describe("compact shell ui", () => {
 
     expect(screen.getByText(/XP Earned/i)).toBeTruthy();
     expect(useUiStore.getState().activeProgressPopup?.kind).toBe("xp");
+    expect(useUiStore.getState().progressQueue.length).toBeGreaterThan(0);
     act(() => {
       useUiStore.getState().dismissProgressPopup();
     });

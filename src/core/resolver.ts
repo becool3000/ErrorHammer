@@ -665,6 +665,17 @@ function getStarterSkillIds(tools: ToolDef[]): SkillId[] {
   const skillIds: SkillId[] = [];
   const validSkills = new Set<SkillId>([
     "general",
+    "sheet_metal",
+    "welding",
+    "hvac",
+    "engineering",
+    "architecture",
+    "cad",
+    "ai_tools",
+    "math",
+    "geometry",
+    "writing",
+    "reading",
     "painting",
     "drywall",
     "concrete",

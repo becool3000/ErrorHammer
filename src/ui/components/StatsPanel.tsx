@@ -1,5 +1,5 @@
 import { ActorState, EventDef, WorkdayState } from "../../core/types";
-import { getSkillDisplayRows, ticksToHours } from "../../core/playerFlow";
+import { formatSkillLabel, getSkillDisplayRows, ticksToHours } from "../../core/playerFlow";
 import { bundle } from "../state";
 
 interface StatsPanelProps {
@@ -34,7 +34,7 @@ export function StatsPanel({ day, player, workday, activeEvents }: StatsPanelPro
       <div className="list compact-list">
         {topSkills.map((skill) => (
           <p key={skill.skillId}>
-            {skill.skillId}: level {skill.level} ({skill.xp} xp)
+            {formatSkillLabel(skill.skillId)}: level {skill.level} ({skill.xp} xp)
           </p>
         ))}
       </div>

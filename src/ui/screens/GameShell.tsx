@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { bundle, useUiStore } from "../state";
 import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
@@ -24,17 +23,6 @@ export function GameShell() {
   const goToTab = useUiStore((state) => state.goToTab);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
   const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout");
-
-  useEffect(() => {
-    if (!activeProgressPopup) {
-      return;
-    }
-    const timeout = window.setTimeout(
-      () => dismissProgressPopup(),
-      activeProgressPopup.severity === "large" ? 3200 : activeProgressPopup.severity === "medium" ? 2400 : 1700
-    );
-    return () => window.clearTimeout(timeout);
-  }, [activeProgressPopup, dismissProgressPopup]);
 
   if (!game) {
     return (

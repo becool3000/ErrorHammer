@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { loadContentBundle } from "../core/content";
 import {
   buyFuel as buyFuelFlow,
+  formatSkillLabel,
   getLevelForXp,
   getOperatorLevel,
   quickBuyMissingTools as quickBuyMissingToolsFlow,
@@ -82,13 +83,6 @@ interface UiState {
 }
 
 const bundle = loadContentBundle();
-
-function formatSkillLabel(skillId: SkillId): string {
-  return skillId
-    .split("_")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
 
 function toSummary(title: string, lines: string[], digest: string): ActionSummary {
   return {

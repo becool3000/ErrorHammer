@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { applyToolPriceModifiers } from "../../core/economy";
-import { formatHours, getCurrentTask, getOperatorLevel, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
+import { formatHours, formatSkillLabel, getCurrentTask, getOperatorLevel, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
 import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
@@ -604,13 +604,6 @@ function labelForStance(stance: TaskStance): string {
     return "Careful";
   }
   return "Standard";
-}
-
-function formatSkillLabel(skillId: string): string {
-  return skillId
-    .split("_")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
 }
 
 function deriveEventCueTags(event: (typeof bundle.events)[number]): string[] {
