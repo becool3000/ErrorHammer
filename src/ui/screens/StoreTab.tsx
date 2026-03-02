@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SUPPLY_QUALITIES, formatSupplyQuality } from "../../core/playerFlow";
 import { bundle, StoreSectionId, useUiStore } from "../state";
 import { SegmentedControl } from "../components/SegmentedControl";
 
@@ -100,14 +101,18 @@ export function StoreTab() {
           <h3>{bundle.strings.homeSuppliesTitle}</h3>
           <div className="chip-grid">
             {Object.entries(game.shopSupplies)
-              .filter(([, quantity]) => quantity > 0)
-              .map(([supplyId, quantity]) => (
+              .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))
+              .map(([supplyId, stack]) => (
                 <span key={supplyId} className="chip large-chip">
-                  {supplyId} x{quantity}
+                  {supplyId} {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
+                    .map((quality) => `${formatSupplyQuality(quality)} x${stack?.[quality]}`)
+                    .join(", ")}
                 </span>
               ))}
           </div>
-          {Object.entries(game.shopSupplies).every(([, quantity]) => quantity <= 0) ? <p className="muted-copy">No stock on hand.</p> : null}
+          {Object.entries(game.shopSupplies).every(([, stack]) => SUPPLY_QUALITIES.every((quality) => (stack?.[quality] ?? 0) <= 0)) ? (
+            <p className="muted-copy">No stock on hand.</p>
+          ) : null}
         </article>
       ) : null}
     </section>

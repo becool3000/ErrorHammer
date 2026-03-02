@@ -1493,7 +1493,11 @@
       },
       "id": "anchor-set",
       "name": "Anchor Set",
-      "price": 18,
+      "prices": {
+        "high": 24,
+        "low": 14,
+        "medium": 18
+      },
       "tags": [
         "fastener",
         "general"
@@ -1506,7 +1510,11 @@
       },
       "id": "board-pack",
       "name": "Board Pack",
-      "price": 32,
+      "prices": {
+        "high": 42,
+        "low": 24,
+        "medium": 32
+      },
       "tags": [
         "framing",
         "outdoor"
@@ -1519,7 +1527,11 @@
       },
       "id": "concrete-mix",
       "name": "Concrete Mix",
-      "price": 24,
+      "prices": {
+        "high": 32,
+        "low": 18,
+        "medium": 24
+      },
       "tags": [
         "concrete",
         "general",
@@ -1533,7 +1545,11 @@
       },
       "id": "fastener-box",
       "name": "Fastener Box",
-      "price": 16,
+      "prices": {
+        "high": 21,
+        "low": 12,
+        "medium": 16
+      },
       "tags": [
         "fastener",
         "general"
@@ -1546,7 +1562,11 @@
       },
       "id": "hinge-pack",
       "name": "Hinge Pack",
-      "price": 22,
+      "prices": {
+        "high": 29,
+        "low": 17,
+        "medium": 22
+      },
       "tags": [
         "finish",
         "mechanical"
@@ -1559,7 +1579,11 @@
       },
       "id": "junction-box",
       "name": "Junction Box",
-      "price": 21,
+      "prices": {
+        "high": 28,
+        "low": 16,
+        "medium": 21
+      },
       "tags": [
         "electrical",
         "inspection"
@@ -1572,7 +1596,11 @@
       },
       "id": "paint-sleeve",
       "name": "Paint Sleeve",
-      "price": 12,
+      "prices": {
+        "high": 16,
+        "low": 9,
+        "medium": 12
+      },
       "tags": [
         "finish",
         "painting",
@@ -1586,7 +1614,11 @@
       },
       "id": "pipe-kit",
       "name": "Pipe Kit",
-      "price": 28,
+      "prices": {
+        "high": 37,
+        "low": 21,
+        "medium": 28
+      },
       "tags": [
         "mechanical",
         "plumbing"
@@ -1599,7 +1631,11 @@
       },
       "id": "roof-patch",
       "name": "Roof Patch",
-      "price": 30,
+      "prices": {
+        "high": 40,
+        "low": 23,
+        "medium": 30
+      },
       "tags": [
         "roof",
         "seal"
@@ -1612,7 +1648,11 @@
       },
       "id": "safety-kit",
       "name": "Safety Kit",
-      "price": 14,
+      "prices": {
+        "high": 19,
+        "low": 11,
+        "medium": 14
+      },
       "tags": [
         "general",
         "inspection"
@@ -1625,7 +1665,11 @@
       },
       "id": "sealant-tube",
       "name": "Sealant Tube",
-      "price": 15,
+      "prices": {
+        "high": 20,
+        "low": 11,
+        "medium": 15
+      },
       "tags": [
         "finish",
         "seal"
@@ -1638,7 +1682,11 @@
       },
       "id": "trim-kit",
       "name": "Trim Kit",
-      "price": 20,
+      "prices": {
+        "high": 27,
+        "low": 15,
+        "medium": 20
+      },
       "tags": [
         "drywall",
         "finish",
@@ -1652,7 +1700,11 @@
       },
       "id": "wire-spool",
       "name": "Wire Spool",
-      "price": 26,
+      "prices": {
+        "high": 35,
+        "low": 20,
+        "medium": 26
+      },
       "tags": [
         "electrical",
         "fastener"

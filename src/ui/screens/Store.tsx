@@ -1,4 +1,5 @@
 import { bundle, useUiStore } from "../state";
+import { SUPPLY_QUALITIES, formatSupplyQuality } from "../../core/playerFlow";
 
 export function Store() {
   const game = useUiStore((state) => state.game);
@@ -66,12 +67,17 @@ export function Store() {
 
       <section className="card">
         <h3>{bundle.strings.homeSuppliesTitle}</h3>
-        {Object.entries(game.shopSupplies).filter(([, quantity]) => quantity > 0).length === 0 ? <p>No stock on hand.</p> : null}
+        {Object.entries(game.shopSupplies).filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0)).length === 0 ? (
+          <p>No stock on hand.</p>
+        ) : null}
         {Object.entries(game.shopSupplies)
-          .filter(([, quantity]) => quantity > 0)
-          .map(([supplyId, quantity]) => (
+          .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))
+          .map(([supplyId, stack]) => (
             <p key={supplyId}>
-              {supplyId}: {quantity}
+              {supplyId}:{" "}
+              {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
+                .map((quality) => `${formatSupplyQuality(quality)} ${stack?.[quality]}`)
+                .join(", ")}
             </p>
           ))}
       </section>

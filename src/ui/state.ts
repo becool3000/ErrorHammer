@@ -4,10 +4,12 @@ import {
   buyFuel as buyFuelFlow,
   formatSkillLabel,
   getLevelForXp,
+  getGasStationStopPlan,
   getOperatorLevel,
   quickBuyMissingTools as quickBuyMissingToolsFlow,
   formatHours,
   performTaskUnit as performTaskUnitFlow,
+  runGasStationStop as runGasStationStopFlow,
   setSupplierCartQuantity as setSupplierCartQuantityFlow,
   acceptContract as acceptContractFlow,
   hireCrew as hireCrewFlow,
@@ -15,7 +17,7 @@ import {
 } from "../core/playerFlow";
 import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from "../core/save";
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
-import { GameState, SkillId, TaskStance, TaskUnitResult } from "../core/types";
+import { GameState, SkillId, SupplyQuality, TaskStance, TaskUnitResult } from "../core/types";
 
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "contracts" | "store" | "company";
@@ -71,10 +73,11 @@ interface UiState {
   clearNotice: () => void;
   dismissProgressPopup: () => void;
   acceptContract: (contractId: string) => void;
-  setCartQuantity: (supplyId: string, quantity: number) => void;
+  setCartQuantity: (supplyId: string, quality: SupplyQuality, quantity: number) => void;
   performTaskUnit: (stance: TaskStance, allowOvertime?: boolean) => void;
   endShift: () => void;
   buyFuel: (units?: number) => void;
+  runGasStationStop: () => void;
   buyTool: (toolId: string) => void;
   repairTool: (toolId: string) => void;
   quickBuyTools: (contractId: string) => void;
@@ -275,12 +278,12 @@ export const useUiStore = create<UiState>((set, get) => ({
     });
   },
 
-  setCartQuantity: (supplyId, quantity) => {
+  setCartQuantity: (supplyId, quality, quantity) => {
     const current = get().game;
     if (!current) {
       return;
     }
-    const result = setSupplierCartQuantityFlow(current, supplyId, quantity);
+    const result = setSupplierCartQuantityFlow(current, supplyId, quality, quantity);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -337,6 +340,31 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: result.nextState,
       lastAction: toSummary("Fuel", [`Fuel now at ${result.nextState.player.fuel}/${result.nextState.player.fuelMax}.`], result.digest),
+      notice: result.notice ?? ""
+    });
+  },
+
+  runGasStationStop: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    const planBefore = getGasStationStopPlan(current, bundle);
+    const result = runGasStationStopFlow(current, bundle);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      lastAction:
+        result.payload ?? planBefore
+          ? toSummary(
+              "Gas Station Run",
+              [
+                `Fuel now at ${result.nextState.player.fuel}/${result.nextState.player.fuelMax}.`,
+                `Cash now at $${result.nextState.player.cash}.`
+              ],
+              result.digest
+            )
+          : get().lastAction,
       notice: result.notice ?? ""
     });
   },

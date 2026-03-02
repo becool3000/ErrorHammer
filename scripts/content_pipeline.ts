@@ -112,6 +112,11 @@ export function normalizeBundle(bundle: ContentBundle): ContentBundle {
   const sortById = <T extends { id: string }>(items: T[]): T[] => [...items].sort((a, b) => a.id.localeCompare(b.id));
   const normalizedSupplies = sortById(bundle.supplies ?? []).map((supply) => ({
     ...supply,
+    prices: {
+      low: supply.prices.low,
+      medium: supply.prices.medium,
+      high: supply.prices.high
+    },
     tags: [...supply.tags].sort((a, b) => a.localeCompare(b))
   }));
 

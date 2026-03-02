@@ -51,10 +51,14 @@ export type TaskTimeOutcome = "fast" | "standard" | "delayed" | "rework";
 
 export type TaskQualityOutcome = "excellent" | "solid" | "sloppy" | "botched";
 
+export type SupplyQuality = "low" | "medium" | "high";
+
+export type SupplyTierValues = Record<SupplyQuality, number>;
+
 export interface SupplyDef {
   id: string;
   name: string;
-  price: number;
+  prices: SupplyTierValues;
   tags: string[];
   flavor: {
     description: string;
@@ -263,12 +267,15 @@ export interface DayLog {
   message: string;
 }
 
-export type SupplyInventory = Record<string, number>;
+export type SupplyStack = Partial<Record<SupplyQuality, number>>;
+
+export type SupplyInventory = Record<string, SupplyStack>;
 
 export interface CartLine {
   supplyId: string;
   quantity: number;
   unitPrice: number;
+  quality: SupplyQuality;
 }
 
 export interface TaskSkillMapping {
@@ -315,8 +322,12 @@ export interface ActiveJobState {
   plannedTicks: number;
   actualTicksSpent: number;
   materialsReserved: boolean;
+  reservedMaterials: SupplyInventory;
+  partsQuality: SupplyQuality | null;
+  partsQualityScore: number;
+  partsQualityModifier: number;
   siteSupplies: SupplyInventory;
-  supplierCart: Record<string, number>;
+  supplierCart: SupplyInventory;
   tasks: ActiveTaskState[];
   outcome?: Outcome;
 }

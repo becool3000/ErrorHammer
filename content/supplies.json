@@ -2,7 +2,7 @@
   {
     "id": "anchor-set",
     "name": "Anchor Set",
-    "price": 18,
+    "prices": { "low": 14, "medium": 18, "high": 24 },
     "tags": ["general", "fastener"],
     "flavor": {
       "description": "A box of tiny promises for walls with trust issues.",
@@ -12,7 +12,7 @@
   {
     "id": "board-pack",
     "name": "Board Pack",
-    "price": 32,
+    "prices": { "low": 24, "medium": 32, "high": 42 },
     "tags": ["framing", "outdoor"],
     "flavor": {
       "description": "Straight lumber with a modest sense of destiny.",
@@ -22,7 +22,7 @@
   {
     "id": "concrete-mix",
     "name": "Concrete Mix",
-    "price": 24,
+    "prices": { "low": 18, "medium": 24, "high": 32 },
     "tags": ["general", "outdoor", "concrete"],
     "flavor": {
       "description": "Powdered permanence in a practical bag.",
@@ -32,7 +32,7 @@
   {
     "id": "fastener-box",
     "name": "Fastener Box",
-    "price": 16,
+    "prices": { "low": 12, "medium": 16, "high": 21 },
     "tags": ["fastener", "general"],
     "flavor": {
       "description": "Screws, bolts, and tiny pieces of authority.",
@@ -42,7 +42,7 @@
   {
     "id": "hinge-pack",
     "name": "Hinge Pack",
-    "price": 22,
+    "prices": { "low": 17, "medium": 22, "high": 29 },
     "tags": ["mechanical", "finish"],
     "flavor": {
       "description": "Metal elbows for doors and cabinets with ambitions.",
@@ -52,7 +52,7 @@
   {
     "id": "junction-box",
     "name": "Junction Box",
-    "price": 21,
+    "prices": { "low": 16, "medium": 21, "high": 28 },
     "tags": ["electrical", "inspection"],
     "flavor": {
       "description": "A legal place for wires to have feelings.",
@@ -62,7 +62,7 @@
   {
     "id": "paint-sleeve",
     "name": "Paint Sleeve",
-    "price": 12,
+    "prices": { "low": 9, "medium": 12, "high": 16 },
     "tags": ["finish", "seal", "painting"],
     "flavor": {
       "description": "Color management for surfaces that need closure.",
@@ -72,7 +72,7 @@
   {
     "id": "pipe-kit",
     "name": "Pipe Kit",
-    "price": 28,
+    "prices": { "low": 21, "medium": 28, "high": 37 },
     "tags": ["plumbing", "mechanical"],
     "flavor": {
       "description": "Fittings, elbows, and controlled wet intentions.",
@@ -82,7 +82,7 @@
   {
     "id": "roof-patch",
     "name": "Roof Patch",
-    "price": 30,
+    "prices": { "low": 23, "medium": 30, "high": 40 },
     "tags": ["roof", "seal"],
     "flavor": {
       "description": "Sticky optimism for elevated leaks.",
@@ -92,7 +92,7 @@
   {
     "id": "safety-kit",
     "name": "Safety Kit",
-    "price": 14,
+    "prices": { "low": 11, "medium": 14, "high": 19 },
     "tags": ["inspection", "general"],
     "flavor": {
       "description": "Tape, covers, and the paperwork version of caution.",
@@ -102,7 +102,7 @@
   {
     "id": "sealant-tube",
     "name": "Sealant Tube",
-    "price": 15,
+    "prices": { "low": 11, "medium": 15, "high": 20 },
     "tags": ["seal", "finish"],
     "flavor": {
       "description": "A squeezable argument against drafts and drips.",
@@ -112,7 +112,7 @@
   {
     "id": "wire-spool",
     "name": "Wire Spool",
-    "price": 26,
+    "prices": { "low": 20, "medium": 26, "high": 35 },
     "tags": ["electrical", "fastener"],
     "flavor": {
       "description": "Coiled certainty for walls full of secrets.",
@@ -122,7 +122,7 @@
   {
     "id": "trim-kit",
     "name": "Trim Kit",
-    "price": 20,
+    "prices": { "low": 15, "medium": 20, "high": 27 },
     "tags": ["finish", "framing", "drywall"],
     "flavor": {
       "description": "Corners, strips, and a second chance at neatness.",

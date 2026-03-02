@@ -253,7 +253,11 @@ function supply(id: string, name: string, price: number, tags: string[]) {
   return {
     id,
     name,
-    price,
+    prices: {
+      low: Math.max(1, Math.floor(price * 0.75)),
+      medium: price,
+      high: Math.max(price + 1, Math.ceil(price * 1.35))
+    },
     tags,
     flavor: {
       description: `${name} keeps the paperwork honest.`,

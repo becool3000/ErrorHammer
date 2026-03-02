@@ -70,7 +70,7 @@ const bundle: ContentBundle = {
     {
       id: "anchor-set",
       name: "Anchor Set",
-      price: 10,
+      prices: { low: 8, medium: 10, high: 14 },
       tags: ["general"],
       flavor: { description: "d", quip_buy: "b" }
     }

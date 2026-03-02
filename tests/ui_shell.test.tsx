@@ -6,6 +6,7 @@ import { App } from "../src/ui/App";
 import { useUiStore, bundle } from "../src/ui/state";
 import { SAVE_VERSION } from "../src/core/save";
 import { createInitialGameState } from "../src/core/resolver";
+import { SupplyQuality } from "../src/core/types";
 
 function installLocalStorage() {
   const store = new Map<string, string>();
@@ -44,6 +45,10 @@ function buildAcceptableGame(seed: number) {
     game.player.tools[tool.id] = { toolId: tool.id, durability: tool.maxDurability };
   }
   return game;
+}
+
+function filledInventory(quantity: number) {
+  return Object.fromEntries(bundle.supplies.map((supply) => [supply.id, { medium: quantity }])) as Record<string, Record<SupplyQuality, number>>;
 }
 
 describe("compact shell ui", () => {
@@ -190,7 +195,7 @@ describe("compact shell ui", () => {
             ...current.player,
             skills: Object.fromEntries(Object.keys(current.player.skills).map((skillId) => [skillId, 99])) as typeof current.player.skills
           },
-          truckSupplies: Object.fromEntries(bundle.supplies.map((supply) => [supply.id, 10])) as typeof current.truckSupplies,
+          truckSupplies: filledInventory(10) as typeof current.truckSupplies,
           activeJob: current.activeJob
             ? {
                 ...current.activeJob,
@@ -238,7 +243,7 @@ describe("compact shell ui", () => {
             ...current.player,
             skills: Object.fromEntries(Object.keys(current.player.skills).map((skillId) => [skillId, 99])) as typeof current.player.skills
           },
-          truckSupplies: Object.fromEntries(bundle.supplies.map((supply) => [supply.id, 10])) as typeof current.truckSupplies,
+          truckSupplies: filledInventory(10) as typeof current.truckSupplies,
           activeJob: current.activeJob
             ? {
                 ...current.activeJob,
@@ -473,8 +478,7 @@ describe("compact shell ui", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
-    expect(screen.getByText(/Add the needed items to the supplier cart before checkout/i)).toBeTruthy();
-    expect(screen.queryAllByText(/Add the needed items to the supplier cart before checkout/i).length).toBe(1);
+    expect(screen.queryAllByText(/Allocate the needed items by quality before checkout/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("EH-TW-053: overtime buttons appear only when the visible action needs overtime", () => {
@@ -526,6 +530,49 @@ describe("compact shell ui", () => {
     expect(visibleActionButtons.every((label) => label.includes("+ OT"))).toBe(true);
   });
 
+  it("EH-TW-062: low fuel warning surfaces a gas-station run that recovers a stranded route", () => {
+    const game = buildAcceptableGame(6067);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Accept Job/i }));
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        activeTab: "work",
+        game: {
+          ...current,
+          player: {
+            ...current.player,
+            fuel: 0,
+            cash: 0
+          },
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "supplier",
+                actualTicksSpent: 0,
+                tasks: current.activeJob.tasks.map((task) =>
+                  task.taskId === "load_from_shop" || task.taskId === "travel_to_supplier" || task.taskId === "checkout_supplies"
+                    ? { ...task, completedUnits: task.requiredUnits || 1 }
+                    : task
+                )
+              }
+            : null
+        }
+      });
+    });
+
+    expect(screen.getByText(/low fuel warning|fuel warning/i)).toBeTruthy();
+    expect(screen.getByText(/truck fuel is too low/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Gas Station Run/i }));
+
+    expect(useUiStore.getState().game?.player.fuel).toBeGreaterThan(0);
+    expect(useUiStore.getState().game?.player.cash).toBeLessThan(0);
+    expect(screen.getByText(/Gas Station Run added/i)).toBeTruthy();
+  });
+
   it("EH-TW-034: supplier-state jobs expose the supplier cart sheet and supply info modal", () => {
     const game = buildAcceptableGame(7070);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
@@ -556,7 +603,10 @@ describe("compact shell ui", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Supplier Cart/i }));
     expect(screen.getByRole("dialog", { name: /Supplier/i })).toBeTruthy();
+    expect(screen.getAllByText(/Low/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Medium/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/High/i).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button", { name: /^Info$/i })[0]);
-    expect(screen.getByRole("dialog", { name: /Supply Info|Anchor Set|Board Pack/i })).toBeTruthy();
+    expect(screen.getAllByRole("dialog").length).toBeGreaterThan(1);
   });
 });

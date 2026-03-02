@@ -14,6 +14,8 @@ import {
   Outcome,
   SkillId,
   SupplyInventory,
+  SupplyQuality,
+  SupplyStack,
   TaskId,
   TaskQualityOutcome,
   TaskSkillMapping,
@@ -47,6 +49,21 @@ export interface QuickBuyPlan {
   enoughCash: boolean;
   enoughTime: boolean;
   allowed: boolean;
+}
+
+export interface GasStationStopPlan {
+  stranded: boolean;
+  warning: string;
+  suggestedFuel: number;
+  totalCost: number;
+  onAccount: boolean;
+  requiredTicks: number;
+}
+
+export interface MaterialQualityResult {
+  quality: SupplyQuality;
+  score: number;
+  modifier: number;
 }
 
 const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -169,7 +186,15 @@ export const BASE_DAY_TICKS = 16;
 export const MAX_OVERTIME_TICKS = 4;
 export const SHOP_SUPPLIER_TICKS = 2;
 export const SHOP_SUPPLIER_FUEL = 1;
+export const GAS_STATION_STOP_TICKS = 2;
 export const FUEL_PRICE = 6;
+export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
+
+const QUALITY_LABELS: Record<SupplyQuality, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High"
+};
 
 export function createInitialSkills(): Record<SkillId, number> {
   const skills = createEmptySkills();
@@ -205,13 +230,13 @@ export function createInitialWorkday(day: number, fatigueDebt = 0): WorkdayState
 
 export function createInitialShopSupplies(): SupplyInventory {
   return {
-    "anchor-set": 2,
-    "board-pack": 1,
-    "fastener-box": 3,
-    "paint-sleeve": 1,
-    "safety-kit": 1,
-    "sealant-tube": 2,
-    "trim-kit": 1
+    "anchor-set": { medium: 2 },
+    "board-pack": { medium: 1 },
+    "fastener-box": { medium: 3 },
+    "paint-sleeve": { medium: 1 },
+    "safety-kit": { medium: 1 },
+    "sealant-tube": { medium: 2 },
+    "trim-kit": { medium: 1 }
   };
 }
 
@@ -252,6 +277,25 @@ const SKILL_LABELS: Record<SkillId, string> = {
 
 export function formatSkillLabel(skillId: SkillId): string {
   return SKILL_LABELS[skillId] ?? skillId;
+}
+
+export function formatSupplyQuality(quality: SupplyQuality): string {
+  return QUALITY_LABELS[quality];
+}
+
+export function getSupplyUnitPrice(supply: ContentBundle["supplies"][number], quality: SupplyQuality, events: EventDef[] = []): number {
+  return applyToolPriceModifiers(supply.prices[quality], events);
+}
+
+export function getSupplyQuantity(inventory: SupplyInventory, supplyId: string, quality?: SupplyQuality): number {
+  const stack = inventory[supplyId];
+  if (!stack) {
+    return 0;
+  }
+  if (quality) {
+    return Math.max(0, stack[quality] ?? 0);
+  }
+  return SUPPLY_QUALITIES.reduce((sum, tier) => sum + Math.max(0, stack[tier] ?? 0), 0);
 }
 
 export function getXpFloorForLevel(level: number): number {
@@ -393,22 +437,19 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
 export function setSupplierCartQuantity(
   state: GameState,
   supplyId: string,
+  quality: SupplyQuality,
   quantity: number
-): StateTransitionResult<Record<string, number>> {
+): StateTransitionResult<SupplyInventory> {
   if (!state.activeJob) {
     return { nextState: state, notice: "No active job.", digest: digestState(state) };
   }
 
   const nextState = cloneState(state);
-  if (quantity <= 0) {
-    delete nextState.activeJob!.supplierCart[supplyId];
-  } else {
-    nextState.activeJob!.supplierCart[supplyId] = quantity;
-  }
+  setInventoryQuantity(nextState.activeJob!.supplierCart, supplyId, quality, quantity);
 
   return {
     nextState,
-    payload: { ...nextState.activeJob!.supplierCart },
+    payload: cloneSupplyInventory(nextState.activeJob!.supplierCart),
     digest: digestState(nextState)
   };
 }
@@ -456,8 +497,12 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     plannedTicks: tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0),
     actualTicksSpent: 0,
     materialsReserved: false,
+    reservedMaterials: {},
+    partsQuality: null,
+    partsQualityScore: 1,
+    partsQualityModifier: 0,
     siteSupplies: {},
-    supplierCart: { ...shortfall },
+    supplierCart: {},
     tasks
   };
   nextState.contractBoard = [];
@@ -491,11 +536,19 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
   return {
     ...(state as GameState),
     player: normalizedPlayer,
+    shopSupplies: normalizeSupplyInventory(state.shopSupplies),
+    truckSupplies: normalizeSupplyInventory(state.truckSupplies),
     activeJob: state.activeJob
       ? {
           ...state.activeJob,
           assignee: state.activeJob.assignee ?? "self",
-          staminaCommitted: state.activeJob.staminaCommitted ?? false
+          staminaCommitted: state.activeJob.staminaCommitted ?? false,
+          reservedMaterials: normalizeSupplyInventory(state.activeJob.reservedMaterials),
+          partsQuality: state.activeJob.partsQuality ?? null,
+          partsQualityScore: state.activeJob.partsQualityScore ?? 1,
+          partsQualityModifier: state.activeJob.partsQualityModifier ?? 0,
+          siteSupplies: normalizeSupplyInventory(state.activeJob.siteSupplies),
+          supplierCart: normalizeSupplyInventory(state.activeJob.supplierCart)
         }
       : null
   };
@@ -595,6 +648,77 @@ export function buyFuel(state: GameState, units = 1): StateTransitionResult<numb
   return {
     nextState,
     payload: nextState.player.fuel,
+    digest: digestState(nextState)
+  };
+}
+
+export function getGasStationStopPlan(state: GameState, bundle: ContentBundle): GasStationStopPlan | null {
+  const activeJob = state.activeJob;
+  if (!activeJob || activeJob.location === "shop") {
+    return null;
+  }
+
+  const district = bundle.districts.find((entry) => entry.id === activeJob.districtId);
+  if (!district) {
+    return null;
+  }
+
+  const currentTask = getCurrentTask(state);
+  const immediateTravelFuel = currentTask && isTravelTask(currentTask.taskId) ? getTravelFuelCost(currentTask.taskId, district, activeJob.location) : 0;
+  const reserveFuel = getRecommendedFieldFuelReserve(state, bundle);
+  const threshold = Math.min(state.player.fuelMax, Math.max(immediateTravelFuel, reserveFuel + 1));
+  if (threshold <= 0 || state.player.fuel > threshold) {
+    return null;
+  }
+
+  const suggestedFuel = Math.max(1, threshold - state.player.fuel);
+  const totalCost = suggestedFuel * FUEL_PRICE;
+  const nextDriveLabel = currentTask && isTravelTask(currentTask.taskId) ? TASK_LABELS[currentTask.taskId].toLowerCase() : "finish the field route";
+  const stranded = immediateTravelFuel > 0 && state.player.fuel < immediateTravelFuel;
+  const warning = stranded
+    ? `Truck fuel is too low to ${nextDriveLabel}.`
+    : `Truck fuel is running low for the current field route.`;
+
+  return {
+    stranded,
+    warning,
+    suggestedFuel,
+    totalCost,
+    onAccount: state.player.cash < totalCost,
+    requiredTicks: GAS_STATION_STOP_TICKS
+  };
+}
+
+export function runGasStationStop(state: GameState, bundle: ContentBundle): StateTransitionResult<GasStationStopPlan> {
+  const plan = getGasStationStopPlan(state, bundle);
+  if (!plan) {
+    return { nextState: state, notice: "The truck does not need a gas-station run right now.", digest: digestState(state) };
+  }
+  if (!canSpendTicks(state.workday, plan.requiredTicks, true)) {
+    return { nextState: state, payload: plan, notice: "No time is left for a gas-station run.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  spendTicks(nextState.workday, plan.requiredTicks);
+  nextState.activeJob!.actualTicksSpent += plan.requiredTicks;
+  nextState.player.cash -= plan.totalCost;
+  nextState.player.fuel = Math.min(nextState.player.fuelMax, nextState.player.fuel + plan.suggestedFuel);
+
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: nextState.activeJob?.contractId,
+    message: plan.onAccount
+      ? `Ran a gas-station stop for ${plan.suggestedFuel} fuel on account ($${plan.totalCost}).`
+      : `Ran a gas-station stop for ${plan.suggestedFuel} fuel ($${plan.totalCost}).`
+  });
+
+  return {
+    nextState,
+    payload: plan,
+    notice: plan.onAccount
+      ? `Gas Station Run added ${plan.suggestedFuel} fuel and charged $${plan.totalCost} to the company account.`
+      : `Gas Station Run added ${plan.suggestedFuel} fuel for $${plan.totalCost}.`,
     digest: digestState(nextState)
   };
 }
@@ -721,11 +845,19 @@ export function performTaskUnit(
         commitActiveJobStamina(nextState, job, logLines);
       }
       if (timing.timeOutcome !== "rework" && !nextState.activeJob!.materialsReserved) {
-        if (!reserveMaterials(nextState.truckSupplies, job.materialNeeds)) {
+        const reservedMaterials = reserveMaterials(nextState.truckSupplies, job.materialNeeds);
+        if (!reservedMaterials) {
           return { nextState: state, notice: "The truck is short on materials.", digest: digestState(state) };
         }
+        const materialQuality = calculateMaterialQuality(reservedMaterials);
         nextState.activeJob!.materialsReserved = true;
-        logLines.push("Reserved the job materials and finally made the mess official.");
+        nextState.activeJob!.reservedMaterials = reservedMaterials;
+        nextState.activeJob!.partsQuality = materialQuality.quality;
+        nextState.activeJob!.partsQualityScore = materialQuality.score;
+        nextState.activeJob!.partsQualityModifier = materialQuality.modifier;
+        logLines.push(
+          `Reserved the job materials at ${formatSupplyQuality(materialQuality.quality)} quality (${materialQuality.modifier >= 0 ? "+" : ""}${materialQuality.modifier} quality).`
+        );
       }
       if (timing.timeOutcome !== "rework") {
         applyToolWear(nextState.player, job, nextActiveTask);
@@ -799,7 +931,7 @@ export function prepareForNextDay(state: GameState): GameState {
     stamina: crew.staminaMax
   }));
 
-  if (nextState.activeJob && nextState.activeJob.location !== "shop" && Object.keys(nextState.truckSupplies).length > 0) {
+  if (nextState.activeJob && nextState.activeJob.location !== "shop" && !isInventoryEmpty(nextState.truckSupplies)) {
     moveAllSupplies(nextState.truckSupplies, nextState.activeJob.siteSupplies);
     nextState.truckSupplies = {};
     const pickupTask = nextState.activeJob.tasks.find((task) => task.taskId === "pickup_site_supplies");
@@ -1047,19 +1179,23 @@ function getTaskLocation(taskId: TaskId): LocationId {
 
 function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: JobDef, logLines: string[]): boolean {
   const activeJob = state.activeJob!;
-  const cartEntries = Object.entries(activeJob.supplierCart).filter(([, quantity]) => quantity > 0);
+  const cartEntries = listInventoryEntries(activeJob.supplierCart);
   if (cartEntries.length === 0) {
     logLines.push("The cart was empty, which impressed nobody.");
     return false;
   }
+  if (!hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart)) {
+    logLines.push("The cart still needs explicit quality picks for the required materials.");
+    return false;
+  }
 
   let total = 0;
-  for (const [supplyId, quantity] of cartEntries) {
+  for (const [supplyId, quality, quantity] of cartEntries) {
     const supply = bundle.supplies.find((entry) => entry.id === supplyId);
     if (!supply) {
       continue;
     }
-    total += applyToolPriceModifiers(supply.price, getActiveEvents(bundle, state.activeEventIds)) * quantity;
+    total += getSupplyUnitPrice(supply, quality, getActiveEvents(bundle, state.activeEventIds)) * quantity;
   }
   if (state.player.cash < total) {
     logLines.push("The supplier admired your taste and declined your balance.");
@@ -1067,35 +1203,46 @@ function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: Job
   }
 
   state.player.cash -= total;
-  for (const [supplyId, quantity] of cartEntries) {
-    state.truckSupplies[supplyId] = (state.truckSupplies[supplyId] ?? 0) + quantity;
+  for (const [supplyId, quality, quantity] of cartEntries) {
+    addSupplyQuantity(state.truckSupplies, supplyId, quality, quantity);
   }
-  const remainingShortfall = getMaterialShortfall(job.materialNeeds, state.truckSupplies);
-  activeJob.supplierCart = remainingShortfall;
+  activeJob.supplierCart = {};
   logLines.push(`Checked out supplies for $${total}.`);
-  return !Object.values(remainingShortfall).some((quantity) => quantity > 0);
+  return true;
 }
 
-function reserveMaterials(truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): boolean {
+function reserveMaterials(truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): SupplyInventory | null {
   for (const material of materialNeeds) {
-    if ((truckSupplies[material.supplyId] ?? 0) < material.quantity) {
-      return false;
+    if (getSupplyQuantity(truckSupplies, material.supplyId) < material.quantity) {
+      return null;
     }
   }
+  const reserved: SupplyInventory = {};
   for (const material of materialNeeds) {
-    truckSupplies[material.supplyId] -= material.quantity;
-    if (truckSupplies[material.supplyId] <= 0) {
-      delete truckSupplies[material.supplyId];
+    let remaining = material.quantity;
+    for (const quality of ["high", "medium", "low"] as SupplyQuality[]) {
+      const available = getSupplyQuantity(truckSupplies, material.supplyId, quality);
+      const take = Math.min(available, remaining);
+      if (take <= 0) {
+        continue;
+      }
+      addSupplyQuantity(reserved, material.supplyId, quality, take);
+      addSupplyQuantity(truckSupplies, material.supplyId, quality, -take);
+      remaining -= take;
+      if (remaining <= 0) {
+        break;
+      }
     }
   }
-  return true;
+  return reserved;
 }
 
 function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): { outcome: Outcome; logLines: string[] } {
   const activeJob = state.activeJob!;
   const events = getActiveEvents(bundle, state.activeEventIds);
+  const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
   const failChance = clamp(
-    getRiskValue(job, events) + activeJob.reworkCount * 0.08 - Math.max(0, activeJob.qualityPoints) * 0.02,
+    getRiskValue(job, events) + activeJob.reworkCount * 0.08 - Math.max(0, effectiveQualityPoints) * 0.02,
     0,
     0.95
   );
@@ -1104,11 +1251,11 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
     outcome = "neutral";
   } else if (createRng(hashSeed(state.seed, state.day, activeJob.contractId, "collect")).bool(failChance)) {
     outcome = "fail";
-  } else if (activeJob.qualityPoints < 0) {
+  } else if (effectiveQualityPoints < 0) {
     outcome = "neutral";
   }
 
-  const qualityRepMod = clamp(Math.floor(activeJob.qualityPoints / 3), -3, 3);
+  const qualityRepMod = clamp(Math.floor(effectiveQualityPoints / 3), -3, 3);
   const scheduleRepMod =
     activeJob.actualTicksSpent <= activeJob.plannedTicks - 2
       ? 1
@@ -1142,6 +1289,7 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   return {
     outcome,
     logLines: [
+      `Parts quality settled at ${formatSupplyQuality(activeJob.partsQuality ?? "medium")} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier} quality).`,
       flavorLine,
       `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${repDelta + qualityRepMod + scheduleRepMod}.`
     ]
@@ -1166,9 +1314,9 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
       if (activeJob.location !== "supplier") {
         return "Travel to the supplier first.";
       }
-      return Object.values(activeJob.supplierCart).every((quantity) => quantity <= 0)
-        ? describeSupplierCartNeed(bundle, job, state.truckSupplies)
-        : null;
+      return hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart)
+        ? null
+        : describeSupplierCartNeed(bundle, job, state.truckSupplies, activeJob.supplierCart);
     case "travel_to_job_site":
       if (activeJob.location === "job-site") {
         return "Already at the job site.";
@@ -1183,7 +1331,7 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
       if (activeJob.location !== "job-site") {
         return "Get back to the job site first.";
       }
-      return Object.keys(activeJob.siteSupplies).length === 0 ? "There is nothing waiting on site." : null;
+      return isInventoryEmpty(activeJob.siteSupplies) ? "There is nothing waiting on site." : null;
     case "do_work":
       if (activeJob.location !== "job-site") {
         return "Travel to the job site first.";
@@ -1266,6 +1414,18 @@ function getTravelFuelCost(taskId: TaskId, district: DistrictDef, location: Loca
   return district.travel.shopToSiteFuel;
 }
 
+function getRecommendedFieldFuelReserve(state: GameState, bundle: ContentBundle): number {
+  const activeJob = state.activeJob;
+  if (!activeJob || activeJob.location === "shop") {
+    return 0;
+  }
+  const district = getDistrict(bundle, activeJob.districtId);
+  if (activeJob.location === "supplier") {
+    return district.travel.supplierToSiteFuel;
+  }
+  return district.travel.shopToSiteFuel;
+}
+
 function getTaskBaseTicks(task: ActiveTaskState, job: JobDef): number {
   if (task.taskId === "do_work") {
     return 2;
@@ -1275,25 +1435,29 @@ function getTaskBaseTicks(task: ActiveTaskState, job: JobDef): number {
 
 function moveSuppliesForJob(shopSupplies: SupplyInventory, truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): void {
   for (const material of materialNeeds) {
-    const available = shopSupplies[material.supplyId] ?? 0;
-    const loadQuantity = Math.min(available, material.quantity);
-    if (loadQuantity <= 0) {
-      continue;
+    let remaining = material.quantity;
+    for (const quality of ["high", "medium", "low"] as SupplyQuality[]) {
+      const available = getSupplyQuantity(shopSupplies, material.supplyId, quality);
+      const loadQuantity = Math.min(available, remaining);
+      if (loadQuantity <= 0) {
+        continue;
+      }
+      addSupplyQuantity(shopSupplies, material.supplyId, quality, -loadQuantity);
+      addSupplyQuantity(truckSupplies, material.supplyId, quality, loadQuantity);
+      remaining -= loadQuantity;
+      if (remaining <= 0) {
+        break;
+      }
     }
-    shopSupplies[material.supplyId] -= loadQuantity;
-    if (shopSupplies[material.supplyId] <= 0) {
-      delete shopSupplies[material.supplyId];
-    }
-    truckSupplies[material.supplyId] = (truckSupplies[material.supplyId] ?? 0) + loadQuantity;
   }
 }
 
 function moveAllSupplies(from: SupplyInventory, to: SupplyInventory): void {
-  for (const [supplyId, quantity] of Object.entries(from)) {
-    if (quantity <= 0) {
-      continue;
-    }
-    to[supplyId] = (to[supplyId] ?? 0) + quantity;
+  for (const [supplyId, quality, quantity] of listInventoryEntries(from)) {
+    addSupplyQuantity(to, supplyId, quality, quantity);
+  }
+  for (const supplyId of Object.keys(from)) {
+    delete from[supplyId];
   }
 }
 
@@ -1316,7 +1480,7 @@ function applyToolWear(actor: ActorState, job: JobDef, task: ActiveTaskState): v
 function getMaterialShortfall(materialNeeds: JobDef["materialNeeds"], inventory: SupplyInventory): Record<string, number> {
   const shortfall: Record<string, number> = {};
   for (const material of materialNeeds) {
-    const remaining = material.quantity - (inventory[material.supplyId] ?? 0);
+    const remaining = material.quantity - getSupplyQuantity(inventory, material.supplyId);
     if (remaining > 0) {
       shortfall[material.supplyId] = remaining;
     }
@@ -1324,8 +1488,8 @@ function getMaterialShortfall(materialNeeds: JobDef["materialNeeds"], inventory:
   return shortfall;
 }
 
-function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory: SupplyInventory): string {
-  const shortfall = getMaterialShortfall(job.materialNeeds, inventory);
+function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory: SupplyInventory, cart: SupplyInventory): string {
+  const shortfall = getMaterialShortfall(job.materialNeeds, mergeSupplyInventories(cloneSupplyInventory(inventory), cart));
   const lines = Object.entries(shortfall)
     .map(([supplyId, quantity]) => {
       const supplyName = bundle.supplies.find((entry) => entry.id === supplyId)?.name ?? supplyId;
@@ -1333,9 +1497,131 @@ function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory:
     })
     .slice(0, 4);
   if (lines.length === 0) {
-    return "Add the needed items to the supplier cart before checkout.";
+    return "Allocate the needed items across low, medium, or high quality before checkout.";
   }
-  return `Add the needed items to the supplier cart before checkout: ${lines.join(", ")}.`;
+  return `Allocate the needed items by quality before checkout: ${lines.join(", ")}.`;
+}
+
+function hasRequiredSupplierAllocation(job: JobDef, inventory: SupplyInventory, cart: SupplyInventory): boolean {
+  return !Object.values(getMaterialShortfall(job.materialNeeds, mergeSupplyInventories(cloneSupplyInventory(inventory), cart))).some((quantity) => quantity > 0);
+}
+
+function calculateMaterialQuality(inventory: SupplyInventory): MaterialQualityResult {
+  let totalUnits = 0;
+  let totalScore = 0;
+  for (const [, quality, quantity] of listInventoryEntries(inventory)) {
+    totalUnits += quantity;
+    totalScore += quantity * getMaterialTierScore(quality);
+  }
+  const score = totalUnits > 0 ? totalScore / totalUnits : 1;
+  const quality = score < 0.75 ? "low" : score < 1.5 ? "medium" : "high";
+  const modifier = quality === "low" ? -2 : quality === "high" ? 2 : 0;
+  return { quality, score, modifier };
+}
+
+function getMaterialTierScore(quality: SupplyQuality): number {
+  if (quality === "low") {
+    return 0;
+  }
+  if (quality === "high") {
+    return 2;
+  }
+  return 1;
+}
+
+function mergeSupplyInventories(target: SupplyInventory, incoming: SupplyInventory): SupplyInventory {
+  for (const [supplyId, quality, quantity] of listInventoryEntries(incoming)) {
+    addSupplyQuantity(target, supplyId, quality, quantity);
+  }
+  return target;
+}
+
+function listInventoryEntries(inventory: SupplyInventory): Array<[string, SupplyQuality, number]> {
+  const entries: Array<[string, SupplyQuality, number]> = [];
+  for (const [supplyId, stack] of Object.entries(inventory)) {
+    for (const quality of SUPPLY_QUALITIES) {
+      const quantity = Math.max(0, stack?.[quality] ?? 0);
+      if (quantity > 0) {
+        entries.push([supplyId, quality, quantity]);
+      }
+    }
+  }
+  return entries;
+}
+
+function isInventoryEmpty(inventory: SupplyInventory): boolean {
+  return listInventoryEntries(inventory).length === 0;
+}
+
+function setInventoryQuantity(inventory: SupplyInventory, supplyId: string, quality: SupplyQuality, quantity: number): void {
+  const normalized = Math.max(0, Math.floor(quantity));
+  if (normalized <= 0) {
+    addSupplyQuantity(inventory, supplyId, quality, -(getSupplyQuantity(inventory, supplyId, quality)));
+    return;
+  }
+  const stack = inventory[supplyId] ?? {};
+  stack[quality] = normalized;
+  inventory[supplyId] = stack;
+}
+
+function addSupplyQuantity(inventory: SupplyInventory, supplyId: string, quality: SupplyQuality, delta: number): void {
+  if (delta === 0) {
+    return;
+  }
+  const stack = inventory[supplyId] ?? {};
+  const nextQuantity = Math.max(0, (stack[quality] ?? 0) + delta);
+  if (nextQuantity > 0) {
+    stack[quality] = nextQuantity;
+    inventory[supplyId] = stack;
+    return;
+  }
+  delete stack[quality];
+  if (SUPPLY_QUALITIES.every((tier) => !stack[tier])) {
+    delete inventory[supplyId];
+  } else {
+    inventory[supplyId] = stack;
+  }
+}
+
+function cloneSupplyInventory(inventory: SupplyInventory | undefined): SupplyInventory {
+  return Object.fromEntries(
+    Object.entries(inventory ?? {}).map(([supplyId, stack]) => [
+      supplyId,
+      Object.fromEntries(
+        SUPPLY_QUALITIES.map((quality) => [quality, Math.max(0, stack?.[quality] ?? 0)]).filter(([, quantity]) => quantity > 0)
+      ) as SupplyStack
+    ])
+  );
+}
+
+function normalizeSupplyInventory(inventory: unknown): SupplyInventory {
+  if (!inventory || typeof inventory !== "object") {
+    return {};
+  }
+
+  const normalized: SupplyInventory = {};
+  for (const [supplyId, raw] of Object.entries(inventory as Record<string, unknown>)) {
+    if (typeof raw === "number") {
+      if (raw > 0) {
+        normalized[supplyId] = { medium: Math.floor(raw) };
+      }
+      continue;
+    }
+    if (!raw || typeof raw !== "object") {
+      continue;
+    }
+    const stack: SupplyStack = {};
+    for (const quality of SUPPLY_QUALITIES) {
+      const value = (raw as Record<string, unknown>)[quality];
+      if (typeof value === "number" && value > 0) {
+        stack[quality] = Math.floor(value);
+      }
+    }
+    if (SUPPLY_QUALITIES.some((quality) => (stack[quality] ?? 0) > 0)) {
+      normalized[supplyId] = stack;
+    }
+  }
+  return normalized;
 }
 
 function getTimeMods(stance: TaskStance): { fast: number; rework: number; delay: number } {
@@ -1426,8 +1712,8 @@ function cloneState(state: GameState): GameState {
     activeEventIds: [...state.activeEventIds],
     log: state.log.map((entry) => ({ ...entry })),
     activeJob: cloneActiveJob(state.activeJob),
-    shopSupplies: { ...state.shopSupplies },
-    truckSupplies: { ...state.truckSupplies },
+    shopSupplies: cloneSupplyInventory(state.shopSupplies),
+    truckSupplies: cloneSupplyInventory(state.truckSupplies),
     workday: {
       ...state.workday,
       fatigue: { ...state.workday.fatigue }
@@ -1453,8 +1739,9 @@ function cloneActiveJob(activeJob: ActiveJobState | null): ActiveJobState | null
   }
   return {
     ...activeJob,
-    siteSupplies: { ...activeJob.siteSupplies },
-    supplierCart: { ...activeJob.supplierCart },
+    reservedMaterials: cloneSupplyInventory(activeJob.reservedMaterials),
+    siteSupplies: cloneSupplyInventory(activeJob.siteSupplies),
+    supplierCart: cloneSupplyInventory(activeJob.supplierCart),
     tasks: activeJob.tasks.map((task) => ({ ...task }))
   };
 }

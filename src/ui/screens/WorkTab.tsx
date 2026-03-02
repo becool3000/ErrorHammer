@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { applyToolPriceModifiers } from "../../core/economy";
-import { formatHours, formatSkillLabel, getCurrentTask, getOperatorLevel, getSkillDisplayRows, getVisibleTaskActions } from "../../core/playerFlow";
-import { ActiveTaskState, SupplyInventory, TaskStance } from "../../core/types";
+import {
+  SUPPLY_QUALITIES,
+  formatHours,
+  formatSkillLabel,
+  formatSupplyQuality,
+  getCurrentTask,
+  getGasStationStopPlan,
+  getOperatorLevel,
+  getSkillDisplayRows,
+  getSupplyQuantity,
+  getSupplyUnitPrice,
+  getVisibleTaskActions
+} from "../../core/playerFlow";
+import { ActiveTaskState, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
 import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
 
@@ -22,6 +33,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const performTask = useUiStore((state) => state.performTaskUnit);
   const setJobAssignee = useUiStore((state) => state.setJobAssignee);
   const endShift = useUiStore((state) => state.endShift);
+  const runGasStationStop = useUiStore((state) => state.runGasStationStop);
   const openModal = useUiStore((state) => state.openModal);
   const openSheet = useUiStore((state) => state.openSheet);
   const goToTab = useUiStore((state) => state.goToTab);
@@ -42,13 +54,12 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const currentTask = getCurrentTask(game);
   const activeJob = game.activeJob;
   const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
-  const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
   const materialNeedRows = job
     ? job.materialNeeds.map((material) => {
         const supply = bundle.supplies.find((entry) => entry.id === material.supplyId);
-        const onTruck = game.truckSupplies[material.supplyId] ?? 0;
-        const onSite = activeJob?.siteSupplies[material.supplyId] ?? 0;
-        const inCart = activeJob?.supplierCart[material.supplyId] ?? 0;
+        const onTruck = getSupplyQuantity(game.truckSupplies, material.supplyId);
+        const onSite = getSupplyQuantity(activeJob?.siteSupplies ?? {}, material.supplyId);
+        const inCart = getSupplyQuantity(activeJob?.supplierCart ?? {}, material.supplyId);
         const onHand = onTruck + onSite;
         return {
           supplyId: material.supplyId,
@@ -56,7 +67,10 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           required: material.quantity,
           onHand,
           inCart,
-          remaining: Math.max(0, material.quantity - onHand)
+          remaining: Math.max(0, material.quantity - onHand - inCart),
+          cartByQuality: Object.fromEntries(
+            SUPPLY_QUALITIES.map((quality) => [quality, getSupplyQuantity(activeJob?.supplierCart ?? {}, material.supplyId, quality)])
+          ) as Record<SupplyQuality, number>
         };
       })
     : [];
@@ -66,7 +80,12 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         label: action.allowOvertime ? `${labelForStance(action.stance)} + OT` : labelForStance(action.stance)
       }))
     : [];
-  const supplierCartNotice = notice.startsWith("Add the needed items to the supplier cart before checkout") ? notice : "";
+  const gasStationPlan = getGasStationStopPlan(game, bundle);
+  const supplierCartNotice =
+    notice.startsWith("Add the needed items to the supplier cart before checkout") ||
+    notice.startsWith("Allocate the needed items by quality before checkout")
+      ? notice
+      : "";
   const selectedSupply = selectedSupplyId ? bundle.supplies.find((supply) => supply.id === selectedSupplyId) ?? null : null;
 
   useEffect(() => {
@@ -100,15 +119,17 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       <section className="stack-block">
         <div className="section-label-row">
           <p className="eyebrow">Supplier Cart</p>
-          <span className="chip">{Object.keys(activeJob.supplierCart).length} lines</span>
+          <span className="chip">{materialNeedRows.length} required lines</span>
         </div>
         <div className="supplier-carousel-frame">
           <div className="supplier-carousel-rail">
-          {bundle.supplies.map((supply) => {
-            const quantity = activeJob.supplierCart[supply.id] ?? 0;
-            const price = supplyPrices.get(supply.id) ?? supply.price;
+          {materialNeedRows.map((row) => {
+            const supply = bundle.supplies.find((entry) => entry.id === row.supplyId);
+            if (!supply) {
+              return null;
+            }
             return (
-              <article key={supply.id} className="compact-row-card supplier-card">
+              <article key={supply.id} className="compact-row-card supplier-card supplier-quality-card">
                 <div className="supplier-card-copy">
                   <div className="section-label-row tight-row">
                     <strong>{supply.name}</strong>
@@ -116,16 +137,27 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                       Info
                     </button>
                   </div>
-                  <small>${price} each</small>
+                  <small>
+                    Need {row.required} | Allocated {row.inCart}
+                  </small>
                 </div>
-                <div className="stepper">
-                  <button className="icon-button" onClick={() => setCartQuantity(supply.id, Math.max(0, quantity - 1))}>
-                    -
-                  </button>
-                  <span>{quantity}</span>
-                  <button className="icon-button" onClick={() => setCartQuantity(supply.id, quantity + 1)}>
-                    +
-                  </button>
+                <div className="stack-list">
+                  {SUPPLY_QUALITIES.map((quality) => {
+                    const quantity = row.cartByQuality[quality];
+                    const price = getSupplyUnitPrice(supply, quality, activeEvents);
+                    return (
+                      <div key={`${supply.id}-${quality}`} className="stepper supplier-quality-row">
+                        <span>{formatSupplyQuality(quality)} ${price}</span>
+                        <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, Math.max(0, quantity - 1))}>
+                          -
+                        </button>
+                        <span>{quantity}</span>
+                        <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, quantity + 1)}>
+                          +
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </article>
             );
@@ -141,9 +173,16 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                     <p className="eyebrow">Supply Info</p>
                     <h3>{selectedSupply.name}</h3>
                   </div>
-                  <span className="chip">${supplyPrices.get(selectedSupply.id) ?? selectedSupply.price} each</span>
+                  <span className="chip">Tiered pricing</span>
                 </div>
                 <p>{selectedSupply.flavor.description}</p>
+                <div className="chip-grid">
+                  {SUPPLY_QUALITIES.map((quality) => (
+                    <span key={`${selectedSupply.id}-${quality}`} className="chip large-chip">
+                      {formatSupplyQuality(quality)} ${getSupplyUnitPrice(selectedSupply, quality, activeEvents)}
+                    </span>
+                  ))}
+                </div>
               </article>
             </section>
           ) : null}
@@ -332,6 +371,27 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
+        {gasStationPlan ? (
+          <div className={gasStationPlan.stranded ? "task-inline-notice fuel-warning-block fuel-warning-critical" : "task-inline-notice fuel-warning-block"}>
+            <div className="section-label-row tight-row">
+              <strong>{gasStationPlan.stranded ? "Low Fuel Warning" : "Fuel Warning"}</strong>
+              <span className="chip">
+                Fuel {game.player.fuel}/{game.player.fuelMax}
+              </span>
+            </div>
+            <p>{gasStationPlan.warning}</p>
+            <div className="material-need-meta">
+              <span>Gas Station Run adds {gasStationPlan.suggestedFuel} fuel</span>
+              <span>{gasStationPlan.onAccount ? `Charges $${gasStationPlan.totalCost} on account` : `Costs $${gasStationPlan.totalCost}`}</span>
+              <span>Time {formatHours(gasStationPlan.requiredTicks)}</span>
+            </div>
+            <div className="task-inline-actions">
+              <button className={gasStationPlan.stranded ? "primary-button" : "ghost-button"} onClick={() => runGasStationStop()}>
+                Gas Station Run
+              </button>
+            </div>
+          </div>
+        ) : null}
         {activeJob.location === "supplier" && materialNeedRows.length > 0 ? (
           <div className="detail-block material-needs-block">
             <div className="section-label-row tight-row">
@@ -350,6 +410,17 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                     {row.inCart > 0 ? <span>In cart {row.inCart}</span> : null}
                     {row.remaining > 0 ? <span>Missing {row.remaining}</span> : null}
                   </div>
+                  {row.inCart > 0 ? (
+                    <div className="material-need-meta">
+                      {SUPPLY_QUALITIES.map((quality) =>
+                        row.cartByQuality[quality] > 0 ? (
+                          <span key={`${row.supplyId}-${quality}`}>
+                            {formatSupplyQuality(quality)} {row.cartByQuality[quality]}
+                          </span>
+                        ) : null
+                      )}
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -439,6 +510,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <div className="metric-grid two-up">
             <span>Payout ${activeJob.lockedPayout}</span>
             <span>Quality {activeJob.qualityPoints}</span>
+            <span>Parts {activeJob.partsQuality ? `${formatSupplyQuality(activeJob.partsQuality)} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier})` : "pending"}</span>
             <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
             <span>Rework {activeJob.reworkCount}</span>
           </div>
@@ -574,15 +646,15 @@ function TaskSummary({ task, currentTaskId }: { task: ActiveTaskState; currentTa
 }
 
 function InventoryPanel({ label, inventory }: { label: string; inventory: SupplyInventory }) {
-  const entries = Object.entries(inventory).filter(([, quantity]) => quantity > 0);
+  const entries = Object.entries(inventory).filter(([supplyId]) => getSupplyQuantity(inventory, supplyId) > 0);
   return (
     <div className="inventory-panel">
       <strong>{label}</strong>
       {entries.length === 0 ? <p className="muted-copy">None</p> : null}
-      {entries.map(([supplyId, quantity]) => (
+      {entries.map(([supplyId, stack]) => (
         <div key={supplyId} className="inventory-line">
           <span>{supplyId}</span>
-          <span>{quantity}</span>
+          <span>{formatSupplyStack(stack)}</span>
         </div>
       ))}
     </div>
@@ -621,4 +693,11 @@ function deriveEventCueTags(event: (typeof bundle.events)[number]): string[] {
     cues.push("tool prices");
   }
   return cues.length > 0 ? cues : ["general conditions"];
+}
+
+function formatSupplyStack(stack: SupplyInventory[string] | undefined): string {
+  return SUPPLY_QUALITIES.map((quality) => ({ quality, quantity: stack?.[quality] ?? 0 }))
+    .filter((entry) => entry.quantity > 0)
+    .map((entry) => `${entry.quantity} ${formatSupplyQuality(entry.quality)}`)
+    .join(", ");
 }

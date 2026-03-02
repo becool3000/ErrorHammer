@@ -280,6 +280,16 @@ p {
   color: #f0c1b3;
 }
 
+.fuel-warning-block {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.fuel-warning-critical {
+  border-color: rgba(227, 150, 119, 0.55);
+  background: rgba(150, 67, 46, 0.28);
+}
+
 .task-inline-actions {
   margin-top: 0.55rem;
   display: flex;

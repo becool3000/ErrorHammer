@@ -1,6 +1,6 @@
 import { ActionSummary } from "../state";
-import { ActiveJobState, ActiveTaskState, JobDef, SupplyDef, SupplyInventory, TaskStance } from "../../core/types";
-import { formatHours } from "../../core/playerFlow";
+import { ActiveJobState, ActiveTaskState, JobDef, SupplyDef, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
+import { SUPPLY_QUALITIES, formatHours, formatSupplyQuality, getSupplyQuantity, getSupplyUnitPrice } from "../../core/playerFlow";
 
 interface AssignmentPanelProps {
   activeJob: ActiveJobState;
@@ -11,7 +11,7 @@ interface AssignmentPanelProps {
   shopSupplies: SupplyInventory;
   currentTask: ActiveTaskState | null;
   lastAction: ActionSummary | null;
-  onSetCartQuantity: (supplyId: string, quantity: number) => void;
+  onSetCartQuantity: (supplyId: string, quality: SupplyQuality, quantity: number) => void;
   onPerformTask: (stance: TaskStance, allowOvertime?: boolean) => void;
 }
 
@@ -27,8 +27,13 @@ export function AssignmentPanel({
   onSetCartQuantity,
   onPerformTask
 }: AssignmentPanelProps) {
-  const cartTotal = Object.entries(activeJob.supplierCart).reduce(
-    (sum, [supplyId, quantity]) => sum + (supplyPrices.get(supplyId) ?? 0) * quantity,
+  const cartTotal = supplies.reduce(
+    (sum, supply) =>
+      sum +
+      SUPPLY_QUALITIES.reduce(
+        (tierSum, quality) => tierSum + getSupplyUnitPrice(supply, quality) * getSupplyQuantity(activeJob.supplierCart, supply.id, quality),
+        0
+      ),
     0
   );
 
@@ -88,20 +93,34 @@ export function AssignmentPanel({
           <h3>Supplier Cart</h3>
           <div className="list">
             {supplies.map((supply) => {
-              const quantity = activeJob.supplierCart[supply.id] ?? 0;
-              const price = supplyPrices.get(supply.id) ?? supply.price;
+              const quantity = getSupplyQuantity(activeJob.supplierCart, supply.id);
               return (
                 <article key={supply.id} className="list-item compact-item">
                   <div>
                     <strong>{supply.name}</strong>
                     <p>{supply.flavor.description}</p>
                     <p>
-                      ${price} | cart {quantity}
+                      Cart {quantity}
                     </p>
                   </div>
-                  <div className="stack-row">
-                    <button onClick={() => onSetCartQuantity(supply.id, Math.max(0, quantity - 1))}>-</button>
-                    <button onClick={() => onSetCartQuantity(supply.id, quantity + 1)}>+</button>
+                  <div className="list">
+                    {SUPPLY_QUALITIES.map((quality) => (
+                      <div key={`${supply.id}-${quality}`} className="stack-row">
+                        <span>
+                          {formatSupplyQuality(quality)} ${getSupplyUnitPrice(supply, quality)}
+                        </span>
+                        <button
+                          onClick={() =>
+                            onSetCartQuantity(supply.id, quality, Math.max(0, getSupplyQuantity(activeJob.supplierCart, supply.id, quality) - 1))
+                          }
+                        >
+                          -
+                        </button>
+                        <button onClick={() => onSetCartQuantity(supply.id, quality, getSupplyQuantity(activeJob.supplierCart, supply.id, quality) + 1)}>
+                          +
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </article>
               );
@@ -149,15 +168,17 @@ function labelForStance(stance: TaskStance): string {
 }
 
 function InventoryList({ inventory }: { inventory: SupplyInventory }) {
-  const entries = Object.entries(inventory).filter(([, quantity]) => quantity > 0);
+  const entries = Object.entries(inventory).filter(([supplyId]) => getSupplyQuantity(inventory, supplyId) > 0);
   if (entries.length === 0) {
     return <p>None</p>;
   }
   return (
     <div className="list">
-      {entries.map(([supplyId, quantity]) => (
+      {entries.map(([supplyId, stack]) => (
         <p key={supplyId}>
-          {supplyId}: {quantity}
+          {supplyId}: {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
+            .map((quality) => `${formatSupplyQuality(quality)} ${stack?.[quality]}`)
+            .join(", ")}
         </p>
       ))}
     </div>

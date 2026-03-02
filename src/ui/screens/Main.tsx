@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { applyToolPriceModifiers } from "../../core/economy";
-import { getCurrentTask } from "../../core/playerFlow";
+import { getCurrentTask, getSupplyUnitPrice } from "../../core/playerFlow";
 import { DayReport } from "../components/DayReport";
 import { AssignmentPanel } from "../components/AssignmentPanel";
 import { ContractList } from "../components/ContractList";
@@ -32,7 +31,7 @@ export function Main() {
   const currentTask = getCurrentTask(game);
   const activeJob = game.activeJob;
   const activeJobDef = activeJob ? jobsById.get(activeJob.jobId) : null;
-  const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, applyToolPriceModifiers(supply.price, activeEvents)]));
+  const supplyPrices = new Map(bundle.supplies.map((supply) => [supply.id, getSupplyUnitPrice(supply, "medium", activeEvents)]));
 
   return (
     <main className="screen main-screen">
