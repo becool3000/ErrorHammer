@@ -1,31 +1,20 @@
 # Decisions
 ## Active Decisions
-1. Runtime target is a browser-first web app built with React, TypeScript, and Vite.
-2. Gameplay resolution remains deterministic and seed-driven; randomness must route through `src/core/rng.ts`.
-3. Gameplay logic stays in pure core modules under `src/core/**`; UI must not mutate gameplay state directly.
-4. Content remains JSON-driven under `content/**`, validated by schemas, and compiled into `src/generated/content.bundle.json`.
-5. The generated content bundle stays tracked in git for reproducible baselines.
-6. Save/load remains a single-slot local `localStorage` path.
-7. The compact mobile-first shell with bottom-tab navigation for `Work`, `Contracts`, `Store`, and `Company` remains the active UI model.
-8. Secondary information stays in overlays instead of long primary-page stacks.
-9. Store interactions remain visibly locked when the player is away from the shop.
-10. Crew hiring remains deterministic: fixed three-slot roster order, unlock at `companyLevel >= 2`, shared player tools, and active-job assignee support.
-11. Active events remain read-only gameplay inputs, but the `Work` view must surface their cues for planning.
-12. Final rolling-session UI contract is locked: `Current Task` renders before `Active Job`, workday and active-job panels start collapsed, supplier-cart checkout guidance stays inline, and visible work actions collapse to overtime-only buttons when regular actions no longer fit.
-13. Visible skill levels use the tiered cumulative curve `0, 100, 250, 450, 650, 850, +200...`.
-14. Operator Level is derived from average raw XP across all tracked skills.
-15. Progression popup order is deterministic: `XP Earned -> Skill Leveled Up -> Operator Leveled Up!`.
-16. Progression popups do not auto-dismiss; the player advances the queue manually.
-17. Player-facing skill labels must use readable names such as `AI Tools`, `HVAC`, `CAD`, and `Sheet Metal`.
-18. `Tasks.md` is the live handoff board, and `Testing.md` is the live evidence summary.
-19. Supplier quality planning chain `PLN-010` adopts exactly three material quality tiers: `low`, `medium`, and `high`.
-20. Supply content must own per-tier prices in data rather than deriving them at runtime from one base price.
-21. Supplier checkout must require explicit player selection for required material quantities by quality tier before `checkout_supplies` can complete.
-22. Material quality must remain deterministic from purchased inventory through reserved job materials and into final completed-job quality effects.
-23. The material-quality calculation must use the actual parts reserved to the job, not the desired cart or leftover truck stock.
-24. `medium` quality is the neutral baseline; `low` and `high` must have visible but bounded effects on completed-job quality so the task-skill system remains primary.
+1. Runtime target remains browser-first React + TypeScript + Vite on `main`.
+2. Gameplay resolution remains deterministic; all random paths must use seeded RNG utilities in `src/core/rng.ts`.
+3. Gameplay mutations stay in core modules under `src/core/**`; UI only dispatches core transitions.
+4. Content remains JSON + schema validated + compiled into tracked `src/generated/content.bundle.json`.
+5. Trade skill contract is locked to 19 skills and every job must declare exactly one `primarySkill`.
+6. Trade job corpus is locked to exactly `95` jobs, with `5` jobs per trade skill.
+7. Bot roster is locked to exactly `10` entries in `content/bots.json`.
+8. Baba fallback jobs remain separate from trade jobs in `content/baba_jobs.json`.
+9. Full contract board generation guarantees one trade offer per skill and deterministic selection by seed/day.
+10. Visible offer order is locked: `Day Labor` first, rotating `Baba G` second, then trade offers.
+11. Baba job risk floor remains high-risk (`>= 60%` effective policy via existing risk rules).
+12. Contracts UI on mobile uses grouped trade tabs instead of a single long contract carousel.
+13. Save compatibility for this migration is handled via version bump and hard-reset policy for incompatible legacy saves.
+14. `Tasks.md` remains the live lane-board source of truth and `Testing.md` remains the evidence summary source.
 
 ## Archive
 1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-2. Detailed testing contract history is archived in [Testing-Scenario-Map-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Testing-Scenario-Map-2026-03-01.md).
-3. Earlier legacy decision history remains in [Decisions-History-2026-02-13.md](/g:/ErrorHammer/obsidian_vault/archive/Decisions-History-2026-02-13.md).
+2. Earlier decision-history notes remain in [Decisions-History-2026-02-13.md](/g:/ErrorHammer/obsidian_vault/archive/Decisions-History-2026-02-13.md).

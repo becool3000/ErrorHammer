@@ -3,15 +3,15 @@
     "id": "doug",
     "name": "Doug",
     "weights": {
-      "wCash": 1.1,
-      "wRep": 0.6,
-      "wRiskAvoid": 0.3,
-      "wToolBuy": 1.2
+      "wCash": 1.12,
+      "wRep": 0.58,
+      "wRiskAvoid": 0.34,
+      "wToolBuy": 1.15
     },
     "flavorLines": [
-      "Doug bought another drill because the first drill looked lonely.",
-      "Doug says risk is just excitement with paperwork.",
-      "Doug arrives early, then improvises the rest."
+      "Doug tracks every invoice in a weatherproof notebook.",
+      "Doug says the real job is fixing yesterday's shortcuts.",
+      "Doug arrives with coffee, tape, and a questionable plan."
     ]
   },
   {
@@ -20,13 +20,133 @@
     "weights": {
       "wCash": 0.9,
       "wRep": 1.2,
-      "wRiskAvoid": 1.3,
-      "wToolBuy": 0.5
+      "wRiskAvoid": 1.25,
+      "wToolBuy": 0.55
     },
     "flavorLines": [
-      "Marlene carries a checklist and a backup checklist.",
-      "Marlene treats clean corners like a moral duty.",
-      "Marlene declines chaos on principle."
+      "Marlene tracks every invoice in a weatherproof notebook.",
+      "Marlene says the real job is fixing yesterday's shortcuts.",
+      "Marlene arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "rico",
+    "name": "Rico",
+    "weights": {
+      "wCash": 1.05,
+      "wRep": 0.75,
+      "wRiskAvoid": 0.45,
+      "wToolBuy": 1.05
+    },
+    "flavorLines": [
+      "Rico tracks every invoice in a weatherproof notebook.",
+      "Rico says the real job is fixing yesterday's shortcuts.",
+      "Rico arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "tasha",
+    "name": "Tasha",
+    "weights": {
+      "wCash": 0.94,
+      "wRep": 1.05,
+      "wRiskAvoid": 0.92,
+      "wToolBuy": 0.78
+    },
+    "flavorLines": [
+      "Tasha tracks every invoice in a weatherproof notebook.",
+      "Tasha says the real job is fixing yesterday's shortcuts.",
+      "Tasha arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "linh",
+    "name": "Linh",
+    "weights": {
+      "wCash": 0.98,
+      "wRep": 0.92,
+      "wRiskAvoid": 0.88,
+      "wToolBuy": 0.9
+    },
+    "flavorLines": [
+      "Linh tracks every invoice in a weatherproof notebook.",
+      "Linh says the real job is fixing yesterday's shortcuts.",
+      "Linh arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "omar",
+    "name": "Omar",
+    "weights": {
+      "wCash": 1.08,
+      "wRep": 0.7,
+      "wRiskAvoid": 0.52,
+      "wToolBuy": 1
+    },
+    "flavorLines": [
+      "Omar tracks every invoice in a weatherproof notebook.",
+      "Omar says the real job is fixing yesterday's shortcuts.",
+      "Omar arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "sylvia",
+    "name": "Sylvia",
+    "weights": {
+      "wCash": 0.87,
+      "wRep": 1.26,
+      "wRiskAvoid": 1.3,
+      "wToolBuy": 0.6
+    },
+    "flavorLines": [
+      "Sylvia tracks every invoice in a weatherproof notebook.",
+      "Sylvia says the real job is fixing yesterday's shortcuts.",
+      "Sylvia arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "benny",
+    "name": "Benny",
+    "weights": {
+      "wCash": 1.16,
+      "wRep": 0.62,
+      "wRiskAvoid": 0.3,
+      "wToolBuy": 1.22
+    },
+    "flavorLines": [
+      "Benny tracks every invoice in a weatherproof notebook.",
+      "Benny says the real job is fixing yesterday's shortcuts.",
+      "Benny arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "keiko",
+    "name": "Keiko",
+    "weights": {
+      "wCash": 0.96,
+      "wRep": 1,
+      "wRiskAvoid": 0.84,
+      "wToolBuy": 0.82
+    },
+    "flavorLines": [
+      "Keiko tracks every invoice in a weatherproof notebook.",
+      "Keiko says the real job is fixing yesterday's shortcuts.",
+      "Keiko arrives with coffee, tape, and a questionable plan."
+    ]
+  },
+  {
+    "id": "rafa",
+    "name": "Rafa",
+    "weights": {
+      "wCash": 1.02,
+      "wRep": 0.86,
+      "wRiskAvoid": 0.66,
+      "wToolBuy": 0.96
+    },
+    "flavorLines": [
+      "Rafa tracks every invoice in a weatherproof notebook.",
+      "Rafa says the real job is fixing yesterday's shortcuts.",
+      "Rafa arrives with coffee, tape, and a questionable plan."
     ]
   }
 ]

@@ -1,0 +1,482 @@
+[
+  {
+    "id": "job-baba-g-001",
+    "name": "Baba G Pig Head Removal Detail",
+    "primarySkill": "mason",
+    "tier": 1,
+    "districtId": "residential",
+    "requiredTools": [
+      "trowel",
+      "level"
+    ],
+    "staminaCost": 2,
+    "basePayout": 80,
+    "risk": 0.62,
+    "repGainSuccess": 2,
+    "repLossFail": 2,
+    "durabilityCost": 3,
+    "workUnits": 3,
+    "materialNeeds": [
+      {
+        "supplyId": "mortar-mix",
+        "quantity": 1
+      },
+      {
+        "supplyId": "brick-pack",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "mason",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Pig Head Removal Detail. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Pig Head Removal Detail somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Pig Head Removal Detail escalated into folklore before lunch.",
+      "neutral_line": "Baba G Pig Head Removal Detail technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-002",
+    "name": "Baba G Grease Trap Catapult Swap",
+    "primarySkill": "plumber",
+    "tier": 2,
+    "districtId": "small-commercial",
+    "requiredTools": [
+      "pipe-threader",
+      "level"
+    ],
+    "staminaCost": 3,
+    "basePayout": 91,
+    "risk": 0.68,
+    "repGainSuccess": 3,
+    "repLossFail": 3,
+    "durabilityCost": 4,
+    "workUnits": 4,
+    "materialNeeds": [
+      {
+        "supplyId": "pipe-kit",
+        "quantity": 2
+      },
+      {
+        "supplyId": "valve-pack",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "plumber",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Grease Trap Catapult Swap. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Grease Trap Catapult Swap somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Grease Trap Catapult Swap escalated into folklore before lunch.",
+      "neutral_line": "Baba G Grease Trap Catapult Swap technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-003",
+    "name": "Baba G Odor Remediation Relay",
+    "primarySkill": "hvac_technician",
+    "tier": 3,
+    "districtId": "civic-lite",
+    "requiredTools": [
+      "hvac-gauge",
+      "drill"
+    ],
+    "staminaCost": 4,
+    "basePayout": 102,
+    "risk": 0.74,
+    "repGainSuccess": 4,
+    "repLossFail": 4,
+    "durabilityCost": 5,
+    "workUnits": 5,
+    "materialNeeds": [
+      {
+        "supplyId": "duct-kit",
+        "quantity": 3
+      },
+      {
+        "supplyId": "filter-pack",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "hvac_technician",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Odor Remediation Relay. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Odor Remediation Relay somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Odor Remediation Relay escalated into folklore before lunch.",
+      "neutral_line": "Baba G Odor Remediation Relay technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-004",
+    "name": "Baba G Roof Bucket Rotation",
+    "primarySkill": "roofer",
+    "tier": 1,
+    "districtId": "residential",
+    "requiredTools": [
+      "roofing-nailer",
+      "ladder"
+    ],
+    "staminaCost": 2,
+    "basePayout": 113,
+    "risk": 0.8,
+    "repGainSuccess": 2,
+    "repLossFail": 2,
+    "durabilityCost": 3,
+    "workUnits": 3,
+    "materialNeeds": [
+      {
+        "supplyId": "roof-shingle-bundle",
+        "quantity": 1
+      },
+      {
+        "supplyId": "roof-flashing-kit",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "roofer",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Roof Bucket Rotation. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Roof Bucket Rotation somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Roof Bucket Rotation escalated into folklore before lunch.",
+      "neutral_line": "Baba G Roof Bucket Rotation technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-005",
+    "name": "Baba G Freezer Graveyard Cleanup",
+    "primarySkill": "electrician",
+    "tier": 2,
+    "districtId": "small-commercial",
+    "requiredTools": [
+      "multimeter",
+      "drill"
+    ],
+    "staminaCost": 3,
+    "basePayout": 124,
+    "risk": 0.62,
+    "repGainSuccess": 3,
+    "repLossFail": 3,
+    "durabilityCost": 4,
+    "workUnits": 4,
+    "materialNeeds": [
+      {
+        "supplyId": "wire-spool",
+        "quantity": 2
+      },
+      {
+        "supplyId": "breaker-kit",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "electrician",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Freezer Graveyard Cleanup. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Freezer Graveyard Cleanup somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Freezer Graveyard Cleanup escalated into folklore before lunch.",
+      "neutral_line": "Baba G Freezer Graveyard Cleanup technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-006",
+    "name": "Baba G Mystery Puddle Containment",
+    "primarySkill": "concrete_finisher",
+    "tier": 3,
+    "districtId": "civic-lite",
+    "requiredTools": [
+      "trowel",
+      "level"
+    ],
+    "staminaCost": 4,
+    "basePayout": 135,
+    "risk": 0.68,
+    "repGainSuccess": 4,
+    "repLossFail": 4,
+    "durabilityCost": 5,
+    "workUnits": 5,
+    "materialNeeds": [
+      {
+        "supplyId": "concrete-mix",
+        "quantity": 3
+      },
+      {
+        "supplyId": "rebar-bundle",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "concrete_finisher",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Mystery Puddle Containment. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Mystery Puddle Containment somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Mystery Puddle Containment escalated into folklore before lunch.",
+      "neutral_line": "Baba G Mystery Puddle Containment technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-007",
+    "name": "Baba G Neon Sign Mood Stabilization",
+    "primarySkill": "solar_panel_installer",
+    "tier": 1,
+    "districtId": "residential",
+    "requiredTools": [
+      "solar-crimper",
+      "drill"
+    ],
+    "staminaCost": 2,
+    "basePayout": 146,
+    "risk": 0.74,
+    "repGainSuccess": 2,
+    "repLossFail": 2,
+    "durabilityCost": 3,
+    "workUnits": 3,
+    "materialNeeds": [
+      {
+        "supplyId": "solar-rack-kit",
+        "quantity": 1
+      },
+      {
+        "supplyId": "wire-spool",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "solar_panel_installer",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Neon Sign Mood Stabilization. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Neon Sign Mood Stabilization somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Neon Sign Mood Stabilization escalated into folklore before lunch.",
+      "neutral_line": "Baba G Neon Sign Mood Stabilization technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-008",
+    "name": "Baba G Side Door Time Loop Repair",
+    "primarySkill": "carpenter",
+    "tier": 2,
+    "districtId": "small-commercial",
+    "requiredTools": [
+      "saw",
+      "hammer"
+    ],
+    "staminaCost": 3,
+    "basePayout": 157,
+    "risk": 0.8,
+    "repGainSuccess": 3,
+    "repLossFail": 3,
+    "durabilityCost": 4,
+    "workUnits": 4,
+    "materialNeeds": [
+      {
+        "supplyId": "board-pack",
+        "quantity": 2
+      },
+      {
+        "supplyId": "fastener-box",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "carpenter",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Side Door Time Loop Repair. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Side Door Time Loop Repair somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Side Door Time Loop Repair escalated into folklore before lunch.",
+      "neutral_line": "Baba G Side Door Time Loop Repair technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-009",
+    "name": "Baba G Countertop Tilt Negotiation",
+    "primarySkill": "millworker",
+    "tier": 3,
+    "districtId": "civic-lite",
+    "requiredTools": [
+      "miter-saw",
+      "drill"
+    ],
+    "staminaCost": 4,
+    "basePayout": 168,
+    "risk": 0.62,
+    "repGainSuccess": 4,
+    "repLossFail": 4,
+    "durabilityCost": 5,
+    "workUnits": 5,
+    "materialNeeds": [
+      {
+        "supplyId": "millwork-trim-kit",
+        "quantity": 3
+      },
+      {
+        "supplyId": "fastener-box",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "millworker",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Countertop Tilt Negotiation. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Countertop Tilt Negotiation somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Countertop Tilt Negotiation escalated into folklore before lunch.",
+      "neutral_line": "Baba G Countertop Tilt Negotiation technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-010",
+    "name": "Baba G Cooler Door Resurrection",
+    "primarySkill": "glazier",
+    "tier": 1,
+    "districtId": "residential",
+    "requiredTools": [
+      "glass-suction",
+      "level"
+    ],
+    "staminaCost": 2,
+    "basePayout": 179,
+    "risk": 0.68,
+    "repGainSuccess": 2,
+    "repLossFail": 2,
+    "durabilityCost": 3,
+    "workUnits": 3,
+    "materialNeeds": [
+      {
+        "supplyId": "glass-panel-crate",
+        "quantity": 1
+      },
+      {
+        "supplyId": "glazing-sealant-tube",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "glazier",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Cooler Door Resurrection. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Cooler Door Resurrection somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Cooler Door Resurrection escalated into folklore before lunch.",
+      "neutral_line": "Baba G Cooler Door Resurrection technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-011",
+    "name": "Baba G Parking Lot Fence Diplomacy",
+    "primarySkill": "fence_installer",
+    "tier": 2,
+    "districtId": "small-commercial",
+    "requiredTools": [
+      "post-hole-auger",
+      "level"
+    ],
+    "staminaCost": 3,
+    "basePayout": 190,
+    "risk": 0.74,
+    "repGainSuccess": 3,
+    "repLossFail": 3,
+    "durabilityCost": 4,
+    "workUnits": 4,
+    "materialNeeds": [
+      {
+        "supplyId": "fence-panel-pack",
+        "quantity": 2
+      },
+      {
+        "supplyId": "post-anchor-kit",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "fence_installer",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Parking Lot Fence Diplomacy. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Parking Lot Fence Diplomacy somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Parking Lot Fence Diplomacy escalated into folklore before lunch.",
+      "neutral_line": "Baba G Parking Lot Fence Diplomacy technically completed, but quality landed halfway."
+    }
+  },
+  {
+    "id": "job-baba-g-012",
+    "name": "Baba G Hallway Drip Choir Silencing",
+    "primarySkill": "drywall_installer",
+    "tier": 3,
+    "districtId": "civic-lite",
+    "requiredTools": [
+      "drywall-knife",
+      "saw"
+    ],
+    "staminaCost": 4,
+    "basePayout": 201,
+    "risk": 0.8,
+    "repGainSuccess": 4,
+    "repLossFail": 4,
+    "durabilityCost": 5,
+    "workUnits": 5,
+    "materialNeeds": [
+      {
+        "supplyId": "drywall-sheet-stack",
+        "quantity": 3
+      },
+      {
+        "supplyId": "joint-compound-bucket",
+        "quantity": 1
+      }
+    ],
+    "tags": [
+      "baba-g",
+      "drywall_installer",
+      "absurd",
+      "commercial"
+    ],
+    "flavor": {
+      "client_quote": "Baba G Hallway Drip Choir Silencing. Baba G says \"if it looks impossible, bill it like art.\"",
+      "success_line": "Baba G Hallway Drip Choir Silencing somehow worked and Baba G called it elegant.",
+      "fail_line": "Baba G Hallway Drip Choir Silencing escalated into folklore before lunch.",
+      "neutral_line": "Baba G Hallway Drip Choir Silencing technically completed, but quality landed halfway."
+    }
+  }
+]

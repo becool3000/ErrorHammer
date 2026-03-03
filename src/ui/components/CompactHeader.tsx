@@ -1,88 +1,95 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GameState } from "../../core/types";
 import { ticksToHours } from "../../core/playerFlow";
-import { bundle, GameTabId, UiTextScale, useUiStore } from "../state";
-import { SegmentedControl } from "./SegmentedControl";
-
-const tabLabels: Record<GameTabId, string> = {
-  work: "Work",
-  contracts: "Contracts",
-  store: "Store",
-  company: "Company"
-};
+import { bundle, GameTabId, useUiStore } from "../state";
 
 interface CompactHeaderProps {
   game: GameState;
   activeTab: GameTabId;
 }
 
-const textScaleOptions: Array<{ id: UiTextScale; label: string }> = [
-  { id: "default", label: "Default" },
-  { id: "large", label: "Large" },
-  { id: "xlarge", label: "XL" }
-];
-
 export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const openModal = useUiStore((state) => state.openModal);
-  const uiTextScale = useUiStore((state) => state.uiTextScale);
-  const setUiTextScale = useUiStore((state) => state.setUiTextScale);
+  const previousCashRef = useRef<number | null>(null);
+  const [cashRaised, setCashRaised] = useState(false);
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);
-  const overtimeHours = ticksToHours(Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed));
   const baseHours = ticksToHours(game.workday.ticksPerDay);
   const activeEventCount = game.activeEventIds.length;
   const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
+  const showOperatorHud = activeTab === "work";
+
+  useEffect(() => {
+    const previousCash = previousCashRef.current;
+    if (previousCash !== null && game.player.cash > previousCash) {
+      setCashRaised(true);
+      const timeoutId = window.setTimeout(() => setCashRaised(false), 1200);
+      previousCashRef.current = game.player.cash;
+      return () => window.clearTimeout(timeoutId);
+    }
+    previousCashRef.current = game.player.cash;
+    setCashRaised(false);
+    return undefined;
+  }, [game.player.cash]);
 
   return (
     <header className="compact-header chrome-card">
-      <div className="section-label-row header-summary-row">
-        <button
-          type="button"
-          className="summary-toggle summary-toggle-block"
-          aria-label={`Toggle workday details for Day ${game.day}`}
-          aria-expanded={detailsOpen}
-          aria-controls="workday-status-panel"
-          onClick={() => setDetailsOpen((open) => !open)}
-        >
-          <span className="summary-toggle-copy header-summary-copy">
-            <span className="eyebrow">{tabLabels[activeTab]}</span>
-            <h1 className="summary-toggle-title">Day {game.day}</h1>
+      <div className="header-top-row">
+        <div className="header-left-stack">
+          {showOperatorHud ? (
+            <div className="header-operator-copy">
+              <h3>{game.player.name}</h3>
+              <p className="muted-copy">{game.player.companyName}</p>
+            </div>
+          ) : null}
+          <div className="header-day-copy">
+            <h1 className="header-day-title">Day {game.day}</h1>
             <span className="header-subtitle">{game.workday.weekday} shift</span>
-          </span>
-          <span className="chip">{detailsOpen ? "Hide" : "Show"}</span>
-        </button>
-        <button type="button" className="ghost-button hud-button" onClick={() => openModal("active-events")}>
-          Active Events {activeEventCount}
-        </button>
+          </div>
+        </div>
+        <div className="header-top-actions">
+          {showOperatorHud ? (
+            <div className="header-action-row">
+              <button className="hud-link-button" onClick={() => openModal("inventory")}>
+                Inventory
+              </button>
+              <button className="hud-link-button" onClick={() => openModal("skills")}>
+                Skills
+              </button>
+            </div>
+          ) : null}
+          <button type="button" className="hud-link-button" onClick={() => openModal("active-events")}>
+            Active Events {activeEventCount}
+          </button>
+        </div>
       </div>
-      <div className="status-strip" role="list" aria-label="Player HUD">
-        <span role="listitem">Cash ${game.player.cash}</span>
-        <span role="listitem">Fuel {game.player.fuel}/{game.player.fuelMax}</span>
-        <span role="listitem">Stamina {game.player.stamina}/{game.player.staminaMax}</span>
-        <span role="listitem">Fatigue {game.workday.fatigue.debt}</span>
-        <span role="listitem">{bundle.strings.hoursLabel} {remainingHours.toFixed(1)}/{totalHours.toFixed(1)}</span>
+      <div className="status-strip header-metric-grid" role="list" aria-label="Player HUD">
+        <span role="listitem" className={cashRaised ? "status-metric tone-success" : "status-metric"}>
+          <span>Cash</span>
+          <strong>${game.player.cash}</strong>
+        </span>
+        <span role="listitem" className="status-metric tone-info">
+          <span>Fuel</span>
+          <strong>
+            {game.player.fuel}/{game.player.fuelMax}
+          </strong>
+        </span>
+        <span role="listitem" className="status-metric tone-energy">
+          <span>{bundle.strings.hoursLabel}</span>
+          <strong>
+            {remainingHours.toFixed(1)}/{totalHours.toFixed(1)}
+          </strong>
+        </span>
+        <span role="listitem" className={game.workday.fatigue.debt > 0 ? "status-metric tone-danger" : "status-metric"}>
+          <span>Fatigue</span>
+          <strong>{game.workday.fatigue.debt}</strong>
+        </span>
       </div>
       {isFatigued ? (
         <p className="muted-copy">Fatigue from overtime shortens this shift to {totalHours.toFixed(1)} of {baseHours.toFixed(1)} hours.</p>
       ) : null}
-      <div className="text-size-control">
-        <p className="eyebrow">Text Size</p>
-        <SegmentedControl value={uiTextScale} options={textScaleOptions} onChange={setUiTextScale} label="Text size" />
-      </div>
-      <div
-        id="workday-status-panel"
-        className={detailsOpen ? "collapsible-panel open" : "collapsible-panel"}
-        aria-hidden={!detailsOpen}
-      >
-        <div className="status-strip" role="list" aria-label="Current status">
-          <span role="listitem">Rep {game.player.reputation}</span>
-          <span role="listitem">
-            {bundle.strings.overtimeLabel} {overtimeHours.toFixed(1)}
-          </span>
-          <span role="listitem">Fatigue debt {game.workday.fatigue.debt}</span>
-        </div>
-      </div>
     </header>
   );
 }
+
+

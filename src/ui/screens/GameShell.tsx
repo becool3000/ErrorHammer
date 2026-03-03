@@ -4,8 +4,8 @@ import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
 import { Modal } from "../components/Modal";
 import { CompanyTab } from "./CompanyTab";
-import { ContractsTab } from "./ContractsTab";
-import { StoreTab } from "./StoreTab";
+import { OfficeTab } from "./OfficeTab";
+import { SettingsTab } from "./SettingsTab";
 import { WorkTab } from "./WorkTab";
 
 export function GameShell() {
@@ -21,8 +21,11 @@ export function GameShell() {
   const progressQueue = useUiStore((state) => state.progressQueue);
   const dismissProgressPopup = useUiStore((state) => state.dismissProgressPopup);
   const goToTab = useUiStore((state) => state.goToTab);
+  const endShift = useUiStore((state) => state.endShift);
+  const openModal = useUiStore((state) => state.openModal);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
   const suppressNoticeBanner = activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout");
+  const normalizedActiveTab = activeTab === "contracts" || activeTab === "store" || activeTab === "company" ? "office" : activeTab;
 
   if (!game) {
     return (
@@ -40,7 +43,7 @@ export function GameShell() {
 
   return (
     <main className="screen-shell app-shell">
-      <CompactHeader game={game} activeTab={activeTab} />
+      {normalizedActiveTab === "work" ? <CompactHeader game={game} activeTab={normalizedActiveTab} /> : null}
       {activeProgressPopup ? (
         <section
           className={`progress-popup progress-popup-${activeProgressPopup.severity}`}
@@ -73,12 +76,10 @@ export function GameShell() {
         </button>
       ) : null}
       <section className="tab-stage">
-        {activeTab === "work" ? <WorkTab /> : null}
-        {activeTab === "contracts" ? <ContractsTab /> : null}
-        {activeTab === "store" ? <StoreTab /> : null}
-        {activeTab === "company" ? <CompanyTab /> : null}
+        {normalizedActiveTab === "work" ? <WorkTab /> : null}
+        {normalizedActiveTab === "office" ? <OfficeTab /> : null}
       </section>
-      <BottomNav activeTab={activeTab} onChange={goToTab} />
+      <BottomNav activeTab={normalizedActiveTab} onChange={goToTab} onEndDay={endShift} onOpenSettings={() => openModal("settings")} />
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
         <WorkTab sheetOnly />
       </BottomSheet>
@@ -105,6 +106,9 @@ export function GameShell() {
       </Modal>
       <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal}>
         <CompanyTab modalView="news" />
+      </Modal>
+      <Modal open={activeModal === "settings"} title="Settings" onClose={closeModal}>
+        <SettingsTab />
       </Modal>
     </main>
   );

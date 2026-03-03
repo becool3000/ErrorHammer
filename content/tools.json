@@ -3,130 +3,341 @@
     "id": "hammer",
     "name": "Hammer",
     "tier": 1,
-    "price": 45,
-    "maxDurability": 30,
-    "tags": ["framing", "general"],
-    "flavor": {
-      "description": "The classic argument with nails.",
-      "quip_buy": "You bought confidence with a wooden handle.",
-      "quip_break": "The hammer retired after a long career in impact studies."
-    }
-  },
-  {
-    "id": "screwdriver",
-    "name": "Screwdriver",
-    "tier": 1,
     "price": 35,
-    "maxDurability": 35,
-    "tags": ["fastener", "general"],
+    "maxDurability": 8,
+    "tags": [
+      "carpenter",
+      "framer"
+    ],
     "flavor": {
-      "description": "Turns tiny doubts into tight decisions.",
-      "quip_buy": "You bought a polite spiral persuader.",
-      "quip_break": "The tip became modern art."
-    }
-  },
-  {
-    "id": "wrench",
-    "name": "Wrench",
-    "tier": 1,
-    "price": 55,
-    "maxDurability": 40,
-    "tags": ["plumbing", "mechanical"],
-    "flavor": {
-      "description": "For nuts, bolts, and life adjustments.",
-      "quip_buy": "You bought leverage and a mild shoulder workout.",
-      "quip_break": "The wrench now mostly resembles intent."
+      "description": "Hammer keeps field work moving.",
+      "quip_buy": "Bought Hammer.",
+      "quip_break": "Hammer tapped out mid-shift."
     }
   },
   {
     "id": "drill",
     "name": "Drill",
-    "tier": 2,
-    "price": 140,
-    "maxDurability": 45,
-    "tags": ["fastener", "electrical"],
+    "tier": 1,
+    "price": 85,
+    "maxDurability": 9,
+    "tags": [
+      "electrician",
+      "solar_panel_installer"
+    ],
     "flavor": {
-      "description": "Makes holes where plans become real.",
-      "quip_buy": "You bought a very loud yes.",
-      "quip_break": "The drill now hums only in memory."
-    }
-  },
-  {
-    "id": "saw",
-    "name": "Saw",
-    "tier": 2,
-    "price": 120,
-    "maxDurability": 38,
-    "tags": ["framing", "finish"],
-    "flavor": {
-      "description": "Cuts boards and overconfidence to size.",
-      "quip_buy": "You bought straight lines with a side of sawdust.",
-      "quip_break": "The saw has entered a contemplative, toothless phase."
-    }
-  },
-  {
-    "id": "ladder",
-    "name": "Ladder",
-    "tier": 2,
-    "price": 110,
-    "maxDurability": 50,
-    "tags": ["outdoor", "roof"],
-    "flavor": {
-      "description": "Temporary altitude with permanent responsibility.",
-      "quip_buy": "You bought seventeen opportunities to hold still.",
-      "quip_break": "The ladder is now two short ladders and a lesson."
+      "description": "Drill keeps field work moving.",
+      "quip_buy": "Bought Drill.",
+      "quip_break": "Drill tapped out mid-shift."
     }
   },
   {
     "id": "level",
     "name": "Level",
-    "tier": 2,
-    "price": 70,
-    "maxDurability": 45,
-    "tags": ["finish", "inspection", "concrete"],
-    "flavor": {
-      "description": "A bubble with strong opinions.",
-      "quip_buy": "You bought objective truth in a plastic tube.",
-      "quip_break": "The bubble escaped and took geometry with it."
-    }
-  },
-  {
-    "id": "caulk-gun",
-    "name": "Caulk Gun",
-    "tier": 2,
-    "price": 80,
-    "maxDurability": 42,
-    "tags": ["finish", "seal", "painting"],
-    "flavor": {
-      "description": "Makes gaps disappear and corners believable.",
-      "quip_buy": "You bought a paste launcher for tiny diplomacy.",
-      "quip_break": "The trigger now negotiates only with itself."
-    }
-  },
-  {
-    "id": "utility-knife",
-    "name": "Utility Knife",
     "tier": 1,
-    "price": 50,
-    "maxDurability": 28,
-    "tags": ["finish", "general", "drywall"],
+    "price": 45,
+    "maxDurability": 10,
+    "tags": [
+      "plumber",
+      "mason"
+    ],
     "flavor": {
-      "description": "For clean cuts and rough schedules.",
-      "quip_buy": "You bought precision with a pocket clip.",
-      "quip_break": "The blade retired to paper-only ambitions."
+      "description": "Level keeps field work moving.",
+      "quip_buy": "Bought Level.",
+      "quip_break": "Level tapped out mid-shift."
     }
   },
   {
-    "id": "stud-finder",
-    "name": "Stud Finder",
-    "tier": 3,
-    "price": 180,
-    "maxDurability": 55,
-    "tags": ["inspection", "electrical"],
+    "id": "saw",
+    "name": "Circular Saw",
+    "tier": 1,
+    "price": 95,
+    "maxDurability": 8,
+    "tags": [
+      "carpenter",
+      "millworker"
+    ],
     "flavor": {
-      "description": "Beeps confidently near walls and occasionally near hope.",
-      "quip_buy": "You bought electronic wall gossip.",
-      "quip_break": "It now identifies only emotional support beams."
+      "description": "Circular Saw keeps field work moving.",
+      "quip_buy": "Bought Circular Saw.",
+      "quip_break": "Circular Saw tapped out mid-shift."
+    }
+  },
+  {
+    "id": "trowel",
+    "name": "Mason Trowel",
+    "tier": 1,
+    "price": 40,
+    "maxDurability": 9,
+    "tags": [
+      "mason",
+      "concrete_finisher"
+    ],
+    "flavor": {
+      "description": "Mason Trowel keeps field work moving.",
+      "quip_buy": "Bought Mason Trowel.",
+      "quip_break": "Mason Trowel tapped out mid-shift."
+    }
+  },
+  {
+    "id": "roofing-nailer",
+    "name": "Roofing Nailer",
+    "tier": 2,
+    "price": 155,
+    "maxDurability": 8,
+    "tags": [
+      "roofer",
+      "siding_installer"
+    ],
+    "flavor": {
+      "description": "Roofing Nailer keeps field work moving.",
+      "quip_buy": "Bought Roofing Nailer.",
+      "quip_break": "Roofing Nailer tapped out mid-shift."
+    }
+  },
+  {
+    "id": "hvac-gauge",
+    "name": "HVAC Gauge Set",
+    "tier": 2,
+    "price": 165,
+    "maxDurability": 8,
+    "tags": [
+      "hvac_technician"
+    ],
+    "flavor": {
+      "description": "HVAC Gauge Set keeps field work moving.",
+      "quip_buy": "Bought HVAC Gauge Set.",
+      "quip_break": "HVAC Gauge Set tapped out mid-shift."
+    }
+  },
+  {
+    "id": "drywall-knife",
+    "name": "Drywall Knife",
+    "tier": 1,
+    "price": 32,
+    "maxDurability": 10,
+    "tags": [
+      "drywall_installer",
+      "insulation_installer"
+    ],
+    "flavor": {
+      "description": "Drywall Knife keeps field work moving.",
+      "quip_buy": "Bought Drywall Knife.",
+      "quip_break": "Drywall Knife tapped out mid-shift."
+    }
+  },
+  {
+    "id": "paint-sprayer",
+    "name": "Paint Sprayer",
+    "tier": 2,
+    "price": 145,
+    "maxDurability": 8,
+    "tags": [
+      "painter"
+    ],
+    "flavor": {
+      "description": "Paint Sprayer keeps field work moving.",
+      "quip_buy": "Bought Paint Sprayer.",
+      "quip_break": "Paint Sprayer tapped out mid-shift."
+    }
+  },
+  {
+    "id": "tile-cutter",
+    "name": "Tile Cutter",
+    "tier": 2,
+    "price": 160,
+    "maxDurability": 7,
+    "tags": [
+      "flooring_installer"
+    ],
+    "flavor": {
+      "description": "Tile Cutter keeps field work moving.",
+      "quip_buy": "Bought Tile Cutter.",
+      "quip_break": "Tile Cutter tapped out mid-shift."
+    }
+  },
+  {
+    "id": "glass-suction",
+    "name": "Glass Suction Rig",
+    "tier": 2,
+    "price": 175,
+    "maxDurability": 7,
+    "tags": [
+      "glazier"
+    ],
+    "flavor": {
+      "description": "Glass Suction Rig keeps field work moving.",
+      "quip_buy": "Bought Glass Suction Rig.",
+      "quip_break": "Glass Suction Rig tapped out mid-shift."
+    }
+  },
+  {
+    "id": "insulation-blower",
+    "name": "Insulation Blower",
+    "tier": 2,
+    "price": 180,
+    "maxDurability": 7,
+    "tags": [
+      "insulation_installer"
+    ],
+    "flavor": {
+      "description": "Insulation Blower keeps field work moving.",
+      "quip_buy": "Bought Insulation Blower.",
+      "quip_break": "Insulation Blower tapped out mid-shift."
+    }
+  },
+  {
+    "id": "framing-nailer",
+    "name": "Framing Nailer",
+    "tier": 2,
+    "price": 170,
+    "maxDurability": 8,
+    "tags": [
+      "framer",
+      "carpenter"
+    ],
+    "flavor": {
+      "description": "Framing Nailer keeps field work moving.",
+      "quip_buy": "Bought Framing Nailer.",
+      "quip_break": "Framing Nailer tapped out mid-shift."
+    }
+  },
+  {
+    "id": "siding-brake",
+    "name": "Siding Brake",
+    "tier": 2,
+    "price": 150,
+    "maxDurability": 8,
+    "tags": [
+      "siding_installer"
+    ],
+    "flavor": {
+      "description": "Siding Brake keeps field work moving.",
+      "quip_buy": "Bought Siding Brake.",
+      "quip_break": "Siding Brake tapped out mid-shift."
+    }
+  },
+  {
+    "id": "post-hole-auger",
+    "name": "Post Hole Auger",
+    "tier": 2,
+    "price": 140,
+    "maxDurability": 8,
+    "tags": [
+      "fence_installer"
+    ],
+    "flavor": {
+      "description": "Post Hole Auger keeps field work moving.",
+      "quip_buy": "Bought Post Hole Auger.",
+      "quip_break": "Post Hole Auger tapped out mid-shift."
+    }
+  },
+  {
+    "id": "cabinet-jig",
+    "name": "Cabinet Jig",
+    "tier": 2,
+    "price": 165,
+    "maxDurability": 8,
+    "tags": [
+      "cabinet_maker"
+    ],
+    "flavor": {
+      "description": "Cabinet Jig keeps field work moving.",
+      "quip_buy": "Bought Cabinet Jig.",
+      "quip_break": "Cabinet Jig tapped out mid-shift."
+    }
+  },
+  {
+    "id": "miter-saw",
+    "name": "Miter Saw",
+    "tier": 2,
+    "price": 175,
+    "maxDurability": 7,
+    "tags": [
+      "millworker",
+      "cabinet_maker"
+    ],
+    "flavor": {
+      "description": "Miter Saw keeps field work moving.",
+      "quip_buy": "Bought Miter Saw.",
+      "quip_break": "Miter Saw tapped out mid-shift."
+    }
+  },
+  {
+    "id": "scaffold-wrench",
+    "name": "Scaffold Wrench",
+    "tier": 1,
+    "price": 52,
+    "maxDurability": 10,
+    "tags": [
+      "scaffolder"
+    ],
+    "flavor": {
+      "description": "Scaffold Wrench keeps field work moving.",
+      "quip_buy": "Bought Scaffold Wrench.",
+      "quip_break": "Scaffold Wrench tapped out mid-shift."
+    }
+  },
+  {
+    "id": "solar-crimper",
+    "name": "Solar Crimper",
+    "tier": 2,
+    "price": 168,
+    "maxDurability": 8,
+    "tags": [
+      "solar_panel_installer",
+      "electrician"
+    ],
+    "flavor": {
+      "description": "Solar Crimper keeps field work moving.",
+      "quip_buy": "Bought Solar Crimper.",
+      "quip_break": "Solar Crimper tapped out mid-shift."
+    }
+  },
+  {
+    "id": "pipe-threader",
+    "name": "Pipe Threader",
+    "tier": 2,
+    "price": 158,
+    "maxDurability": 8,
+    "tags": [
+      "plumber"
+    ],
+    "flavor": {
+      "description": "Pipe Threader keeps field work moving.",
+      "quip_buy": "Bought Pipe Threader.",
+      "quip_break": "Pipe Threader tapped out mid-shift."
+    }
+  },
+  {
+    "id": "multimeter",
+    "name": "Multimeter",
+    "tier": 1,
+    "price": 62,
+    "maxDurability": 9,
+    "tags": [
+      "electrician"
+    ],
+    "flavor": {
+      "description": "Multimeter keeps field work moving.",
+      "quip_buy": "Bought Multimeter.",
+      "quip_break": "Multimeter tapped out mid-shift."
+    }
+  },
+  {
+    "id": "ladder",
+    "name": "Ladder",
+    "tier": 1,
+    "price": 70,
+    "maxDurability": 9,
+    "tags": [
+      "roofer",
+      "painter"
+    ],
+    "flavor": {
+      "description": "Ladder keeps field work moving.",
+      "quip_buy": "Bought Ladder.",
+      "quip_break": "Ladder tapped out mid-shift."
     }
   }
 ]

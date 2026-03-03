@@ -5,6 +5,7 @@ import {
   formatSkillLabel,
   formatSupplyQuality,
   getCurrentTask,
+  getCurrentTaskGuidance,
   getGasStationStopPlan,
   getOperatorLevel,
   getSkillDisplayRows,
@@ -13,7 +14,6 @@ import {
   getVisibleTaskActions
 } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
-import { Modal } from "../components/Modal";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
@@ -23,7 +23,6 @@ interface WorkTabProps {
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
-  const [selectedSupplyId, setSelectedSupplyId] = useState<string | null>(null);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
   const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
   const actionTrackRef = useRef<HTMLDivElement | null>(null);
@@ -32,10 +31,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const notice = useUiStore((state) => state.notice);
   const performTask = useUiStore((state) => state.performTaskUnit);
   const setJobAssignee = useUiStore((state) => state.setJobAssignee);
-  const endShift = useUiStore((state) => state.endShift);
   const runGasStationStop = useUiStore((state) => state.runGasStationStop);
   const openModal = useUiStore((state) => state.openModal);
-  const openSheet = useUiStore((state) => state.openSheet);
   const goToTab = useUiStore((state) => state.goToTab);
   const setCartQuantity = useUiStore((state) => state.setCartQuantity);
   if (!game) {
@@ -52,8 +49,12 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     [activeEvents]
   );
   const currentTask = getCurrentTask(game);
+  const taskGuidance = getCurrentTaskGuidance(game, bundle);
+  const isSupplierCheckoutTask = currentTask?.taskId === "checkout_supplies";
   const activeJob = game.activeJob;
-  const job = activeJob ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? null : null;
+  const job = activeJob
+    ? bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? bundle.babaJobs.find((entry) => entry.id === activeJob.jobId) ?? null
+    : null;
   const materialNeedRows = job
     ? job.materialNeeds.map((material) => {
         const supply = bundle.supplies.find((entry) => entry.id === material.supplyId);
@@ -77,30 +78,63 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const taskActions = currentTask
     ? getVisibleTaskActions(game, bundle).map((action) => ({
         ...action,
-        label: action.allowOvertime ? `${labelForStance(action.stance)} + OT` : labelForStance(action.stance)
+        label:
+          currentTask.taskId === "refuel_at_station"
+            ? action.allowOvertime
+              ? `${labelForRefuelAction(action.stance)} + OT`
+              : labelForRefuelAction(action.stance)
+            : action.allowOvertime
+              ? `${labelForStance(action.stance)} + OT`
+              : labelForStance(action.stance)
       }))
     : [];
+  const supplierCatalogRows = materialNeedRows
+    .map((need) => {
+      const supply = bundle.supplies.find((entry) => entry.id === need.supplyId);
+      if (!supply) {
+        return null;
+      }
+      const onTruck = getSupplyQuantity(game.truckSupplies, supply.id);
+      const inCart = getSupplyQuantity(activeJob?.supplierCart ?? {}, supply.id);
+      return {
+        supply,
+        required: need.required,
+        onTruck,
+        inCart,
+        remaining: Math.max(0, need.required - onTruck - inCart),
+        cartByQuality: Object.fromEntries(
+          SUPPLY_QUALITIES.map((quality) => [quality, getSupplyQuantity(activeJob?.supplierCart ?? {}, supply.id, quality)])
+        ) as Record<SupplyQuality, number>
+      };
+    })
+    .filter(
+      (
+        row
+      ): row is {
+        supply: (typeof bundle.supplies)[number];
+        required: number;
+        onTruck: number;
+        inCart: number;
+        remaining: number;
+        cartByQuality: Record<SupplyQuality, number>;
+      } => row !== null
+    );
   const gasStationPlan = getGasStationStopPlan(game, bundle);
   const supplierCartNotice =
     notice.startsWith("Add the needed items to the supplier cart before checkout") ||
     notice.startsWith("Allocate the needed items by quality before checkout")
       ? notice
       : "";
-  const selectedSupply = selectedSupplyId ? bundle.supplies.find((supply) => supply.id === selectedSupplyId) ?? null : null;
   const supplierCartTotal = activeJob
-    ? materialNeedRows.reduce((sum, row) => {
-        const supply = bundle.supplies.find((entry) => entry.id === row.supplyId);
-        if (!supply) {
-          return sum;
-        }
-        return (
+    ? supplierCatalogRows.reduce(
+        (sum, row) =>
           sum +
           SUPPLY_QUALITIES.reduce(
-            (tierSum, quality) => tierSum + row.cartByQuality[quality] * getSupplyUnitPrice(supply, quality, activeEvents),
+            (tierSum, quality) => tierSum + row.cartByQuality[quality] * getSupplyUnitPrice(row.supply, quality, activeEvents),
             0
-          )
-        );
-      }, 0)
+          ),
+        0
+      )
     : 0;
 
   useEffect(() => {
@@ -132,80 +166,56 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (sheetOnly) {
     return activeJob && activeJob.location === "supplier" ? (
       <section className="stack-block">
-        <div className="section-label-row">
-          <p className="eyebrow">Supplier Cart</p>
-          <span className="chip">{materialNeedRows.length} required lines</span>
-        </div>
-        <div className="material-need-meta">
-          <span>Total checkout cost</span>
-          <span>${supplierCartTotal}</span>
+        <p className="supplier-sheet-intro">Allocate item quality and quantity, then checkout from the task actions.</p>
+        <div className="supplier-sheet-meta" role="list" aria-label="Supplier cart summary">
+          <span className="supplier-sheet-metric" role="listitem">
+            <small>Total checkout cost</small>
+            <strong>${supplierCartTotal}</strong>
+          </span>
+          <span className="supplier-sheet-metric" role="listitem">
+            <small>Required lines</small>
+            <strong>{materialNeedRows.length}</strong>
+          </span>
         </div>
         <div className="supplier-carousel-frame">
           <div className="supplier-carousel-rail">
-          {materialNeedRows.map((row) => {
-            const supply = bundle.supplies.find((entry) => entry.id === row.supplyId);
-            if (!supply) {
-              return null;
-            }
-            return (
-              <article key={supply.id} className="compact-row-card supplier-card supplier-quality-card">
-                <div className="supplier-card-copy">
-                  <div className="section-label-row tight-row">
-                    <strong>{supply.name}</strong>
-                    <button className="icon-button supplier-info-button" onClick={() => setSelectedSupplyId(supply.id)}>
-                      Info
-                    </button>
+            {supplierCatalogRows.map((row) => {
+              const { supply } = row;
+              return (
+                <article key={supply.id} className="compact-row-card supplier-card supplier-quality-card">
+                  <div className="supplier-card-copy">
+                    <div className="section-label-row tight-row">
+                      <strong>{supply.name}</strong>
+                      <span>{row.required} needed</span>
+                    </div>
+                    <small>
+                      On hand {row.onTruck} {row.inCart > 0 ? `| In cart ${row.inCart}` : ""}
+                    </small>
+                    {row.remaining > 0 ? <small>Missing {row.remaining}</small> : <small>Requirement covered</small>}
                   </div>
-                  <small>
-                    Need {row.required} | Allocated {row.inCart}
-                  </small>
-                </div>
-                <div className="stack-list">
-                  {SUPPLY_QUALITIES.map((quality) => {
-                    const quantity = row.cartByQuality[quality];
-                    const price = getSupplyUnitPrice(supply, quality, activeEvents);
-                    return (
-                      <div key={`${supply.id}-${quality}`} className="stepper supplier-quality-row">
-                        <span>{formatSupplyQuality(quality)} ${price}</span>
-                        <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, Math.max(0, quantity - 1))}>
-                          -
-                        </button>
-                        <span>{quantity}</span>
-                        <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, quantity + 1)}>
-                          +
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        </div>
-        <Modal open={selectedSupply !== null} title={selectedSupply?.name ?? "Supply Info"} onClose={() => setSelectedSupplyId(null)}>
-          {selectedSupply ? (
-            <section className="stack-block">
-              <article className="chrome-card inset-card">
-                <div className="section-label-row">
-                  <div>
-                    <p className="eyebrow">Supply Info</p>
-                    <h3>{selectedSupply.name}</h3>
+                  <div className="stack-list">
+                    {SUPPLY_QUALITIES.map((quality) => {
+                      const quantity = row.cartByQuality[quality];
+                      const price = getSupplyUnitPrice(supply, quality, activeEvents);
+                      return (
+                        <div key={`${supply.id}-${quality}`} className="stepper supplier-quality-row">
+                          <span>{formatSupplyQuality(quality)} ${price}</span>
+                          <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, Math.max(0, quantity - 1))}>
+                            -
+                          </button>
+                          <span>{quantity}</span>
+                          <button className="icon-button" onClick={() => setCartQuantity(supply.id, quality, quantity + 1)}>
+                            +
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <span className="chip">Tiered pricing</span>
-                </div>
-                <p>{selectedSupply.flavor.description}</p>
-                <div className="chip-grid">
-                  {SUPPLY_QUALITIES.map((quality) => (
-                    <span key={`${selectedSupply.id}-${quality}`} className="chip large-chip">
-                      {formatSupplyQuality(quality)} ${getSupplyUnitPrice(selectedSupply, quality, activeEvents)}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            </section>
-          ) : null}
-        </Modal>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </section>
     ) : (
       <p className="muted-copy">No supplier stop is active.</p>
@@ -225,7 +235,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <span>Quality {activeJob.qualityPoints}</span>
             <span>Rework {activeJob.reworkCount}</span>
             <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
-            <span>Outcome {activeJob.outcome ?? "open"}</span>
+            <span>Outcome {formatOutcomeLabel(activeJob.outcome)}</span>
           </div>
         </article>
         <article className="chrome-card inset-card">
@@ -265,7 +275,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         <article className="chrome-card inset-card">
           <p className="eyebrow">Skill Ledger</p>
           <div className="section-label-row tight-row">
-            <strong>Operator Lv {operatorLevel.level}</strong>
+            <strong>Owner/Operator Lv {operatorLevel.level}</strong>
             <span className="chip">Avg XP {Math.floor(operatorLevel.avgXp)}</span>
           </div>
           <div className="stack-list skill-ledger-list">
@@ -290,8 +300,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <p className="eyebrow">Shift Context</p>
           <p className="muted-copy">Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>
           <div className="metric-grid two-up">
-            <span>Stamina {game.player.stamina}/{game.player.staminaMax}</span>
             <span>Rep {game.player.reputation}</span>
+            <span>Fatigue debt {game.workday.fatigue.debt}</span>
           </div>
         </article>
       </section>
@@ -336,13 +346,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (!activeJob || !job) {
     return (
       <section className="tab-panel work-tab">
-        <OperatorCard
-          playerName={game.player.name}
-          companyName={game.player.companyName}
-          operatorLevel={getOperatorLevel(game.player)}
-          onOpenInventory={() => openModal("inventory")}
-          onOpenSkills={() => openModal("skills")}
-        />
         <article className="hero-card chrome-card">
           <p className="eyebrow">Work Queue</p>
           <h2>No active job</h2>
@@ -356,41 +359,21 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </button>
           </div>
         </article>
-        <article className="chrome-card inset-card compact-metrics">
-          <div className="metric-grid two-up">
-            <span>Fatigue debt {game.workday.fatigue.debt}</span>
-            <span>Overtime left {Math.max(0, game.workday.maxOvertime - game.workday.overtimeUsed)}</span>
-          </div>
-        </article>
-        <div className="sticky-action-bar">
-          <button className="primary-button wide-button" onClick={() => endShift()}>
-            End Shift
-          </button>
-        </div>
       </section>
     );
   }
 
   return (
     <section className="tab-panel work-tab">
-      <OperatorCard
-        playerName={game.player.name}
-        companyName={game.player.companyName}
-        operatorLevel={getOperatorLevel(game.player)}
-        onOpenInventory={() => openModal("inventory")}
-        onOpenSkills={() => openModal("skills")}
-      />
-
       <article className="chrome-card inset-card task-focus-card">
         <div className="section-label-row">
           <div>
             <p className="eyebrow">Current Task</p>
-            <h3>{currentTask?.label ?? "Waiting"}</h3>
           </div>
-          {currentTask ? <span className="chip">{renderProgress(currentTask)}</span> : null}
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
-        {gasStationPlan ? (
+        {taskGuidance ? <p className="task-guidance">{taskGuidance}</p> : null}
+        {gasStationPlan && currentTask?.taskId !== "refuel_at_station" ? (
           <div className={gasStationPlan.stranded ? "task-inline-notice fuel-warning-block fuel-warning-critical" : "task-inline-notice fuel-warning-block"}>
             <div className="section-label-row tight-row">
               <strong>{gasStationPlan.stranded ? "Low Fuel Warning" : "Fuel Warning"}</strong>
@@ -411,55 +394,59 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </div>
           </div>
         ) : null}
-        {activeJob.location === "supplier" && materialNeedRows.length > 0 ? (
+        {activeJob.location === "supplier" && isSupplierCheckoutTask ? (
           <div className="detail-block material-needs-block">
             <div className="section-label-row tight-row">
               <strong>Needed Supplies</strong>
-              <span className="chip">{materialNeedRows.length} lines</span>
             </div>
             <div className="material-need-meta">
               <span>Supplier cart total</span>
               <span>${supplierCartTotal}</span>
             </div>
-            <div className="stack-list material-needs-list">
-              {materialNeedRows.map((row) => (
-                <article key={row.supplyId} className="task-summary material-need-row">
-                  <div className="section-label-row tight-row">
-                    <strong>{row.name}</strong>
-                    <span>{row.required} needed</span>
-                  </div>
-                  <div className="material-need-meta">
-                    <span>On hand {row.onHand} of {row.required}</span>
-                    {row.inCart > 0 ? <span>In cart {row.inCart}</span> : null}
-                    {row.remaining > 0 ? <span>Missing {row.remaining}</span> : null}
-                  </div>
-                  {row.inCart > 0 ? (
-                    <div className="material-need-meta">
-                      {SUPPLY_QUALITIES.map((quality) =>
-                        row.cartByQuality[quality] > 0 ? (
-                          <span key={`${row.supplyId}-${quality}`}>
-                            {formatSupplyQuality(quality)} {row.cartByQuality[quality]}
-                          </span>
-                        ) : null
-                      )}
+            <div className="supplier-carousel-frame inline-supplier-frame">
+              <div className="supplier-carousel-rail">
+                {supplierCatalogRows.map((row) => (
+                  <article key={row.supply.id} className="task-summary material-need-row inline-supplier-row">
+                    <div className="section-label-row tight-row">
+                      <strong>{row.supply.name}</strong>
+                      <span>{row.required} needed</span>
                     </div>
-                  ) : null}
-                </article>
-              ))}
+                    <div className="material-need-meta">
+                      <span>On hand {row.onTruck} of {row.required}</span>
+                      {row.inCart > 0 ? <span>In cart {row.inCart}</span> : null}
+                      {row.remaining > 0 ? <span>Missing {row.remaining}</span> : null}
+                    </div>
+                    <div className="stack-list">
+                      {SUPPLY_QUALITIES.map((quality) => {
+                        const quantity = row.cartByQuality[quality];
+                        const price = getSupplyUnitPrice(row.supply, quality, activeEvents);
+                        return (
+                          <div key={`${row.supply.id}-${quality}`} className="stepper supplier-quality-row">
+                            <span>{formatSupplyQuality(quality)} ${price}</span>
+                            <button className="icon-button" onClick={() => setCartQuantity(row.supply.id, quality, Math.max(0, quantity - 1))}>
+                              -
+                            </button>
+                            <span>{quantity}</span>
+                            <button className="icon-button" onClick={() => setCartQuantity(row.supply.id, quality, quantity + 1)}>
+                              +
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
         {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
-        {activeJob.location === "supplier" ? (
-          <div className="task-inline-actions">
-            <button className="ghost-button" onClick={() => openSheet("supplies")}>
-              Supplier Cart
-            </button>
-          </div>
-        ) : null}
         {currentTask ? (
           <div className="action-carousel">
             <div className="action-carousel-header">
+              <div className="action-callout">
+                <strong>TAKE ACTION</strong>
+              </div>
               <div className="carousel-nav">
                 <button
                   type="button"
@@ -468,7 +455,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   disabled={!canScrollActionsLeft}
                   onClick={() => nudgeActionCarousel("left")}
                 >
-                  ◀
+                  {"<"}
                 </button>
                 <button
                   type="button"
@@ -477,7 +464,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   disabled={!canScrollActionsRight}
                   onClick={() => nudgeActionCarousel("right")}
                 >
-                  ▶
+                  {">"}
                 </button>
               </div>
             </div>
@@ -485,7 +472,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               {taskActions.map((action) => (
                 <button
                   key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
-                  className={action.allowOvertime ? "ghost-button action-carousel-button" : "primary-button action-carousel-button"}
+                  className={`${action.allowOvertime ? "ghost-button" : "primary-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
                   onClick={() => performTask(action.stance, action.allowOvertime)}
                 >
                   {action.label}
@@ -495,11 +482,13 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
         ) : null}
         {lastAction ? (
-          <div className="last-action-panel">
+          <div className={`last-action-panel ${toneClassForActionTitle(lastAction.title)}`}>
             <strong>{lastAction.title}</strong>
             <div className="summary-copy">
               {lastAction.lines.map((line, index) => (
-                <p key={`${lastAction.digest}-${index}`}>{line}</p>
+                <p key={`${lastAction.digest}-${index}`} className={toneClassForLogLine(line)}>
+                  {line}
+                </p>
               ))}
             </div>
           </div>
@@ -507,22 +496,21 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       </article>
 
       <article className="hero-card chrome-card active-job-hero">
-        <div className="section-label-row">
+        <div className="section-label-row active-job-header-row">
+          <span className="summary-toggle-copy">
+            <span className="eyebrow">Active Job</span>
+            <span className="summary-toggle-title">{job.name}</span>
+          </span>
           <button
             type="button"
-            className="summary-toggle summary-toggle-block"
+            className="ghost-button summary-detail-button"
             aria-label={`Toggle active job details for ${job.name}`}
             aria-expanded={jobDetailsOpen}
             aria-controls="active-job-panel"
             onClick={() => setJobDetailsOpen((open) => !open)}
           >
-            <span className="summary-toggle-copy">
-              <span className="eyebrow">Active Job</span>
-              <span className="summary-toggle-title">{job.name}</span>
-            </span>
-            <span className="chip">{jobDetailsOpen ? "Hide" : "Show"}</span>
+            Details
           </button>
-          <span className="chip">{activeJob.location}</span>
         </div>
         <div
           id="active-job-panel"
@@ -541,7 +529,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             <strong>Assigned To</strong>
             <div className="chip-grid">
               <button className={activeJob.assignee === "self" ? "primary-button" : "ghost-button"} onClick={() => setJobAssignee("self")}>
-                {game.player.name} ({game.player.stamina}/{game.player.staminaMax})
+                {game.player.name}
               </button>
               {game.player.crews.map((crew) => (
                 <button
@@ -549,7 +537,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   className={activeJob.assignee === crew.crewId ? "primary-button" : "ghost-button"}
                   onClick={() => setJobAssignee(crew.crewId)}
                 >
-                  {crew.name} ({crew.stamina}/{crew.staminaMax})
+                  {crew.name}
                 </button>
               ))}
             </div>
@@ -565,14 +553,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         </div>
       </article>
 
-      <div className="sticky-action-bar">
-        <button className="ghost-button wide-button" onClick={() => goToTab("contracts")}>
-          Contract Board
-        </button>
-        <button className="primary-button wide-button" onClick={() => endShift()}>
-          End Shift
-        </button>
-      </div>
     </section>
   );
 }
@@ -609,42 +589,6 @@ function EventCueCard({
             </div>
           </article>
         ))}
-      </div>
-    </article>
-  );
-}
-
-function OperatorCard({
-  playerName,
-  companyName,
-  operatorLevel,
-  onOpenInventory,
-  onOpenSkills
-}: {
-  playerName: string;
-  companyName: string;
-  operatorLevel: ReturnType<typeof getOperatorLevel>;
-  onOpenInventory: () => void;
-  onOpenSkills: () => void;
-}) {
-  return (
-    <article className="chrome-card inset-card operator-card">
-      <div className="operator-copy">
-        <p className="eyebrow">Operator</p>
-        <h3>{playerName}</h3>
-        <p className="muted-copy">{companyName}</p>
-        <div className="operator-meta">
-          <span>Operator Lv {operatorLevel.level}</span>
-          <span>Avg XP {Math.floor(operatorLevel.avgXp)}</span>
-        </div>
-      </div>
-      <div className="action-row operator-actions">
-        <button className="ghost-button" onClick={onOpenInventory}>
-          Inventory
-        </button>
-        <button className="ghost-button" onClick={onOpenSkills}>
-          Skills
-        </button>
       </div>
     </article>
   );
@@ -701,6 +645,59 @@ function labelForStance(stance: TaskStance): string {
   return "Standard";
 }
 
+function labelForRefuelAction(stance: TaskStance): string {
+  if (stance === "rush") {
+    return "Buy 1 Fuel";
+  }
+  if (stance === "careful") {
+    return "Fill Tank";
+  }
+  return "Recommended Fill";
+}
+
+function toneClassForStance(stance: TaskStance): string {
+  if (stance === "rush") {
+    return "tone-warning";
+  }
+  if (stance === "careful") {
+    return "tone-success";
+  }
+  return "tone-info";
+}
+
+function toneClassForActionTitle(title: string): string {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("fail")) {
+    return "tone-danger";
+  }
+  if (normalized.includes("neutral")) {
+    return "tone-warning";
+  }
+  if (normalized.includes("success") || normalized.includes("excellent")) {
+    return "tone-success";
+  }
+  return "";
+}
+
+function toneClassForLogLine(line: string): string {
+  const normalized = line.toLowerCase();
+  if (
+    normalized.includes("fail") ||
+    normalized.includes("sideways") ||
+    normalized.includes("blocked") ||
+    normalized.includes("rework")
+  ) {
+    return "tone-danger";
+  }
+  if (normalized.includes("neutral") || normalized.includes("half pay")) {
+    return "tone-warning";
+  }
+  if (normalized.includes("success") || normalized.includes("excellent") || normalized.includes("earned")) {
+    return "tone-success";
+  }
+  return "";
+}
+
 function deriveEventCueTags(event: (typeof bundle.events)[number]): string[] {
   const cues: string[] = [];
   for (const tag of Object.keys(event.mods.payoutMultByTag ?? {})) {
@@ -724,3 +721,14 @@ function formatSupplyStack(stack: SupplyInventory[string] | undefined): string {
     .map((entry) => `${entry.quantity} ${formatSupplyQuality(entry.quality)}`)
     .join(", ");
 }
+
+function formatOutcomeLabel(outcome: string | undefined): string {
+  if (!outcome) {
+    return "open";
+  }
+  if (outcome === "neutral") {
+    return "neutral (half pay)";
+  }
+  return outcome;
+}
+

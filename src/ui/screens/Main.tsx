@@ -59,7 +59,7 @@ export function Main() {
       <section className="main-actions">
         <button onClick={() => goTo("store")}>Store</button>
         <button onClick={() => goTo("company")}>Company</button>
-        <button onClick={() => endShift()}>End Shift</button>
+        <button onClick={() => endShift()}>End Day</button>
       </section>
 
       {notice ? <p className="notice">{notice}</p> : null}

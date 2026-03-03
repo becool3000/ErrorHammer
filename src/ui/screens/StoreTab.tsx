@@ -13,7 +13,6 @@ export function StoreTab() {
   const game = useUiStore((state) => state.game);
   const storeSection = useUiStore((state) => state.storeSection);
   const setStoreSection = useUiStore((state) => state.setStoreSection);
-  const buyFuel = useUiStore((state) => state.buyFuel);
   const buyTool = useUiStore((state) => state.buyTool);
   const repairTool = useUiStore((state) => state.repairTool);
   const [expandedToolId, setExpandedToolId] = useState<string | null>(null);
@@ -30,17 +29,16 @@ export function StoreTab() {
       <article className="chrome-card inset-card">
         <div className="section-label-row">
           <div>
-            <p className="eyebrow">Supply Node</p>
-            <h2>{bundle.strings.storeTitle}</h2>
+            <h2>Shop</h2>
           </div>
           <span className="chip">Cash ${game.player.cash}</span>
         </div>
-        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Store sections" />
+        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Shop sections" />
       </article>
 
       {storeSection === "fuel" ? (
         <article className="hero-card chrome-card">
-          <p className="eyebrow">Fuel Pump</p>
+          <p className="eyebrow">Gas Station</p>
           <h3>
             Fuel {game.player.fuel}/{game.player.fuelMax}
           </h3>
@@ -48,14 +46,7 @@ export function StoreTab() {
             <span>Unit price $6</span>
             <span>Tank room {Math.max(0, game.player.fuelMax - game.player.fuel)}</span>
           </div>
-          <div className="action-row">
-            <button className="primary-button" onClick={() => buyFuel(1)} disabled={!atShop}>
-              Buy 1 Fuel
-            </button>
-            <button className="ghost-button" onClick={() => buyFuel(game.player.fuelMax - game.player.fuel)} disabled={!atShop}>
-              Fill Tank
-            </button>
-          </div>
+          <p className="muted-copy">Fuel is purchased in Work during the `Refuel At Gas Station` task.</p>
         </article>
       ) : null}
 

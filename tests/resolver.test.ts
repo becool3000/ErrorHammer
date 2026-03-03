@@ -8,7 +8,7 @@ describe("resolver", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 99);
 
-    expect(state.saveVersion).toBe(4);
+    expect(state.saveVersion).toBe(5);
     expect(state.activeJob).toBeNull();
     expect(state.workday.weekday).toBe("Monday");
     expect(state.player.fuel).toBeGreaterThan(0);
@@ -70,5 +70,25 @@ describe("resolver", () => {
     const result = applyBotPurchasesForNextDay([bot], bundle.bots, bundle, board, [eventById(bundle, "event-sale")], 22);
     expect(result.purchaseLogs.length).toBeLessThanOrEqual(1);
     expect(result.bots[0]).toBeDefined();
+  });
+
+  it("applies one-time stagnation recovery after three flat rep days", () => {
+    const bundle = makeScenarioBundle();
+    const state = createInitialGameState(bundle, 102);
+    state.day = 3;
+    state.player.reputation = 0;
+    state.log = [
+      { day: 1, actorId: state.player.actorId, message: "Collected fail payment: cash +0, rep -2." },
+      { day: 2, actorId: state.player.actorId, message: "Collected neutral payment: cash +10, rep 0." },
+      { day: 3, actorId: state.player.actorId, message: "Collected fail payment: cash +0, rep -1." }
+    ];
+
+    const first = endShift(state, bundle);
+    expect(first.nextState.player.reputation).toBe(3);
+    expect(first.nextState.log.some((entry) => entry.message.includes("Stagnation recovery applied"))).toBe(true);
+
+    const second = endShift(first.nextState, bundle);
+    expect(second.nextState.player.reputation).toBeGreaterThanOrEqual(3);
+    expect(second.nextState.log.filter((entry) => entry.message.includes("Stagnation recovery applied")).length).toBe(1);
   });
 });

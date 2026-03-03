@@ -22,7 +22,7 @@ describe("content validation", () => {
     expect(result.ok).toBe(true);
 
     const normalized = normalizeBundle(result.bundle!);
-    expect(Object.keys(normalized).sort()).toEqual(["bots", "districts", "events", "jobs", "strings", "supplies", "tools"]);
+    expect(Object.keys(normalized).sort()).toEqual(["babaJobs", "bots", "districts", "events", "jobs", "strings", "supplies", "tools"]);
     expect(normalized.supplies.length).toBeGreaterThanOrEqual(12);
     expect(normalized.supplies.every((supply) => supply.prices.low > 0 && supply.prices.medium > 0 && supply.prices.high > 0)).toBe(true);
     expect(normalized.jobs.every((job) => job.workUnits > 0)).toBe(true);

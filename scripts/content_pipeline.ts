@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
-import { ContentBundle, DistrictDef, JobDef, JobMaterialNeed } from "../src/core/types";
+import { ContentBundle, DistrictDef, JobDef, JobMaterialNeed, SkillId, TRADE_SKILLS } from "../src/core/types";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 export const PROJECT_ROOT = path.resolve(scriptDir, "..");
@@ -10,6 +10,7 @@ export const PROJECT_ROOT = path.resolve(scriptDir, "..");
 const CONTENT_FILES = {
   tools: "tools.json",
   jobs: "jobs.json",
+  babaJobs: "baba_jobs.json",
   events: "events.json",
   districts: "districts.json",
   bots: "bots.json",
@@ -20,6 +21,7 @@ const CONTENT_FILES = {
 const SCHEMA_FILES = {
   tools: "tools.schema.json",
   jobs: "jobs.schema.json",
+  babaJobs: "baba_jobs.schema.json",
   events: "events.schema.json",
   districts: "districts.schema.json",
   bots: "bots.schema.json",
@@ -27,16 +29,27 @@ const SCHEMA_FILES = {
   strings: "strings.schema.json"
 } as const;
 
-const SUPPLY_GROUPS: Array<{ match: string[]; supplyIds: [string, string] }> = [
-  { match: ["electrical"], supplyIds: ["wire-spool", "junction-box"] },
-  { match: ["plumbing"], supplyIds: ["pipe-kit", "sealant-tube"] },
-  { match: ["roof"], supplyIds: ["roof-patch", "fastener-box"] },
-  { match: ["finish"], supplyIds: ["trim-kit", "paint-sleeve"] },
-  { match: ["framing"], supplyIds: ["board-pack", "fastener-box"] },
-  { match: ["mechanical"], supplyIds: ["hinge-pack", "fastener-box"] },
-  { match: ["seal"], supplyIds: ["sealant-tube", "anchor-set"] },
-  { match: ["inspection"], supplyIds: ["anchor-set", "safety-kit"] }
-];
+const SUPPLY_GROUPS: Record<SkillId, [string, string]> = {
+  electrician: ["wire-spool", "breaker-kit"],
+  plumber: ["pipe-kit", "valve-pack"],
+  carpenter: ["board-pack", "fastener-box"],
+  mason: ["mortar-mix", "brick-pack"],
+  concrete_finisher: ["concrete-mix", "rebar-bundle"],
+  roofer: ["roof-shingle-bundle", "roof-flashing-kit"],
+  hvac_technician: ["duct-kit", "filter-pack"],
+  drywall_installer: ["drywall-sheet-stack", "joint-compound-bucket"],
+  painter: ["paint-bucket", "roller-pack"],
+  flooring_installer: ["tile-box", "underlayment-roll"],
+  glazier: ["glass-panel-crate", "glazing-sealant-tube"],
+  insulation_installer: ["insulation-batt-pack", "vapor-barrier-roll"],
+  framer: ["stud-bundle", "fastener-box"],
+  siding_installer: ["siding-panel-pack", "trim-kit"],
+  fence_installer: ["fence-panel-pack", "post-anchor-kit"],
+  cabinet_maker: ["cabinet-panel-pack", "hinge-pack"],
+  millworker: ["millwork-trim-kit", "fastener-box"],
+  scaffolder: ["scaffold-coupler-pack", "anchor-set"],
+  solar_panel_installer: ["solar-rack-kit", "wire-spool"]
+};
 
 export interface ValidationResult {
   ok: boolean;
@@ -110,6 +123,7 @@ export function validateContent(content: Record<string, unknown>, schemas: Recor
 
 export function normalizeBundle(bundle: ContentBundle): ContentBundle {
   const sortById = <T extends { id: string }>(items: T[]): T[] => [...items].sort((a, b) => a.id.localeCompare(b.id));
+  const availableSupplyIds = sortById(bundle.supplies ?? []).map((supply) => supply.id);
   const normalizedSupplies = sortById(bundle.supplies ?? []).map((supply) => ({
     ...supply,
     prices: {
@@ -125,7 +139,8 @@ export function normalizeBundle(bundle: ContentBundle): ContentBundle {
       ...tool,
       tags: [...tool.tags].sort((a, b) => a.localeCompare(b))
     })),
-    jobs: sortById(bundle.jobs).map((job) => normalizeJob(job as Partial<JobDef>, normalizedSupplies.map((supply) => supply.id))),
+    jobs: sortById(bundle.jobs).map((job) => normalizeJob(job as Partial<JobDef>, availableSupplyIds, false)),
+    babaJobs: sortById(bundle.babaJobs ?? []).map((job) => normalizeJob(job as Partial<JobDef>, availableSupplyIds, true)),
     events: sortById(bundle.events).map((event) => ({
       ...event,
       mods: {
@@ -152,16 +167,20 @@ function crossValidate(bundle: ContentBundle): string[] {
 
   ensureUniqueIds(bundle.tools, "tools", errors);
   ensureUniqueIds(bundle.jobs, "jobs", errors);
+  ensureUniqueIds(bundle.babaJobs, "babaJobs", errors);
   ensureUniqueIds(bundle.events, "events", errors);
   ensureUniqueIds(bundle.districts, "districts", errors);
   ensureUniqueIds(bundle.bots, "bots", errors);
   ensureUniqueIds(bundle.supplies, "supplies", errors);
 
-  if (bundle.tools.length < 10) {
-    errors.push("tools: minimum 10 entries required");
+  if (bundle.tools.length < 19) {
+    errors.push("tools: minimum 19 entries required");
   }
-  if (bundle.jobs.length < 30) {
-    errors.push("jobs: minimum 30 entries required");
+  if (bundle.jobs.length !== 95) {
+    errors.push(`jobs: expected exactly 95 trade jobs, got ${bundle.jobs.length}`);
+  }
+  if (bundle.babaJobs.length < 8) {
+    errors.push("babaJobs: minimum 8 entries required");
   }
   if (bundle.events.length < 12) {
     errors.push("events: minimum 12 entries required");
@@ -169,8 +188,8 @@ function crossValidate(bundle: ContentBundle): string[] {
   if (bundle.districts.length < 3) {
     errors.push("districts: minimum 3 entries required");
   }
-  if (bundle.bots.length < 2) {
-    errors.push("bots: minimum 2 entries required");
+  if (bundle.bots.length !== 10) {
+    errors.push(`bots: expected exactly 10 entries, got ${bundle.bots.length}`);
   }
   if (bundle.supplies.length < 12) {
     errors.push("supplies: minimum 12 entries required");
@@ -181,6 +200,9 @@ function crossValidate(bundle: ContentBundle): string[] {
   const supplyIds = new Set(bundle.supplies.map((supply) => supply.id));
 
   for (const job of bundle.jobs) {
+    if (!TRADE_SKILLS.includes(job.primarySkill)) {
+      errors.push(`jobs/${job.id}: unknown primarySkill '${job.primarySkill}'`);
+    }
     if (!districtIds.has(job.districtId)) {
       errors.push(`jobs/${job.id}: unknown districtId '${job.districtId}'`);
     }
@@ -201,6 +223,41 @@ function crossValidate(bundle: ContentBundle): string[] {
       }
       if (material.quantity < 1) {
         errors.push(`jobs/${job.id}: supply '${material.supplyId}' quantity must be >= 1`);
+      }
+    }
+  }
+
+  const countsBySkill = new Map<SkillId, number>();
+  for (const skill of TRADE_SKILLS) {
+    countsBySkill.set(skill, 0);
+  }
+  for (const job of bundle.jobs) {
+    countsBySkill.set(job.primarySkill, (countsBySkill.get(job.primarySkill) ?? 0) + 1);
+  }
+  for (const skill of TRADE_SKILLS) {
+    if ((countsBySkill.get(skill) ?? 0) !== 5) {
+      errors.push(`jobs: expected 5 jobs for '${skill}', got ${countsBySkill.get(skill) ?? 0}`);
+    }
+  }
+
+  for (const job of bundle.babaJobs) {
+    if (!TRADE_SKILLS.includes(job.primarySkill)) {
+      errors.push(`babaJobs/${job.id}: unknown primarySkill '${job.primarySkill}'`);
+    }
+    if (!job.tags.includes("baba-g")) {
+      errors.push(`babaJobs/${job.id}: missing required 'baba-g' tag`);
+    }
+    if (!districtIds.has(job.districtId)) {
+      errors.push(`babaJobs/${job.id}: unknown districtId '${job.districtId}'`);
+    }
+    for (const toolId of job.requiredTools) {
+      if (!toolIds.has(toolId)) {
+        errors.push(`babaJobs/${job.id}: unknown requiredTool '${toolId}'`);
+      }
+    }
+    for (const material of job.materialNeeds) {
+      if (!supplyIds.has(material.supplyId)) {
+        errors.push(`babaJobs/${job.id}: unknown supply '${material.supplyId}'`);
       }
     }
   }
@@ -226,20 +283,23 @@ function normalizeDistrict(district: Partial<DistrictDef>): DistrictDef {
   };
 }
 
-function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[]): JobDef {
+function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[], isBaba: boolean): JobDef {
   const tags = [...(job.tags ?? [])].sort((a, b) => a.localeCompare(b));
   const requiredTools = [...(job.requiredTools ?? [])].sort((a, b) => a.localeCompare(b));
   const workUnits = job.workUnits ?? deriveWorkUnits(job);
+  const primarySkill = (job.primarySkill ?? "carpenter") as SkillId;
   const materialNeeds = normalizeMaterialNeeds(job.materialNeeds, availableSupplyIds, {
-    tags,
+    primarySkill,
     requiredTools,
     tier: job.tier ?? 1,
     workUnits
   });
+  const normalizedTags = isBaba && !tags.includes("baba-g") ? [...tags, "baba-g"] : tags;
 
   return {
     id: job.id ?? "unknown-job",
     name: job.name ?? "Unknown Job",
+    primarySkill,
     tier: job.tier ?? 1,
     districtId: job.districtId ?? "residential",
     requiredTools,
@@ -251,7 +311,7 @@ function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[]): JobDe
     durabilityCost: job.durabilityCost ?? 2,
     workUnits,
     materialNeeds,
-    tags,
+    tags: normalizedTags,
     flavor: {
       client_quote: job.flavor?.client_quote ?? "Please keep the building in one mood.",
       success_line: job.flavor?.success_line ?? "The work no longer looks theoretical.",
@@ -264,7 +324,7 @@ function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[]): JobDe
 function normalizeMaterialNeeds(
   materialNeeds: JobMaterialNeed[] | undefined,
   availableSupplyIds: string[],
-  context: { tags: string[]; requiredTools: string[]; tier: number; workUnits: number }
+  context: { primarySkill: SkillId; requiredTools: string[]; tier: number; workUnits: number }
 ): JobMaterialNeed[] {
   if (Array.isArray(materialNeeds) && materialNeeds.length > 0) {
     return materialNeeds
@@ -275,7 +335,7 @@ function normalizeMaterialNeeds(
       .sort((a, b) => a.supplyId.localeCompare(b.supplyId));
   }
 
-  const derived = deriveMaterialNeeds(context.tags, context.requiredTools, context.tier, context.workUnits);
+  const derived = deriveMaterialNeeds(context.primarySkill, context.requiredTools, context.tier, context.workUnits);
   return derived
     .filter((material) => availableSupplyIds.includes(material.supplyId))
     .sort((a, b) => a.supplyId.localeCompare(b.supplyId));
@@ -288,9 +348,8 @@ function deriveWorkUnits(job: Partial<JobDef>): number {
   return clamp(Math.ceil(payout / 70) + tier + toolLoad - 1, 4, 10);
 }
 
-function deriveMaterialNeeds(tags: string[], requiredTools: string[], tier: number, workUnits: number): JobMaterialNeed[] {
-  const matched = SUPPLY_GROUPS.find((group) => group.match.some((tag) => tags.includes(tag)));
-  const [primaryId, secondaryId] = matched?.supplyIds ?? ["anchor-set", "fastener-box"];
+function deriveMaterialNeeds(primarySkill: SkillId, requiredTools: string[], tier: number, workUnits: number): JobMaterialNeed[] {
+  const [primaryId, secondaryId] = SUPPLY_GROUPS[primarySkill] ?? ["anchor-set", "fastener-box"];
   const primaryQuantity = clamp(Math.ceil(workUnits / 2), 1, 6);
   const secondaryQuantity = clamp(tier + Math.max(0, requiredTools.length - 1), 1, 5);
   return [

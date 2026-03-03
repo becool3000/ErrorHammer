@@ -32,7 +32,7 @@ describe("progression helpers", () => {
     for (const skillId of boostedSkills) {
       actor.skills[skillId] = 450;
     }
-    actor.skills.negotiation = 100;
+    actor.skills.electrician = 100;
 
     const operator = getOperatorLevel(actor);
 
@@ -41,7 +41,7 @@ describe("progression helpers", () => {
     expect(operator.level).toBe(1);
   });
 
-  it("EH-TW-060: progression popup helpers emit xp-skill-operator order", () => {
+  it("EH-TW-060: progression popup helpers emit skill and operator level popups", () => {
     const bundle = loadContentBundle();
     const previous = createInitialGameState(bundle, 5151);
     const next = createInitialGameState(bundle, 5151);
@@ -51,8 +51,8 @@ describe("progression helpers", () => {
       next.player.skills[skillId] = 99;
     }
 
-    next.player.skills.framing = 120;
-    next.player.skills.general = 110;
+    next.player.skills.framer = 120;
+    next.player.skills.electrician = 110;
 
     const popups = buildProgressPopups(previous, next, {
       day: 1,
@@ -64,8 +64,8 @@ describe("progression helpers", () => {
       unitsCompleted: 1,
       qualityPointsDelta: 1,
       skillXpDelta: {
-        framing: 21,
-        general: 11
+        framer: 21,
+        electrician: 11
       },
       reworkAdded: 0,
       location: "job-site",
@@ -73,16 +73,15 @@ describe("progression helpers", () => {
       digest: "progress-seq"
     });
 
-    expect(popups.map((popup) => popup.kind)).toEqual(["xp", "skill-level", "skill-level", "operator-level"]);
-    expect(popups[0]?.lines).toContain("Framing +21");
-    expect(popups[1]?.title).toBe("Skill Leveled Up");
+    expect(popups.map((popup) => popup.kind)).toEqual(["skill-level", "skill-level", "operator-level"]);
+    expect(popups[0]?.title).toBe("Skill Leveled Up");
     expect(popups.at(-1)?.title).toBe("Operator Leveled Up!");
   });
 
   it("EH-TW-061: progression labels preserve acronym-heavy skill names", () => {
-    expect(formatSkillLabel("ai_tools")).toBe("AI Tools");
-    expect(formatSkillLabel("hvac")).toBe("HVAC");
-    expect(formatSkillLabel("cad")).toBe("CAD");
-    expect(formatSkillLabel("sheet_metal")).toBe("Sheet Metal");
+    expect(formatSkillLabel("hvac_technician")).toBe("HVAC Technician");
+    expect(formatSkillLabel("solar_panel_installer")).toBe("Solar Panel Installer");
+    expect(formatSkillLabel("drywall_installer")).toBe("Drywall Installer");
+    expect(formatSkillLabel("concrete_finisher")).toBe("Concrete Finisher");
   });
 });

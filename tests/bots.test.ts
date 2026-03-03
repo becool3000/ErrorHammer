@@ -38,8 +38,8 @@ function makeActor(): ActorState {
     fuelMax: 12,
     skills: {
       ...createInitialSkills(),
-      electrical: 200,
-      general: 100
+      electrician: 200,
+      framer: 100
     },
     tools: {
       hammer: {
@@ -56,20 +56,20 @@ function makeActor(): ActorState {
 }
 
 describe("bots", () => {
-  it("obeys same tool and stamina gates", () => {
+  it("obeys tool gates and no longer limits assignments by stamina", () => {
     const actor = makeActor();
     actor.stamina = 2;
 
     const intent = generateBotIntent(actor, profile, contracts, bundle, 1, 99);
 
-    expect(intent.assignments.length).toBe(1);
-    expect(intent.assignments[0]?.contractId).toBe("c2");
+    expect(intent.assignments.length).toBe(2);
+    expect(intent.assignments.map((entry) => entry.contractId)).toEqual(["c2", "c1"]);
   });
 
   it("evaluateBotPlan tie-noise off is deterministic and uses contract id tie-breaks", () => {
     const actor = makeActor();
-    actor.skills.general = 100;
-    actor.skills.electrical = 100;
+    actor.skills.framer = 100;
+    actor.skills.electrician = 100;
     actor.tools = {
       hammer: { toolId: "hammer", durability: 2 }
     };

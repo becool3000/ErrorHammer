@@ -9,6 +9,9 @@ export function loadContentBundle(): ContentBundle {
   if (!Array.isArray(bundle.jobs)) {
     throw new Error("Invalid generated content: missing jobs[]");
   }
+  if (!Array.isArray(bundle.babaJobs)) {
+    throw new Error("Invalid generated content: missing babaJobs[]");
+  }
   if (!Array.isArray(bundle.events)) {
     throw new Error("Invalid generated content: missing events[]");
   }

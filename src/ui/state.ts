@@ -23,17 +23,37 @@ import { buyTool, createInitialGameState, endShift, repairTool } from "../core/r
 import { GameState, SkillId, SupplyQuality, TaskStance, TaskUnitResult } from "../core/types";
 
 export type ScreenId = "title" | "game";
-export type GameTabId = "work" | "contracts" | "store" | "company";
+export type GameTabId = "work" | "office" | "contracts" | "store" | "company";
+export type OfficeSectionId = "contracts" | "store" | "company" | "accounting";
 export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
 export type StoreSectionId = "fuel" | "tools" | "stock";
-export type ActiveModalId = null | "job-details" | "inventory" | "skills" | "field-log" | "active-events" | "districts" | "crews" | "news";
+export type ActiveModalId =
+  | null
+  | "job-details"
+  | "inventory"
+  | "skills"
+  | "field-log"
+  | "active-events"
+  | "districts"
+  | "crews"
+  | "news"
+  | "settings";
 export type ActiveSheetId = null | "supplies";
-export type UiTextScale = "default" | "large" | "xlarge";
+export type UiTextScale = "xsmall" | "default" | "large" | "xlarge";
+export type UiColorMode = "classic" | "neon";
 
 export interface ActionSummary {
   title: string;
   lines: string[];
   digest: string;
+}
+
+export interface SessionTelemetry {
+  startedAtMs: number;
+  startDay: number;
+  startReputation: number;
+  interactions: number;
+  endDayPresses: number;
 }
 
 export type ProgressPopupKind = "xp" | "skill-level" | "operator-level";
@@ -51,35 +71,48 @@ export interface ProgressPopup {
 const UI_PREFS_KEY = "error-hammer-ui-prefs-v1";
 
 function isUiTextScale(value: unknown): value is UiTextScale {
-  return value === "default" || value === "large" || value === "xlarge";
+  return value === "xsmall" || value === "default" || value === "large" || value === "xlarge";
 }
 
-function loadUiTextScalePreference(): UiTextScale {
+function isUiColorMode(value: unknown): value is UiColorMode {
+  return value === "classic" || value === "neon";
+}
+
+interface UiPrefsPayload {
+  uiTextScale: UiTextScale;
+  uiColorMode: UiColorMode;
+}
+
+function loadUiPreferences(): UiPrefsPayload {
   if (typeof localStorage === "undefined") {
-    return "default";
+    return { uiTextScale: "default", uiColorMode: "neon" };
   }
   const raw = localStorage.getItem(UI_PREFS_KEY);
   if (!raw) {
-    return "default";
+    return { uiTextScale: "default", uiColorMode: "neon" };
   }
   try {
-    const parsed = JSON.parse(raw) as { uiTextScale?: unknown };
-    return isUiTextScale(parsed.uiTextScale) ? parsed.uiTextScale : "default";
+    const parsed = JSON.parse(raw) as { uiTextScale?: unknown; uiColorMode?: unknown };
+    return {
+      uiTextScale: isUiTextScale(parsed.uiTextScale) ? parsed.uiTextScale : "default",
+      uiColorMode: isUiColorMode(parsed.uiColorMode) ? parsed.uiColorMode : "neon"
+    };
   } catch {
-    return "default";
+    return { uiTextScale: "default", uiColorMode: "neon" };
   }
 }
 
-function saveUiTextScalePreference(scale: UiTextScale): void {
+function saveUiPreferences(prefs: UiPrefsPayload): void {
   if (typeof localStorage === "undefined") {
     return;
   }
-  localStorage.setItem(UI_PREFS_KEY, JSON.stringify({ uiTextScale: scale }));
+  localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
 }
 
 interface UiState {
   screen: ScreenId;
   activeTab: GameTabId;
+  officeSection: OfficeSectionId;
   storeSection: StoreSectionId;
   activeModal: ActiveModalId;
   activeSheet: ActiveSheetId;
@@ -88,18 +121,22 @@ interface UiState {
   lastAction: ActionSummary | null;
   notice: string;
   uiTextScale: UiTextScale;
+  uiColorMode: UiColorMode;
+  sessionTelemetry: SessionTelemetry;
   activeProgressPopup: ProgressPopup | null;
   progressQueue: ProgressPopup[];
   titlePlayerName: string;
   titleCompanyName: string;
   hydrateUiPrefs: () => void;
   setUiTextScale: (scale: UiTextScale) => void;
+  setUiColorMode: (mode: UiColorMode) => void;
   setTitlePlayerName: (name: string) => void;
   setTitleCompanyName: (name: string) => void;
   newGame: (playerName?: string, companyName?: string, seed?: number) => void;
   continueGame: () => void;
   returnToTitle: () => void;
   goToTab: (tab: GameTabId) => void;
+  setOfficeSection: (section: OfficeSectionId) => void;
   openModal: (modal: Exclude<ActiveModalId, null>) => void;
   closeModal: () => void;
   openSheet: (sheet: Exclude<ActiveSheetId, null>) => void;
@@ -150,16 +187,7 @@ export function buildProgressPopups(previous: GameState, next: GameState, payloa
     return [];
   }
 
-  const popups: ProgressPopup[] = [
-    {
-      id: `${payload.digest}:xp`,
-      kind: "xp",
-      title: "XP Earned",
-      lines: xpEntries.map(([skillId, delta]) => `${formatSkillLabel(skillId)} +${delta}`),
-      severity: "small",
-      createdAtDigest: payload.digest
-    }
-  ];
+  const popups: ProgressPopup[] = [];
 
   for (const [skillId] of xpEntries) {
     const previousLevel = getLevelForXp(previous.player.skills[skillId] ?? 0);
@@ -192,6 +220,17 @@ export function buildProgressPopups(previous: GameState, next: GameState, payloa
   return popups;
 }
 
+function buildTaskResultLines(payload: TaskUnitResult): string[] {
+  const xpEntries = Object.entries(payload.skillXpDelta)
+    .filter(([, delta]) => (delta ?? 0) > 0)
+    .sort(([left], [right]) => left.localeCompare(right)) as Array<[SkillId, number]>;
+  if (xpEntries.length === 0) {
+    return payload.logLines;
+  }
+  const xpLine = `XP Earned: ${xpEntries.map(([skillId, delta]) => `${formatSkillLabel(skillId)} +${delta}`).join(" | ")}`;
+  return [...payload.logLines, xpLine];
+}
+
 function enqueueProgressPopups(current: Pick<UiState, "activeProgressPopup" | "progressQueue">, incoming: ProgressPopup[]) {
   if (incoming.length === 0) {
     return {
@@ -211,9 +250,28 @@ function enqueueProgressPopups(current: Pick<UiState, "activeProgressPopup" | "p
   };
 }
 
+function createSessionTelemetry(game: GameState | null): SessionTelemetry {
+  return {
+    startedAtMs: Date.now(),
+    startDay: game?.day ?? 1,
+    startReputation: game?.player.reputation ?? 0,
+    interactions: 0,
+    endDayPresses: 0
+  };
+}
+
+function bumpSessionTelemetry(current: SessionTelemetry, isEndDay = false): SessionTelemetry {
+  return {
+    ...current,
+    interactions: current.interactions + 1,
+    endDayPresses: current.endDayPresses + (isEndDay ? 1 : 0)
+  };
+}
+
 export const useUiStore = create<UiState>((set, get) => ({
   screen: "title",
   activeTab: "work",
+  officeSection: "contracts",
   storeSection: "fuel",
   activeModal: null,
   activeSheet: null,
@@ -221,15 +279,26 @@ export const useUiStore = create<UiState>((set, get) => ({
   game: null,
   lastAction: null,
   notice: "",
-  uiTextScale: loadUiTextScalePreference(),
+  uiTextScale: loadUiPreferences().uiTextScale,
+  uiColorMode: loadUiPreferences().uiColorMode,
+  sessionTelemetry: createSessionTelemetry(null),
   activeProgressPopup: null,
   progressQueue: [],
   titlePlayerName: "",
   titleCompanyName: "",
-  hydrateUiPrefs: () => set({ uiTextScale: loadUiTextScalePreference() }),
+  hydrateUiPrefs: () => {
+    const prefs = loadUiPreferences();
+    set({ uiTextScale: prefs.uiTextScale, uiColorMode: prefs.uiColorMode });
+  },
   setUiTextScale: (scale) => {
-    saveUiTextScalePreference(scale);
+    const currentColorMode = get().uiColorMode;
+    saveUiPreferences({ uiTextScale: scale, uiColorMode: currentColorMode });
     set({ uiTextScale: scale });
+  },
+  setUiColorMode: (mode) => {
+    const currentTextScale = get().uiTextScale;
+    saveUiPreferences({ uiTextScale: currentTextScale, uiColorMode: mode });
+    set({ uiColorMode: mode });
   },
 
   newGame: (playerName?: string, companyName?: string, seed?: number) => {
@@ -241,6 +310,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       screen: "game",
       activeTab: "work",
+      officeSection: "contracts",
       storeSection: "fuel",
       activeModal: null,
       activeSheet: null,
@@ -248,6 +318,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       game,
       lastAction: null,
       notice: "",
+      sessionTelemetry: createSessionTelemetry(game),
       activeProgressPopup: null,
       progressQueue: [],
       titlePlayerName: resolvedPlayerName,
@@ -264,12 +335,14 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       screen: "game",
       activeTab: "work",
+      officeSection: "contracts",
       storeSection: "fuel",
       activeModal: null,
       activeSheet: null,
       selectedContractId: getDefaultContractId(loaded),
       game: loaded,
       notice: "",
+      sessionTelemetry: createSessionTelemetry(loaded),
       activeProgressPopup: null,
       progressQueue: [],
       titlePlayerName: loaded.player.name,
@@ -277,9 +350,28 @@ export const useUiStore = create<UiState>((set, get) => ({
     });
   },
 
-  returnToTitle: () => set({ screen: "title", activeModal: null, activeSheet: null, notice: "", activeProgressPopup: null, progressQueue: [] }),
+  returnToTitle: () =>
+    set({
+      screen: "title",
+      activeModal: null,
+      activeSheet: null,
+      notice: "",
+      sessionTelemetry: createSessionTelemetry(null),
+      activeProgressPopup: null,
+      progressQueue: []
+    }),
 
-  goToTab: (tab) => set({ activeTab: tab, activeModal: null, activeSheet: null }),
+  goToTab: (tab) =>
+    set(() => {
+      if (tab === "contracts" || tab === "store" || tab === "company") {
+        return { activeTab: "office", officeSection: tab, activeModal: null, activeSheet: null };
+      }
+      if (tab === "office") {
+        return { activeTab: "office", activeModal: null, activeSheet: null };
+      }
+      return { activeTab: tab, activeModal: null, activeSheet: null };
+    }),
+  setOfficeSection: (section) => set({ officeSection: section }),
 
   openModal: (modal) => set({ activeModal: modal, activeSheet: null }),
 
@@ -321,6 +413,7 @@ export const useUiStore = create<UiState>((set, get) => ({
             ? toSummary("Contract Accepted", [`Accepted ${result.payload.jobId} for the field loop.`], result.digest)
             : get().lastAction,
       notice: result.notice ?? "",
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       activeModal: null,
       activeSheet: null
     });
@@ -335,6 +428,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     saveGame(result.nextState);
     set({
       game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   },
@@ -349,8 +443,9 @@ export const useUiStore = create<UiState>((set, get) => ({
     saveGame(result.nextState);
     set({
       game: result.nextState,
-      lastAction: result.payload ? toSummary("Task Result", result.payload.logLines, result.payload.digest) : get().lastAction,
+      lastAction: result.payload ? toSummary("Task Result", buildTaskResultLines(result.payload), result.payload.digest) : get().lastAction,
       notice: result.notice ?? "",
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       activeSheet: null,
       selectedContractId: getDefaultContractId(result.nextState),
       ...enqueueProgressPopups(get(), progressUpdates)
@@ -373,8 +468,9 @@ export const useUiStore = create<UiState>((set, get) => ({
       ),
       notice:
         result.nextState.workday.fatigue.debt > 0 && result.nextState.workday.availableTicks < BASE_DAY_TICKS
-          ? `Fatigue is cutting this shift to ${(result.nextState.workday.availableTicks * 0.5).toFixed(1)} hours after heavy overtime. Stamina still refills each day; fatigue debt only shortens how long you can work.`
+          ? `Fatigue is cutting this shift to ${(result.nextState.workday.availableTicks * 0.5).toFixed(1)} hours after heavy overtime. Fatigue debt only shortens how long you can work.`
           : "",
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry, true),
       activeModal: null,
       activeSheet: null,
       selectedContractId: getDefaultContractId(result.nextState)
@@ -391,6 +487,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: result.nextState,
       lastAction: toSummary("Fuel", [`Fuel now at ${result.nextState.player.fuel}/${result.nextState.player.fuelMax}.`], result.digest),
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   },
@@ -416,6 +513,7 @@ export const useUiStore = create<UiState>((set, get) => ({
               result.digest
             )
           : get().lastAction,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   },
@@ -431,6 +529,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: nextState,
       lastAction: toSummary("Tool Purchase", [`Checked the tool rack for ${toolId}.`], JSON.stringify(nextState.day)),
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: ""
     });
   },
@@ -446,6 +545,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: nextState,
       lastAction: toSummary("Tool Repair", [`Ran a repair cycle for ${toolId}.`], JSON.stringify(nextState.day)),
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: ""
     });
   },
@@ -469,6 +569,7 @@ export const useUiStore = create<UiState>((set, get) => ({
             result.digest
           )
         : get().lastAction,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   },
@@ -483,6 +584,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       game: result.nextState,
       lastAction: result.payload ? toSummary("Crew Hire", [`${result.payload.name} is now on the roster.`], result.digest) : get().lastAction,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   },
@@ -496,9 +598,12 @@ export const useUiStore = create<UiState>((set, get) => ({
     saveGame(result.nextState);
     set({
       game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       notice: result.notice ?? ""
     });
   }
 }));
 
 export { bundle };
+
+

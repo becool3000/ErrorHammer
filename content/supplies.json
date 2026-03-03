@@ -1,132 +1,568 @@
 [
   {
-    "id": "anchor-set",
-    "name": "Anchor Set",
-    "prices": { "low": 14, "medium": 18, "high": 24 },
-    "tags": ["general", "fastener"],
+    "id": "wire-spool",
+    "name": "Wire Spool",
+    "prices": {
+      "low": 18,
+      "medium": 24,
+      "high": 32
+    },
+    "tags": [
+      "electrician",
+      "solar_panel_installer"
+    ],
     "flavor": {
-      "description": "A box of tiny promises for walls with trust issues.",
-      "quip_buy": "You bought several little commitments."
+      "description": "Wire Spool is stocked for field contracts.",
+      "quip_buy": "Loaded wire spool into the cart."
     }
   },
   {
-    "id": "board-pack",
-    "name": "Board Pack",
-    "prices": { "low": 24, "medium": 32, "high": 42 },
-    "tags": ["framing", "outdoor"],
+    "id": "breaker-kit",
+    "name": "Breaker Kit",
+    "prices": {
+      "low": 25,
+      "medium": 34,
+      "high": 45
+    },
+    "tags": [
+      "electrician"
+    ],
     "flavor": {
-      "description": "Straight lumber with a modest sense of destiny.",
-      "quip_buy": "You bought planks and future splinters."
-    }
-  },
-  {
-    "id": "concrete-mix",
-    "name": "Concrete Mix",
-    "prices": { "low": 18, "medium": 24, "high": 32 },
-    "tags": ["general", "outdoor", "concrete"],
-    "flavor": {
-      "description": "Powdered permanence in a practical bag.",
-      "quip_buy": "You bought a future rock."
-    }
-  },
-  {
-    "id": "fastener-box",
-    "name": "Fastener Box",
-    "prices": { "low": 12, "medium": 16, "high": 21 },
-    "tags": ["fastener", "general"],
-    "flavor": {
-      "description": "Screws, bolts, and tiny pieces of authority.",
-      "quip_buy": "You bought industrial punctuation."
-    }
-  },
-  {
-    "id": "hinge-pack",
-    "name": "Hinge Pack",
-    "prices": { "low": 17, "medium": 22, "high": 29 },
-    "tags": ["mechanical", "finish"],
-    "flavor": {
-      "description": "Metal elbows for doors and cabinets with ambitions.",
-      "quip_buy": "You bought several quiet pivots."
-    }
-  },
-  {
-    "id": "junction-box",
-    "name": "Junction Box",
-    "prices": { "low": 16, "medium": 21, "high": 28 },
-    "tags": ["electrical", "inspection"],
-    "flavor": {
-      "description": "A legal place for wires to have feelings.",
-      "quip_buy": "You bought approved tiny housing for electricity."
-    }
-  },
-  {
-    "id": "paint-sleeve",
-    "name": "Paint Sleeve",
-    "prices": { "low": 9, "medium": 12, "high": 16 },
-    "tags": ["finish", "seal", "painting"],
-    "flavor": {
-      "description": "Color management for surfaces that need closure.",
-      "quip_buy": "You bought a small apology for the wall."
+      "description": "Breaker Kit is stocked for field contracts.",
+      "quip_buy": "Loaded breaker kit into the cart."
     }
   },
   {
     "id": "pipe-kit",
     "name": "Pipe Kit",
-    "prices": { "low": 21, "medium": 28, "high": 37 },
-    "tags": ["plumbing", "mechanical"],
+    "prices": {
+      "low": 21,
+      "medium": 28,
+      "high": 37
+    },
+    "tags": [
+      "plumber"
+    ],
     "flavor": {
-      "description": "Fittings, elbows, and controlled wet intentions.",
-      "quip_buy": "You bought several future right angles."
+      "description": "Pipe Kit is stocked for field contracts.",
+      "quip_buy": "Loaded pipe kit into the cart."
     }
   },
   {
-    "id": "roof-patch",
-    "name": "Roof Patch",
-    "prices": { "low": 23, "medium": 30, "high": 40 },
-    "tags": ["roof", "seal"],
+    "id": "valve-pack",
+    "name": "Valve Pack",
+    "prices": {
+      "low": 19,
+      "medium": 26,
+      "high": 35
+    },
+    "tags": [
+      "plumber"
+    ],
     "flavor": {
-      "description": "Sticky optimism for elevated leaks.",
-      "quip_buy": "You bought weather negotiations."
+      "description": "Valve Pack is stocked for field contracts.",
+      "quip_buy": "Loaded valve pack into the cart."
     }
   },
   {
-    "id": "safety-kit",
-    "name": "Safety Kit",
-    "prices": { "low": 11, "medium": 14, "high": 19 },
-    "tags": ["inspection", "general"],
+    "id": "board-pack",
+    "name": "Board Pack",
+    "prices": {
+      "low": 22,
+      "medium": 30,
+      "high": 40
+    },
+    "tags": [
+      "carpenter",
+      "framer"
+    ],
     "flavor": {
-      "description": "Tape, covers, and the paperwork version of caution.",
-      "quip_buy": "You bought several less dramatic outcomes."
+      "description": "Board Pack is stocked for field contracts.",
+      "quip_buy": "Loaded board pack into the cart."
     }
   },
   {
-    "id": "sealant-tube",
-    "name": "Sealant Tube",
-    "prices": { "low": 11, "medium": 15, "high": 20 },
-    "tags": ["seal", "finish"],
+    "id": "fastener-box",
+    "name": "Fastener Box",
+    "prices": {
+      "low": 13,
+      "medium": 18,
+      "high": 24
+    },
+    "tags": [
+      "carpenter",
+      "framer",
+      "millworker"
+    ],
     "flavor": {
-      "description": "A squeezable argument against drafts and drips.",
-      "quip_buy": "You bought adhesive diplomacy."
+      "description": "Fastener Box is stocked for field contracts.",
+      "quip_buy": "Loaded fastener box into the cart."
     }
   },
   {
-    "id": "wire-spool",
-    "name": "Wire Spool",
-    "prices": { "low": 20, "medium": 26, "high": 35 },
-    "tags": ["electrical", "fastener"],
+    "id": "mortar-mix",
+    "name": "Mortar Mix",
+    "prices": {
+      "low": 16,
+      "medium": 22,
+      "high": 30
+    },
+    "tags": [
+      "mason"
+    ],
     "flavor": {
-      "description": "Coiled certainty for walls full of secrets.",
-      "quip_buy": "You bought very organized lightning."
+      "description": "Mortar Mix is stocked for field contracts.",
+      "quip_buy": "Loaded mortar mix into the cart."
+    }
+  },
+  {
+    "id": "brick-pack",
+    "name": "Brick Pack",
+    "prices": {
+      "low": 19,
+      "medium": 26,
+      "high": 35
+    },
+    "tags": [
+      "mason"
+    ],
+    "flavor": {
+      "description": "Brick Pack is stocked for field contracts.",
+      "quip_buy": "Loaded brick pack into the cart."
+    }
+  },
+  {
+    "id": "concrete-mix",
+    "name": "Concrete Mix",
+    "prices": {
+      "low": 15,
+      "medium": 20,
+      "high": 27
+    },
+    "tags": [
+      "concrete_finisher"
+    ],
+    "flavor": {
+      "description": "Concrete Mix is stocked for field contracts.",
+      "quip_buy": "Loaded concrete mix into the cart."
+    }
+  },
+  {
+    "id": "rebar-bundle",
+    "name": "Rebar Bundle",
+    "prices": {
+      "low": 18,
+      "medium": 24,
+      "high": 32
+    },
+    "tags": [
+      "concrete_finisher"
+    ],
+    "flavor": {
+      "description": "Rebar Bundle is stocked for field contracts.",
+      "quip_buy": "Loaded rebar bundle into the cart."
+    }
+  },
+  {
+    "id": "roof-shingle-bundle",
+    "name": "Roof Shingle Bundle",
+    "prices": {
+      "low": 21,
+      "medium": 28,
+      "high": 37
+    },
+    "tags": [
+      "roofer"
+    ],
+    "flavor": {
+      "description": "Roof Shingle Bundle is stocked for field contracts.",
+      "quip_buy": "Loaded roof shingle bundle into the cart."
+    }
+  },
+  {
+    "id": "roof-flashing-kit",
+    "name": "Roof Flashing Kit",
+    "prices": {
+      "low": 19,
+      "medium": 25,
+      "high": 33
+    },
+    "tags": [
+      "roofer"
+    ],
+    "flavor": {
+      "description": "Roof Flashing Kit is stocked for field contracts.",
+      "quip_buy": "Loaded roof flashing kit into the cart."
+    }
+  },
+  {
+    "id": "duct-kit",
+    "name": "Duct Kit",
+    "prices": {
+      "low": 22,
+      "medium": 30,
+      "high": 40
+    },
+    "tags": [
+      "hvac_technician"
+    ],
+    "flavor": {
+      "description": "Duct Kit is stocked for field contracts.",
+      "quip_buy": "Loaded duct kit into the cart."
+    }
+  },
+  {
+    "id": "filter-pack",
+    "name": "Filter Pack",
+    "prices": {
+      "low": 12,
+      "medium": 16,
+      "high": 22
+    },
+    "tags": [
+      "hvac_technician"
+    ],
+    "flavor": {
+      "description": "Filter Pack is stocked for field contracts.",
+      "quip_buy": "Loaded filter pack into the cart."
+    }
+  },
+  {
+    "id": "drywall-sheet-stack",
+    "name": "Drywall Sheet Stack",
+    "prices": {
+      "low": 20,
+      "medium": 27,
+      "high": 36
+    },
+    "tags": [
+      "drywall_installer"
+    ],
+    "flavor": {
+      "description": "Drywall Sheet Stack is stocked for field contracts.",
+      "quip_buy": "Loaded drywall sheet stack into the cart."
+    }
+  },
+  {
+    "id": "joint-compound-bucket",
+    "name": "Joint Compound Bucket",
+    "prices": {
+      "low": 12,
+      "medium": 17,
+      "high": 23
+    },
+    "tags": [
+      "drywall_installer"
+    ],
+    "flavor": {
+      "description": "Joint Compound Bucket is stocked for field contracts.",
+      "quip_buy": "Loaded joint compound bucket into the cart."
+    }
+  },
+  {
+    "id": "paint-bucket",
+    "name": "Paint Bucket",
+    "prices": {
+      "low": 13,
+      "medium": 18,
+      "high": 24
+    },
+    "tags": [
+      "painter"
+    ],
+    "flavor": {
+      "description": "Paint Bucket is stocked for field contracts.",
+      "quip_buy": "Loaded paint bucket into the cart."
+    }
+  },
+  {
+    "id": "roller-pack",
+    "name": "Roller Pack",
+    "prices": {
+      "low": 9,
+      "medium": 12,
+      "high": 16
+    },
+    "tags": [
+      "painter"
+    ],
+    "flavor": {
+      "description": "Roller Pack is stocked for field contracts.",
+      "quip_buy": "Loaded roller pack into the cart."
+    }
+  },
+  {
+    "id": "tile-box",
+    "name": "Tile Box",
+    "prices": {
+      "low": 22,
+      "medium": 29,
+      "high": 39
+    },
+    "tags": [
+      "flooring_installer"
+    ],
+    "flavor": {
+      "description": "Tile Box is stocked for field contracts.",
+      "quip_buy": "Loaded tile box into the cart."
+    }
+  },
+  {
+    "id": "underlayment-roll",
+    "name": "Underlayment Roll",
+    "prices": {
+      "low": 11,
+      "medium": 15,
+      "high": 20
+    },
+    "tags": [
+      "flooring_installer"
+    ],
+    "flavor": {
+      "description": "Underlayment Roll is stocked for field contracts.",
+      "quip_buy": "Loaded underlayment roll into the cart."
+    }
+  },
+  {
+    "id": "glass-panel-crate",
+    "name": "Glass Panel Crate",
+    "prices": {
+      "low": 27,
+      "medium": 36,
+      "high": 48
+    },
+    "tags": [
+      "glazier"
+    ],
+    "flavor": {
+      "description": "Glass Panel Crate is stocked for field contracts.",
+      "quip_buy": "Loaded glass panel crate into the cart."
+    }
+  },
+  {
+    "id": "glazing-sealant-tube",
+    "name": "Glazing Sealant Tube",
+    "prices": {
+      "low": 10,
+      "medium": 14,
+      "high": 19
+    },
+    "tags": [
+      "glazier"
+    ],
+    "flavor": {
+      "description": "Glazing Sealant Tube is stocked for field contracts.",
+      "quip_buy": "Loaded glazing sealant tube into the cart."
+    }
+  },
+  {
+    "id": "insulation-batt-pack",
+    "name": "Insulation Batt Pack",
+    "prices": {
+      "low": 16,
+      "medium": 22,
+      "high": 30
+    },
+    "tags": [
+      "insulation_installer"
+    ],
+    "flavor": {
+      "description": "Insulation Batt Pack is stocked for field contracts.",
+      "quip_buy": "Loaded insulation batt pack into the cart."
+    }
+  },
+  {
+    "id": "vapor-barrier-roll",
+    "name": "Vapor Barrier Roll",
+    "prices": {
+      "low": 12,
+      "medium": 16,
+      "high": 22
+    },
+    "tags": [
+      "insulation_installer"
+    ],
+    "flavor": {
+      "description": "Vapor Barrier Roll is stocked for field contracts.",
+      "quip_buy": "Loaded vapor barrier roll into the cart."
+    }
+  },
+  {
+    "id": "stud-bundle",
+    "name": "Stud Bundle",
+    "prices": {
+      "low": 21,
+      "medium": 28,
+      "high": 37
+    },
+    "tags": [
+      "framer"
+    ],
+    "flavor": {
+      "description": "Stud Bundle is stocked for field contracts.",
+      "quip_buy": "Loaded stud bundle into the cart."
+    }
+  },
+  {
+    "id": "siding-panel-pack",
+    "name": "Siding Panel Pack",
+    "prices": {
+      "low": 18,
+      "medium": 24,
+      "high": 32
+    },
+    "tags": [
+      "siding_installer"
+    ],
+    "flavor": {
+      "description": "Siding Panel Pack is stocked for field contracts.",
+      "quip_buy": "Loaded siding panel pack into the cart."
     }
   },
   {
     "id": "trim-kit",
     "name": "Trim Kit",
-    "prices": { "low": 15, "medium": 20, "high": 27 },
-    "tags": ["finish", "framing", "drywall"],
+    "prices": {
+      "low": 14,
+      "medium": 19,
+      "high": 26
+    },
+    "tags": [
+      "siding_installer",
+      "millworker"
+    ],
     "flavor": {
-      "description": "Corners, strips, and a second chance at neatness.",
-      "quip_buy": "You bought decorative seriousness."
+      "description": "Trim Kit is stocked for field contracts.",
+      "quip_buy": "Loaded trim kit into the cart."
+    }
+  },
+  {
+    "id": "fence-panel-pack",
+    "name": "Fence Panel Pack",
+    "prices": {
+      "low": 19,
+      "medium": 26,
+      "high": 35
+    },
+    "tags": [
+      "fence_installer"
+    ],
+    "flavor": {
+      "description": "Fence Panel Pack is stocked for field contracts.",
+      "quip_buy": "Loaded fence panel pack into the cart."
+    }
+  },
+  {
+    "id": "post-anchor-kit",
+    "name": "Post Anchor Kit",
+    "prices": {
+      "low": 13,
+      "medium": 18,
+      "high": 24
+    },
+    "tags": [
+      "fence_installer"
+    ],
+    "flavor": {
+      "description": "Post Anchor Kit is stocked for field contracts.",
+      "quip_buy": "Loaded post anchor kit into the cart."
+    }
+  },
+  {
+    "id": "cabinet-panel-pack",
+    "name": "Cabinet Panel Pack",
+    "prices": {
+      "low": 23,
+      "medium": 31,
+      "high": 41
+    },
+    "tags": [
+      "cabinet_maker"
+    ],
+    "flavor": {
+      "description": "Cabinet Panel Pack is stocked for field contracts.",
+      "quip_buy": "Loaded cabinet panel pack into the cart."
+    }
+  },
+  {
+    "id": "hinge-pack",
+    "name": "Hinge Pack",
+    "prices": {
+      "low": 12,
+      "medium": 17,
+      "high": 23
+    },
+    "tags": [
+      "cabinet_maker"
+    ],
+    "flavor": {
+      "description": "Hinge Pack is stocked for field contracts.",
+      "quip_buy": "Loaded hinge pack into the cart."
+    }
+  },
+  {
+    "id": "millwork-trim-kit",
+    "name": "Millwork Trim Kit",
+    "prices": {
+      "low": 17,
+      "medium": 23,
+      "high": 31
+    },
+    "tags": [
+      "millworker"
+    ],
+    "flavor": {
+      "description": "Millwork Trim Kit is stocked for field contracts.",
+      "quip_buy": "Loaded millwork trim kit into the cart."
+    }
+  },
+  {
+    "id": "scaffold-coupler-pack",
+    "name": "Scaffold Coupler Pack",
+    "prices": {
+      "low": 15,
+      "medium": 20,
+      "high": 27
+    },
+    "tags": [
+      "scaffolder"
+    ],
+    "flavor": {
+      "description": "Scaffold Coupler Pack is stocked for field contracts.",
+      "quip_buy": "Loaded scaffold coupler pack into the cart."
+    }
+  },
+  {
+    "id": "anchor-set",
+    "name": "Anchor Set",
+    "prices": {
+      "low": 14,
+      "medium": 19,
+      "high": 26
+    },
+    "tags": [
+      "scaffolder",
+      "fence_installer"
+    ],
+    "flavor": {
+      "description": "Anchor Set is stocked for field contracts.",
+      "quip_buy": "Loaded anchor set into the cart."
+    }
+  },
+  {
+    "id": "solar-rack-kit",
+    "name": "Solar Rack Kit",
+    "prices": {
+      "low": 26,
+      "medium": 35,
+      "high": 47
+    },
+    "tags": [
+      "solar_panel_installer"
+    ],
+    "flavor": {
+      "description": "Solar Rack Kit is stocked for field contracts.",
+      "quip_buy": "Loaded solar rack kit into the cart."
     }
   }
 ]

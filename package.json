@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "content:validate": "tsx scripts/content_validate.ts",
-    "content:compile": "tsx scripts/content_compile.ts"
+    "content:compile": "tsx scripts/content_compile.ts",
+    "benchmark:progression": "tsx scripts/benchmark_progression.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

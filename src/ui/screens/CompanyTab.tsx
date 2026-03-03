@@ -63,9 +63,7 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
               <article key={crew.crewId} className="chrome-card inset-card">
                 <div className="section-label-row tight-row">
                   <strong>{crew.name}</strong>
-                  <span className="chip">
-                    Stamina {crew.stamina}/{crew.staminaMax}
-                  </span>
+                  <span className="chip">Crew Member</span>
                 </div>
                 <div className="metric-grid two-up">
                   <span>Efficiency {crew.efficiency}</span>
@@ -109,9 +107,7 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
       <article className="hero-card chrome-card">
         <div className="section-label-row">
           <div>
-            <p className="eyebrow">Firm Ledger</p>
-            <h2>{bundle.strings.companyTitle}</h2>
-            <p className="muted-copy">{game.player.companyName}</p>
+            <h2>{game.player.companyName}</h2>
           </div>
           <span className="chip">Level {game.player.companyLevel}</span>
         </div>

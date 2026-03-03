@@ -6,7 +6,6 @@ import { ActorState, BotProfile, ContentBundle, ContractInstance, EventDef, Inte
 interface ScoredContract {
   contractId: string;
   score: number;
-  staminaCost: number;
 }
 
 export interface EvaluateBotPlanOptions {
@@ -58,8 +57,7 @@ export function evaluateBotPlan(
 
       return {
         contractId: contract.contractId,
-        score,
-        staminaCost: job.staminaCost
+        score
       };
     })
     .filter((item): item is ScoredContract => Boolean(item))
@@ -71,19 +69,13 @@ export function evaluateBotPlan(
     });
 
   const assignments: Intent["assignments"] = [];
-  let remainingStamina = actor.stamina;
   let totalScore = 0;
 
   for (const candidate of scored) {
-    if (remainingStamina < candidate.staminaCost) {
-      continue;
-    }
-
     assignments.push({
       assignee: "self",
       contractId: candidate.contractId
     });
-    remainingStamina -= candidate.staminaCost;
     totalScore += candidate.score;
   }
 
@@ -130,7 +122,6 @@ export function simulateBotDay(
   daySeed: number
 ): { bot: ActorState; logLines: string[] } {
   const nextBot = cloneActor(bot);
-  nextBot.stamina = nextBot.staminaMax;
   const jobsById = new Map(bundle.jobs.map((job) => [job.id, job]));
   const contractsById = new Map(contracts.map((contract) => [contract.contractId, contract]));
   const intent = generateBotIntent(nextBot, profile, contracts, bundle, day, daySeed);
@@ -144,11 +135,9 @@ export function simulateBotDay(
     if (!contract || !job) {
       continue;
     }
-    if (!hasUsableTools(nextBot, job.requiredTools) || nextBot.stamina < job.staminaCost) {
+    if (!hasUsableTools(nextBot, job.requiredTools)) {
       continue;
     }
-
-    nextBot.stamina -= job.staminaCost;
     const mapping = getTaskSkillMapping(job, "do_work");
     const primaryRank = getSkillRank(nextBot, mapping.primary);
     const secondaryRank = mapping.secondary ? getSkillRank(nextBot, mapping.secondary) : primaryRank;
@@ -186,7 +175,7 @@ export function simulateBotDay(
     }
 
     nextBot.cash += cashDelta;
-    nextBot.reputation += repDelta;
+    nextBot.reputation = Math.max(0, nextBot.reputation + repDelta);
     nextBot.skills[mapping.primary] += 10 + (qualityPoints >= 2 ? 6 : qualityPoints >= 1 ? 3 : 1);
     if (mapping.secondary) {
       nextBot.skills[mapping.secondary] += 5;
@@ -202,7 +191,6 @@ export function simulateBotDay(
     logLines.push(`${nextBot.name} logged a ${outcome} on ${job.name}.`);
   }
 
-  nextBot.stamina = nextBot.staminaMax;
   return {
     bot: nextBot,
     logLines

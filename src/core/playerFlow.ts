@@ -23,7 +23,8 @@ import {
   TaskTimeOutcome,
   TaskUnitResult,
   Weekday,
-  WorkdayState
+  WorkdayState,
+  TRADE_SKILLS
 } from "./types";
 import { applyToolPriceModifiers, deriveCompanyLevel, getPayoutMultiplier, getRiskValue, isForcedNeutral } from "./economy";
 import { createRng, hashSeed } from "./rng";
@@ -72,40 +73,22 @@ export interface ContractOffer {
   alwaysAvailable?: boolean;
 }
 
+export type RiskBand = "low" | "medium" | "high";
+
+export interface SettlementPreview {
+  successCash: number;
+  neutralCash: number;
+  failCash: number;
+  riskBand: RiskBand;
+  neutralWarning: string;
+}
+
 const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const SKILL_IDS: SkillId[] = [
-  "travel",
-  "procurement",
-  "organization",
-  "negotiation",
-  "general",
-  "sheet_metal",
-  "welding",
-  "hvac",
-  "engineering",
-  "architecture",
-  "cad",
-  "ai_tools",
-  "math",
-  "geometry",
-  "writing",
-  "reading",
-  "painting",
-  "drywall",
-  "concrete",
-  "fastener",
-  "framing",
-  "finish",
-  "plumbing",
-  "electrical",
-  "mechanical",
-  "roof",
-  "seal",
-  "inspection"
-];
+const SKILL_IDS: SkillId[] = [...TRADE_SKILLS];
 
 const TASK_LABELS: Record<TaskId, string> = {
   load_from_shop: "Load From Shop",
+  refuel_at_station: "Refuel At Gas Station",
   travel_to_supplier: "Travel To Supplier",
   checkout_supplies: "Checkout Supplies",
   travel_to_job_site: "Travel To Job Site",
@@ -118,6 +101,7 @@ const TASK_LABELS: Record<TaskId, string> = {
 
 const TEMPLATE_DIFFICULTY: Record<TaskId, number> = {
   load_from_shop: 1,
+  refuel_at_station: 1,
   travel_to_supplier: 1,
   checkout_supplies: 1,
   travel_to_job_site: 1,
@@ -144,6 +128,7 @@ const QUALITY_XP_BONUS: Record<TaskQualityOutcome, number> = {
 
 const TASK_ORDER: TaskId[] = [
   "load_from_shop",
+  "refuel_at_station",
   "travel_to_supplier",
   "checkout_supplies",
   "travel_to_job_site",
@@ -198,6 +183,7 @@ export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
 export const DAY_LABOR_CONTRACT_ID = "day-labor-contract";
 export const DAY_LABOR_JOB_ID = "job-day-laborer";
 export const MINIMUM_WAGE_PER_HOUR = 7.25;
+const BABA_G_ROTATING_CONTRACT_PREFIX = "baba-g-rotating-contract";
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
   low: "Low",
@@ -206,13 +192,7 @@ const QUALITY_LABELS: Record<SupplyQuality, string> = {
 };
 
 export function createInitialSkills(): Record<SkillId, number> {
-  const skills = createEmptySkills();
-  skills.travel = 100;
-  skills.procurement = 100;
-  skills.organization = 100;
-  skills.negotiation = 100;
-  skills.general = 100;
-  return skills;
+  return Object.fromEntries(SKILL_IDS.map((skillId) => [skillId, 100])) as Record<SkillId, number>;
 }
 
 export function createBotSkills(starterSkillIds: SkillId[]): Record<SkillId, number> {
@@ -239,13 +219,18 @@ export function createInitialWorkday(day: number, fatigueDebt = 0): WorkdayState
 
 export function createInitialShopSupplies(): SupplyInventory {
   return {
-    "anchor-set": { medium: 2 },
-    "board-pack": { medium: 1 },
+    "board-pack": { medium: 2 },
     "fastener-box": { medium: 3 },
-    "paint-sleeve": { medium: 1 },
-    "safety-kit": { medium: 1 },
-    "sealant-tube": { medium: 2 },
-    "trim-kit": { medium: 1 }
+    "pipe-kit": { medium: 1 },
+    "wire-spool": { medium: 1 },
+    "paint-bucket": { medium: 1 },
+    "drywall-sheet-stack": { medium: 1 },
+    "roof-shingle-bundle": { medium: 1 },
+    "tile-box": { medium: 1 },
+    "duct-kit": { medium: 1 },
+    "concrete-mix": { medium: 1 },
+    "trim-kit": { medium: 1 },
+    "anchor-set": { medium: 1 }
   };
 }
 
@@ -253,39 +238,60 @@ export function getWeekday(day: number): Weekday {
   return WEEKDAYS[(Math.max(1, day) - 1) % WEEKDAYS.length]!;
 }
 
+function findJobInBundle(bundle: ContentBundle, jobId: string): JobDef | null {
+  return bundle.jobs.find((entry) => entry.id === jobId) ?? bundle.babaJobs.find((entry) => entry.id === jobId) ?? null;
+}
+
 const SKILL_LABELS: Record<SkillId, string> = {
-  travel: "Travel",
-  procurement: "Procurement",
-  organization: "Organization",
-  negotiation: "Negotiation",
-  general: "General",
-  sheet_metal: "Sheet Metal",
-  welding: "Welding",
-  hvac: "HVAC",
-  engineering: "Engineering",
-  architecture: "Architecture",
-  cad: "CAD",
-  ai_tools: "AI Tools",
-  math: "Math",
-  geometry: "Geometry",
-  writing: "Writing",
-  reading: "Reading",
-  painting: "Painting",
-  drywall: "Drywall",
-  concrete: "Concrete",
-  fastener: "Fastener",
-  framing: "Framing",
-  finish: "Finish",
-  plumbing: "Plumbing",
-  electrical: "Electrical",
-  mechanical: "Mechanical",
-  roof: "Roof",
-  seal: "Seal",
-  inspection: "Inspection"
+  electrician: "Electrician",
+  plumber: "Plumber",
+  carpenter: "Carpenter",
+  mason: "Mason",
+  concrete_finisher: "Concrete Finisher",
+  roofer: "Roofer",
+  hvac_technician: "HVAC Technician",
+  drywall_installer: "Drywall Installer",
+  painter: "Painter",
+  flooring_installer: "Flooring Installer",
+  glazier: "Glazier",
+  insulation_installer: "Insulation Installer",
+  framer: "Framer",
+  siding_installer: "Siding Installer",
+  fence_installer: "Fence Installer",
+  cabinet_maker: "Cabinet Maker",
+  millworker: "Millworker",
+  scaffolder: "Scaffolder",
+  solar_panel_installer: "Solar Panel Installer"
+};
+
+const SKILL_COMPACT_LABELS: Record<SkillId, string> = {
+  electrician: "Elec",
+  plumber: "Plumb",
+  carpenter: "Carp",
+  mason: "Mason",
+  concrete_finisher: "Concrete",
+  roofer: "Roof",
+  hvac_technician: "HVAC",
+  drywall_installer: "Drywall",
+  painter: "Paint",
+  flooring_installer: "Floor",
+  glazier: "Glass",
+  insulation_installer: "Insulate",
+  framer: "Frame",
+  siding_installer: "Siding",
+  fence_installer: "Fence",
+  cabinet_maker: "Cabinet",
+  millworker: "Millwork",
+  scaffolder: "Scaffold",
+  solar_panel_installer: "Solar"
 };
 
 export function formatSkillLabel(skillId: SkillId): string {
   return SKILL_LABELS[skillId] ?? skillId;
+}
+
+export function formatSkillCompactLabel(skillId: SkillId): string {
+  return SKILL_COMPACT_LABELS[skillId] ?? formatSkillLabel(skillId);
 }
 
 export function formatSupplyQuality(quality: SupplyQuality): string {
@@ -408,7 +414,7 @@ export function getVisibleTaskActions(
     return [];
   }
 
-  const job = bundle.jobs.find((entry) => entry.id === state.activeJob?.jobId);
+  const job = findJobInBundle(bundle, state.activeJob?.jobId ?? "");
   const district = bundle.districts.find((entry) => entry.id === state.activeJob?.districtId);
   if (!job || !district) {
     return [];
@@ -431,15 +437,74 @@ export function getVisibleTaskActions(
   });
 }
 
+export function getSettlementPreview(state: GameState, bundle: ContentBundle): SettlementPreview | null {
+  const activeJob = state.activeJob;
+  if (!activeJob) {
+    return null;
+  }
+
+  const job = findJobInBundle(bundle, activeJob.jobId);
+  if (!job) {
+    return null;
+  }
+
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
+  const failChance = getSettlementFailChance(activeJob, job, events, effectiveQualityPoints, state.day);
+  const neutralWarning = isForcedNeutral(job, events)
+    ? "Current event conditions can force a low-quality half-pay result."
+    : effectiveQualityPoints <= -2
+      ? "Current quality is low enough to trigger half pay."
+      : "Low quality can still reduce payment to half.";
+
+  return {
+    successCash: Math.max(0, activeJob.lockedPayout),
+    neutralCash: Math.max(0, Math.round(activeJob.lockedPayout * 0.5)),
+    failCash: 0,
+    riskBand: getRiskBandFromFailChance(failChance),
+    neutralWarning
+  };
+}
+
+export function getCurrentTaskGuidance(state: GameState, bundle: ContentBundle): string | null {
+  if (!state.activeJob) {
+    return null;
+  }
+
+  const activeTask = getCurrentTask(state);
+  if (!activeTask) {
+    return "Next step: Close out the active job.";
+  }
+
+  const job = findJobInBundle(bundle, state.activeJob?.jobId ?? "");
+  if (!job) {
+    return getDefaultTaskGuidance(activeTask.taskId);
+  }
+
+  const blockedReason = getTaskBlockedReason(state, bundle, activeTask, job);
+  if (blockedReason) {
+    return getBlockedTaskGuidance(activeTask.taskId, blockedReason, state.activeJob);
+  }
+
+  return getDefaultTaskGuidance(activeTask.taskId);
+}
+
 export function getJobByContract(state: GameState, bundle: ContentBundle, contractId: string): { contract: ContractInstance; job: JobDef } | null {
   if (contractId === DAY_LABOR_CONTRACT_ID) {
     return getDayLaborOffer(state, bundle);
+  }
+  if (isBabaRotatingContractId(contractId)) {
+    const rotatingOffer = getRotatingBabaOffer(state, bundle);
+    if (!rotatingOffer || rotatingOffer.contract.contractId !== contractId) {
+      return null;
+    }
+    return rotatingOffer;
   }
   const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
   if (!contract) {
     return null;
   }
-  const job = bundle.jobs.find((entry) => entry.id === contract.jobId);
+  const job = findJobInBundle(bundle, contract.jobId);
   if (!job) {
     return null;
   }
@@ -447,14 +512,20 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
 }
 
 export function getAvailableContractOffers(state: GameState, bundle: ContentBundle): ContractOffer[] {
-  const offers = state.contractBoard
+  const boardOffers = state.contractBoard
     .map((contract) => getJobByContract(state, bundle, contract.contractId))
     .filter((offer): offer is ContractOffer => Boolean(offer));
-  return [...offers, getDayLaborOffer(state, bundle)];
+  const babaOffers = boardOffers.filter((offer) => offer.job.tags.includes("baba-g"));
+  const standardOffers = boardOffers.filter((offer) => !offer.job.tags.includes("baba-g"));
+  const rotatingBabaOffer = getRotatingBabaOffer(state, bundle);
+  if (rotatingBabaOffer) {
+    return [getDayLaborOffer(state, bundle), rotatingBabaOffer, ...standardOffers];
+  }
+  return [getDayLaborOffer(state, bundle), ...babaOffers, ...standardOffers];
 }
 
 function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffer {
-  const remainingTicks = getRemainingShiftTicks(state.workday);
+  const remainingTicks = getRemainingDayLaborTicks(state.workday);
   const hours = ticksToHours(remainingTicks);
   const payout = Math.max(0, Math.round(hours * MINIMUM_WAGE_PER_HOUR));
   const fallbackDistrictId = state.activeJob?.districtId ?? state.player.districtUnlocks[0] ?? bundle.districts[0]?.id ?? "residential";
@@ -470,6 +541,7 @@ function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffe
     job: {
       id: DAY_LABOR_JOB_ID,
       name: "Day Laborer",
+      primarySkill: "carpenter",
       tier: 0,
       districtId: fallbackDistrictId,
       requiredTools: [],
@@ -585,11 +657,11 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
 
 export function runDayLaborShift(state: GameState, bundle: ContentBundle): StateTransitionResult {
   const offer = getDayLaborOffer(state, bundle);
-  const requiredTicks = getRemainingShiftTicks(state.workday);
+  const requiredTicks = getRemainingDayLaborTicks(state.workday);
   if (requiredTicks <= 0) {
     return { nextState: state, notice: "No shift hours remain for day labor.", digest: digestState(state) };
   }
-  if (!canSpendTicks(state.workday, requiredTicks, true)) {
+  if (!canSpendTicks(state.workday, requiredTicks, false)) {
     return { nextState: state, notice: "No shift hours remain for day labor.", digest: digestState(state) };
   }
 
@@ -624,7 +696,7 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
     }))
   };
 
-  return {
+  const normalizedState: GameState = {
     ...(state as GameState),
     player: normalizedPlayer,
     shopSupplies: normalizeSupplyInventory(state.shopSupplies),
@@ -643,6 +715,34 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
         }
       : null
   };
+  if (normalizedState.activeJob) {
+    repairActiveJobRouting(normalizedState.activeJob);
+  }
+  return normalizedState;
+}
+
+function getRotatingBabaOffer(state: GameState, bundle: ContentBundle): ContractOffer | null {
+  const babaJobs = [...bundle.babaJobs].sort((a, b) => a.id.localeCompare(b.id));
+  if (babaJobs.length === 0) {
+    return null;
+  }
+  const rotationIndex = Math.max(0, (state.day - 1) % babaJobs.length);
+  const job = babaJobs[rotationIndex]!;
+  const payoutMult = Number((0.95 + ((state.day + rotationIndex) % 16) * 0.01).toFixed(2));
+  return {
+    contract: {
+      contractId: `${BABA_G_ROTATING_CONTRACT_PREFIX}-D${state.day}-${job.id}`,
+      jobId: job.id,
+      districtId: job.districtId,
+      payoutMult,
+      expiresDay: state.day
+    },
+    job
+  };
+}
+
+function isBabaRotatingContractId(contractId: string): boolean {
+  return contractId.startsWith(BABA_G_ROTATING_CONTRACT_PREFIX);
 }
 
 export function hireCrew(state: GameState): StateTransitionResult<CrewState> {
@@ -824,40 +924,46 @@ export function performTaskUnit(
     return { nextState: state, notice: "No active job.", digest: digestState(state) };
   }
 
-  const activeTask = getCurrentTask(state);
+  const preparedState = cloneState(state);
+  repairActiveJobRouting(preparedState.activeJob);
+
+  const activeTask = getCurrentTask(preparedState);
   if (!activeTask) {
-    return { nextState: state, notice: "There is no task to advance.", digest: digestState(state) };
+    return { nextState: preparedState, notice: "There is no task to advance.", digest: digestState(preparedState) };
   }
 
-  const job = bundle.jobs.find((entry) => entry.id === state.activeJob?.jobId);
-  const district = bundle.districts.find((entry) => entry.id === state.activeJob?.districtId);
+  const job = findJobInBundle(bundle, preparedState.activeJob?.jobId ?? "");
+  const district = bundle.districts.find((entry) => entry.id === preparedState.activeJob?.districtId);
   if (!job || !district) {
-    return { nextState: state, notice: "Active job data is incomplete.", digest: digestState(state) };
+    return { nextState: preparedState, notice: "Active job data is incomplete.", digest: digestState(preparedState) };
   }
 
-  const assignee = getJobAssignee(state.player, state.activeJob.assignee);
+  const assignee = getJobAssignee(preparedState.player, preparedState.activeJob!.assignee);
   if (!assignee) {
-    return { nextState: state, notice: "Assigned crew is unavailable.", digest: digestState(state) };
+    return { nextState: preparedState, notice: "Assigned crew is unavailable.", digest: digestState(preparedState) };
   }
 
-  const effectiveStance = activeTask.qualityBearing ? stance : "standard";
-  const blockedReason = getTaskBlockedReason(state, bundle, activeTask, job);
+  const effectiveStance = activeTask.qualityBearing || activeTask.taskId === "refuel_at_station" ? stance : "standard";
+  const blockedReason = getTaskBlockedReason(preparedState, bundle, activeTask, job);
   if (blockedReason) {
-    return { nextState: state, notice: blockedReason, digest: digestState(state) };
+    return { nextState: preparedState, notice: blockedReason, digest: digestState(preparedState) };
   }
 
   const mapping = getTaskSkillMapping(job, activeTask.taskId);
-  const skillRank = getTaskSkillRank(state.player, mapping);
-  const difficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, state.activeEventIds));
-  const timing = resolveTiming(state, job, activeTask, effectiveStance, skillRank, difficulty);
-  if (!canSpendTicks(state.workday, timing.ticksSpent, allowOvertime)) {
-    return { nextState: state, notice: "This action spills into overtime.", digest: digestState(state) };
+  const skillRank = getTaskSkillRank(preparedState.player, mapping);
+  const difficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, preparedState.activeEventIds));
+  const timing =
+    activeTask.taskId === "refuel_at_station"
+      ? { timeOutcome: "standard" as const, ticksSpent: getTaskBaseTicks(activeTask, job) }
+      : resolveTiming(preparedState, job, activeTask, effectiveStance, skillRank, difficulty);
+  if (!canSpendTicks(preparedState.workday, timing.ticksSpent, allowOvertime)) {
+    return { nextState: preparedState, notice: "This action spills into overtime.", digest: digestState(preparedState) };
   }
 
-  const nextState = cloneState(state);
+  const nextState = cloneState(preparedState);
   const nextActiveTask = getCurrentTask(nextState);
   if (!nextActiveTask) {
-    return { nextState: state, notice: "There is no task to advance.", digest: digestState(state) };
+    return { nextState: preparedState, notice: "There is no task to advance.", digest: digestState(preparedState) };
   }
 
   const logLines: string[] = [];
@@ -885,7 +991,7 @@ export function performTaskUnit(
   } else {
     nextActiveTask.completedUnits += 1;
     if (nextActiveTask.qualityBearing) {
-      qualityOutcome = resolveQuality(state, job, nextActiveTask, effectiveStance, skillRank, difficulty, timing.timeOutcome);
+      qualityOutcome = resolveQuality(preparedState, job, nextActiveTask, effectiveStance, skillRank, difficulty, timing.timeOutcome);
       qualityPointsDelta = QUALITY_POINT_DELTA[qualityOutcome];
       nextState.activeJob!.qualityPoints += qualityPointsDelta;
       logLines.push(`${TASK_LABELS[nextActiveTask.taskId]} landed ${qualityOutcome}.`);
@@ -919,6 +1025,26 @@ export function performTaskUnit(
         unitsCompleted = 0;
       }
       break;
+    case "refuel_at_station":
+      if (timing.timeOutcome !== "rework") {
+        const requestedFuel = getRefuelPurchaseUnits(nextState, bundle, effectiveStance);
+        const fuelPurchased = Math.max(0, Math.min(requestedFuel, nextState.player.fuelMax - nextState.player.fuel));
+        const fuelCost = fuelPurchased * FUEL_PRICE;
+        const onAccount = fuelPurchased > 0 && nextState.player.cash < fuelCost;
+        nextState.player.fuel += fuelPurchased;
+        nextState.player.cash -= fuelCost;
+        nextActiveTask.completedUnits = nextActiveTask.requiredUnits;
+        if (fuelPurchased > 0) {
+          logLines.push(
+            onAccount
+              ? `Refueled ${fuelPurchased} at the gas station on account ($${fuelCost}).`
+              : `Refueled ${fuelPurchased} at the gas station for $${fuelCost}.`
+          );
+        } else {
+          logLines.push("Tank already full at the gas station.");
+        }
+      }
+      break;
     case "travel_to_job_site":
       if (timing.timeOutcome !== "rework") {
         nextActiveTask.completedUnits = nextActiveTask.requiredUnits;
@@ -929,6 +1055,8 @@ export function performTaskUnit(
       if (timing.timeOutcome !== "rework") {
         moveAllSupplies(nextState.activeJob!.siteSupplies, nextState.truckSupplies);
         nextState.activeJob!.siteSupplies = {};
+        // Pickup is a one-time transfer; clear any rework-inflated remaining units to prevent dead-end states.
+        nextActiveTask.completedUnits = nextActiveTask.requiredUnits;
       }
       break;
     case "do_work":
@@ -980,7 +1108,7 @@ export function performTaskUnit(
     appendLog(nextState, {
       day: nextState.day,
       actorId: nextState.player.actorId,
-      contractId: state.activeJob.contractId,
+      contractId: preparedState.activeJob!.contractId,
       taskId: nextActiveTask.taskId,
       message: line
     });
@@ -988,7 +1116,7 @@ export function performTaskUnit(
 
   const digest = digestState(nextState);
   const payload: TaskUnitResult = {
-    day: state.day,
+    day: preparedState.day,
     taskId: nextActiveTask.taskId,
     stance: effectiveStance,
     timeOutcome: timing.timeOutcome,
@@ -1022,13 +1150,37 @@ export function prepareForNextDay(state: GameState): GameState {
     stamina: crew.staminaMax
   }));
 
-  if (nextState.activeJob && nextState.activeJob.location !== "shop" && !isInventoryEmpty(nextState.truckSupplies)) {
-    moveAllSupplies(nextState.truckSupplies, nextState.activeJob.siteSupplies);
-    nextState.truckSupplies = {};
-    const pickupTask = nextState.activeJob.tasks.find((task) => task.taskId === "pickup_site_supplies");
-    if (pickupTask) {
-      pickupTask.requiredUnits += 1;
+  if (nextState.activeJob) {
+    const refuelTask = nextState.activeJob.tasks.find((task) => task.taskId === "refuel_at_station");
+    if (refuelTask) {
+      refuelTask.requiredUnits += 1;
     }
+  }
+
+  if (nextState.activeJob && nextState.activeJob.location !== "shop") {
+    const supplierStopOutstanding = hasOutstandingSupplierStop(nextState.activeJob);
+
+    if (!isInventoryEmpty(nextState.truckSupplies)) {
+      moveAllSupplies(nextState.truckSupplies, nextState.activeJob.siteSupplies);
+      nextState.truckSupplies = {};
+      const pickupTask = nextState.activeJob.tasks.find((task) => task.taskId === "pickup_site_supplies");
+      if (pickupTask) {
+        pickupTask.requiredUnits += 1;
+      }
+    }
+
+    if (supplierStopOutstanding) {
+      const travelToSupplierTask = nextState.activeJob.tasks.find((task) => task.taskId === "travel_to_supplier");
+      if (travelToSupplierTask) {
+        travelToSupplierTask.requiredUnits += 1;
+      }
+    } else {
+      const travelToSiteTask = nextState.activeJob.tasks.find((task) => task.taskId === "travel_to_job_site");
+      if (travelToSiteTask) {
+        travelToSiteTask.requiredUnits += 1;
+      }
+    }
+    nextState.activeJob.location = "shop";
   }
 
   return nextState;
@@ -1050,56 +1202,16 @@ export function getTaskSkillMapping(job: JobDef, taskId: TaskId): TaskSkillMappi
     case "load_from_shop":
     case "pickup_site_supplies":
     case "store_leftovers":
-      return { primary: "organization" };
+    case "refuel_at_station":
     case "checkout_supplies":
-      return { primary: "procurement" };
     case "travel_to_supplier":
     case "travel_to_job_site":
     case "return_to_shop":
-      return { primary: "travel" };
     case "collect_payment":
-      return { primary: "negotiation" };
+      return { primary: job.primarySkill };
     case "do_work":
-      return getWorkSkillMapping(job);
+      return { primary: job.primarySkill };
   }
-}
-
-function getWorkSkillMapping(job: JobDef): TaskSkillMapping {
-  const priority: SkillId[] = [
-    "electrical",
-    "plumbing",
-    "roof",
-    "mechanical",
-    "hvac",
-    "sheet_metal",
-    "welding",
-    "engineering",
-    "architecture",
-    "cad",
-    "ai_tools",
-    "math",
-    "geometry",
-    "concrete",
-    "drywall",
-    "painting",
-    "writing",
-    "reading",
-    "framing",
-    "finish",
-    "seal",
-    "inspection",
-    "fastener",
-    "general"
-  ];
-
-  const matches = priority.filter((skillId) => job.tags.includes(skillId));
-  if (matches.length >= 2) {
-    return { primary: matches[0]!, secondary: matches[1]! };
-  }
-  if (matches.length === 1) {
-    return { primary: matches[0]! };
-  }
-  return { primary: "general" };
 }
 
 function getTaskSkillRank(actor: ActorState, mapping: TaskSkillMapping): number {
@@ -1226,6 +1338,7 @@ function applySkillXp(
 function createTaskTemplate(job: JobDef, district: DistrictDef, needsSupplier: boolean): ActiveTaskState[] {
   return [
     createTask("load_from_shop", 2, 1, true),
+    createTask("refuel_at_station", 0, 1, false),
     createTask("travel_to_supplier", SHOP_SUPPLIER_TICKS, needsSupplier ? 1 : 0, false),
     createTask("checkout_supplies", 2, needsSupplier ? 1 : 0, true),
     createTask("travel_to_job_site", needsSupplier ? district.travel.supplierToSiteTicks : district.travel.shopToSiteTicks, 1, false),
@@ -1238,6 +1351,8 @@ function createTaskTemplate(job: JobDef, district: DistrictDef, needsSupplier: b
 }
 
 function createTask(taskId: TaskId, baseTicks: number, requiredUnits: number, qualityBearing: boolean): ActiveTaskState {
+  const availableStances: TaskStance[] =
+    taskId === "refuel_at_station" ? ["rush", "standard", "careful"] : qualityBearing ? ["rush", "standard", "careful"] : ["standard"];
   return {
     taskId,
     label: TASK_LABELS[taskId],
@@ -1246,12 +1361,14 @@ function createTask(taskId: TaskId, baseTicks: number, requiredUnits: number, qu
     requiredUnits,
     completedUnits: 0,
     qualityBearing,
-    availableStances: qualityBearing ? ["rush", "standard", "careful"] : ["standard"]
+    availableStances
   };
 }
 
 function getTaskLocation(taskId: TaskId): LocationId {
   switch (taskId) {
+    case "refuel_at_station":
+      return "gas-station";
     case "travel_to_supplier":
       return "shop";
     case "checkout_supplies":
@@ -1271,11 +1388,16 @@ function getTaskLocation(taskId: TaskId): LocationId {
 function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: JobDef, logLines: string[]): boolean {
   const activeJob = state.activeJob!;
   const cartEntries = listInventoryEntries(activeJob.supplierCart);
+  const hasRequiredAllocation = hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart);
   if (cartEntries.length === 0) {
+    if (hasRequiredAllocation) {
+      logLines.push("Supplier stop confirmed: truck supplies already cover the job.");
+      return true;
+    }
     logLines.push("The cart was empty, which impressed nobody.");
     return false;
   }
-  if (!hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart)) {
+  if (!hasRequiredAllocation) {
     logLines.push("The cart still needs explicit quality picks for the required materials.");
     return false;
   }
@@ -1332,17 +1454,13 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   const activeJob = state.activeJob!;
   const events = getActiveEvents(bundle, state.activeEventIds);
   const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
-  const failChance = clamp(
-    getRiskValue(job, events) + activeJob.reworkCount * 0.08 - Math.max(0, effectiveQualityPoints) * 0.02,
-    0,
-    0.95
-  );
+  const failChance = getSettlementFailChance(activeJob, job, events, effectiveQualityPoints, state.day);
   let outcome: Outcome = "success";
   if (isForcedNeutral(job, events)) {
     outcome = "neutral";
   } else if (createRng(hashSeed(state.seed, state.day, activeJob.contractId, "collect")).bool(failChance)) {
     outcome = "fail";
-  } else if (effectiveQualityPoints < 0) {
+  } else if (effectiveQualityPoints <= -3) {
     outcome = "neutral";
   }
 
@@ -1371,8 +1489,16 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
     flavorLine = job.flavor.fail_line;
   }
 
+  const reputationBefore = state.player.reputation;
+  let requestedRepDelta = repDelta + qualityRepMod + scheduleRepMod;
+  if (outcome === "success") {
+    requestedRepDelta = Math.max(2, requestedRepDelta);
+  } else if (outcome === "neutral") {
+    requestedRepDelta = Math.max(1, requestedRepDelta);
+  }
   state.player.cash += cashDelta;
-  state.player.reputation += repDelta + qualityRepMod + scheduleRepMod;
+  state.player.reputation = Math.max(0, reputationBefore + requestedRepDelta);
+  const appliedRepDelta = state.player.reputation - reputationBefore;
   state.player.companyLevel = deriveCompanyLevel(state.player.reputation);
   state.player.districtUnlocks = unlockDistricts(bundle, state.player.companyLevel);
   activeJob.outcome = outcome;
@@ -1382,7 +1508,9 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
     logLines: [
       `Parts quality settled at ${formatSupplyQuality(activeJob.partsQuality ?? "medium")} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier} quality).`,
       flavorLine,
-      `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${repDelta + qualityRepMod + scheduleRepMod}.`
+      outcome === "neutral"
+        ? `Job completed at low quality. Client approved half pay: cash +${cashDelta}, rep ${appliedRepDelta}.`
+        : `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${appliedRepDelta}.`
     ]
   };
 }
@@ -1396,6 +1524,8 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
   switch (task.taskId) {
     case "load_from_shop":
       return activeJob.location === "shop" ? null : "Return to the shop before loading supplies.";
+    case "refuel_at_station":
+      return activeJob.location === "shop" ? null : "Return to the shop before refueling at the gas station.";
     case "travel_to_supplier":
       if (activeJob.location !== "shop") {
         return "Supplier runs start from the shop.";
@@ -1422,13 +1552,10 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
       if (activeJob.location !== "job-site") {
         return "Get back to the job site first.";
       }
-      return isInventoryEmpty(activeJob.siteSupplies) ? "There is nothing waiting on site." : null;
+      return null;
     case "do_work":
       if (activeJob.location !== "job-site") {
         return "Travel to the job site first.";
-      }
-      if (!activeJob.staminaCommitted && assignee.stamina < job.staminaCost) {
-        return `${assignee.name} does not have enough stamina for the work.`;
       }
       if (!hasUsableTools(state.player, job.requiredTools)) {
         return "Missing usable tools for the work.";
@@ -1460,9 +1587,8 @@ function commitActiveJobStamina(state: GameState, job: JobDef, logLines: string[
   if (!assignee || activeJob.staminaCommitted) {
     return;
   }
-  assignee.stamina = Math.max(0, assignee.stamina - job.staminaCost);
   activeJob.staminaCommitted = true;
-  logLines.push(`${assignee.name} committed ${job.staminaCost} stamina to ${job.name}.`);
+  logLines.push(`${assignee.name} started work on ${job.name}.`);
 }
 
 function getJobAssignee(actor: ActorState, assignee: "self" | string): { name: string; stamina: number } | ActorState | CrewState | null {
@@ -1486,9 +1612,103 @@ function formatAssigneeLogLine(assigneeName: string, line: string): string {
   return `${assigneeName}: ${line}`;
 }
 
+function repairActiveJobRouting(activeJob: ActiveJobState | null): void {
+  if (!activeJob) {
+    return;
+  }
+
+  const travelToSupplierTask = activeJob.tasks.find((task) => task.taskId === "travel_to_supplier");
+  const checkoutTask = activeJob.tasks.find((task) => task.taskId === "checkout_supplies");
+  if (!travelToSupplierTask || !checkoutTask) {
+    return;
+  }
+
+  const checkoutOutstanding = checkoutTask.requiredUnits > checkoutTask.completedUnits;
+  const travelToSupplierComplete = travelToSupplierTask.completedUnits >= travelToSupplierTask.requiredUnits;
+  if (activeJob.location === "shop" && checkoutOutstanding && travelToSupplierComplete) {
+    travelToSupplierTask.requiredUnits = travelToSupplierTask.completedUnits + 1;
+  }
+}
+
 function hasOutstandingSupplierStop(activeJob: ActiveJobState): boolean {
   const checkoutTask = activeJob.tasks.find((task) => task.taskId === "checkout_supplies");
   return Boolean(checkoutTask && checkoutTask.requiredUnits > checkoutTask.completedUnits);
+}
+
+function getDefaultTaskGuidance(taskId: TaskId): string {
+  switch (taskId) {
+    case "load_from_shop":
+      return "Next step: Load required supplies at the shop.";
+    case "refuel_at_station":
+      return "Next step: Refuel at Gas Station.";
+    case "travel_to_supplier":
+      return "Next step: Travel to Supplier.";
+    case "checkout_supplies":
+      return "Next step: Allocate materials in Supplier Cart.";
+    case "travel_to_job_site":
+      return "Next step: Travel to Job Site.";
+    case "pickup_site_supplies":
+      return "Next step: Pick up site supplies.";
+    case "do_work":
+      return "Next step: Take action on the job.";
+    case "collect_payment":
+      return "Next step: Collect payment.";
+    case "return_to_shop":
+      return "Next step: Return to Shop.";
+    case "store_leftovers":
+      return "Next step: Store leftovers at the shop.";
+  }
+}
+
+function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob: ActiveJobState): string {
+  const normalizedReason = blockedReason.toLowerCase();
+  if (normalizedReason.includes("fuel")) {
+    return "Next step: Refuel at Gas Station.";
+  }
+  if (normalizedReason.includes("supplier cart") || normalizedReason.includes("quality before checkout")) {
+    return "Next step: Allocate materials in Supplier Cart.";
+  }
+  if (normalizedReason.includes("supplier checkout")) {
+    return "Next step: Allocate materials in Supplier Cart.";
+  }
+  if (taskId === "checkout_supplies" && activeJob.location !== "supplier") {
+    return "Next step: Travel to Supplier.";
+  }
+  if (normalizedReason.includes("supplier")) {
+    return "Next step: Travel to Supplier.";
+  }
+  if (normalizedReason.includes("job site")) {
+    return "Next step: Travel to Job Site.";
+  }
+  if (normalizedReason.includes("materials")) {
+    return "Next step: Load or buy required materials.";
+  }
+  return getDefaultTaskGuidance(taskId);
+}
+
+function getSettlementFailChance(
+  activeJob: ActiveJobState,
+  job: JobDef,
+  events: EventDef[],
+  effectiveQualityPoints: number,
+  day: number
+): number {
+  const onboardingFailBuffer = day <= 5 ? 0.1 : 0;
+  return clamp(
+    getRiskValue(job, events) + activeJob.reworkCount * 0.04 - Math.max(0, effectiveQualityPoints) * 0.02 - onboardingFailBuffer,
+    0,
+    0.95
+  );
+}
+
+function getRiskBandFromFailChance(failChance: number): RiskBand {
+  if (failChance < 0.25) {
+    return "low";
+  }
+  if (failChance < 0.55) {
+    return "medium";
+  }
+  return "high";
 }
 
 function getDistrict(bundle: ContentBundle, districtId: string): DistrictDef {
@@ -1522,6 +1742,30 @@ function getTaskBaseTicks(task: ActiveTaskState, job: JobDef): number {
     return 2;
   }
   return task.baseTicks;
+}
+
+function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskStance: TaskStance): number {
+  const room = Math.max(0, state.player.fuelMax - state.player.fuel);
+  if (room <= 0) {
+    return 0;
+  }
+  if (taskStance === "rush") {
+    return 1;
+  }
+  if (taskStance === "careful") {
+    return room;
+  }
+  const activeJob = state.activeJob;
+  const district = activeJob ? getDistrict(bundle, activeJob.districtId) : null;
+  const supplierOutstanding = activeJob ? hasOutstandingSupplierStop(activeJob) : false;
+  const immediateNeed = district
+    ? supplierOutstanding
+      ? SHOP_SUPPLIER_FUEL
+      : getTravelFuelCost("travel_to_job_site", district, "shop")
+    : 1;
+  const reserve = district ? Math.max(district.travel.shopToSiteFuel, district.travel.supplierToSiteFuel) : 1;
+  const targetFuel = Math.min(state.player.fuelMax, immediateNeed + reserve);
+  return clamp(Math.max(1, targetFuel - state.player.fuel), 1, room);
 }
 
 function moveSuppliesForJob(shopSupplies: SupplyInventory, truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): void {
@@ -1588,7 +1832,7 @@ function describeSupplierCartNeed(bundle: ContentBundle, job: JobDef, inventory:
     })
     .slice(0, 4);
   if (lines.length === 0) {
-    return "Allocate the needed items across low, medium, or high quality before checkout.";
+    return "Required supplies are already covered. Proceed with checkout.";
   }
   return `Allocate the needed items by quality before checkout: ${lines.join(", ")}.`;
 }
@@ -1874,19 +2118,20 @@ export function getRemainingShiftTicks(workday: WorkdayState): number {
   return Math.max(0, workday.availableTicks + (workday.maxOvertime - workday.overtimeUsed) - workday.ticksSpent);
 }
 
+function getRemainingDayLaborTicks(workday: WorkdayState): number {
+  return Math.max(0, workday.availableTicks - workday.ticksSpent);
+}
+
 export function getQuickBuyPlan(
   state: GameState,
   bundle: ContentBundle,
   contractId: string
 ): QuickBuyPlan | null {
-  const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
-  if (!contract) {
+  const picked = getJobByContract(state, bundle, contractId);
+  if (!picked) {
     return null;
   }
-  const job = bundle.jobs.find((entry) => entry.id === contract.jobId);
-  if (!job) {
-    return null;
-  }
+  const { job } = picked;
   const events = getActiveEvents(bundle, state.activeEventIds);
   const missingTools: QuickBuyToolLine[] = [];
   for (const toolId of job.requiredTools) {

@@ -24,7 +24,8 @@ import {
   Resolution,
   ResolverResult,
   SkillId,
-  ToolDef
+  ToolDef,
+  TRADE_SKILLS
 } from "./types";
 
 interface ValidAssignment {
@@ -119,8 +120,6 @@ export function resolveDay(
       continue;
     }
 
-    const staminaTracker = createStaminaTracker(actor);
-
     for (const assignment of intent.assignments) {
       const contract = contractsById.get(assignment.contractId);
       if (!contract || contract.expiresDay < state.day) {
@@ -142,19 +141,6 @@ export function resolveDay(
         continue;
       }
 
-      const staminaKey = staminaTrackerKey(actorId, assignment.assignee);
-      const availableStamina = staminaTracker.get(staminaKey) ?? 0;
-      if (availableStamina < job.staminaCost) {
-        dayLog.push({
-          day: state.day,
-          actorId,
-          contractId: contract.contractId,
-          message: `${actor.name} skipped ${job.name}; stamina was short.`
-        });
-        continue;
-      }
-
-      staminaTracker.set(staminaKey, availableStamina - job.staminaCost);
       validAssignments.push({
         actorId,
         assignee: assignment.assignee,
@@ -245,11 +231,6 @@ export function resolveDay(
     }
 
     const staminaBefore = getAssigneeStamina(actor, winner.assignee);
-    if (staminaBefore < winner.job.staminaCost) {
-      continue;
-    }
-
-    setAssigneeStamina(actor, winner.assignee, staminaBefore - winner.job.staminaCost);
 
     const toolBefore = readToolDurability(actor, winner.job.requiredTools);
     const payout = Math.max(
@@ -290,7 +271,9 @@ export function resolveDay(
     }
 
     actor.cash += cashDelta;
-    actor.reputation += repDelta;
+    const reputationBefore = actor.reputation;
+    actor.reputation = Math.max(0, actor.reputation + repDelta);
+    const appliedRepDelta = actor.reputation - reputationBefore;
 
     for (const toolId of winner.job.requiredTools) {
       const tool = actor.tools[toolId];
@@ -308,9 +291,9 @@ export function resolveDay(
       outcome,
       winnerActorId: winner.actorId,
       cashDelta,
-      repDelta,
+      repDelta: appliedRepDelta,
       staminaBefore,
-      staminaAfter: getAssigneeStamina(actor, winner.assignee),
+      staminaAfter: staminaBefore,
       toolDurabilityBefore: toolBefore,
       toolDurabilityAfter: toolAfter,
       logLine
@@ -438,6 +421,7 @@ export function endShift(state: GameState, bundle: ContentBundle): ResolverResul
   }
 
   nextState.bots = updatedBots;
+  applyStagnationRecovery(nextState, bundle, dayLog, state.day);
   nextState.contractBoard = nextState.activeJob
     ? []
     : generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
@@ -452,6 +436,46 @@ export function endShift(state: GameState, bundle: ContentBundle): ResolverResul
     dayLog,
     digest: digestState(nextState)
   };
+}
+
+function applyStagnationRecovery(nextState: GameState, bundle: ContentBundle, dayLog: DayLog[], completedDay: number): void {
+  if (completedDay < 3) {
+    return;
+  }
+
+  const playerId = nextState.player.actorId;
+  const fullLog = [...nextState.log, ...dayLog];
+  const alreadyRecovered = fullLog.some(
+    (entry) => entry.actorId === playerId && entry.message.includes("Stagnation recovery applied")
+  );
+  if (alreadyRecovered) {
+    return;
+  }
+
+  const repDeltaByDay = new Map<number, number>();
+  for (const entry of fullLog) {
+    if (entry.actorId !== playerId) {
+      continue;
+    }
+    const repMatch = entry.message.match(/rep\s+([+-]?\d+)/i);
+    const repDelta = repMatch ? Number.parseInt(repMatch[1] ?? "0", 10) : 0;
+    repDeltaByDay.set(entry.day, (repDeltaByDay.get(entry.day) ?? 0) + repDelta);
+  }
+
+  const lastThreeDays = [completedDay - 2, completedDay - 1, completedDay];
+  const stalled = lastThreeDays.every((day) => (repDeltaByDay.get(day) ?? 0) <= 0);
+  if (!stalled) {
+    return;
+  }
+
+  nextState.player.reputation += 3;
+  nextState.player.companyLevel = deriveCompanyLevel(nextState.player.reputation);
+  nextState.player.districtUnlocks = unlockDistricts(bundle, nextState.player.companyLevel);
+  dayLog.push({
+    day: completedDay,
+    actorId: playerId,
+    message: "Stagnation recovery applied: reputation +3 after three flat days."
+  });
 }
 
 export function buyTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
@@ -479,10 +503,19 @@ export function buyTool(state: GameState, bundle: ContentBundle, toolId: string)
     durability: tool.maxDurability
   };
 
-  return {
+  const nextState = {
     ...state,
-    player: nextPlayer
+    player: nextPlayer,
+    log: [
+      ...state.log,
+      {
+        day: state.day,
+        actorId: state.player.actorId,
+        message: `Bought ${tool.name} for $${price}.`
+      }
+    ].slice(-300)
   };
+  return nextState;
 }
 
 export function repairTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
@@ -511,10 +544,19 @@ export function repairTool(state: GameState, bundle: ContentBundle, toolId: stri
     durability: toolDef.maxDurability
   };
 
-  return {
+  const nextState = {
     ...state,
-    player: nextPlayer
+    player: nextPlayer,
+    log: [
+      ...state.log,
+      {
+        day: state.day,
+        actorId: state.player.actorId,
+        message: `Repaired ${toolDef.name} for $${repairCost}.`
+      }
+    ].slice(-300)
   };
+  return nextState;
 }
 
 export function hireCrew(state: GameState): GameState {
@@ -663,32 +705,7 @@ function pickStarterTools(tools: ToolDef[], randomIndex: number): ToolDef[] {
 
 function getStarterSkillIds(tools: ToolDef[]): SkillId[] {
   const skillIds: SkillId[] = [];
-  const validSkills = new Set<SkillId>([
-    "general",
-    "sheet_metal",
-    "welding",
-    "hvac",
-    "engineering",
-    "architecture",
-    "cad",
-    "ai_tools",
-    "math",
-    "geometry",
-    "writing",
-    "reading",
-    "painting",
-    "drywall",
-    "concrete",
-    "fastener",
-    "framing",
-    "finish",
-    "plumbing",
-    "electrical",
-    "mechanical",
-    "roof",
-    "seal",
-    "inspection"
-  ]);
+  const validSkills = new Set<SkillId>([...TRADE_SKILLS]);
 
   for (const tool of tools) {
     for (const tag of tool.tags) {
@@ -721,24 +738,11 @@ function cloneActor(actor: ActorState): ActorState {
   };
 }
 
-function createStaminaTracker(actor: ActorState): Map<string, number> {
-  const tracker = new Map<string, number>();
-  tracker.set(staminaTrackerKey(actor.actorId, "self"), actor.stamina);
-  for (const crew of actor.crews) {
-    tracker.set(staminaTrackerKey(actor.actorId, crew.crewId), crew.stamina);
-  }
-  return tracker;
-}
-
 function hasUsableTools(actor: ActorState, requiredToolIds: string[]): boolean {
   return requiredToolIds.every((toolId) => {
     const tool = actor.tools[toolId];
     return Boolean(tool && tool.durability > 0);
   });
-}
-
-function staminaTrackerKey(actorId: string, assignee: AssignmentIntent["assignee"]): string {
-  return `${actorId}:${assignee}`;
 }
 
 function getAssigneeStamina(actor: ActorState, assignee: AssignmentIntent["assignee"]): number {
@@ -747,20 +751,6 @@ function getAssigneeStamina(actor: ActorState, assignee: AssignmentIntent["assig
   }
   const crew = actor.crews.find((item) => item.crewId === assignee);
   return crew?.stamina ?? 0;
-}
-
-function setAssigneeStamina(actor: ActorState, assignee: AssignmentIntent["assignee"], value: number): void {
-  const safeValue = Math.max(0, value);
-  if (assignee === "self") {
-    actor.stamina = safeValue;
-    return;
-  }
-
-  const crew = actor.crews.find((item) => item.crewId === assignee);
-  if (!crew) {
-    return;
-  }
-  crew.stamina = safeValue;
 }
 
 function readToolDurability(actor: ActorState, requiredToolIds: string[]): Record<string, number> {

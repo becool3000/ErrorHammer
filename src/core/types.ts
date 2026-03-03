@@ -1,41 +1,55 @@
 export type Outcome = "success" | "fail" | "neutral" | "lost";
 
+export const TRADE_SKILLS = [
+  "electrician",
+  "plumber",
+  "carpenter",
+  "mason",
+  "concrete_finisher",
+  "roofer",
+  "hvac_technician",
+  "drywall_installer",
+  "painter",
+  "flooring_installer",
+  "glazier",
+  "insulation_installer",
+  "framer",
+  "siding_installer",
+  "fence_installer",
+  "cabinet_maker",
+  "millworker",
+  "scaffolder",
+  "solar_panel_installer"
+] as const;
+
 export type SkillId =
-  | "travel"
-  | "procurement"
-  | "organization"
-  | "negotiation"
-  | "general"
-  | "sheet_metal"
-  | "welding"
-  | "hvac"
-  | "engineering"
-  | "architecture"
-  | "cad"
-  | "ai_tools"
-  | "math"
-  | "geometry"
-  | "writing"
-  | "reading"
-  | "painting"
-  | "drywall"
-  | "concrete"
-  | "fastener"
-  | "framing"
-  | "finish"
-  | "plumbing"
-  | "electrical"
-  | "mechanical"
-  | "roof"
-  | "seal"
-  | "inspection";
+  | "electrician"
+  | "plumber"
+  | "carpenter"
+  | "mason"
+  | "concrete_finisher"
+  | "roofer"
+  | "hvac_technician"
+  | "drywall_installer"
+  | "painter"
+  | "flooring_installer"
+  | "glazier"
+  | "insulation_installer"
+  | "framer"
+  | "siding_installer"
+  | "fence_installer"
+  | "cabinet_maker"
+  | "millworker"
+  | "scaffolder"
+  | "solar_panel_installer";
 
 export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 
-export type LocationId = "shop" | "supplier" | "job-site";
+export type LocationId = "shop" | "supplier" | "job-site" | "gas-station";
 
 export type TaskId =
   | "load_from_shop"
+  | "refuel_at_station"
   | "travel_to_supplier"
   | "checkout_supplies"
   | "travel_to_job_site"
@@ -88,6 +102,7 @@ export interface JobMaterialNeed {
 export interface JobDef {
   id: string;
   name: string;
+  primarySkill: SkillId;
   tier: number;
   districtId: string;
   requiredTools: string[];
@@ -366,6 +381,7 @@ export interface GameState {
 export interface ContentBundle {
   tools: ToolDef[];
   jobs: JobDef[];
+  babaJobs: JobDef[];
   events: EventDef[];
   districts: DistrictDef[];
   bots: BotProfile[];

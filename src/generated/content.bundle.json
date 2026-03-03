@@ -1,33 +1,635 @@
 {
+  "babaJobs": [
+    {
+      "basePayout": 80,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Pig Head Removal Detail. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Pig Head Removal Detail escalated into folklore before lunch.",
+        "neutral_line": "Baba G Pig Head Removal Detail technically completed, but quality landed halfway.",
+        "success_line": "Baba G Pig Head Removal Detail somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Baba G Pig Head Removal Detail",
+      "primarySkill": "mason",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.62,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "mason"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 91,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Grease Trap Catapult Swap. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Grease Trap Catapult Swap escalated into folklore before lunch.",
+        "neutral_line": "Baba G Grease Trap Catapult Swap technically completed, but quality landed halfway.",
+        "success_line": "Baba G Grease Trap Catapult Swap somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Baba G Grease Trap Catapult Swap",
+      "primarySkill": "plumber",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.68,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "plumber"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 102,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Baba G Odor Remediation Relay. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Odor Remediation Relay escalated into folklore before lunch.",
+        "neutral_line": "Baba G Odor Remediation Relay technically completed, but quality landed halfway.",
+        "success_line": "Baba G Odor Remediation Relay somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Baba G Odor Remediation Relay",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 4,
+      "repLossFail": 4,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.74,
+      "staminaCost": 4,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "hvac_technician"
+      ],
+      "tier": 3,
+      "workUnits": 5
+    },
+    {
+      "basePayout": 113,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Roof Bucket Rotation. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Roof Bucket Rotation escalated into folklore before lunch.",
+        "neutral_line": "Baba G Roof Bucket Rotation technically completed, but quality landed halfway.",
+        "success_line": "Baba G Roof Bucket Rotation somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-004",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Baba G Roof Bucket Rotation",
+      "primarySkill": "roofer",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.8,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "roofer"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 124,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Freezer Graveyard Cleanup. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Freezer Graveyard Cleanup escalated into folklore before lunch.",
+        "neutral_line": "Baba G Freezer Graveyard Cleanup technically completed, but quality landed halfway.",
+        "success_line": "Baba G Freezer Graveyard Cleanup somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-005",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Baba G Freezer Graveyard Cleanup",
+      "primarySkill": "electrician",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.62,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "electrician"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 135,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Baba G Mystery Puddle Containment. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Mystery Puddle Containment escalated into folklore before lunch.",
+        "neutral_line": "Baba G Mystery Puddle Containment technically completed, but quality landed halfway.",
+        "success_line": "Baba G Mystery Puddle Containment somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-006",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "concrete-mix"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Baba G Mystery Puddle Containment",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 4,
+      "repLossFail": 4,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.68,
+      "staminaCost": 4,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "concrete_finisher"
+      ],
+      "tier": 3,
+      "workUnits": 5
+    },
+    {
+      "basePayout": 146,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Neon Sign Mood Stabilization. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Neon Sign Mood Stabilization escalated into folklore before lunch.",
+        "neutral_line": "Baba G Neon Sign Mood Stabilization technically completed, but quality landed halfway.",
+        "success_line": "Baba G Neon Sign Mood Stabilization somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-007",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Baba G Neon Sign Mood Stabilization",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.74,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "solar_panel_installer"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 157,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Side Door Time Loop Repair. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Side Door Time Loop Repair escalated into folklore before lunch.",
+        "neutral_line": "Baba G Side Door Time Loop Repair technically completed, but quality landed halfway.",
+        "success_line": "Baba G Side Door Time Loop Repair somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-008",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Baba G Side Door Time Loop Repair",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.8,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "carpenter",
+        "commercial"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 168,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Baba G Countertop Tilt Negotiation. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Countertop Tilt Negotiation escalated into folklore before lunch.",
+        "neutral_line": "Baba G Countertop Tilt Negotiation technically completed, but quality landed halfway.",
+        "success_line": "Baba G Countertop Tilt Negotiation somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-009",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Baba G Countertop Tilt Negotiation",
+      "primarySkill": "millworker",
+      "repGainSuccess": 4,
+      "repLossFail": 4,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.62,
+      "staminaCost": 4,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "millworker"
+      ],
+      "tier": 3,
+      "workUnits": 5
+    },
+    {
+      "basePayout": 179,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Cooler Door Resurrection. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Cooler Door Resurrection escalated into folklore before lunch.",
+        "neutral_line": "Baba G Cooler Door Resurrection technically completed, but quality landed halfway.",
+        "success_line": "Baba G Cooler Door Resurrection somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-010",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Baba G Cooler Door Resurrection",
+      "primarySkill": "glazier",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.68,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "glazier"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 190,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Parking Lot Fence Diplomacy. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Parking Lot Fence Diplomacy escalated into folklore before lunch.",
+        "neutral_line": "Baba G Parking Lot Fence Diplomacy technically completed, but quality landed halfway.",
+        "success_line": "Baba G Parking Lot Fence Diplomacy somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-011",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Baba G Parking Lot Fence Diplomacy",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.74,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "fence_installer"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 201,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Baba G Hallway Drip Choir Silencing. Baba G says \"if it looks impossible, bill it like art.\"",
+        "fail_line": "Baba G Hallway Drip Choir Silencing escalated into folklore before lunch.",
+        "neutral_line": "Baba G Hallway Drip Choir Silencing technically completed, but quality landed halfway.",
+        "success_line": "Baba G Hallway Drip Choir Silencing somehow worked and Baba G called it elegant."
+      },
+      "id": "job-baba-g-012",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Baba G Hallway Drip Choir Silencing",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 4,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.8,
+      "staminaCost": 4,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "drywall_installer"
+      ],
+      "tier": 3,
+      "workUnits": 5
+    }
+  ],
   "bots": [
     {
       "flavorLines": [
-        "Doug bought another drill because the first drill looked lonely.",
-        "Doug says risk is just excitement with paperwork.",
-        "Doug arrives early, then improvises the rest."
+        "Benny tracks every invoice in a weatherproof notebook.",
+        "Benny says the real job is fixing yesterday's shortcuts.",
+        "Benny arrives with coffee, tape, and a questionable plan."
       ],
-      "id": "doug",
-      "name": "Doug",
+      "id": "benny",
+      "name": "Benny",
       "weights": {
-        "wCash": 1.1,
-        "wRep": 0.6,
+        "wCash": 1.16,
+        "wRep": 0.62,
         "wRiskAvoid": 0.3,
-        "wToolBuy": 1.2
+        "wToolBuy": 1.22
       }
     },
     {
       "flavorLines": [
-        "Marlene carries a checklist and a backup checklist.",
-        "Marlene treats clean corners like a moral duty.",
-        "Marlene declines chaos on principle."
+        "Doug tracks every invoice in a weatherproof notebook.",
+        "Doug says the real job is fixing yesterday's shortcuts.",
+        "Doug arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "doug",
+      "name": "Doug",
+      "weights": {
+        "wCash": 1.12,
+        "wRep": 0.58,
+        "wRiskAvoid": 0.34,
+        "wToolBuy": 1.15
+      }
+    },
+    {
+      "flavorLines": [
+        "Keiko tracks every invoice in a weatherproof notebook.",
+        "Keiko says the real job is fixing yesterday's shortcuts.",
+        "Keiko arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "keiko",
+      "name": "Keiko",
+      "weights": {
+        "wCash": 0.96,
+        "wRep": 1,
+        "wRiskAvoid": 0.84,
+        "wToolBuy": 0.82
+      }
+    },
+    {
+      "flavorLines": [
+        "Linh tracks every invoice in a weatherproof notebook.",
+        "Linh says the real job is fixing yesterday's shortcuts.",
+        "Linh arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "linh",
+      "name": "Linh",
+      "weights": {
+        "wCash": 0.98,
+        "wRep": 0.92,
+        "wRiskAvoid": 0.88,
+        "wToolBuy": 0.9
+      }
+    },
+    {
+      "flavorLines": [
+        "Marlene tracks every invoice in a weatherproof notebook.",
+        "Marlene says the real job is fixing yesterday's shortcuts.",
+        "Marlene arrives with coffee, tape, and a questionable plan."
       ],
       "id": "marlene",
       "name": "Marlene",
       "weights": {
         "wCash": 0.9,
         "wRep": 1.2,
+        "wRiskAvoid": 1.25,
+        "wToolBuy": 0.55
+      }
+    },
+    {
+      "flavorLines": [
+        "Omar tracks every invoice in a weatherproof notebook.",
+        "Omar says the real job is fixing yesterday's shortcuts.",
+        "Omar arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "omar",
+      "name": "Omar",
+      "weights": {
+        "wCash": 1.08,
+        "wRep": 0.7,
+        "wRiskAvoid": 0.52,
+        "wToolBuy": 1
+      }
+    },
+    {
+      "flavorLines": [
+        "Rafa tracks every invoice in a weatherproof notebook.",
+        "Rafa says the real job is fixing yesterday's shortcuts.",
+        "Rafa arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "rafa",
+      "name": "Rafa",
+      "weights": {
+        "wCash": 1.02,
+        "wRep": 0.86,
+        "wRiskAvoid": 0.66,
+        "wToolBuy": 0.96
+      }
+    },
+    {
+      "flavorLines": [
+        "Rico tracks every invoice in a weatherproof notebook.",
+        "Rico says the real job is fixing yesterday's shortcuts.",
+        "Rico arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "rico",
+      "name": "Rico",
+      "weights": {
+        "wCash": 1.05,
+        "wRep": 0.75,
+        "wRiskAvoid": 0.45,
+        "wToolBuy": 1.05
+      }
+    },
+    {
+      "flavorLines": [
+        "Sylvia tracks every invoice in a weatherproof notebook.",
+        "Sylvia says the real job is fixing yesterday's shortcuts.",
+        "Sylvia arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "sylvia",
+      "name": "Sylvia",
+      "weights": {
+        "wCash": 0.87,
+        "wRep": 1.26,
         "wRiskAvoid": 1.3,
-        "wToolBuy": 0.5
+        "wToolBuy": 0.6
+      }
+    },
+    {
+      "flavorLines": [
+        "Tasha tracks every invoice in a weatherproof notebook.",
+        "Tasha says the real job is fixing yesterday's shortcuts.",
+        "Tasha arrives with coffee, tape, and a questionable plan."
+      ],
+      "id": "tasha",
+      "name": "Tasha",
+      "weights": {
+        "wCash": 0.94,
+        "wRep": 1.05,
+        "wRiskAvoid": 0.92,
+        "wToolBuy": 0.78
       }
     }
   ],
@@ -328,1125 +930,3804 @@
   ],
   "jobs": [
     {
-      "basePayout": 110,
+      "basePayout": 123,
       "districtId": "residential",
       "durabilityCost": 2,
       "flavor": {
-        "client_quote": "Can we make this railing less suspenseful?",
-        "fail_line": "Porch Rail Tighten remains interpretive with structural ambition.",
-        "neutral_line": "Porch Rail Tighten improved in the emotionally measurable ways.",
-        "success_line": "Porch Rail Tighten no longer looks experimental."
+        "client_quote": "Cabinet Maker job ticket: \"Base Cabinet Rehang\" needs a same-day save without drama.",
+        "fail_line": "Base Cabinet Rehang stalled out and the callback board got louder.",
+        "neutral_line": "Base Cabinet Rehang is functional, but quality came in under spec.",
+        "success_line": "Base Cabinet Rehang cleared inspection and everyone exhaled."
       },
-      "id": "job-001",
+      "id": "job-cabinet_maker-001",
       "materialNeeds": [
         {
           "quantity": 2,
-          "supplyId": "paint-sleeve"
+          "supplyId": "cabinet-panel-pack"
         },
         {
-          "quantity": 2,
-          "supplyId": "trim-kit"
+          "quantity": 1,
+          "supplyId": "hinge-pack"
         }
       ],
-      "name": "Porch Rail Tighten",
-      "repGainSuccess": 3,
+      "name": "Base Cabinet Rehang",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 2,
       "repLossFail": 1,
       "requiredTools": [
-        "hammer",
-        "screwdriver"
-      ],
-      "risk": 0.18,
-      "staminaCost": 2,
-      "tags": [
-        "finish",
-        "outdoor",
-        "painting"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 95,
-      "districtId": "residential",
-      "durabilityCost": 2,
-      "flavor": {
-        "client_quote": "My mailbox leans like it has opinions.",
-        "fail_line": "Mailbox Post Reset remains interpretive with structural ambition.",
-        "neutral_line": "Mailbox Post Reset improved in the emotionally measurable ways.",
-        "success_line": "Mailbox Post Reset no longer looks experimental."
-      },
-      "id": "job-002",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Mailbox Post Reset",
-      "repGainSuccess": 3,
-      "repLossFail": 1,
-      "requiredTools": [
-        "hammer",
-        "level"
-      ],
-      "risk": 0.16,
-      "staminaCost": 2,
-      "tags": [
-        "concrete",
-        "framing",
-        "outdoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 125,
-      "districtId": "residential",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "I would like gravity to stop winning.",
-        "fail_line": "Kitchen Shelf Mount remains interpretive with structural ambition.",
-        "neutral_line": "Kitchen Shelf Mount improved in the emotionally measurable ways.",
-        "success_line": "Kitchen Shelf Mount no longer looks experimental."
-      },
-      "id": "job-003",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Kitchen Shelf Mount",
-      "repGainSuccess": 4,
-      "repLossFail": 1,
-      "requiredTools": [
-        "drill",
-        "level"
-      ],
-      "risk": 0.2,
-      "staminaCost": 2,
-      "tags": [
-        "finish",
-        "indoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 118,
-      "districtId": "residential",
-      "durabilityCost": 2,
-      "flavor": {
-        "client_quote": "The sink keeps applauding at 2 AM.",
-        "fail_line": "Leaky Tap Trim remains interpretive with structural ambition.",
-        "neutral_line": "Leaky Tap Trim improved in the emotionally measurable ways.",
-        "success_line": "Leaky Tap Trim no longer looks experimental."
-      },
-      "id": "job-004",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "pipe-kit"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "sealant-tube"
-        }
-      ],
-      "name": "Leaky Tap Trim",
-      "repGainSuccess": 4,
-      "repLossFail": 1,
-      "requiredTools": [
-        "screwdriver",
-        "wrench"
-      ],
-      "risk": 0.22,
-      "staminaCost": 2,
-      "tags": [
-        "indoor",
-        "plumbing"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 135,
-      "districtId": "residential",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "One fence plank has chosen freedom.",
-        "fail_line": "Fence Panel Patch remains interpretive with structural ambition.",
-        "neutral_line": "Fence Panel Patch improved in the emotionally measurable ways.",
-        "success_line": "Fence Panel Patch no longer looks experimental."
-      },
-      "id": "job-005",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Fence Panel Patch",
-      "repGainSuccess": 4,
-      "repLossFail": 2,
-      "requiredTools": [
-        "hammer",
+        "cabinet-jig",
         "saw"
-      ],
-      "risk": 0.25,
-      "staminaCost": 2,
-      "tags": [
-        "framing",
-        "outdoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 105,
-      "districtId": "residential",
-      "durabilityCost": 2,
-      "flavor": {
-        "client_quote": "The closet door only closes during holidays.",
-        "fail_line": "Closet Door Align remains interpretive with structural ambition.",
-        "neutral_line": "Closet Door Align improved in the emotionally measurable ways.",
-        "success_line": "Closet Door Align no longer looks experimental."
-      },
-      "id": "job-006",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Closet Door Align",
-      "repGainSuccess": 3,
-      "repLossFail": 1,
-      "requiredTools": [
-        "level",
-        "screwdriver"
-      ],
-      "risk": 0.14,
-      "staminaCost": 2,
-      "tags": [
-        "drywall",
-        "finish",
-        "indoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 112,
-      "districtId": "residential",
-      "durabilityCost": 2,
-      "flavor": {
-        "client_quote": "This corner is trying very hard.",
-        "fail_line": "Drywall Corner Rescue remains interpretive with structural ambition.",
-        "neutral_line": "Drywall Corner Rescue improved in the emotionally measurable ways.",
-        "success_line": "Drywall Corner Rescue no longer looks experimental."
-      },
-      "id": "job-007",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Drywall Corner Rescue",
-      "repGainSuccess": 3,
-      "repLossFail": 1,
-      "requiredTools": [
-        "caulk-gun",
-        "utility-knife"
-      ],
-      "risk": 0.21,
-      "staminaCost": 2,
-      "tags": [
-        "finish",
-        "indoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 145,
-      "districtId": "residential",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The attic entrance currently negotiates with ankles.",
-        "fail_line": "Attic Ladder Brace remains interpretive with structural ambition.",
-        "neutral_line": "Attic Ladder Brace improved in the emotionally measurable ways.",
-        "success_line": "Attic Ladder Brace no longer looks experimental."
-      },
-      "id": "job-008",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "fastener-box"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "roof-patch"
-        }
-      ],
-      "name": "Attic Ladder Brace",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
-      "requiredTools": [
-        "drill",
-        "ladder"
-      ],
-      "risk": 0.28,
-      "staminaCost": 2,
-      "tags": [
-        "outdoor",
-        "roof"
-      ],
-      "tier": 1,
-      "workUnits": 5
-    },
-    {
-      "basePayout": 138,
-      "districtId": "residential",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "One deck board squeaks in protest.",
-        "fail_line": "Deck Board Swap remains interpretive with structural ambition.",
-        "neutral_line": "Deck Board Swap improved in the emotionally measurable ways.",
-        "success_line": "Deck Board Swap no longer looks experimental."
-      },
-      "id": "job-009",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Deck Board Swap",
-      "repGainSuccess": 4,
-      "repLossFail": 2,
-      "requiredTools": [
-        "hammer",
-        "saw"
-      ],
-      "risk": 0.24,
-      "staminaCost": 2,
-      "tags": [
-        "framing",
-        "outdoor"
-      ],
-      "tier": 1,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 98,
-      "districtId": "residential",
-      "durabilityCost": 2,
-      "flavor": {
-        "client_quote": "The tub edge is auditioning for geology.",
-        "fail_line": "Bathroom Caulk Reboot remains interpretive with structural ambition.",
-        "neutral_line": "Bathroom Caulk Reboot improved in the emotionally measurable ways.",
-        "success_line": "Bathroom Caulk Reboot no longer looks experimental."
-      },
-      "id": "job-010",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 2,
-          "supplyId": "sealant-tube"
-        }
-      ],
-      "name": "Bathroom Caulk Reboot",
-      "repGainSuccess": 3,
-      "repLossFail": 1,
-      "requiredTools": [
-        "caulk-gun",
-        "utility-knife"
       ],
       "risk": 0.17,
       "staminaCost": 2,
       "tags": [
+        "cabinet_maker",
         "indoor",
-        "seal"
+        "residential",
+        "residential"
       ],
       "tier": 1,
-      "workUnits": 4
+      "workUnits": 2
     },
     {
-      "basePayout": 175,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
+      "basePayout": 132,
+      "districtId": "residential",
+      "durabilityCost": 2,
       "flavor": {
-        "client_quote": "Our espresso machine likes to slide south.",
-        "fail_line": "Cafe Counter Shim remains interpretive with structural ambition.",
-        "neutral_line": "Cafe Counter Shim improved in the emotionally measurable ways.",
-        "success_line": "Cafe Counter Shim no longer looks experimental."
+        "client_quote": "Cabinet Maker job ticket: \"Drawer Bank Alignment\" needs a same-day save without drama.",
+        "fail_line": "Drawer Bank Alignment stalled out and the callback board got louder.",
+        "neutral_line": "Drawer Bank Alignment is functional, but quality came in under spec.",
+        "success_line": "Drawer Bank Alignment cleared inspection and everyone exhaled."
       },
-      "id": "job-011",
+      "id": "job-cabinet_maker-002",
       "materialNeeds": [
         {
-          "quantity": 3,
-          "supplyId": "paint-sleeve"
+          "quantity": 2,
+          "supplyId": "cabinet-panel-pack"
         },
         {
-          "quantity": 3,
-          "supplyId": "trim-kit"
+          "quantity": 1,
+          "supplyId": "hinge-pack"
         }
       ],
-      "name": "Cafe Counter Shim",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
+      "name": "Drawer Bank Alignment",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
       "requiredTools": [
-        "drill",
-        "level"
-      ],
-      "risk": 0.26,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "finish"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 190,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The sign now points at a cloud.",
-        "fail_line": "Shop Sign Rehang remains interpretive with structural ambition.",
-        "neutral_line": "Shop Sign Rehang improved in the emotionally measurable ways.",
-        "success_line": "Shop Sign Rehang no longer looks experimental."
-      },
-      "id": "job-012",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Shop Sign Rehang",
-      "repGainSuccess": 6,
-      "repLossFail": 2,
-      "requiredTools": [
-        "drill",
-        "ladder"
-      ],
-      "risk": 0.29,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "outdoor"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 205,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Two cubicles became one by accident.",
-        "fail_line": "Office Partition Fix remains interpretive with structural ambition.",
-        "neutral_line": "Office Partition Fix improved in the emotionally measurable ways.",
-        "success_line": "Office Partition Fix no longer looks experimental."
-      },
-      "id": "job-013",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Office Partition Fix",
-      "repGainSuccess": 6,
-      "repLossFail": 2,
-      "requiredTools": [
-        "drill",
+        "cabinet-jig",
         "saw"
       ],
-      "risk": 0.31,
-      "staminaCost": 3,
+      "risk": 0.2,
+      "staminaCost": 2,
       "tags": [
-        "framing",
-        "indoor"
+        "cabinet_maker",
+        "indoor",
+        "residential",
+        "residential"
       ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 182,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The prep sink wiggles with conviction.",
-        "fail_line": "Bakery Sink Clamp remains interpretive with structural ambition.",
-        "neutral_line": "Bakery Sink Clamp improved in the emotionally measurable ways.",
-        "success_line": "Bakery Sink Clamp no longer looks experimental."
-      },
-      "id": "job-014",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "pipe-kit"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "sealant-tube"
-        }
-      ],
-      "name": "Bakery Sink Clamp",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
-      "requiredTools": [
-        "caulk-gun",
-        "wrench"
-      ],
-      "risk": 0.27,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "plumbing"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 220,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Half the lamps have trust issues.",
-        "fail_line": "Studio Light Track remains interpretive with structural ambition.",
-        "neutral_line": "Studio Light Track improved in the emotionally measurable ways.",
-        "success_line": "Studio Light Track no longer looks experimental."
-      },
-      "id": "job-015",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "junction-box"
-        },
-        {
-          "quantity": 4,
-          "supplyId": "wire-spool"
-        }
-      ],
-      "name": "Studio Light Track",
-      "repGainSuccess": 7,
-      "repLossFail": 3,
-      "requiredTools": [
-        "drill",
-        "stud-finder"
-      ],
-      "risk": 0.33,
-      "staminaCost": 3,
-      "tags": [
-        "electrical",
-        "indoor"
-      ],
-      "tier": 2,
-      "workUnits": 7
-    },
-    {
-      "basePayout": 188,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The shelf leans toward impulse purchases.",
-        "fail_line": "Retail Shelf Anchor remains interpretive with structural ambition.",
-        "neutral_line": "Retail Shelf Anchor improved in the emotionally measurable ways.",
-        "success_line": "Retail Shelf Anchor no longer looks experimental."
-      },
-      "id": "job-016",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Retail Shelf Anchor",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
-      "requiredTools": [
-        "drill",
-        "level"
-      ],
-      "risk": 0.25,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "finish"
-      ],
-      "tier": 2,
-      "workUnits": 6
+      "tier": 1,
+      "workUnits": 3
     },
     {
       "basePayout": 196,
       "districtId": "small-commercial",
-      "durabilityCost": 3,
+      "durabilityCost": 4,
       "flavor": {
-        "client_quote": "The loading door sings at dawn.",
-        "fail_line": "Warehouse Door Tune remains interpretive with structural ambition.",
-        "neutral_line": "Warehouse Door Tune improved in the emotionally measurable ways.",
-        "success_line": "Warehouse Door Tune no longer looks experimental."
+        "client_quote": "Cabinet Maker job ticket: \"Pantry Unit Refit\" needs a same-day save without drama.",
+        "fail_line": "Pantry Unit Refit stalled out and the callback board got louder.",
+        "neutral_line": "Pantry Unit Refit is functional, but quality came in under spec.",
+        "success_line": "Pantry Unit Refit cleared inspection and everyone exhaled."
       },
-      "id": "job-017",
+      "id": "job-cabinet_maker-003",
       "materialNeeds": [
         {
           "quantity": 3,
-          "supplyId": "fastener-box"
+          "supplyId": "cabinet-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "hinge-pack"
+        }
+      ],
+      "name": "Pantry Unit Refit",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "cabinet_maker",
+        "commercial",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 165,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Cabinet Maker job ticket: \"Island Joinery Repair\" needs a same-day save without drama.",
+        "fail_line": "Island Joinery Repair stalled out and the callback board got louder.",
+        "neutral_line": "Island Joinery Repair is functional, but quality came in under spec.",
+        "success_line": "Island Joinery Repair cleared inspection and everyone exhaled."
+      },
+      "id": "job-cabinet_maker-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "cabinet-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "hinge-pack"
+        }
+      ],
+      "name": "Island Joinery Repair",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "cabinet_maker",
+        "commercial",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 279,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Cabinet Maker job ticket: \"Civic Office Mill Cabinet Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Office Mill Cabinet Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Office Mill Cabinet Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Office Mill Cabinet Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-cabinet_maker-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "cabinet-panel-pack"
         },
         {
           "quantity": 3,
           "supplyId": "hinge-pack"
         }
       ],
-      "name": "Warehouse Door Tune",
-      "repGainSuccess": 6,
-      "repLossFail": 2,
-      "requiredTools": [
-        "hammer",
-        "wrench"
-      ],
-      "risk": 0.3,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "mechanical"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 210,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "The awning now flaps motivationally.",
-        "fail_line": "Patio Awning Joint remains interpretive with structural ambition.",
-        "neutral_line": "Patio Awning Joint improved in the emotionally measurable ways.",
-        "success_line": "Patio Awning Joint no longer looks experimental."
-      },
-      "id": "job-018",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "roof-patch"
-        }
-      ],
-      "name": "Patio Awning Joint",
-      "repGainSuccess": 7,
+      "name": "Civic Office Mill Cabinet Recovery",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 4,
       "repLossFail": 3,
       "requiredTools": [
-        "ladder",
-        "wrench"
-      ],
-      "risk": 0.34,
-      "staminaCost": 3,
-      "tags": [
-        "outdoor",
-        "roof"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 170,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The wall trim has several dialects.",
-        "fail_line": "Mini Clinic Trim remains interpretive with structural ambition.",
-        "neutral_line": "Mini Clinic Trim improved in the emotionally measurable ways.",
-        "success_line": "Mini Clinic Trim no longer looks experimental."
-      },
-      "id": "job-019",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Mini Clinic Trim",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
-      "requiredTools": [
-        "caulk-gun",
-        "utility-knife"
-      ],
-      "risk": 0.23,
-      "staminaCost": 3,
-      "tags": [
-        "finish",
-        "indoor"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 200,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "The ramp says maybe to wheelchairs.",
-        "fail_line": "Co-Op Ramp Brace remains interpretive with structural ambition.",
-        "neutral_line": "Co-Op Ramp Brace improved in the emotionally measurable ways.",
-        "success_line": "Co-Op Ramp Brace no longer looks experimental."
-      },
-      "id": "job-020",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Co-Op Ramp Brace",
-      "repGainSuccess": 6,
-      "repLossFail": 2,
-      "requiredTools": [
-        "hammer",
-        "level"
-      ],
-      "risk": 0.28,
-      "staminaCost": 3,
-      "tags": [
-        "framing",
-        "outdoor"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 214,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "The vent opening became abstract.",
-        "fail_line": "Workshop Vent Frame remains interpretive with structural ambition.",
-        "neutral_line": "Workshop Vent Frame improved in the emotionally measurable ways.",
-        "success_line": "Workshop Vent Frame no longer looks experimental."
-      },
-      "id": "job-021",
-      "materialNeeds": [
-        {
-          "quantity": 4,
-          "supplyId": "board-pack"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Workshop Vent Frame",
-      "repGainSuccess": 7,
-      "repLossFail": 3,
-      "requiredTools": [
-        "drill",
+        "cabinet-jig",
         "saw"
-      ],
-      "risk": 0.32,
-      "staminaCost": 3,
-      "tags": [
-        "commercial",
-        "framing"
-      ],
-      "tier": 2,
-      "workUnits": 7
-    },
-    {
-      "basePayout": 185,
-      "districtId": "small-commercial",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "One bollard now greets cars diagonally.",
-        "fail_line": "Parking Bollard Reset remains interpretive with structural ambition.",
-        "neutral_line": "Parking Bollard Reset improved in the emotionally measurable ways.",
-        "success_line": "Parking Bollard Reset no longer looks experimental."
-      },
-      "id": "job-022",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Parking Bollard Reset",
-      "repGainSuccess": 5,
-      "repLossFail": 2,
-      "requiredTools": [
-        "hammer",
-        "wrench"
-      ],
-      "risk": 0.27,
-      "staminaCost": 3,
-      "tags": [
-        "civic",
-        "outdoor"
-      ],
-      "tier": 2,
-      "workUnits": 6
-    },
-    {
-      "basePayout": 245,
-      "districtId": "civic-lite",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "The front step currently teaches humility.",
-        "fail_line": "Library Step Reinforce remains interpretive with structural ambition.",
-        "neutral_line": "Library Step Reinforce improved in the emotionally measurable ways.",
-        "success_line": "Library Step Reinforce no longer looks experimental."
-      },
-      "id": "job-023",
-      "materialNeeds": [
-        {
-          "quantity": 5,
-          "supplyId": "paint-sleeve"
-        },
-        {
-          "quantity": 5,
-          "supplyId": "trim-kit"
-        }
-      ],
-      "name": "Library Step Reinforce",
-      "repGainSuccess": 8,
-      "repLossFail": 3,
-      "requiredTools": [
-        "drill",
-        "hammer",
-        "level"
-      ],
-      "risk": 0.34,
-      "staminaCost": 4,
-      "tags": [
-        "civic",
-        "finish"
-      ],
-      "tier": 3,
-      "workUnits": 9
-    },
-    {
-      "basePayout": 260,
-      "districtId": "civic-lite",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Bench number three has trust issues.",
-        "fail_line": "Park Bench Retrofit remains interpretive with structural ambition.",
-        "neutral_line": "Park Bench Retrofit improved in the emotionally measurable ways.",
-        "success_line": "Park Bench Retrofit no longer looks experimental."
-      },
-      "id": "job-024",
-      "materialNeeds": [
-        {
-          "quantity": 5,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 5,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Park Bench Retrofit",
-      "repGainSuccess": 8,
-      "repLossFail": 3,
-      "requiredTools": [
-        "drill",
-        "saw",
-        "wrench"
-      ],
-      "risk": 0.36,
-      "staminaCost": 4,
-      "tags": [
-        "civic",
-        "outdoor"
-      ],
-      "tier": 3,
-      "workUnits": 9
-    },
-    {
-      "basePayout": 252,
-      "districtId": "civic-lite",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "The handrail ends mid-conversation.",
-        "fail_line": "Community Hall Rail remains interpretive with structural ambition.",
-        "neutral_line": "Community Hall Rail improved in the emotionally measurable ways.",
-        "success_line": "Community Hall Rail no longer looks experimental."
-      },
-      "id": "job-025",
-      "materialNeeds": [
-        {
-          "quantity": 5,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 5,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Community Hall Rail",
-      "repGainSuccess": 8,
-      "repLossFail": 3,
-      "requiredTools": [
-        "caulk-gun",
-        "drill",
-        "level"
       ],
       "risk": 0.33,
       "staminaCost": 4,
       "tags": [
+        "cabinet_maker",
         "civic",
-        "indoor"
+        "indoor",
+        "residential"
       ],
       "tier": 3,
-      "workUnits": 9
+      "workUnits": 4
+    },
+    {
+      "basePayout": 119,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Carpenter job ticket: \"Rough Opening Correction\" needs a same-day save without drama.",
+        "fail_line": "Rough Opening Correction stalled out and the callback board got louder.",
+        "neutral_line": "Rough Opening Correction is functional, but quality came in under spec.",
+        "success_line": "Rough Opening Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-carpenter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Rough Opening Correction",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "carpenter",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 128,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Carpenter job ticket: \"Finish Trim Alignment\" needs a same-day save without drama.",
+        "fail_line": "Finish Trim Alignment stalled out and the callback board got louder.",
+        "neutral_line": "Finish Trim Alignment is functional, but quality came in under spec.",
+        "success_line": "Finish Trim Alignment cleared inspection and everyone exhaled."
+      },
+      "id": "job-carpenter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Finish Trim Alignment",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "carpenter",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 192,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Carpenter job ticket: \"Cabin Framing Patch\" needs a same-day save without drama.",
+        "fail_line": "Cabin Framing Patch stalled out and the callback board got louder.",
+        "neutral_line": "Cabin Framing Patch is functional, but quality came in under spec.",
+        "success_line": "Cabin Framing Patch cleared inspection and everyone exhaled."
+      },
+      "id": "job-carpenter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Cabin Framing Patch",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "carpenter",
+        "commercial",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 201,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Carpenter job ticket: \"Door Jamb Recovery\" needs a same-day save without drama.",
+        "fail_line": "Door Jamb Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Door Jamb Recovery is functional, but quality came in under spec.",
+        "success_line": "Door Jamb Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-carpenter-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "board-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Door Jamb Recovery",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "carpenter",
+        "commercial",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
     },
     {
       "basePayout": 275,
       "districtId": "civic-lite",
       "durabilityCost": 5,
       "flavor": {
-        "client_quote": "Rain currently enters from all strategic angles.",
-        "fail_line": "Bus Shelter Panel remains interpretive with structural ambition.",
-        "neutral_line": "Bus Shelter Panel improved in the emotionally measurable ways.",
-        "success_line": "Bus Shelter Panel no longer looks experimental."
+        "client_quote": "Carpenter job ticket: \"Townhall Mill Corner Rescue\" needs a same-day save without drama.",
+        "fail_line": "Townhall Mill Corner Rescue stalled out and the callback board got louder.",
+        "neutral_line": "Townhall Mill Corner Rescue is functional, but quality came in under spec.",
+        "success_line": "Townhall Mill Corner Rescue cleared inspection and everyone exhaled."
       },
-      "id": "job-026",
+      "id": "job-carpenter-005",
       "materialNeeds": [
         {
-          "quantity": 5,
-          "supplyId": "anchor-set"
+          "quantity": 4,
+          "supplyId": "board-pack"
         },
         {
-          "quantity": 5,
+          "quantity": 3,
           "supplyId": "fastener-box"
         }
       ],
-      "name": "Bus Shelter Panel",
-      "repGainSuccess": 9,
+      "name": "Townhall Mill Corner Rescue",
+      "primarySkill": "carpenter",
+      "repGainSuccess": 4,
       "repLossFail": 3,
       "requiredTools": [
-        "drill",
-        "ladder",
-        "utility-knife"
+        "hammer",
+        "saw"
       ],
-      "risk": 0.38,
+      "risk": 0.33,
       "staminaCost": 4,
       "tags": [
+        "carpenter",
         "civic",
-        "outdoor"
+        "indoor",
+        "residential"
       ],
       "tier": 3,
-      "workUnits": 9
+      "workUnits": 4
     },
     {
-      "basePayout": 268,
-      "districtId": "civic-lite",
-      "durabilityCost": 4,
+      "basePayout": 127,
+      "districtId": "residential",
+      "durabilityCost": 2,
       "flavor": {
-        "client_quote": "This door both drags and drifts.",
-        "fail_line": "Rec Center Door Set remains interpretive with structural ambition.",
-        "neutral_line": "Rec Center Door Set improved in the emotionally measurable ways.",
-        "success_line": "Rec Center Door Set no longer looks experimental."
+        "client_quote": "Concrete Finisher job ticket: \"Sidewalk Patch Finish\" needs a same-day save without drama.",
+        "fail_line": "Sidewalk Patch Finish stalled out and the callback board got louder.",
+        "neutral_line": "Sidewalk Patch Finish is functional, but quality came in under spec.",
+        "success_line": "Sidewalk Patch Finish cleared inspection and everyone exhaled."
       },
-      "id": "job-027",
+      "id": "job-concrete_finisher-001",
       "materialNeeds": [
         {
-          "quantity": 5,
-          "supplyId": "fastener-box"
+          "quantity": 2,
+          "supplyId": "concrete-mix"
         },
         {
-          "quantity": 5,
-          "supplyId": "hinge-pack"
+          "quantity": 1,
+          "supplyId": "rebar-bundle"
         }
       ],
-      "name": "Rec Center Door Set",
-      "repGainSuccess": 8,
+      "name": "Sidewalk Patch Finish",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "concrete_finisher",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 136,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Concrete Finisher job ticket: \"Garage Slab Burnish\" needs a same-day save without drama.",
+        "fail_line": "Garage Slab Burnish stalled out and the callback board got louder.",
+        "neutral_line": "Garage Slab Burnish is functional, but quality came in under spec.",
+        "success_line": "Garage Slab Burnish cleared inspection and everyone exhaled."
+      },
+      "id": "job-concrete_finisher-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "concrete-mix"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Garage Slab Burnish",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "concrete_finisher",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Concrete Finisher job ticket: \"Ramp Surface Refinish\" needs a same-day save without drama.",
+        "fail_line": "Ramp Surface Refinish stalled out and the callback board got louder.",
+        "neutral_line": "Ramp Surface Refinish is functional, but quality came in under spec.",
+        "success_line": "Ramp Surface Refinish cleared inspection and everyone exhaled."
+      },
+      "id": "job-concrete_finisher-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "concrete-mix"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Ramp Surface Refinish",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "concrete_finisher",
+        "outdoor"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 169,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Concrete Finisher job ticket: \"Dock Pad Relevel\" needs a same-day save without drama.",
+        "fail_line": "Dock Pad Relevel stalled out and the callback board got louder.",
+        "neutral_line": "Dock Pad Relevel is functional, but quality came in under spec.",
+        "success_line": "Dock Pad Relevel cleared inspection and everyone exhaled."
+      },
+      "id": "job-concrete_finisher-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "concrete-mix"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Dock Pad Relevel",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "concrete_finisher",
+        "outdoor"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 283,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Concrete Finisher job ticket: \"Transit Bay Surface Recovery\" needs a same-day save without drama.",
+        "fail_line": "Transit Bay Surface Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Transit Bay Surface Recovery is functional, but quality came in under spec.",
+        "success_line": "Transit Bay Surface Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-concrete_finisher-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "concrete-mix"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Transit Bay Surface Recovery",
+      "primarySkill": "concrete_finisher",
+      "repGainSuccess": 4,
       "repLossFail": 3,
       "requiredTools": [
         "level",
-        "screwdriver",
-        "wrench"
+        "trowel"
       ],
-      "risk": 0.35,
+      "risk": 0.33,
       "staminaCost": 4,
       "tags": [
         "civic",
-        "mechanical"
+        "commercial",
+        "concrete_finisher",
+        "outdoor"
       ],
       "tier": 3,
-      "workUnits": 9
+      "workUnits": 4
+    },
+    {
+      "basePayout": 127,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Drywall Installer job ticket: \"Corner Bead Reset\" needs a same-day save without drama.",
+        "fail_line": "Corner Bead Reset stalled out and the callback board got louder.",
+        "neutral_line": "Corner Bead Reset is functional, but quality came in under spec.",
+        "success_line": "Corner Bead Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-drywall_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Corner Bead Reset",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "drywall_installer",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 136,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Drywall Installer job ticket: \"Patch Wall Finish\" needs a same-day save without drama.",
+        "fail_line": "Patch Wall Finish stalled out and the callback board got louder.",
+        "neutral_line": "Patch Wall Finish is functional, but quality came in under spec.",
+        "success_line": "Patch Wall Finish cleared inspection and everyone exhaled."
+      },
+      "id": "job-drywall_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Patch Wall Finish",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "drywall_installer",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Drywall Installer job ticket: \"Ceiling Seam Recovery\" needs a same-day save without drama.",
+        "fail_line": "Ceiling Seam Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Ceiling Seam Recovery is functional, but quality came in under spec.",
+        "success_line": "Ceiling Seam Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-drywall_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Ceiling Seam Recovery",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "drywall_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 169,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Drywall Installer job ticket: \"Board Hang Rework\" needs a same-day save without drama.",
+        "fail_line": "Board Hang Rework stalled out and the callback board got louder.",
+        "neutral_line": "Board Hang Rework is functional, but quality came in under spec.",
+        "success_line": "Board Hang Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-drywall_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Board Hang Rework",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "drywall_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 283,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Drywall Installer job ticket: \"Civic Hall Partition Rescue\" needs a same-day save without drama.",
+        "fail_line": "Civic Hall Partition Rescue stalled out and the callback board got louder.",
+        "neutral_line": "Civic Hall Partition Rescue is functional, but quality came in under spec.",
+        "success_line": "Civic Hall Partition Rescue cleared inspection and everyone exhaled."
+      },
+      "id": "job-drywall_installer-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Civic Hall Partition Rescue",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.33,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "drywall_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 121,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Electrician job ticket: \"Panel Circuit Cleanup\" needs a same-day save without drama.",
+        "fail_line": "Panel Circuit Cleanup stalled out and the callback board got louder.",
+        "neutral_line": "Panel Circuit Cleanup is functional, but quality came in under spec.",
+        "success_line": "Panel Circuit Cleanup cleared inspection and everyone exhaled."
+      },
+      "id": "job-electrician-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Panel Circuit Cleanup",
+      "primarySkill": "electrician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "electrician",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 130,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Electrician job ticket: \"Breaker Stack Stabilization\" needs a same-day save without drama.",
+        "fail_line": "Breaker Stack Stabilization stalled out and the callback board got louder.",
+        "neutral_line": "Breaker Stack Stabilization is functional, but quality came in under spec.",
+        "success_line": "Breaker Stack Stabilization cleared inspection and everyone exhaled."
+      },
+      "id": "job-electrician-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Breaker Stack Stabilization",
+      "primarySkill": "electrician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "electrician",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 194,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Electrician job ticket: \"Service Conduit Reroute\" needs a same-day save without drama.",
+        "fail_line": "Service Conduit Reroute stalled out and the callback board got louder.",
+        "neutral_line": "Service Conduit Reroute is functional, but quality came in under spec.",
+        "success_line": "Service Conduit Reroute cleared inspection and everyone exhaled."
+      },
+      "id": "job-electrician-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Service Conduit Reroute",
+      "primarySkill": "electrician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "electrician",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 203,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Electrician job ticket: \"Load Balance Correction\" needs a same-day save without drama.",
+        "fail_line": "Load Balance Correction stalled out and the callback board got louder.",
+        "neutral_line": "Load Balance Correction is functional, but quality came in under spec.",
+        "success_line": "Load Balance Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-electrician-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Load Balance Correction",
+      "primarySkill": "electrician",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "electrician",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 277,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Electrician job ticket: \"Municipal Switchboard Recovery\" needs a same-day save without drama.",
+        "fail_line": "Municipal Switchboard Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Municipal Switchboard Recovery is functional, but quality came in under spec.",
+        "success_line": "Municipal Switchboard Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-electrician-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Municipal Switchboard Recovery",
+      "primarySkill": "electrician",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "electrician",
+        "indoor"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Fence Installer job ticket: \"Line Post Reset\" needs a same-day save without drama.",
+        "fail_line": "Line Post Reset stalled out and the callback board got louder.",
+        "neutral_line": "Line Post Reset is functional, but quality came in under spec.",
+        "success_line": "Line Post Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-fence_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Line Post Reset",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "fence_installer",
+        "outdoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 134,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Fence Installer job ticket: \"Gate Hinge Rehang\" needs a same-day save without drama.",
+        "fail_line": "Gate Hinge Rehang stalled out and the callback board got louder.",
+        "neutral_line": "Gate Hinge Rehang is functional, but quality came in under spec.",
+        "success_line": "Gate Hinge Rehang cleared inspection and everyone exhaled."
+      },
+      "id": "job-fence_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Gate Hinge Rehang",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "fence_installer",
+        "outdoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 198,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Fence Installer job ticket: \"Panel Run Alignment\" needs a same-day save without drama.",
+        "fail_line": "Panel Run Alignment stalled out and the callback board got louder.",
+        "neutral_line": "Panel Run Alignment is functional, but quality came in under spec.",
+        "success_line": "Panel Run Alignment cleared inspection and everyone exhaled."
+      },
+      "id": "job-fence_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Panel Run Alignment",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "fence_installer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 167,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Fence Installer job ticket: \"Perimeter Brace Rework\" needs a same-day save without drama.",
+        "fail_line": "Perimeter Brace Rework stalled out and the callback board got louder.",
+        "neutral_line": "Perimeter Brace Rework is functional, but quality came in under spec.",
+        "success_line": "Perimeter Brace Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-fence_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Perimeter Brace Rework",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "fence_installer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 281,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Fence Installer job ticket: \"Civic Yard Boundary Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Yard Boundary Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Yard Boundary Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Yard Boundary Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-fence_installer-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Civic Yard Boundary Recovery",
+      "primarySkill": "fence_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "fence_installer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 128,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Flooring Installer job ticket: \"Tile Grid Correction\" needs a same-day save without drama.",
+        "fail_line": "Tile Grid Correction stalled out and the callback board got louder.",
+        "neutral_line": "Tile Grid Correction is functional, but quality came in under spec.",
+        "success_line": "Tile Grid Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-flooring_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Tile Grid Correction",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "flooring_installer",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 137,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Flooring Installer job ticket: \"Hardwood Row Reset\" needs a same-day save without drama.",
+        "fail_line": "Hardwood Row Reset stalled out and the callback board got louder.",
+        "neutral_line": "Hardwood Row Reset is functional, but quality came in under spec.",
+        "success_line": "Hardwood Row Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-flooring_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Hardwood Row Reset",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "flooring_installer",
+        "indoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 201,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Flooring Installer job ticket: \"Vinyl Seam Repair\" needs a same-day save without drama.",
+        "fail_line": "Vinyl Seam Repair stalled out and the callback board got louder.",
+        "neutral_line": "Vinyl Seam Repair is functional, but quality came in under spec.",
+        "success_line": "Vinyl Seam Repair cleared inspection and everyone exhaled."
+      },
+      "id": "job-flooring_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Vinyl Seam Repair",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "flooring_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 170,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Flooring Installer job ticket: \"Subfloor Underlay Refit\" needs a same-day save without drama.",
+        "fail_line": "Subfloor Underlay Refit stalled out and the callback board got louder.",
+        "neutral_line": "Subfloor Underlay Refit is functional, but quality came in under spec.",
+        "success_line": "Subfloor Underlay Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-flooring_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Subfloor Underlay Refit",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "flooring_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 284,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Flooring Installer job ticket: \"Civic Lobby Surface Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Lobby Surface Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Lobby Surface Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Lobby Surface Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-flooring_installer-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Civic Lobby Surface Recovery",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.36,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "flooring_installer",
+        "indoor",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 116,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Framer job ticket: \"Stud Wall Correction\" needs a same-day save without drama.",
+        "fail_line": "Stud Wall Correction stalled out and the callback board got louder.",
+        "neutral_line": "Stud Wall Correction is functional, but quality came in under spec.",
+        "success_line": "Stud Wall Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-framer-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "stud-bundle"
+        }
+      ],
+      "name": "Stud Wall Correction",
+      "primarySkill": "framer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "framing-nailer",
+        "level"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "framer",
+        "outdoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Framer job ticket: \"Deck Frame Brace\" needs a same-day save without drama.",
+        "fail_line": "Deck Frame Brace stalled out and the callback board got louder.",
+        "neutral_line": "Deck Frame Brace is functional, but quality came in under spec.",
+        "success_line": "Deck Frame Brace cleared inspection and everyone exhaled."
+      },
+      "id": "job-framer-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "stud-bundle"
+        }
+      ],
+      "name": "Deck Frame Brace",
+      "primarySkill": "framer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "framing-nailer",
+        "level"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "framer",
+        "outdoor",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 189,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Framer job ticket: \"Garage Header Rebuild\" needs a same-day save without drama.",
+        "fail_line": "Garage Header Rebuild stalled out and the callback board got louder.",
+        "neutral_line": "Garage Header Rebuild is functional, but quality came in under spec.",
+        "success_line": "Garage Header Rebuild cleared inspection and everyone exhaled."
+      },
+      "id": "job-framer-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "stud-bundle"
+        }
+      ],
+      "name": "Garage Header Rebuild",
+      "primarySkill": "framer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "framing-nailer",
+        "level"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "framer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 198,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Framer job ticket: \"Porch Structure Refasten\" needs a same-day save without drama.",
+        "fail_line": "Porch Structure Refasten stalled out and the callback board got louder.",
+        "neutral_line": "Porch Structure Refasten is functional, but quality came in under spec.",
+        "success_line": "Porch Structure Refasten cleared inspection and everyone exhaled."
+      },
+      "id": "job-framer-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "stud-bundle"
+        }
+      ],
+      "name": "Porch Structure Refasten",
+      "primarySkill": "framer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "framing-nailer",
+        "level"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "framer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 272,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Framer job ticket: \"Civic Stage Frame Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Stage Frame Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Stage Frame Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Stage Frame Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-framer-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "stud-bundle"
+        }
+      ],
+      "name": "Civic Stage Frame Recovery",
+      "primarySkill": "framer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "framing-nailer",
+        "level"
+      ],
+      "risk": 0.36,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "framer",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 117,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Glazier job ticket: \"Storefront Pane Swap\" needs a same-day save without drama.",
+        "fail_line": "Storefront Pane Swap stalled out and the callback board got louder.",
+        "neutral_line": "Storefront Pane Swap is functional, but quality came in under spec.",
+        "success_line": "Storefront Pane Swap cleared inspection and everyone exhaled."
+      },
+      "id": "job-glazier-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Storefront Pane Swap",
+      "primarySkill": "glazier",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "glazier",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 126,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Glazier job ticket: \"Door Lite Refit\" needs a same-day save without drama.",
+        "fail_line": "Door Lite Refit stalled out and the callback board got louder.",
+        "neutral_line": "Door Lite Refit is functional, but quality came in under spec.",
+        "success_line": "Door Lite Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-glazier-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Door Lite Refit",
+      "primarySkill": "glazier",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "glazier",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 190,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Glazier job ticket: \"Window Seal Rework\" needs a same-day save without drama.",
+        "fail_line": "Window Seal Rework stalled out and the callback board got louder.",
+        "neutral_line": "Window Seal Rework is functional, but quality came in under spec.",
+        "success_line": "Window Seal Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-glazier-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Window Seal Rework",
+      "primarySkill": "glazier",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "glazier",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 199,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Glazier job ticket: \"Transom Glass Alignment\" needs a same-day save without drama.",
+        "fail_line": "Transom Glass Alignment stalled out and the callback board got louder.",
+        "neutral_line": "Transom Glass Alignment is functional, but quality came in under spec.",
+        "success_line": "Transom Glass Alignment cleared inspection and everyone exhaled."
+      },
+      "id": "job-glazier-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Transom Glass Alignment",
+      "primarySkill": "glazier",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "glazier",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 273,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Glazier job ticket: \"Civic Atrium Panel Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Atrium Panel Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Atrium Panel Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Atrium Panel Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-glazier-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "glass-panel-crate"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "glazing-sealant-tube"
+        }
+      ],
+      "name": "Civic Atrium Panel Recovery",
+      "primarySkill": "glazier",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "glass-suction",
+        "level"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "glazier",
+        "indoor"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "HVAC Technician job ticket: \"Register Flow Correction\" needs a same-day save without drama.",
+        "fail_line": "Register Flow Correction stalled out and the callback board got louder.",
+        "neutral_line": "Register Flow Correction is functional, but quality came in under spec.",
+        "success_line": "Register Flow Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-hvac_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Register Flow Correction",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "hvac_technician",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 134,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "HVAC Technician job ticket: \"Air Handler Tune\" needs a same-day save without drama.",
+        "fail_line": "Air Handler Tune stalled out and the callback board got louder.",
+        "neutral_line": "Air Handler Tune is functional, but quality came in under spec.",
+        "success_line": "Air Handler Tune cleared inspection and everyone exhaled."
+      },
+      "id": "job-hvac_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Air Handler Tune",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "hvac_technician",
+        "indoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 198,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "HVAC Technician job ticket: \"Duct Branch Rebalance\" needs a same-day save without drama.",
+        "fail_line": "Duct Branch Rebalance stalled out and the callback board got louder.",
+        "neutral_line": "Duct Branch Rebalance is functional, but quality came in under spec.",
+        "success_line": "Duct Branch Rebalance cleared inspection and everyone exhaled."
+      },
+      "id": "job-hvac_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Duct Branch Rebalance",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "hvac_technician",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 167,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "HVAC Technician job ticket: \"Condenser Coil Service\" needs a same-day save without drama.",
+        "fail_line": "Condenser Coil Service stalled out and the callback board got louder.",
+        "neutral_line": "Condenser Coil Service is functional, but quality came in under spec.",
+        "success_line": "Condenser Coil Service cleared inspection and everyone exhaled."
+      },
+      "id": "job-hvac_technician-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Condenser Coil Service",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "hvac_technician",
+        "indoor"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 281,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "HVAC Technician job ticket: \"Civic Boiler Loop Stabilization\" needs a same-day save without drama.",
+        "fail_line": "Civic Boiler Loop Stabilization stalled out and the callback board got louder.",
+        "neutral_line": "Civic Boiler Loop Stabilization is functional, but quality came in under spec.",
+        "success_line": "Civic Boiler Loop Stabilization cleared inspection and everyone exhaled."
+      },
+      "id": "job-hvac_technician-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Civic Boiler Loop Stabilization",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "hvac_technician",
+        "indoor"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 130,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Insulation Installer job ticket: \"Attic Batt Reset\" needs a same-day save without drama.",
+        "fail_line": "Attic Batt Reset stalled out and the callback board got louder.",
+        "neutral_line": "Attic Batt Reset is functional, but quality came in under spec.",
+        "success_line": "Attic Batt Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-insulation_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "insulation-batt-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "vapor-barrier-roll"
+        }
+      ],
+      "name": "Attic Batt Reset",
+      "primarySkill": "insulation_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "insulation-blower"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "indoor",
+        "insulation_installer",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 111,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Insulation Installer job ticket: \"Wall Cavity Pack\" needs a same-day save without drama.",
+        "fail_line": "Wall Cavity Pack stalled out and the callback board got louder.",
+        "neutral_line": "Wall Cavity Pack is functional, but quality came in under spec.",
+        "success_line": "Wall Cavity Pack cleared inspection and everyone exhaled."
+      },
+      "id": "job-insulation_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "insulation-batt-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "vapor-barrier-roll"
+        }
+      ],
+      "name": "Wall Cavity Pack",
+      "primarySkill": "insulation_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "insulation-blower"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "indoor",
+        "insulation_installer",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 203,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Insulation Installer job ticket: \"Crawlspace Barrier Repair\" needs a same-day save without drama.",
+        "fail_line": "Crawlspace Barrier Repair stalled out and the callback board got louder.",
+        "neutral_line": "Crawlspace Barrier Repair is functional, but quality came in under spec.",
+        "success_line": "Crawlspace Barrier Repair cleared inspection and everyone exhaled."
+      },
+      "id": "job-insulation_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "insulation-batt-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "vapor-barrier-roll"
+        }
+      ],
+      "name": "Crawlspace Barrier Repair",
+      "primarySkill": "insulation_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "insulation-blower"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "insulation_installer",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 172,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Insulation Installer job ticket: \"Rim Joist Insulation Refit\" needs a same-day save without drama.",
+        "fail_line": "Rim Joist Insulation Refit stalled out and the callback board got louder.",
+        "neutral_line": "Rim Joist Insulation Refit is functional, but quality came in under spec.",
+        "success_line": "Rim Joist Insulation Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-insulation_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "insulation-batt-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "vapor-barrier-roll"
+        }
+      ],
+      "name": "Rim Joist Insulation Refit",
+      "primarySkill": "insulation_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drywall-knife",
+        "insulation-blower"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "insulation_installer",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 286,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Insulation Installer job ticket: \"Civic Envelope Thermal Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Envelope Thermal Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Envelope Thermal Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Envelope Thermal Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-insulation_installer-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "insulation-batt-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "vapor-barrier-roll"
+        }
+      ],
+      "name": "Civic Envelope Thermal Recovery",
+      "primarySkill": "insulation_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drywall-knife",
+        "insulation-blower"
+      ],
+      "risk": 0.3,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "indoor",
+        "insulation_installer",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 115,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Mason job ticket: \"Brick Face Reset\" needs a same-day save without drama.",
+        "fail_line": "Brick Face Reset stalled out and the callback board got louder.",
+        "neutral_line": "Brick Face Reset is functional, but quality came in under spec.",
+        "success_line": "Brick Face Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-mason-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Brick Face Reset",
+      "primarySkill": "mason",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "mason",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 124,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Mason job ticket: \"Block Wall Stitch\" needs a same-day save without drama.",
+        "fail_line": "Block Wall Stitch stalled out and the callback board got louder.",
+        "neutral_line": "Block Wall Stitch is functional, but quality came in under spec.",
+        "success_line": "Block Wall Stitch cleared inspection and everyone exhaled."
+      },
+      "id": "job-mason-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Block Wall Stitch",
+      "primarySkill": "mason",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "mason",
+        "outdoor",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 188,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Mason job ticket: \"Stone Cap Reseat\" needs a same-day save without drama.",
+        "fail_line": "Stone Cap Reseat stalled out and the callback board got louder.",
+        "neutral_line": "Stone Cap Reseat is functional, but quality came in under spec.",
+        "success_line": "Stone Cap Reseat cleared inspection and everyone exhaled."
+      },
+      "id": "job-mason-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Stone Cap Reseat",
+      "primarySkill": "mason",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "mason",
+        "outdoor"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 197,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Mason job ticket: \"Facade Mortar Rebuild\" needs a same-day save without drama.",
+        "fail_line": "Facade Mortar Rebuild stalled out and the callback board got louder.",
+        "neutral_line": "Facade Mortar Rebuild is functional, but quality came in under spec.",
+        "success_line": "Facade Mortar Rebuild cleared inspection and everyone exhaled."
+      },
+      "id": "job-mason-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Facade Mortar Rebuild",
+      "primarySkill": "mason",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "mason",
+        "outdoor"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 271,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Mason job ticket: \"Civic Arch Repoint\" needs a same-day save without drama.",
+        "fail_line": "Civic Arch Repoint stalled out and the callback board got louder.",
+        "neutral_line": "Civic Arch Repoint is functional, but quality came in under spec.",
+        "success_line": "Civic Arch Repoint cleared inspection and everyone exhaled."
+      },
+      "id": "job-mason-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "brick-pack"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "mortar-mix"
+        }
+      ],
+      "name": "Civic Arch Repoint",
+      "primarySkill": "mason",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "trowel"
+      ],
+      "risk": 0.33,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "mason",
+        "outdoor"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 120,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Millworker job ticket: \"Trim Profile Match\" needs a same-day save without drama.",
+        "fail_line": "Trim Profile Match stalled out and the callback board got louder.",
+        "neutral_line": "Trim Profile Match is functional, but quality came in under spec.",
+        "success_line": "Trim Profile Match cleared inspection and everyone exhaled."
+      },
+      "id": "job-millworker-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Trim Profile Match",
+      "primarySkill": "millworker",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "millworker",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 129,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Millworker job ticket: \"Handrail Segment Refit\" needs a same-day save without drama.",
+        "fail_line": "Handrail Segment Refit stalled out and the callback board got louder.",
+        "neutral_line": "Handrail Segment Refit is functional, but quality came in under spec.",
+        "success_line": "Handrail Segment Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-millworker-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Handrail Segment Refit",
+      "primarySkill": "millworker",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "millworker",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 193,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Millworker job ticket: \"Wall Panel Mill Pass\" needs a same-day save without drama.",
+        "fail_line": "Wall Panel Mill Pass stalled out and the callback board got louder.",
+        "neutral_line": "Wall Panel Mill Pass is functional, but quality came in under spec.",
+        "success_line": "Wall Panel Mill Pass cleared inspection and everyone exhaled."
+      },
+      "id": "job-millworker-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Wall Panel Mill Pass",
+      "primarySkill": "millworker",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "indoor",
+        "millworker"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 202,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Millworker job ticket: \"Reception Counter Reface\" needs a same-day save without drama.",
+        "fail_line": "Reception Counter Reface stalled out and the callback board got louder.",
+        "neutral_line": "Reception Counter Reface is functional, but quality came in under spec.",
+        "success_line": "Reception Counter Reface cleared inspection and everyone exhaled."
+      },
+      "id": "job-millworker-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Reception Counter Reface",
+      "primarySkill": "millworker",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "indoor",
+        "millworker"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 276,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Millworker job ticket: \"Civic Chamber Millwork Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Chamber Millwork Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Chamber Millwork Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Chamber Millwork Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-millworker-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Civic Chamber Millwork Recovery",
+      "primarySkill": "millworker",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.36,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "indoor",
+        "millworker"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 117,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Painter job ticket: \"Accent Wall Rescue\" needs a same-day save without drama.",
+        "fail_line": "Accent Wall Rescue stalled out and the callback board got louder.",
+        "neutral_line": "Accent Wall Rescue is functional, but quality came in under spec.",
+        "success_line": "Accent Wall Rescue cleared inspection and everyone exhaled."
+      },
+      "id": "job-painter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Accent Wall Rescue",
+      "primarySkill": "painter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "indoor",
+        "painter",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 126,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Painter job ticket: \"Exterior Trim Recoat\" needs a same-day save without drama.",
+        "fail_line": "Exterior Trim Recoat stalled out and the callback board got louder.",
+        "neutral_line": "Exterior Trim Recoat is functional, but quality came in under spec.",
+        "success_line": "Exterior Trim Recoat cleared inspection and everyone exhaled."
+      },
+      "id": "job-painter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Exterior Trim Recoat",
+      "primarySkill": "painter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "indoor",
+        "painter",
+        "residential",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 190,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Painter job ticket: \"Hallway Repaint Pass\" needs a same-day save without drama.",
+        "fail_line": "Hallway Repaint Pass stalled out and the callback board got louder.",
+        "neutral_line": "Hallway Repaint Pass is functional, but quality came in under spec.",
+        "success_line": "Hallway Repaint Pass cleared inspection and everyone exhaled."
+      },
+      "id": "job-painter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Hallway Repaint Pass",
+      "primarySkill": "painter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "painter",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 199,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Painter job ticket: \"Stairwell Primer Recovery\" needs a same-day save without drama.",
+        "fail_line": "Stairwell Primer Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Stairwell Primer Recovery is functional, but quality came in under spec.",
+        "success_line": "Stairwell Primer Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-painter-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Stairwell Primer Recovery",
+      "primarySkill": "painter",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "painter",
+        "residential"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 273,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Painter job ticket: \"Civic Mural Basecoat Fix\" needs a same-day save without drama.",
+        "fail_line": "Civic Mural Basecoat Fix stalled out and the callback board got louder.",
+        "neutral_line": "Civic Mural Basecoat Fix is functional, but quality came in under spec.",
+        "success_line": "Civic Mural Basecoat Fix cleared inspection and everyone exhaled."
+      },
+      "id": "job-painter-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Civic Mural Basecoat Fix",
+      "primarySkill": "painter",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "indoor",
+        "painter",
+        "residential"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 117,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Plumber job ticket: \"Leak Chasing Route\" needs a same-day save without drama.",
+        "fail_line": "Leak Chasing Route stalled out and the callback board got louder.",
+        "neutral_line": "Leak Chasing Route is functional, but quality came in under spec.",
+        "success_line": "Leak Chasing Route cleared inspection and everyone exhaled."
+      },
+      "id": "job-plumber-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Leak Chasing Route",
+      "primarySkill": "plumber",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "plumber",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 126,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Plumber job ticket: \"Valve Bank Replacement\" needs a same-day save without drama.",
+        "fail_line": "Valve Bank Replacement stalled out and the callback board got louder.",
+        "neutral_line": "Valve Bank Replacement is functional, but quality came in under spec.",
+        "success_line": "Valve Bank Replacement cleared inspection and everyone exhaled."
+      },
+      "id": "job-plumber-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Valve Bank Replacement",
+      "primarySkill": "plumber",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "indoor",
+        "plumber",
+        "residential"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 190,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Plumber job ticket: \"Supply Line Retrofit\" needs a same-day save without drama.",
+        "fail_line": "Supply Line Retrofit stalled out and the callback board got louder.",
+        "neutral_line": "Supply Line Retrofit is functional, but quality came in under spec.",
+        "success_line": "Supply Line Retrofit cleared inspection and everyone exhaled."
+      },
+      "id": "job-plumber-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Supply Line Retrofit",
+      "primarySkill": "plumber",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "indoor",
+        "plumber"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 199,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Plumber job ticket: \"Drain Stack Rebuild\" needs a same-day save without drama.",
+        "fail_line": "Drain Stack Rebuild stalled out and the callback board got louder.",
+        "neutral_line": "Drain Stack Rebuild is functional, but quality came in under spec.",
+        "success_line": "Drain Stack Rebuild cleared inspection and everyone exhaled."
+      },
+      "id": "job-plumber-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Drain Stack Rebuild",
+      "primarySkill": "plumber",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "indoor",
+        "plumber"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 273,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Plumber job ticket: \"Civic Pump Room Reset\" needs a same-day save without drama.",
+        "fail_line": "Civic Pump Room Reset stalled out and the callback board got louder.",
+        "neutral_line": "Civic Pump Room Reset is functional, but quality came in under spec.",
+        "success_line": "Civic Pump Room Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-plumber-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Civic Pump Room Reset",
+      "primarySkill": "plumber",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.39,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "indoor",
+        "plumber"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 116,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Roofer job ticket: \"Shingle Slip Correction\" needs a same-day save without drama.",
+        "fail_line": "Shingle Slip Correction stalled out and the callback board got louder.",
+        "neutral_line": "Shingle Slip Correction is functional, but quality came in under spec.",
+        "success_line": "Shingle Slip Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-roofer-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Shingle Slip Correction",
+      "primarySkill": "roofer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "roofer"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Roofer job ticket: \"Flashing Seal Repair\" needs a same-day save without drama.",
+        "fail_line": "Flashing Seal Repair stalled out and the callback board got louder.",
+        "neutral_line": "Flashing Seal Repair is functional, but quality came in under spec.",
+        "success_line": "Flashing Seal Repair cleared inspection and everyone exhaled."
+      },
+      "id": "job-roofer-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Flashing Seal Repair",
+      "primarySkill": "roofer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "roofer"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 189,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Roofer job ticket: \"Drain Valley Rework\" needs a same-day save without drama.",
+        "fail_line": "Drain Valley Rework stalled out and the callback board got louder.",
+        "neutral_line": "Drain Valley Rework is functional, but quality came in under spec.",
+        "success_line": "Drain Valley Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-roofer-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Drain Valley Rework",
+      "primarySkill": "roofer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "outdoor",
+        "roofer"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 198,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Roofer job ticket: \"Membrane Edge Refasten\" needs a same-day save without drama.",
+        "fail_line": "Membrane Edge Refasten stalled out and the callback board got louder.",
+        "neutral_line": "Membrane Edge Refasten is functional, but quality came in under spec.",
+        "success_line": "Membrane Edge Refasten cleared inspection and everyone exhaled."
+      },
+      "id": "job-roofer-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Membrane Edge Refasten",
+      "primarySkill": "roofer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "outdoor",
+        "roofer"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 272,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Roofer job ticket: \"Civic Roof Deck Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Roof Deck Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Roof Deck Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Roof Deck Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-roofer-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "roof-flashing-kit"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "roof-shingle-bundle"
+        }
+      ],
+      "name": "Civic Roof Deck Recovery",
+      "primarySkill": "roofer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "ladder",
+        "roofing-nailer"
+      ],
+      "risk": 0.36,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "outdoor",
+        "roofer"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 120,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Scaffolder job ticket: \"Frame Bay Restack\" needs a same-day save without drama.",
+        "fail_line": "Frame Bay Restack stalled out and the callback board got louder.",
+        "neutral_line": "Frame Bay Restack is functional, but quality came in under spec.",
+        "success_line": "Frame Bay Restack cleared inspection and everyone exhaled."
+      },
+      "id": "job-scaffolder-001",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "scaffold-coupler-pack"
+        }
+      ],
+      "name": "Frame Bay Restack",
+      "primarySkill": "scaffolder",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "scaffold-wrench"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "civic",
+        "outdoor",
+        "residential",
+        "scaffolder"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 129,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Scaffolder job ticket: \"Coupler Line Tighten\" needs a same-day save without drama.",
+        "fail_line": "Coupler Line Tighten stalled out and the callback board got louder.",
+        "neutral_line": "Coupler Line Tighten is functional, but quality came in under spec.",
+        "success_line": "Coupler Line Tighten cleared inspection and everyone exhaled."
+      },
+      "id": "job-scaffolder-002",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "scaffold-coupler-pack"
+        }
+      ],
+      "name": "Coupler Line Tighten",
+      "primarySkill": "scaffolder",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "scaffold-wrench"
+      ],
+      "risk": 0.23,
+      "staminaCost": 2,
+      "tags": [
+        "civic",
+        "outdoor",
+        "residential",
+        "scaffolder"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 193,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Scaffolder job ticket: \"Access Platform Refit\" needs a same-day save without drama.",
+        "fail_line": "Access Platform Refit stalled out and the callback board got louder.",
+        "neutral_line": "Access Platform Refit is functional, but quality came in under spec.",
+        "success_line": "Access Platform Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-scaffolder-003",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "scaffold-coupler-pack"
+        }
+      ],
+      "name": "Access Platform Refit",
+      "primarySkill": "scaffolder",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "scaffold-wrench"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "civic",
+        "commercial",
+        "outdoor",
+        "scaffolder"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 202,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Scaffolder job ticket: \"Guardrail Tower Rework\" needs a same-day save without drama.",
+        "fail_line": "Guardrail Tower Rework stalled out and the callback board got louder.",
+        "neutral_line": "Guardrail Tower Rework is functional, but quality came in under spec.",
+        "success_line": "Guardrail Tower Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-scaffolder-004",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "scaffold-coupler-pack"
+        }
+      ],
+      "name": "Guardrail Tower Rework",
+      "primarySkill": "scaffolder",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "scaffold-wrench"
+      ],
+      "risk": 0.25,
+      "staminaCost": 2,
+      "tags": [
+        "civic",
+        "commercial",
+        "outdoor",
+        "scaffolder"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 276,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Scaffolder job ticket: \"Civic Facade Scaffold Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Facade Scaffold Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Facade Scaffold Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Facade Scaffold Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-scaffolder-005",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 4,
+          "supplyId": "scaffold-coupler-pack"
+        }
+      ],
+      "name": "Civic Facade Scaffold Recovery",
+      "primarySkill": "scaffolder",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "scaffold-wrench"
+      ],
+      "risk": 0.36,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "civic",
+        "outdoor",
+        "scaffolder"
+      ],
+      "tier": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 126,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Siding Installer job ticket: \"Lap Course Correction\" needs a same-day save without drama.",
+        "fail_line": "Lap Course Correction stalled out and the callback board got louder.",
+        "neutral_line": "Lap Course Correction is functional, but quality came in under spec.",
+        "success_line": "Lap Course Correction cleared inspection and everyone exhaled."
+      },
+      "id": "job-siding_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "siding-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Lap Course Correction",
+      "primarySkill": "siding_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "siding-brake"
+      ],
+      "risk": 0.14,
+      "staminaCost": 2,
+      "tags": [
+        "outdoor",
+        "residential",
+        "residential",
+        "siding_installer"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 135,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Siding Installer job ticket: \"Corner Post Refit\" needs a same-day save without drama.",
+        "fail_line": "Corner Post Refit stalled out and the callback board got louder.",
+        "neutral_line": "Corner Post Refit is functional, but quality came in under spec.",
+        "success_line": "Corner Post Refit cleared inspection and everyone exhaled."
+      },
+      "id": "job-siding_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "siding-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Corner Post Refit",
+      "primarySkill": "siding_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "siding-brake"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "outdoor",
+        "residential",
+        "residential",
+        "siding_installer"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 199,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Siding Installer job ticket: \"Facade Panel Reset\" needs a same-day save without drama.",
+        "fail_line": "Facade Panel Reset stalled out and the callback board got louder.",
+        "neutral_line": "Facade Panel Reset is functional, but quality came in under spec.",
+        "success_line": "Facade Panel Reset cleared inspection and everyone exhaled."
+      },
+      "id": "job-siding_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "siding-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Facade Panel Reset",
+      "primarySkill": "siding_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "siding-brake"
+      ],
+      "risk": 0.28,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "siding_installer"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 168,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Siding Installer job ticket: \"Trim Channel Rework\" needs a same-day save without drama.",
+        "fail_line": "Trim Channel Rework stalled out and the callback board got louder.",
+        "neutral_line": "Trim Channel Rework is functional, but quality came in under spec.",
+        "success_line": "Trim Channel Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-siding_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "siding-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Trim Channel Rework",
+      "primarySkill": "siding_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "siding-brake"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "siding_installer"
+      ],
+      "tier": 2,
+      "workUnits": 4
     },
     {
       "basePayout": 282,
       "districtId": "civic-lite",
       "durabilityCost": 5,
       "flavor": {
-        "client_quote": "The kiosk wiring resembles spaghetti literature.",
-        "fail_line": "Public Kiosk Cable Cover remains interpretive with structural ambition.",
-        "neutral_line": "Public Kiosk Cable Cover improved in the emotionally measurable ways.",
-        "success_line": "Public Kiosk Cable Cover no longer looks experimental."
+        "client_quote": "Siding Installer job ticket: \"Civic Annex Cladding Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Annex Cladding Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Annex Cladding Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Annex Cladding Recovery cleared inspection and everyone exhaled."
       },
-      "id": "job-028",
+      "id": "job-siding_installer-005",
       "materialNeeds": [
         {
-          "quantity": 5,
-          "supplyId": "junction-box"
+          "quantity": 4,
+          "supplyId": "siding-panel-pack"
         },
         {
-          "quantity": 5,
-          "supplyId": "wire-spool"
+          "quantity": 3,
+          "supplyId": "trim-kit"
         }
       ],
-      "name": "Public Kiosk Cable Cover",
-      "repGainSuccess": 9,
-      "repLossFail": 4,
-      "requiredTools": [
-        "drill",
-        "stud-finder",
-        "utility-knife"
-      ],
-      "risk": 0.39,
-      "staminaCost": 4,
-      "tags": [
-        "civic",
-        "electrical"
-      ],
-      "tier": 3,
-      "workUnits": 10
-    },
-    {
-      "basePayout": 290,
-      "districtId": "civic-lite",
-      "durabilityCost": 5,
-      "flavor": {
-        "client_quote": "The bridge plank hums under pressure.",
-        "fail_line": "Footbridge Deck Strip remains interpretive with structural ambition.",
-        "neutral_line": "Footbridge Deck Strip improved in the emotionally measurable ways.",
-        "success_line": "Footbridge Deck Strip no longer looks experimental."
-      },
-      "id": "job-029",
-      "materialNeeds": [
-        {
-          "quantity": 5,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 5,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Footbridge Deck Strip",
-      "repGainSuccess": 9,
-      "repLossFail": 4,
-      "requiredTools": [
-        "hammer",
-        "level",
-        "saw"
-      ],
-      "risk": 0.4,
-      "staminaCost": 4,
-      "tags": [
-        "civic",
-        "outdoor"
-      ],
-      "tier": 3,
-      "workUnits": 10
-    },
-    {
-      "basePayout": 255,
-      "districtId": "civic-lite",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Announcements deserve less tilt and more dignity.",
-        "fail_line": "Town Notice Board Rebuild remains interpretive with structural ambition.",
-        "neutral_line": "Town Notice Board Rebuild improved in the emotionally measurable ways.",
-        "success_line": "Town Notice Board Rebuild no longer looks experimental."
-      },
-      "id": "job-030",
-      "materialNeeds": [
-        {
-          "quantity": 5,
-          "supplyId": "anchor-set"
-        },
-        {
-          "quantity": 5,
-          "supplyId": "fastener-box"
-        }
-      ],
-      "name": "Town Notice Board Rebuild",
-      "repGainSuccess": 8,
+      "name": "Civic Annex Cladding Recovery",
+      "primarySkill": "siding_installer",
+      "repGainSuccess": 4,
       "repLossFail": 3,
       "requiredTools": [
         "drill",
-        "hammer",
-        "stud-finder"
+        "siding-brake"
       ],
-      "risk": 0.34,
+      "risk": 0.3,
       "staminaCost": 4,
       "tags": [
         "civic",
-        "outdoor"
+        "outdoor",
+        "residential",
+        "siding_installer"
       ],
       "tier": 3,
-      "workUnits": 9
+      "workUnits": 4
+    },
+    {
+      "basePayout": 131,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Solar Panel Installer job ticket: \"Rail Line Alignment\" needs a same-day save without drama.",
+        "fail_line": "Rail Line Alignment stalled out and the callback board got louder.",
+        "neutral_line": "Rail Line Alignment is functional, but quality came in under spec.",
+        "success_line": "Rail Line Alignment cleared inspection and everyone exhaled."
+      },
+      "id": "job-solar_panel_installer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Rail Line Alignment",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.17,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "solar_panel_installer"
+      ],
+      "tier": 1,
+      "workUnits": 2
+    },
+    {
+      "basePayout": 112,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Solar Panel Installer job ticket: \"Array Junction Cleanup\" needs a same-day save without drama.",
+        "fail_line": "Array Junction Cleanup stalled out and the callback board got louder.",
+        "neutral_line": "Array Junction Cleanup is functional, but quality came in under spec.",
+        "success_line": "Array Junction Cleanup cleared inspection and everyone exhaled."
+      },
+      "id": "job-solar_panel_installer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Array Junction Cleanup",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.2,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "outdoor",
+        "residential",
+        "solar_panel_installer"
+      ],
+      "tier": 1,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 204,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Solar Panel Installer job ticket: \"Inverter Feed Rework\" needs a same-day save without drama.",
+        "fail_line": "Inverter Feed Rework stalled out and the callback board got louder.",
+        "neutral_line": "Inverter Feed Rework is functional, but quality came in under spec.",
+        "success_line": "Inverter Feed Rework cleared inspection and everyone exhaled."
+      },
+      "id": "job-solar_panel_installer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Inverter Feed Rework",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.31,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "outdoor",
+        "solar_panel_installer"
+      ],
+      "tier": 2,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 173,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Solar Panel Installer job ticket: \"Panel Mount Refasten\" needs a same-day save without drama.",
+        "fail_line": "Panel Mount Refasten stalled out and the callback board got louder.",
+        "neutral_line": "Panel Mount Refasten is functional, but quality came in under spec.",
+        "success_line": "Panel Mount Refasten cleared inspection and everyone exhaled."
+      },
+      "id": "job-solar_panel_installer-004",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Panel Mount Refasten",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.22,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "commercial",
+        "outdoor",
+        "solar_panel_installer"
+      ],
+      "tier": 2,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 287,
+      "districtId": "civic-lite",
+      "durabilityCost": 5,
+      "flavor": {
+        "client_quote": "Solar Panel Installer job ticket: \"Civic Rooftop Solar Recovery\" needs a same-day save without drama.",
+        "fail_line": "Civic Rooftop Solar Recovery stalled out and the callback board got louder.",
+        "neutral_line": "Civic Rooftop Solar Recovery is functional, but quality came in under spec.",
+        "success_line": "Civic Rooftop Solar Recovery cleared inspection and everyone exhaled."
+      },
+      "id": "job-solar_panel_installer-005",
+      "materialNeeds": [
+        {
+          "quantity": 4,
+          "supplyId": "solar-rack-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Civic Rooftop Solar Recovery",
+      "primarySkill": "solar_panel_installer",
+      "repGainSuccess": 4,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "solar-crimper"
+      ],
+      "risk": 0.33,
+      "staminaCost": 4,
+      "tags": [
+        "civic",
+        "commercial",
+        "outdoor",
+        "solar_panel_installer"
+      ],
+      "tier": 3,
+      "workUnits": 4
     }
   ],
   "strings": {
@@ -1488,129 +4769,316 @@
   "supplies": [
     {
       "flavor": {
-        "description": "A box of tiny promises for walls with trust issues.",
-        "quip_buy": "You bought several little commitments."
+        "description": "Anchor Set is stocked for field contracts.",
+        "quip_buy": "Loaded anchor set into the cart."
       },
       "id": "anchor-set",
       "name": "Anchor Set",
       "prices": {
-        "high": 24,
+        "high": 26,
         "low": 14,
-        "medium": 18
+        "medium": 19
       },
       "tags": [
-        "fastener",
-        "general"
+        "fence_installer",
+        "scaffolder"
       ]
     },
     {
       "flavor": {
-        "description": "Straight lumber with a modest sense of destiny.",
-        "quip_buy": "You bought planks and future splinters."
+        "description": "Board Pack is stocked for field contracts.",
+        "quip_buy": "Loaded board pack into the cart."
       },
       "id": "board-pack",
       "name": "Board Pack",
       "prices": {
-        "high": 42,
-        "low": 24,
-        "medium": 32
+        "high": 40,
+        "low": 22,
+        "medium": 30
       },
       "tags": [
-        "framing",
-        "outdoor"
+        "carpenter",
+        "framer"
       ]
     },
     {
       "flavor": {
-        "description": "Powdered permanence in a practical bag.",
-        "quip_buy": "You bought a future rock."
+        "description": "Breaker Kit is stocked for field contracts.",
+        "quip_buy": "Loaded breaker kit into the cart."
+      },
+      "id": "breaker-kit",
+      "name": "Breaker Kit",
+      "prices": {
+        "high": 45,
+        "low": 25,
+        "medium": 34
+      },
+      "tags": [
+        "electrician"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Brick Pack is stocked for field contracts.",
+        "quip_buy": "Loaded brick pack into the cart."
+      },
+      "id": "brick-pack",
+      "name": "Brick Pack",
+      "prices": {
+        "high": 35,
+        "low": 19,
+        "medium": 26
+      },
+      "tags": [
+        "mason"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Cabinet Panel Pack is stocked for field contracts.",
+        "quip_buy": "Loaded cabinet panel pack into the cart."
+      },
+      "id": "cabinet-panel-pack",
+      "name": "Cabinet Panel Pack",
+      "prices": {
+        "high": 41,
+        "low": 23,
+        "medium": 31
+      },
+      "tags": [
+        "cabinet_maker"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Concrete Mix is stocked for field contracts.",
+        "quip_buy": "Loaded concrete mix into the cart."
       },
       "id": "concrete-mix",
       "name": "Concrete Mix",
       "prices": {
-        "high": 32,
-        "low": 18,
-        "medium": 24
+        "high": 27,
+        "low": 15,
+        "medium": 20
       },
       "tags": [
-        "concrete",
-        "general",
-        "outdoor"
+        "concrete_finisher"
       ]
     },
     {
       "flavor": {
-        "description": "Screws, bolts, and tiny pieces of authority.",
-        "quip_buy": "You bought industrial punctuation."
+        "description": "Drywall Sheet Stack is stocked for field contracts.",
+        "quip_buy": "Loaded drywall sheet stack into the cart."
+      },
+      "id": "drywall-sheet-stack",
+      "name": "Drywall Sheet Stack",
+      "prices": {
+        "high": 36,
+        "low": 20,
+        "medium": 27
+      },
+      "tags": [
+        "drywall_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Duct Kit is stocked for field contracts.",
+        "quip_buy": "Loaded duct kit into the cart."
+      },
+      "id": "duct-kit",
+      "name": "Duct Kit",
+      "prices": {
+        "high": 40,
+        "low": 22,
+        "medium": 30
+      },
+      "tags": [
+        "hvac_technician"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Fastener Box is stocked for field contracts.",
+        "quip_buy": "Loaded fastener box into the cart."
       },
       "id": "fastener-box",
       "name": "Fastener Box",
       "prices": {
-        "high": 21,
+        "high": 24,
+        "low": 13,
+        "medium": 18
+      },
+      "tags": [
+        "carpenter",
+        "framer",
+        "millworker"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Fence Panel Pack is stocked for field contracts.",
+        "quip_buy": "Loaded fence panel pack into the cart."
+      },
+      "id": "fence-panel-pack",
+      "name": "Fence Panel Pack",
+      "prices": {
+        "high": 35,
+        "low": 19,
+        "medium": 26
+      },
+      "tags": [
+        "fence_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Filter Pack is stocked for field contracts.",
+        "quip_buy": "Loaded filter pack into the cart."
+      },
+      "id": "filter-pack",
+      "name": "Filter Pack",
+      "prices": {
+        "high": 22,
         "low": 12,
         "medium": 16
       },
       "tags": [
-        "fastener",
-        "general"
+        "hvac_technician"
       ]
     },
     {
       "flavor": {
-        "description": "Metal elbows for doors and cabinets with ambitions.",
-        "quip_buy": "You bought several quiet pivots."
+        "description": "Glass Panel Crate is stocked for field contracts.",
+        "quip_buy": "Loaded glass panel crate into the cart."
+      },
+      "id": "glass-panel-crate",
+      "name": "Glass Panel Crate",
+      "prices": {
+        "high": 48,
+        "low": 27,
+        "medium": 36
+      },
+      "tags": [
+        "glazier"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Glazing Sealant Tube is stocked for field contracts.",
+        "quip_buy": "Loaded glazing sealant tube into the cart."
+      },
+      "id": "glazing-sealant-tube",
+      "name": "Glazing Sealant Tube",
+      "prices": {
+        "high": 19,
+        "low": 10,
+        "medium": 14
+      },
+      "tags": [
+        "glazier"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Hinge Pack is stocked for field contracts.",
+        "quip_buy": "Loaded hinge pack into the cart."
       },
       "id": "hinge-pack",
       "name": "Hinge Pack",
       "prices": {
-        "high": 29,
-        "low": 17,
+        "high": 23,
+        "low": 12,
+        "medium": 17
+      },
+      "tags": [
+        "cabinet_maker"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Insulation Batt Pack is stocked for field contracts.",
+        "quip_buy": "Loaded insulation batt pack into the cart."
+      },
+      "id": "insulation-batt-pack",
+      "name": "Insulation Batt Pack",
+      "prices": {
+        "high": 30,
+        "low": 16,
         "medium": 22
       },
       "tags": [
-        "finish",
-        "mechanical"
+        "insulation_installer"
       ]
     },
     {
       "flavor": {
-        "description": "A legal place for wires to have feelings.",
-        "quip_buy": "You bought approved tiny housing for electricity."
+        "description": "Joint Compound Bucket is stocked for field contracts.",
+        "quip_buy": "Loaded joint compound bucket into the cart."
       },
-      "id": "junction-box",
-      "name": "Junction Box",
+      "id": "joint-compound-bucket",
+      "name": "Joint Compound Bucket",
       "prices": {
-        "high": 28,
+        "high": 23,
+        "low": 12,
+        "medium": 17
+      },
+      "tags": [
+        "drywall_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Millwork Trim Kit is stocked for field contracts.",
+        "quip_buy": "Loaded millwork trim kit into the cart."
+      },
+      "id": "millwork-trim-kit",
+      "name": "Millwork Trim Kit",
+      "prices": {
+        "high": 31,
+        "low": 17,
+        "medium": 23
+      },
+      "tags": [
+        "millworker"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Mortar Mix is stocked for field contracts.",
+        "quip_buy": "Loaded mortar mix into the cart."
+      },
+      "id": "mortar-mix",
+      "name": "Mortar Mix",
+      "prices": {
+        "high": 30,
         "low": 16,
-        "medium": 21
+        "medium": 22
       },
       "tags": [
-        "electrical",
-        "inspection"
+        "mason"
       ]
     },
     {
       "flavor": {
-        "description": "Color management for surfaces that need closure.",
-        "quip_buy": "You bought a small apology for the wall."
+        "description": "Paint Bucket is stocked for field contracts.",
+        "quip_buy": "Loaded paint bucket into the cart."
       },
-      "id": "paint-sleeve",
-      "name": "Paint Sleeve",
+      "id": "paint-bucket",
+      "name": "Paint Bucket",
       "prices": {
-        "high": 16,
-        "low": 9,
-        "medium": 12
+        "high": 24,
+        "low": 13,
+        "medium": 18
       },
       "tags": [
-        "finish",
-        "painting",
-        "seal"
+        "painter"
       ]
     },
     {
       "flavor": {
-        "description": "Fittings, elbows, and controlled wet intentions.",
-        "quip_buy": "You bought several future right angles."
+        "description": "Pipe Kit is stocked for field contracts.",
+        "quip_buy": "Loaded pipe kit into the cart."
       },
       "id": "pipe-kit",
       "name": "Pipe Kit",
@@ -1620,258 +5088,591 @@
         "medium": 28
       },
       "tags": [
-        "mechanical",
-        "plumbing"
+        "plumber"
       ]
     },
     {
       "flavor": {
-        "description": "Sticky optimism for elevated leaks.",
-        "quip_buy": "You bought weather negotiations."
+        "description": "Post Anchor Kit is stocked for field contracts.",
+        "quip_buy": "Loaded post anchor kit into the cart."
       },
-      "id": "roof-patch",
-      "name": "Roof Patch",
+      "id": "post-anchor-kit",
+      "name": "Post Anchor Kit",
       "prices": {
-        "high": 40,
-        "low": 23,
-        "medium": 30
+        "high": 24,
+        "low": 13,
+        "medium": 18
       },
       "tags": [
-        "roof",
-        "seal"
+        "fence_installer"
       ]
     },
     {
       "flavor": {
-        "description": "Tape, covers, and the paperwork version of caution.",
-        "quip_buy": "You bought several less dramatic outcomes."
+        "description": "Rebar Bundle is stocked for field contracts.",
+        "quip_buy": "Loaded rebar bundle into the cart."
       },
-      "id": "safety-kit",
-      "name": "Safety Kit",
+      "id": "rebar-bundle",
+      "name": "Rebar Bundle",
       "prices": {
-        "high": 19,
-        "low": 11,
-        "medium": 14
+        "high": 32,
+        "low": 18,
+        "medium": 24
       },
       "tags": [
-        "general",
-        "inspection"
+        "concrete_finisher"
       ]
     },
     {
       "flavor": {
-        "description": "A squeezable argument against drafts and drips.",
-        "quip_buy": "You bought adhesive diplomacy."
+        "description": "Roller Pack is stocked for field contracts.",
+        "quip_buy": "Loaded roller pack into the cart."
       },
-      "id": "sealant-tube",
-      "name": "Sealant Tube",
+      "id": "roller-pack",
+      "name": "Roller Pack",
       "prices": {
-        "high": 20,
-        "low": 11,
-        "medium": 15
+        "high": 16,
+        "low": 9,
+        "medium": 12
       },
       "tags": [
-        "finish",
-        "seal"
+        "painter"
       ]
     },
     {
       "flavor": {
-        "description": "Corners, strips, and a second chance at neatness.",
-        "quip_buy": "You bought decorative seriousness."
+        "description": "Roof Flashing Kit is stocked for field contracts.",
+        "quip_buy": "Loaded roof flashing kit into the cart."
       },
-      "id": "trim-kit",
-      "name": "Trim Kit",
+      "id": "roof-flashing-kit",
+      "name": "Roof Flashing Kit",
+      "prices": {
+        "high": 33,
+        "low": 19,
+        "medium": 25
+      },
+      "tags": [
+        "roofer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Roof Shingle Bundle is stocked for field contracts.",
+        "quip_buy": "Loaded roof shingle bundle into the cart."
+      },
+      "id": "roof-shingle-bundle",
+      "name": "Roof Shingle Bundle",
+      "prices": {
+        "high": 37,
+        "low": 21,
+        "medium": 28
+      },
+      "tags": [
+        "roofer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Scaffold Coupler Pack is stocked for field contracts.",
+        "quip_buy": "Loaded scaffold coupler pack into the cart."
+      },
+      "id": "scaffold-coupler-pack",
+      "name": "Scaffold Coupler Pack",
       "prices": {
         "high": 27,
         "low": 15,
         "medium": 20
       },
       "tags": [
-        "drywall",
-        "finish",
-        "framing"
+        "scaffolder"
       ]
     },
     {
       "flavor": {
-        "description": "Coiled certainty for walls full of secrets.",
-        "quip_buy": "You bought very organized lightning."
+        "description": "Siding Panel Pack is stocked for field contracts.",
+        "quip_buy": "Loaded siding panel pack into the cart."
+      },
+      "id": "siding-panel-pack",
+      "name": "Siding Panel Pack",
+      "prices": {
+        "high": 32,
+        "low": 18,
+        "medium": 24
+      },
+      "tags": [
+        "siding_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Solar Rack Kit is stocked for field contracts.",
+        "quip_buy": "Loaded solar rack kit into the cart."
+      },
+      "id": "solar-rack-kit",
+      "name": "Solar Rack Kit",
+      "prices": {
+        "high": 47,
+        "low": 26,
+        "medium": 35
+      },
+      "tags": [
+        "solar_panel_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Stud Bundle is stocked for field contracts.",
+        "quip_buy": "Loaded stud bundle into the cart."
+      },
+      "id": "stud-bundle",
+      "name": "Stud Bundle",
+      "prices": {
+        "high": 37,
+        "low": 21,
+        "medium": 28
+      },
+      "tags": [
+        "framer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Tile Box is stocked for field contracts.",
+        "quip_buy": "Loaded tile box into the cart."
+      },
+      "id": "tile-box",
+      "name": "Tile Box",
+      "prices": {
+        "high": 39,
+        "low": 22,
+        "medium": 29
+      },
+      "tags": [
+        "flooring_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Trim Kit is stocked for field contracts.",
+        "quip_buy": "Loaded trim kit into the cart."
+      },
+      "id": "trim-kit",
+      "name": "Trim Kit",
+      "prices": {
+        "high": 26,
+        "low": 14,
+        "medium": 19
+      },
+      "tags": [
+        "millworker",
+        "siding_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Underlayment Roll is stocked for field contracts.",
+        "quip_buy": "Loaded underlayment roll into the cart."
+      },
+      "id": "underlayment-roll",
+      "name": "Underlayment Roll",
+      "prices": {
+        "high": 20,
+        "low": 11,
+        "medium": 15
+      },
+      "tags": [
+        "flooring_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Valve Pack is stocked for field contracts.",
+        "quip_buy": "Loaded valve pack into the cart."
+      },
+      "id": "valve-pack",
+      "name": "Valve Pack",
+      "prices": {
+        "high": 35,
+        "low": 19,
+        "medium": 26
+      },
+      "tags": [
+        "plumber"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Vapor Barrier Roll is stocked for field contracts.",
+        "quip_buy": "Loaded vapor barrier roll into the cart."
+      },
+      "id": "vapor-barrier-roll",
+      "name": "Vapor Barrier Roll",
+      "prices": {
+        "high": 22,
+        "low": 12,
+        "medium": 16
+      },
+      "tags": [
+        "insulation_installer"
+      ]
+    },
+    {
+      "flavor": {
+        "description": "Wire Spool is stocked for field contracts.",
+        "quip_buy": "Loaded wire spool into the cart."
       },
       "id": "wire-spool",
       "name": "Wire Spool",
       "prices": {
-        "high": 35,
-        "low": 20,
-        "medium": 26
+        "high": 32,
+        "low": 18,
+        "medium": 24
       },
       "tags": [
-        "electrical",
-        "fastener"
+        "electrician",
+        "solar_panel_installer"
       ]
     }
   ],
   "tools": [
     {
       "flavor": {
-        "description": "Makes gaps disappear and corners believable.",
-        "quip_break": "The trigger now negotiates only with itself.",
-        "quip_buy": "You bought a paste launcher for tiny diplomacy."
+        "description": "Cabinet Jig keeps field work moving.",
+        "quip_break": "Cabinet Jig tapped out mid-shift.",
+        "quip_buy": "Bought Cabinet Jig."
       },
-      "id": "caulk-gun",
-      "maxDurability": 42,
-      "name": "Caulk Gun",
-      "price": 80,
+      "id": "cabinet-jig",
+      "maxDurability": 8,
+      "name": "Cabinet Jig",
+      "price": 165,
       "tags": [
-        "finish",
-        "painting",
-        "seal"
+        "cabinet_maker"
       ],
       "tier": 2
     },
     {
       "flavor": {
-        "description": "Makes holes where plans become real.",
-        "quip_break": "The drill now hums only in memory.",
-        "quip_buy": "You bought a very loud yes."
+        "description": "Drill keeps field work moving.",
+        "quip_break": "Drill tapped out mid-shift.",
+        "quip_buy": "Bought Drill."
       },
       "id": "drill",
-      "maxDurability": 45,
+      "maxDurability": 9,
       "name": "Drill",
-      "price": 140,
+      "price": 85,
       "tags": [
-        "electrical",
-        "fastener"
+        "electrician",
+        "solar_panel_installer"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Drywall Knife keeps field work moving.",
+        "quip_break": "Drywall Knife tapped out mid-shift.",
+        "quip_buy": "Bought Drywall Knife."
+      },
+      "id": "drywall-knife",
+      "maxDurability": 10,
+      "name": "Drywall Knife",
+      "price": 32,
+      "tags": [
+        "drywall_installer",
+        "insulation_installer"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Framing Nailer keeps field work moving.",
+        "quip_break": "Framing Nailer tapped out mid-shift.",
+        "quip_buy": "Bought Framing Nailer."
+      },
+      "id": "framing-nailer",
+      "maxDurability": 8,
+      "name": "Framing Nailer",
+      "price": 170,
+      "tags": [
+        "carpenter",
+        "framer"
       ],
       "tier": 2
     },
     {
       "flavor": {
-        "description": "The classic argument with nails.",
-        "quip_break": "The hammer retired after a long career in impact studies.",
-        "quip_buy": "You bought confidence with a wooden handle."
+        "description": "Glass Suction Rig keeps field work moving.",
+        "quip_break": "Glass Suction Rig tapped out mid-shift.",
+        "quip_buy": "Bought Glass Suction Rig."
+      },
+      "id": "glass-suction",
+      "maxDurability": 7,
+      "name": "Glass Suction Rig",
+      "price": 175,
+      "tags": [
+        "glazier"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Hammer keeps field work moving.",
+        "quip_break": "Hammer tapped out mid-shift.",
+        "quip_buy": "Bought Hammer."
       },
       "id": "hammer",
-      "maxDurability": 30,
+      "maxDurability": 8,
       "name": "Hammer",
-      "price": 45,
-      "tags": [
-        "framing",
-        "general"
-      ],
-      "tier": 1
-    },
-    {
-      "flavor": {
-        "description": "Temporary altitude with permanent responsibility.",
-        "quip_break": "The ladder is now two short ladders and a lesson.",
-        "quip_buy": "You bought seventeen opportunities to hold still."
-      },
-      "id": "ladder",
-      "maxDurability": 50,
-      "name": "Ladder",
-      "price": 110,
-      "tags": [
-        "outdoor",
-        "roof"
-      ],
-      "tier": 2
-    },
-    {
-      "flavor": {
-        "description": "A bubble with strong opinions.",
-        "quip_break": "The bubble escaped and took geometry with it.",
-        "quip_buy": "You bought objective truth in a plastic tube."
-      },
-      "id": "level",
-      "maxDurability": 45,
-      "name": "Level",
-      "price": 70,
-      "tags": [
-        "concrete",
-        "finish",
-        "inspection"
-      ],
-      "tier": 2
-    },
-    {
-      "flavor": {
-        "description": "Cuts boards and overconfidence to size.",
-        "quip_break": "The saw has entered a contemplative, toothless phase.",
-        "quip_buy": "You bought straight lines with a side of sawdust."
-      },
-      "id": "saw",
-      "maxDurability": 38,
-      "name": "Saw",
-      "price": 120,
-      "tags": [
-        "finish",
-        "framing"
-      ],
-      "tier": 2
-    },
-    {
-      "flavor": {
-        "description": "Turns tiny doubts into tight decisions.",
-        "quip_break": "The tip became modern art.",
-        "quip_buy": "You bought a polite spiral persuader."
-      },
-      "id": "screwdriver",
-      "maxDurability": 35,
-      "name": "Screwdriver",
       "price": 35,
       "tags": [
-        "fastener",
-        "general"
+        "carpenter",
+        "framer"
       ],
       "tier": 1
     },
     {
       "flavor": {
-        "description": "Beeps confidently near walls and occasionally near hope.",
-        "quip_break": "It now identifies only emotional support beams.",
-        "quip_buy": "You bought electronic wall gossip."
+        "description": "HVAC Gauge Set keeps field work moving.",
+        "quip_break": "HVAC Gauge Set tapped out mid-shift.",
+        "quip_buy": "Bought HVAC Gauge Set."
       },
-      "id": "stud-finder",
-      "maxDurability": 55,
-      "name": "Stud Finder",
+      "id": "hvac-gauge",
+      "maxDurability": 8,
+      "name": "HVAC Gauge Set",
+      "price": 165,
+      "tags": [
+        "hvac_technician"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Insulation Blower keeps field work moving.",
+        "quip_break": "Insulation Blower tapped out mid-shift.",
+        "quip_buy": "Bought Insulation Blower."
+      },
+      "id": "insulation-blower",
+      "maxDurability": 7,
+      "name": "Insulation Blower",
       "price": 180,
       "tags": [
-        "electrical",
-        "inspection"
+        "insulation_installer"
       ],
-      "tier": 3
+      "tier": 2
     },
     {
       "flavor": {
-        "description": "For clean cuts and rough schedules.",
-        "quip_break": "The blade retired to paper-only ambitions.",
-        "quip_buy": "You bought precision with a pocket clip."
+        "description": "Ladder keeps field work moving.",
+        "quip_break": "Ladder tapped out mid-shift.",
+        "quip_buy": "Bought Ladder."
       },
-      "id": "utility-knife",
-      "maxDurability": 28,
-      "name": "Utility Knife",
-      "price": 50,
+      "id": "ladder",
+      "maxDurability": 9,
+      "name": "Ladder",
+      "price": 70,
       "tags": [
-        "drywall",
-        "finish",
-        "general"
+        "painter",
+        "roofer"
       ],
       "tier": 1
     },
     {
       "flavor": {
-        "description": "For nuts, bolts, and life adjustments.",
-        "quip_break": "The wrench now mostly resembles intent.",
-        "quip_buy": "You bought leverage and a mild shoulder workout."
+        "description": "Level keeps field work moving.",
+        "quip_break": "Level tapped out mid-shift.",
+        "quip_buy": "Bought Level."
       },
-      "id": "wrench",
-      "maxDurability": 40,
-      "name": "Wrench",
-      "price": 55,
+      "id": "level",
+      "maxDurability": 10,
+      "name": "Level",
+      "price": 45,
       "tags": [
-        "mechanical",
-        "plumbing"
+        "mason",
+        "plumber"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Miter Saw keeps field work moving.",
+        "quip_break": "Miter Saw tapped out mid-shift.",
+        "quip_buy": "Bought Miter Saw."
+      },
+      "id": "miter-saw",
+      "maxDurability": 7,
+      "name": "Miter Saw",
+      "price": 175,
+      "tags": [
+        "cabinet_maker",
+        "millworker"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Multimeter keeps field work moving.",
+        "quip_break": "Multimeter tapped out mid-shift.",
+        "quip_buy": "Bought Multimeter."
+      },
+      "id": "multimeter",
+      "maxDurability": 9,
+      "name": "Multimeter",
+      "price": 62,
+      "tags": [
+        "electrician"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Paint Sprayer keeps field work moving.",
+        "quip_break": "Paint Sprayer tapped out mid-shift.",
+        "quip_buy": "Bought Paint Sprayer."
+      },
+      "id": "paint-sprayer",
+      "maxDurability": 8,
+      "name": "Paint Sprayer",
+      "price": 145,
+      "tags": [
+        "painter"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Pipe Threader keeps field work moving.",
+        "quip_break": "Pipe Threader tapped out mid-shift.",
+        "quip_buy": "Bought Pipe Threader."
+      },
+      "id": "pipe-threader",
+      "maxDurability": 8,
+      "name": "Pipe Threader",
+      "price": 158,
+      "tags": [
+        "plumber"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Post Hole Auger keeps field work moving.",
+        "quip_break": "Post Hole Auger tapped out mid-shift.",
+        "quip_buy": "Bought Post Hole Auger."
+      },
+      "id": "post-hole-auger",
+      "maxDurability": 8,
+      "name": "Post Hole Auger",
+      "price": 140,
+      "tags": [
+        "fence_installer"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Roofing Nailer keeps field work moving.",
+        "quip_break": "Roofing Nailer tapped out mid-shift.",
+        "quip_buy": "Bought Roofing Nailer."
+      },
+      "id": "roofing-nailer",
+      "maxDurability": 8,
+      "name": "Roofing Nailer",
+      "price": 155,
+      "tags": [
+        "roofer",
+        "siding_installer"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Circular Saw keeps field work moving.",
+        "quip_break": "Circular Saw tapped out mid-shift.",
+        "quip_buy": "Bought Circular Saw."
+      },
+      "id": "saw",
+      "maxDurability": 8,
+      "name": "Circular Saw",
+      "price": 95,
+      "tags": [
+        "carpenter",
+        "millworker"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Scaffold Wrench keeps field work moving.",
+        "quip_break": "Scaffold Wrench tapped out mid-shift.",
+        "quip_buy": "Bought Scaffold Wrench."
+      },
+      "id": "scaffold-wrench",
+      "maxDurability": 10,
+      "name": "Scaffold Wrench",
+      "price": 52,
+      "tags": [
+        "scaffolder"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Siding Brake keeps field work moving.",
+        "quip_break": "Siding Brake tapped out mid-shift.",
+        "quip_buy": "Bought Siding Brake."
+      },
+      "id": "siding-brake",
+      "maxDurability": 8,
+      "name": "Siding Brake",
+      "price": 150,
+      "tags": [
+        "siding_installer"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Solar Crimper keeps field work moving.",
+        "quip_break": "Solar Crimper tapped out mid-shift.",
+        "quip_buy": "Bought Solar Crimper."
+      },
+      "id": "solar-crimper",
+      "maxDurability": 8,
+      "name": "Solar Crimper",
+      "price": 168,
+      "tags": [
+        "electrician",
+        "solar_panel_installer"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Tile Cutter keeps field work moving.",
+        "quip_break": "Tile Cutter tapped out mid-shift.",
+        "quip_buy": "Bought Tile Cutter."
+      },
+      "id": "tile-cutter",
+      "maxDurability": 7,
+      "name": "Tile Cutter",
+      "price": 160,
+      "tags": [
+        "flooring_installer"
+      ],
+      "tier": 2
+    },
+    {
+      "flavor": {
+        "description": "Mason Trowel keeps field work moving.",
+        "quip_break": "Mason Trowel tapped out mid-shift.",
+        "quip_buy": "Bought Mason Trowel."
+      },
+      "id": "trowel",
+      "maxDurability": 9,
+      "name": "Mason Trowel",
+      "price": 40,
+      "tags": [
+        "concrete_finisher",
+        "mason"
       ],
       "tier": 1
     }

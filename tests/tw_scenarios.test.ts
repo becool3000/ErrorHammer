@@ -7,6 +7,7 @@ import {
   formatSupplyQuality,
   getGasStationStopPlan,
   getAvailableContractOffers,
+  getSettlementPreview,
   getCurrentTask,
   getSkillRank,
   getRemainingShiftTicks,
@@ -140,46 +141,141 @@ describe("TW-004 deterministic scenario suite", () => {
     const dayLaborOffer = getAvailableContractOffers(initial, makeScenarioBundle()).find(
       (offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID
     );
+    const initialDayLaborTicks = Math.max(0, initial.workday.availableTicks - initial.workday.ticksSpent);
     expect(dayLaborOffer).toBeTruthy();
-    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((getRemainingShiftTicks(initial.workday) * 0.5) * 7.25));
-    expect(dayLaborOffer?.job.flavor.client_quote).toContain(`${(getRemainingShiftTicks(initial.workday) * 0.5).toFixed(1)} hours`);
+    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((initialDayLaborTicks * 0.5) * 7.25));
+    expect(dayLaborOffer?.job.flavor.client_quote).toContain(`${(initialDayLaborTicks * 0.5).toFixed(1)} hours`);
 
     const accepted = acceptJob(5602, "job-alpha-contract");
     const beforeActiveJobId = accepted.state.activeJob?.contractId;
-    const beforeRemainingTicks = getRemainingShiftTicks(accepted.state.workday);
+    const beforeRemainingTicks = Math.max(0, accepted.state.workday.availableTicks - accepted.state.workday.ticksSpent);
     const beforeCash = accepted.state.player.cash;
 
     const laborShift = acceptContract(accepted.state, accepted.bundle, DAY_LABOR_CONTRACT_ID);
 
     expect(laborShift.nextState.activeJob?.contractId).toBe(beforeActiveJobId);
     expect(laborShift.nextState.player.cash).toBe(beforeCash + Math.round((beforeRemainingTicks * 0.5) * 7.25));
-    expect(getRemainingShiftTicks(laborShift.nextState.workday)).toBe(0);
+    expect(Math.max(0, laborShift.nextState.workday.availableTicks - laborShift.nextState.workday.ticksSpent)).toBe(0);
+    expect(getRemainingShiftTicks(laborShift.nextState.workday)).toBe(4);
     expect(laborShift.notice).toContain("Day Laborer paid");
   });
 
-  it("EH-TW-064: Day Laborer keeps an 8-hour offer even when fatigue compresses the current workday", () => {
+  it("EH-TW-064: Day Laborer uses only regular shift hours when fatigue compresses the workday", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 5603);
     state.workday = createInitialWorkday(state.day, 8);
 
     const dayLaborOffer = getAvailableContractOffers(state, bundle).find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID);
+    const remainingRegularTicks = Math.max(0, state.workday.availableTicks - state.workday.ticksSpent);
 
-    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((getRemainingShiftTicks(state.workday) * 0.5) * 7.25));
-    expect(dayLaborOffer?.job.flavor.client_quote).toContain("6.0 hours");
+    expect(dayLaborOffer?.job.basePayout).toBe(Math.round((remainingRegularTicks * 0.5) * 7.25));
+    expect(dayLaborOffer?.job.flavor.client_quote).toContain("4.0 hours");
   });
 
-  it("EH-TW-024: supplier checkout deducts cash, adds supplies, advances checkout, and grants procurement XP", () => {
+  it("EH-TW-072: available offers are ordered as Day Labor first, then Baba G jobs", () => {
+    const bundle = makeScenarioBundle();
+    const state = createInitialGameState(bundle, 5604);
+    state.contractBoard = [
+      { contractId: "c-standard", jobId: "job-alpha", districtId: "residential", payoutMult: 1, expiresDay: 1 },
+      { contractId: "c-baba", jobId: "job-baba-g", districtId: "residential", payoutMult: 1, expiresDay: 1 }
+    ];
+    const babaJob = {
+      ...bundle.jobs[0]!,
+      id: "job-baba-g",
+      name: "Baba G Infinite Leak Relay",
+      tags: ["baba-g", "commercial", "absurd"]
+    };
+    bundle.jobs = [...bundle.jobs, babaJob];
+
+    const offers = getAvailableContractOffers(state, bundle);
+    expect(offers[0]?.contract.contractId).toBe(DAY_LABOR_CONTRACT_ID);
+    expect(offers[1]?.job.tags.includes("baba-g")).toBe(true);
+  });
+
+  it("EH-TW-098: second offer rotates Baba G contract by day", () => {
+    const bundle = makeScenarioBundle();
+    const babaJobA = {
+      ...bundle.jobs[0]!,
+      id: "job-baba-rotate-a",
+      name: "Baba G Pig Head Removal Initiative",
+      tags: ["baba-g", "commercial", "absurd"]
+    };
+    const babaJobB = {
+      ...bundle.jobs[1]!,
+      id: "job-baba-rotate-b",
+      name: "Baba G Grease Trap Replacement Parade",
+      tags: ["baba-g", "commercial", "absurd"]
+    };
+    bundle.jobs = [...bundle.jobs, babaJobA, babaJobB];
+    const stateDayOne = createInitialGameState(bundle, 5611);
+    const stateDayTwo = createInitialGameState(bundle, 5611);
+    stateDayTwo.day = 2;
+
+    const dayOneOffers = getAvailableContractOffers(stateDayOne, bundle);
+    const dayTwoOffers = getAvailableContractOffers(stateDayTwo, bundle);
+
+    expect(dayOneOffers[0]?.contract.contractId).toBe(DAY_LABOR_CONTRACT_ID);
+    expect(dayTwoOffers[0]?.contract.contractId).toBe(DAY_LABOR_CONTRACT_ID);
+    expect(dayOneOffers[1]?.job.tags.includes("baba-g")).toBe(true);
+    expect(dayTwoOffers[1]?.job.tags.includes("baba-g")).toBe(true);
+    expect(dayOneOffers[1]?.contract.contractId).not.toBe(dayTwoOffers[1]?.contract.contractId);
+    expect(dayOneOffers[1]?.job.id).not.toBe(dayTwoOffers[1]?.job.id);
+  });
+
+  it("EH-TW-024: supplier checkout deducts cash, adds supplies, advances checkout, and grants trade skill XP", () => {
     const { bundle, state } = fastForwardToTask(503, "job-beta-contract", "checkout_supplies");
     seedMediumSupplierCart(state, bundle);
     const beforeCash = state.player.cash;
-    const beforeXp = state.player.skills.procurement;
+    const beforeXp = state.player.skills.electrician;
+    const expectedCartCost = Object.entries(state.activeJob?.supplierCart ?? {}).reduce((sum, [supplyId, stack]) => {
+      const supply = bundle.supplies.find((entry) => entry.id === supplyId);
+      if (!supply) {
+        return sum;
+      }
+      const stackCost = Object.entries(stack ?? {}).reduce((tierSum, [quality, qty]) => {
+        const quantity = qty ?? 0;
+        if (quantity <= 0) {
+          return tierSum;
+        }
+        return tierSum + supply.prices[quality as "low" | "medium" | "high"] * quantity;
+      }, 0);
+      return sum + stackCost;
+    }, 0);
     const result = performTaskUnit(state, bundle, "standard");
 
-    expect(result.nextState.player.cash).toBe(beforeCash - (26 * 2 + 21));
+    expect(result.nextState.player.cash).toBe(beforeCash - expectedCartCost);
     expect(getSupplyQuantity(result.nextState.truckSupplies, "wire-spool", "medium")).toBe(2);
     expect(getSupplyQuantity(result.nextState.truckSupplies, "junction-box", "medium")).toBe(1);
-    expect(result.nextState.player.skills.procurement).toBeGreaterThan(beforeXp);
+    expect(result.nextState.player.skills.electrician).toBeGreaterThan(beforeXp);
     expect(result.payload?.taskId).toBe("checkout_supplies");
+  });
+
+  it("EH-TW-082: checkout passes with empty supplier cart when truck stock already covers material needs", () => {
+    const { bundle, state } = fastForwardToTask(503, "job-beta-contract", "checkout_supplies");
+    const job = bundle.jobs.find((entry) => entry.id === state.activeJob?.jobId)!;
+
+    for (const material of job.materialNeeds) {
+      const onTruck = getSupplyQuantity(state.truckSupplies, material.supplyId);
+      const missing = Math.max(0, material.quantity - onTruck);
+      if (missing <= 0) {
+        continue;
+      }
+      const stack = state.truckSupplies[material.supplyId] ?? {};
+      state.truckSupplies[material.supplyId] = {
+        ...stack,
+        medium: (stack.medium ?? 0) + missing
+      };
+    }
+    state.activeJob!.supplierCart = {};
+
+    const beforeCash = state.player.cash;
+    const result = performTaskUnit(state, bundle, "standard");
+    const checkoutTask = result.nextState.activeJob?.tasks.find((task) => task.taskId === "checkout_supplies");
+
+    expect(result.payload?.taskId).toBe("checkout_supplies");
+    expect(result.nextState.player.cash).toBe(beforeCash);
+    expect(checkoutTask?.completedUnits).toBeGreaterThanOrEqual(checkoutTask?.requiredUnits ?? 0);
+    expect(result.payload?.logLines.some((line) => line.includes("already cover the job"))).toBe(true);
   });
 
   it("EH-TW-025: travel blocks when fuel is insufficient", () => {
@@ -191,30 +287,28 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(blocked.nextState.player.fuel).toBe(0);
   });
 
-  it("EH-TW-062: gas-station run recovers a stranded field job and keeps the route advancing", () => {
+  it("EH-TW-062: refuel task at the gas station restores fuel before route travel", () => {
     const { bundle, state } = acceptJob(3301, "job-beta-contract");
-    state.activeJob!.location = "supplier";
-    state.activeJob!.tasks = state.activeJob!.tasks.map((task) =>
-      task.taskId === "load_from_shop" || task.taskId === "travel_to_supplier" || task.taskId === "checkout_supplies"
-        ? { ...task, completedUnits: task.requiredUnits || 1 }
-        : task
-    );
-    state.player.fuel = 0;
-    state.player.cash = 0;
+    let currentState = { ...state, player: { ...state.player, fuel: 0, cash: 0 } };
 
-    const plan = getGasStationStopPlan(state, bundle);
-    expect(plan?.stranded).toBe(true);
-    expect(plan?.suggestedFuel).toBeGreaterThan(0);
+    expect(getCurrentTask(currentState)?.taskId).toBe("load_from_shop");
+    let guard = 0;
+    while (getCurrentTask(currentState)?.taskId !== "refuel_at_station") {
+      const step = performTaskUnit(currentState, bundle, "standard", true);
+      expect(step.notice).toBeFalsy();
+      currentState = step.nextState;
+      guard += 1;
+      if (guard > 10) {
+        throw new Error(`Could not reach refuel task. Current task: ${getCurrentTask(currentState)?.taskId ?? "none"}`);
+      }
+    }
 
-    const fueled = runGasStationStop(state, bundle);
-    expect(fueled.notice).toContain("Gas Station Run");
-    expect(fueled.nextState.player.fuel).toBeGreaterThan(0);
-    expect(fueled.nextState.player.cash).toBeLessThan(0);
-    expect(fueled.nextState.activeJob?.actualTicksSpent).toBe(state.activeJob?.actualTicksSpent + 2);
-
-    const resumed = performTaskUnit(fueled.nextState, bundle, "standard");
-    expect(resumed.notice).toBeFalsy();
-    expect(resumed.payload?.taskId).toBe("travel_to_job_site");
+    const refueled = performTaskUnit(currentState, bundle, "standard");
+    expect(refueled.notice).toBeFalsy();
+    expect(refueled.payload?.taskId).toBe("refuel_at_station");
+    expect(refueled.nextState.player.fuel).toBeGreaterThan(0);
+    expect(refueled.nextState.player.cash).toBeLessThanOrEqual(0);
+    expect(getCurrentTask(refueled.nextState)?.taskId).toBe("travel_to_supplier");
   });
 
   it("EH-TW-026: rush increases fast and rework frequency against standard across seeds", () => {
@@ -282,6 +376,46 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(resumed.payload?.taskId).toBe("do_work");
   });
 
+  it("EH-TW-069: pickup-site-supplies cannot hard-block when site inventory is empty", () => {
+    const { bundle, state } = acceptJob(3601, "job-beta-contract");
+    const activeJob = state.activeJob!;
+    state.workday = { ...state.workday, ticksSpent: 0, availableTicks: 99, overtimeUsed: 0 };
+    activeJob.location = "job-site";
+    activeJob.tasks = activeJob.tasks.map((task) => {
+      if (
+        task.taskId === "load_from_shop" ||
+                  task.taskId === "refuel_at_station" ||
+        task.taskId === "travel_to_supplier" ||
+        task.taskId === "checkout_supplies" ||
+        task.taskId === "travel_to_job_site"
+      ) {
+        return { ...task, completedUnits: task.requiredUnits };
+      }
+      if (task.taskId === "pickup_site_supplies") {
+        return { ...task, requiredUnits: 2, completedUnits: 1 };
+      }
+      return task;
+    });
+    activeJob.siteSupplies = {};
+
+    let currentState = state;
+    let advanced = false;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const result = performTaskUnit(currentState, bundle, "standard", true);
+      expect(result.notice).toBeFalsy();
+      currentState = result.nextState;
+      if (getCurrentTask(currentState)?.taskId === "do_work") {
+        advanced = true;
+        break;
+      }
+    }
+
+    const pickupTask = currentState.activeJob?.tasks.find((task) => task.taskId === "pickup_site_supplies");
+    expect(advanced).toBe(true);
+    expect(pickupTask?.completedUnits).toBe(pickupTask?.requiredUnits);
+    expect(getCurrentTask(currentState)?.taskId).toBe("do_work");
+  });
+
   it("EH-TW-030: unfinished jobs persist across rollovers and keep the board hidden", () => {
     const { bundle, state } = fastForwardToTask(1301, "job-beta-contract", "travel_to_job_site");
     const atSite = performTaskUnit(state, bundle, "standard").nextState;
@@ -291,7 +425,35 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(nextDay.nextState.activeJob).not.toBeNull();
     expect(nextDay.nextState.contractBoard).toEqual([]);
     expect(getSupplyQuantity(nextDay.nextState.activeJob?.siteSupplies ?? {}, "wire-spool", "medium")).toBe(1);
+    expect(nextDay.nextState.activeJob?.location).toBe("shop");
+    expect(getCurrentTask(nextDay.nextState)?.taskId).toBe("refuel_at_station");
     expect(nextDay.nextState.day).toBe(2);
+  });
+
+  it("EH-TW-073: supplier-stage rollover returns to shop and requires travel-to-supplier before checkout", () => {
+    const { bundle, state } = acceptJob(3701, "job-beta-contract");
+    const activeJob = state.activeJob!;
+    activeJob.location = "supplier";
+    activeJob.tasks = activeJob.tasks.map((task) => {
+      if (task.taskId === "load_from_shop" ||
+                  task.taskId === "refuel_at_station" || task.taskId === "travel_to_supplier") {
+        return { ...task, completedUnits: task.requiredUnits };
+      }
+      if (task.taskId === "checkout_supplies") {
+        return { ...task, completedUnits: 0, requiredUnits: 1 };
+      }
+      return task;
+    });
+
+    const nextDay = endShift(state, bundle);
+    const currentTask = getCurrentTask(nextDay.nextState);
+    const travelToSupplier = nextDay.nextState.activeJob?.tasks.find((task) => task.taskId === "travel_to_supplier");
+    const checkoutSupplies = nextDay.nextState.activeJob?.tasks.find((task) => task.taskId === "checkout_supplies");
+
+    expect(nextDay.nextState.activeJob?.location).toBe("shop");
+    expect(currentTask?.taskId).toBe("refuel_at_station");
+    expect((travelToSupplier?.requiredUnits ?? 0) - (travelToSupplier?.completedUnits ?? 0)).toBe(1);
+    expect((checkoutSupplies?.requiredUnits ?? 0) - (checkoutSupplies?.completedUnits ?? 0)).toBe(1);
   });
 
   it("EH-TW-031: overtime reduces next-day ticks while weekend recovery removes more debt", () => {
@@ -318,7 +480,7 @@ describe("TW-004 deterministic scenario suite", () => {
   it("EH-TW-032: collect payment resolves success, neutral, and fail deterministically from quality and risk", () => {
     const success = fastForwardToTask(1501, "job-alpha-contract", "collect_payment");
     success.state.workday = createInitialWorkday(success.state.day, 0);
-    success.state.player.skills.negotiation = 1000;
+    success.state.player.skills.framer = 1000;
     success.state.activeJob!.qualityPoints = 4;
     success.state.activeJob!.reworkCount = 0;
     success.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
@@ -327,15 +489,15 @@ describe("TW-004 deterministic scenario suite", () => {
 
     const neutral = fastForwardToTask(1502, "job-alpha-contract", "collect_payment");
     neutral.state.workday = createInitialWorkday(neutral.state.day, 0);
-    neutral.state.player.skills.negotiation = 1000;
-    neutral.state.activeJob!.qualityPoints = -3;
+    neutral.state.player.skills.framer = 1000;
+    neutral.state.activeJob!.qualityPoints = -4;
     neutral.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
     const neutralRun = finishCurrentTaskUntilOutcome(neutral.state, neutral.bundle, "standard");
     expect(neutralRun.nextState.activeJob?.outcome).toBe("neutral");
 
     const fail = fastForwardToTask(1500, "job-alpha-contract", "collect_payment");
     fail.state.workday = createInitialWorkday(fail.state.day, 0);
-    fail.state.player.skills.negotiation = 1000;
+    fail.state.player.skills.framer = 1000;
     fail.state.activeJob!.qualityPoints = 0;
     fail.state.activeJob!.reworkCount = 10;
     fail.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.95;
@@ -343,11 +505,60 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(failRun.nextState.activeJob?.outcome).toBe("fail");
   });
 
+  it("EH-TW-074: quality at -1 does not auto-trigger neutral when risk checks pass", () => {
+    const almostNeutral = fastForwardToTask(1501, "job-alpha-contract", "collect_payment");
+    almostNeutral.state.workday = createInitialWorkday(almostNeutral.state.day, 0);
+    almostNeutral.state.player.skills.framer = 1000;
+    almostNeutral.state.activeJob!.qualityPoints = -1;
+    almostNeutral.state.activeJob!.reworkCount = 0;
+    almostNeutral.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
+
+    const result = finishCurrentTaskUntilOutcome(almostNeutral.state, almostNeutral.bundle, "careful");
+    expect(result.nextState.activeJob?.outcome).toBe("success");
+  });
+
+  it("EH-TW-075: quality at -4 triggers neutral even when fail risk is zero", () => {
+    const neutralThreshold = fastForwardToTask(1502, "job-alpha-contract", "collect_payment");
+    neutralThreshold.state.workday = createInitialWorkday(neutralThreshold.state.day, 0);
+    neutralThreshold.state.activeJob!.qualityPoints = -4;
+    neutralThreshold.state.activeJob!.reworkCount = 0;
+    neutralThreshold.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
+
+    const result = finishCurrentTaskUntilOutcome(neutralThreshold.state, neutralThreshold.bundle, "standard");
+    expect(result.nextState.activeJob?.outcome).toBe("neutral");
+  });
+
+  it("EH-TW-076: rework-heavy settlements follow the softened fail-pressure coefficient", () => {
+    const tuned = fastForwardToTask(5, "job-alpha-contract", "collect_payment");
+    tuned.state.workday = createInitialWorkday(tuned.state.day, 0);
+    tuned.state.player.skills.framer = 1000;
+    tuned.state.activeJob!.qualityPoints = 0;
+    tuned.state.activeJob!.reworkCount = 4;
+    tuned.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.3;
+
+    const result = finishCurrentTaskUntilOutcome(tuned.state, tuned.bundle, "standard");
+    expect(result.nextState.activeJob?.outcome).toBe("success");
+  });
+
+  it("EH-TW-077: settlement preview exposes payout snapshot and risk band for active jobs", () => {
+    const previewTarget = fastForwardToTask(1501, "job-alpha-contract", "collect_payment");
+    previewTarget.state.activeJob!.lockedPayout = 220;
+    previewTarget.state.activeJob!.qualityPoints = 0;
+    previewTarget.state.activeJob!.reworkCount = 0;
+
+    const preview = getSettlementPreview(previewTarget.state, previewTarget.bundle);
+    expect(preview).not.toBeNull();
+    expect(preview?.successCash).toBe(220);
+    expect(preview?.neutralCash).toBe(110);
+    expect(preview?.failCash).toBe(0);
+    expect(["low", "medium", "high"]).toContain(preview?.riskBand);
+  });
+
   it("EH-TW-033: final reputation delta includes quality and schedule modifiers", () => {
     const { bundle, state } = fastForwardToTask(1601, "job-alpha-contract", "collect_payment");
     bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
     state.workday = createInitialWorkday(state.day, 0);
-    state.player.skills.negotiation = 1000;
+    state.player.skills.framer = 1000;
     state.activeJob!.qualityPoints = 11;
     state.activeJob!.reworkCount = 0;
     state.activeJob!.plannedTicks = 10;
@@ -364,8 +575,7 @@ describe("TW-004 deterministic scenario suite", () => {
       "anchor-set": { high: 1 },
       "fastener-box": { high: 1 }
     };
-    state.player.skills.general = 1000;
-    state.player.skills.negotiation = 1000;
+    state.player.skills.framer = 1000;
 
     const worked = performTaskUnit(state, bundle, "careful", true);
     expect(worked.nextState.activeJob?.partsQuality).toBe("high");
@@ -373,8 +583,8 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(worked.payload?.logLines.some((line) => line.includes("High quality"))).toBe(true);
 
     const collectState = fastForwardToTask(3402, "job-alpha-contract", "collect_payment").state;
-    collectState.player.skills.negotiation = 1000;
-    collectState.activeJob!.qualityPoints = 0;
+    collectState.player.skills.framer = 1000;
+    collectState.activeJob!.qualityPoints = -2;
     collectState.activeJob!.reworkCount = 0;
     collectState.activeJob!.partsQuality = "low";
     collectState.activeJob!.partsQualityScore = 0;
@@ -388,14 +598,14 @@ describe("TW-004 deterministic scenario suite", () => {
 
   it("EH-TW-034: skill XP grows from task use and can increase derived rank", () => {
     const { bundle, state } = acceptJob(1701, "job-alpha-contract");
-    state.player.skills.organization = 95;
-    const beforeRank = getSkillRank(state.player, "organization");
+    state.player.skills.framer = 95;
+    const beforeRank = getSkillRank(state.player, "framer");
     const result = performTaskUnit(state, bundle, "careful");
-    const afterRank = getSkillRank(result.nextState.player, "organization");
+    const afterRank = getSkillRank(result.nextState.player, "framer");
 
     expect(beforeRank).toBe(0);
     expect(afterRank).toBeGreaterThan(beforeRank);
-    expect(result.payload?.skillXpDelta.organization).toBeGreaterThan(0);
+    expect(result.payload?.skillXpDelta.framer).toBeGreaterThan(0);
   });
 
   it("EH-TW-035: save/load round-trip preserves active job, location, fatigue, fuel, and skills", () => {
@@ -472,7 +682,7 @@ describe("TW-004 deterministic scenario suite", () => {
 
     expect(first.digest).toBe(second.digest);
     expect(first.dayLog).toEqual(second.dayLog);
-    expect(first.nextState.bots[0]!.skills.general).toBeGreaterThanOrEqual(state.bots[0]!.skills.general);
+    expect(first.nextState.bots[0]!.skills.electrician).toBeGreaterThanOrEqual(state.bots[0]!.skills.electrician);
   });
 
   it("EH-TW-038: shop tool buy, repair, and fuel purchase keep active-job progress intact", () => {
@@ -541,14 +751,13 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(hired.nextState.log.at(-1)?.message).toContain("June");
   });
 
-  it("EH-TW-045: assigned crew spends stamina on first work commit and task logs name the assignee", () => {
+  it("EH-TW-045: assigned crew starts work without stamina gating and task logs name the assignee", () => {
     const { bundle, state } = fastForwardToTask(3000, "job-alpha-contract", "do_work");
     state.player.companyLevel = 2;
     const hired = hireCrew(state).nextState;
     const assigned = setActiveJobAssignee(hired, "crew-1");
     const result = performTaskUnit(assigned.nextState, bundle, "standard", true);
 
-    expect(result.nextState.player.crews[0]?.stamina).toBe(4);
     expect(result.nextState.activeJob?.staminaCommitted).toBe(true);
     expect(result.payload?.logLines.some((line) => line.includes("June:"))).toBe(true);
   });
@@ -595,18 +804,15 @@ describe("TW-004 deterministic scenario suite", () => {
     }
   });
 
-  it("EH-TW-049: assignee locks after work starts and crew stamina is not spent twice", () => {
+  it("EH-TW-049: assignee locks after work starts", () => {
     const { bundle, state } = fastForwardToTask(3200, "job-alpha-contract", "do_work");
     state.player.companyLevel = 2;
     const hired = hireCrew(state).nextState;
     const assigned = setActiveJobAssignee(hired, "crew-1");
     const first = performTaskUnit(assigned.nextState, bundle, "standard", true);
-    const staminaAfterFirst = first.nextState.player.crews[0]?.stamina;
     const second = performTaskUnit(first.nextState, bundle, "standard", true);
     const reassigned = setActiveJobAssignee(second.nextState, "self");
 
-    expect(staminaAfterFirst).toBe(4);
-    expect(second.nextState.player.crews[0]?.stamina).toBe(staminaAfterFirst);
     expect(reassigned.notice).toContain("locked");
     expect(reassigned.nextState.activeJob?.assignee).toBe("crew-1");
   });
@@ -618,7 +824,7 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(result.ok).toBe(true);
 
     const normalized = normalizeBundle(result.bundle!);
-    expect(Object.keys(normalized).sort()).toEqual(["bots", "districts", "events", "jobs", "strings", "supplies", "tools"]);
+    expect(Object.keys(normalized).sort()).toEqual(["babaJobs", "bots", "districts", "events", "jobs", "strings", "supplies", "tools"]);
     const toolIds = normalized.tools.map((tool) => tool.id);
     const jobIds = normalized.jobs.map((job) => job.id);
     expect(toolIds).toEqual([...toolIds].sort((a, b) => a.localeCompare(b)));
@@ -638,3 +844,6 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(result.errors.some((error) => error.includes("success_line"))).toBe(true);
   });
 });
+
+
+
