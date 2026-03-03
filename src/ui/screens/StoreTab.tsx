@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { SUPPLY_QUALITIES, formatSupplyQuality } from "../../core/playerFlow";
+import { formatNumberByAccountingClarity, obfuscateReadableText } from "../readability";
 import { bundle, StoreSectionId, useUiStore } from "../state";
 import { SegmentedControl } from "../components/SegmentedControl";
 
 const storeSections: Array<{ id: StoreSectionId; label: string }> = [
-  { id: "fuel", label: "Fuel" },
   { id: "tools", label: "Tools" },
   { id: "stock", label: "Stock" }
 ];
@@ -31,24 +31,10 @@ export function StoreTab() {
           <div>
             <h2>Shop</h2>
           </div>
-          <span className="chip">Cash ${game.player.cash}</span>
+          <span className="chip">Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true })}</span>
         </div>
         <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Shop sections" />
       </article>
-
-      {storeSection === "fuel" ? (
-        <article className="hero-card chrome-card">
-          <p className="eyebrow">Gas Station</p>
-          <h3>
-            Fuel {game.player.fuel}/{game.player.fuelMax}
-          </h3>
-          <div className="metric-grid two-up">
-            <span>Unit price $6</span>
-            <span>Tank room {Math.max(0, game.player.fuelMax - game.player.fuel)}</span>
-          </div>
-          <p className="muted-copy">Fuel is purchased in Work during the `Refuel At Gas Station` task.</p>
-        </article>
-      ) : null}
 
       {storeSection === "tools" ? (
         <div className="stack-list">
@@ -71,7 +57,7 @@ export function StoreTab() {
                   <span>Price ${tool.price}</span>
                   <span>Durability {owned ? `${owned.durability}/${tool.maxDurability}` : "not owned"}</span>
                 </div>
-                {expanded ? <p className="muted-copy">{tool.flavor.description}</p> : null}
+                {expanded ? <p className="muted-copy">{obfuscateReadableText(game, tool.flavor.description, `tool:${tool.id}:desc`)}</p> : null}
                 <div className="action-row">
                   <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!atShop}>
                     Buy

@@ -8,6 +8,16 @@ export interface AccountingCategoryTotals {
   quickBuyExpense: number;
   toolExpense: number;
   repairExpense: number;
+  researchExpense: number;
+  officeRentExpense: number;
+  truckPaymentExpense: number;
+  electricExpense: number;
+  waterSewageExpense: number;
+  dumpsterBaseExpense: number;
+  accountantSalaryExpense: number;
+  lateFeeExpense: number;
+  accountantHireExpense: number;
+  dumpsterServiceExpense: number;
 }
 
 export interface AccountingJobLedgerRow {
@@ -46,7 +56,17 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     fuelExpense: 0,
     quickBuyExpense: 0,
     toolExpense: 0,
-    repairExpense: 0
+    repairExpense: 0,
+    researchExpense: 0,
+    officeRentExpense: 0,
+    truckPaymentExpense: 0,
+    electricExpense: 0,
+    waterSewageExpense: 0,
+    dumpsterBaseExpense: 0,
+    accountantSalaryExpense: 0,
+    lateFeeExpense: 0,
+    accountantHireExpense: 0,
+    dumpsterServiceExpense: 0
   };
   const pendingJobsByActor = new Map<string, PendingJob>();
   const jobRows: AccountingJobLedgerRow[] = [];
@@ -125,6 +145,66 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       continue;
     }
 
+    const researchMatch = message.match(/^Research started: .+ for \$([0-9]+)\./i);
+    if (researchMatch) {
+      categories.researchExpense += parseMoneyCapture(researchMatch[1]);
+      continue;
+    }
+
+    const hireAccountantMatch = message.match(/^Hired accountant for \$([0-9]+)\./i);
+    if (hireAccountantMatch) {
+      categories.accountantHireExpense += parseMoneyCapture(hireAccountantMatch[1]);
+      continue;
+    }
+
+    const dumpsterServiceMatch = message.match(/^Dumpster emptied for \$([0-9]+)\./i);
+    if (dumpsterServiceMatch) {
+      categories.dumpsterServiceExpense += parseMoneyCapture(dumpsterServiceMatch[1]);
+      continue;
+    }
+
+    const officeRentMatch = message.match(/^Bill office rent: \$([0-9]+)\./i);
+    if (officeRentMatch) {
+      categories.officeRentExpense += parseMoneyCapture(officeRentMatch[1]);
+      continue;
+    }
+
+    const truckPaymentMatch = message.match(/^Bill truck payment: \$([0-9]+)\./i);
+    if (truckPaymentMatch) {
+      categories.truckPaymentExpense += parseMoneyCapture(truckPaymentMatch[1]);
+      continue;
+    }
+
+    const electricMatch = message.match(/^Bill electric: \$([0-9]+)\./i);
+    if (electricMatch) {
+      categories.electricExpense += parseMoneyCapture(electricMatch[1]);
+      continue;
+    }
+
+    const waterMatch = message.match(/^Bill water\/sewage: \$([0-9]+)\./i);
+    if (waterMatch) {
+      categories.waterSewageExpense += parseMoneyCapture(waterMatch[1]);
+      continue;
+    }
+
+    const dumpsterBaseMatch = message.match(/^Bill dumpster base: \$([0-9]+)\./i);
+    if (dumpsterBaseMatch) {
+      categories.dumpsterBaseExpense += parseMoneyCapture(dumpsterBaseMatch[1]);
+      continue;
+    }
+
+    const salaryMatch = message.match(/^Bill accountant salary: \$([0-9]+)\./i);
+    if (salaryMatch) {
+      categories.accountantSalaryExpense += parseMoneyCapture(salaryMatch[1]);
+      continue;
+    }
+
+    const lateFeeMatch = message.match(/^Late fee applied: \$([0-9]+)\./i);
+    if (lateFeeMatch) {
+      categories.lateFeeExpense += parseMoneyCapture(lateFeeMatch[1]);
+      continue;
+    }
+
     const dayLaborMatch = message.match(/worked a day-labor shift .+ earned \$([0-9]+)\./i);
     if (dayLaborMatch) {
       const payout = parseMoneyCapture(dayLaborMatch[1]);
@@ -186,7 +266,17 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     categories.fuelExpense +
     categories.quickBuyExpense +
     categories.toolExpense +
-    categories.repairExpense;
+    categories.repairExpense +
+    categories.researchExpense +
+    categories.officeRentExpense +
+    categories.truckPaymentExpense +
+    categories.electricExpense +
+    categories.waterSewageExpense +
+    categories.dumpsterBaseExpense +
+    categories.accountantSalaryExpense +
+    categories.lateFeeExpense +
+    categories.accountantHireExpense +
+    categories.dumpsterServiceExpense;
   const netFromLogs = totalIncome - totalExpenses;
   const observedCashDelta = state.player.cash - STARTING_CASH;
   const cashDrift = observedCashDelta - netFromLogs;

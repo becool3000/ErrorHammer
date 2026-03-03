@@ -9,6 +9,7 @@ import {
   getAvailableContractOffers,
   getSettlementPreview,
   getCurrentTask,
+  getCurrentTaskGuidance,
   getSkillRank,
   getRemainingShiftTicks,
   getSupplyQuantity,
@@ -16,18 +17,28 @@ import {
   hireCrew,
   performTaskUnit,
   quickBuyMissingTools,
+  returnToShopForTools,
   runGasStationStop,
   setActiveJobAssignee,
   setSupplierCartQuantity
 } from "../src/core/playerFlow";
 import { clear as clearSave, hasIncompatibleLegacySave, load as loadSave, save as saveState } from "../src/core/save";
 import { createInitialGameState, endShift, repairTool, buyTool } from "../src/core/resolver";
+import { GameState, TRADE_SKILLS } from "../src/core/types";
 import { loadRawContent, loadSchemas, normalizeBundle, validateContent } from "../scripts/content_pipeline";
 import { eventById, makeScenarioBundle } from "./scenario_helpers";
+
+function unlockTradeResearch(state: GameState) {
+  state.research.babaUnlocked = true;
+  for (const skillId of TRADE_SKILLS) {
+    state.research.unlockedSkills[skillId] = true;
+  }
+}
 
 function acceptJob(seed: number, contractId: string) {
   const bundle = makeScenarioBundle();
   let state = createInitialGameState(bundle, seed);
+  unlockTradeResearch(state);
   state.activeEventIds = [];
   state.contractBoard = [
     { contractId: "job-alpha-contract", jobId: "job-alpha", districtId: "residential", payoutMult: 1, expiresDay: 1 },
@@ -105,6 +116,7 @@ const quickBuyContract = {
 function setupQuickBuyState(seed: number, cash = 500, playerName?: string, companyName?: string) {
   const scenarioBundle = makeScenarioBundle();
   const state = createInitialGameState(scenarioBundle, seed, playerName, companyName);
+  unlockTradeResearch(state);
   state.player.tools = {
     hammer: { toolId: "hammer", durability: 20 }
   };
@@ -138,6 +150,7 @@ describe("TW-004 deterministic scenario suite", () => {
 
   it("EH-TW-063: Day Laborer is always offered and pays minimum wage without replacing the active field job", () => {
     const initial = createInitialGameState(makeScenarioBundle(), 5601);
+    unlockTradeResearch(initial);
     const dayLaborOffer = getAvailableContractOffers(initial, makeScenarioBundle()).find(
       (offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID
     );
@@ -163,6 +176,7 @@ describe("TW-004 deterministic scenario suite", () => {
   it("EH-TW-064: Day Laborer uses only regular shift hours when fatigue compresses the workday", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 5603);
+    unlockTradeResearch(state);
     state.workday = createInitialWorkday(state.day, 8);
 
     const dayLaborOffer = getAvailableContractOffers(state, bundle).find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID);
@@ -175,6 +189,7 @@ describe("TW-004 deterministic scenario suite", () => {
   it("EH-TW-072: available offers are ordered as Day Labor first, then Baba G jobs", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 5604);
+    unlockTradeResearch(state);
     state.contractBoard = [
       { contractId: "c-standard", jobId: "job-alpha", districtId: "residential", payoutMult: 1, expiresDay: 1 },
       { contractId: "c-baba", jobId: "job-baba-g", districtId: "residential", payoutMult: 1, expiresDay: 1 }
@@ -209,6 +224,8 @@ describe("TW-004 deterministic scenario suite", () => {
     bundle.jobs = [...bundle.jobs, babaJobA, babaJobB];
     const stateDayOne = createInitialGameState(bundle, 5611);
     const stateDayTwo = createInitialGameState(bundle, 5611);
+    unlockTradeResearch(stateDayOne);
+    unlockTradeResearch(stateDayTwo);
     stateDayTwo.day = 2;
 
     const dayOneOffers = getAvailableContractOffers(stateDayOne, bundle);
@@ -278,6 +295,18 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(result.payload?.logLines.some((line) => line.includes("already cover the job"))).toBe(true);
   });
 
+  it("EH-TW-104: checkout with insufficient cash returns a balance-declined notice and clear shortfall", () => {
+    const { bundle, state } = fastForwardToTask(503, "job-beta-contract", "checkout_supplies");
+    seedMediumSupplierCart(state, bundle);
+    state.player.cash = 0;
+
+    const result = performTaskUnit(state, bundle, "standard");
+
+    expect(result.notice).toContain("Balance declined");
+    expect(result.payload?.logLines.some((line) => line.includes("Balance declined at supplier checkout"))).toBe(true);
+    expect(result.nextState.player.cash).toBe(0);
+  });
+
   it("EH-TW-025: travel blocks when fuel is insufficient", () => {
     const { bundle, state } = fastForwardToTask(504, "job-beta-contract", "travel_to_supplier");
     state.player.fuel = 0;
@@ -285,6 +314,18 @@ describe("TW-004 deterministic scenario suite", () => {
 
     expect(blocked.notice).toContain("fuel");
     expect(blocked.nextState.player.fuel).toBe(0);
+  });
+
+  it("EH-TW-103: load-from-shop guidance calls out extra in-stock required supplies", () => {
+    const { bundle, state } = acceptJob(6201, "job-alpha-contract");
+    expect(getCurrentTask(state)?.taskId).toBe("load_from_shop");
+    state.shopSupplies["anchor-set"] = { medium: 3 };
+    state.shopSupplies["fastener-box"] = { medium: 2 };
+
+    const guidance = getCurrentTaskGuidance(state, bundle);
+    expect(guidance).toContain("Next step: Load required supplies at the shop.");
+    expect(guidance).toMatch(/extra stock/i);
+    expect(guidance).toContain("Anchor Set +2");
   });
 
   it("EH-TW-062: refuel task at the gas station restores fuel before route travel", () => {
@@ -698,6 +739,21 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(fueled.nextState.player.tools.saw?.durability).toBe(7);
     expect(fueled.nextState.player.tools.hammer?.durability).toBe(6);
     expect(fueled.nextState.player.fuel).toBeGreaterThan(updated.player.fuel);
+  });
+
+  it("EH-TW-118: broken on-site tools can route back to shop before the job is complete", () => {
+    const { bundle, state } = fastForwardToTask(2101, "job-alpha-contract", "do_work");
+    const job = bundle.jobs.find((entry) => entry.id === state.activeJob?.jobId)!;
+    const requiredToolId = job.requiredTools[0]!;
+
+    state.player.tools[requiredToolId] = { toolId: requiredToolId, durability: 0 };
+    const blocked = performTaskUnit(state, bundle, "standard", true);
+    expect(blocked.notice).toContain("Missing usable tools");
+
+    const reroute = returnToShopForTools(state, bundle);
+    expect(reroute.nextState.activeJob?.location).toBe("shop");
+    expect(getCurrentTask(reroute.nextState)?.taskId).toBe("travel_to_job_site");
+    expect(reroute.notice).toContain("Returned to shop for tools");
   });
 
   it("EH-TW-040: quick buy uses player/company names in logs", () => {

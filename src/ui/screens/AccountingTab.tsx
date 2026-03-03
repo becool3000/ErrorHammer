@@ -1,16 +1,20 @@
 import { useMemo } from "react";
 import { getAccountingSnapshot } from "../../core/accounting";
+import { formatNumberByAccountingClarity, getAccountingClarity } from "../readability";
 import { useUiStore } from "../state";
 
 export function AccountingTab() {
   const game = useUiStore((state) => state.game);
   const sessionTelemetry = useUiStore((state) => state.sessionTelemetry);
+  const hireAccountant = useUiStore((state) => state.hireAccountant);
   const snapshot = useMemo(() => (game ? getAccountingSnapshot(game, 24) : null), [game]);
 
   if (!game || !snapshot) {
     return null;
   }
 
+  const accountingClarity = getAccountingClarity(game);
+  const showDetailedFinance = accountingClarity >= 0.75 || game.operations.accountantHired;
   const netClass = snapshot.netFromLogs >= 0 ? "tone-success" : "tone-danger";
   const sessionMinutes = Math.max(0, (Date.now() - sessionTelemetry.startedAtMs) / 60000);
   const repsGained = game.player.reputation - sessionTelemetry.startReputation;
@@ -26,27 +30,54 @@ export function AccountingTab() {
             <p className="eyebrow">Accounting</p>
             <h2>Cashflow Ledger</h2>
           </div>
-          <span className={`chip ${netClass}`}>Net ${snapshot.netFromLogs}</span>
+          <span className={`chip ${netClass}`}>Net {formatNumberByAccountingClarity(game, snapshot.netFromLogs, { currency: true, signed: true })}</span>
         </div>
-        <p className="muted-copy">Tracks income and costs from logs so you can see exactly where job money went.</p>
+        <p className="muted-copy">Tracks income and costs with bill categories, late fees, and service expenses.</p>
+        <div className="metric-grid two-up">
+          <span>Accounting XP {Math.round(game.officeSkills.accountingXp)}</span>
+          <span>Clarity {(accountingClarity * 100).toFixed(0)}%</span>
+        </div>
+        <button className="ghost-button" onClick={() => hireAccountant()} disabled={game.operations.accountantHired}>
+          {game.operations.accountantHired ? "Accountant On Staff" : "Hire Accountant ($240)"}
+        </button>
       </article>
 
       <article className="chrome-card inset-card">
         <div className="metric-grid two-up">
-          <span className="tone-success">Income ${snapshot.totalIncome}</span>
-          <span className="tone-danger">Expenses ${snapshot.totalExpenses}</span>
-          <span className={netClass}>Net ${snapshot.netFromLogs}</span>
-          <span>Current Cash ${game.player.cash}</span>
-          <span>Supplies ${snapshot.categories.supplyExpense}</span>
-          <span>Fuel ${snapshot.categories.fuelExpense}</span>
-          <span>Quick Buy ${snapshot.categories.quickBuyExpense}</span>
-          <span>Tools + Repairs ${snapshot.categories.toolExpense + snapshot.categories.repairExpense}</span>
+          <span className="tone-success">Income {formatNumberByAccountingClarity(game, snapshot.totalIncome, { currency: true })}</span>
+          <span className="tone-danger">Expenses {formatNumberByAccountingClarity(game, snapshot.totalExpenses, { currency: true })}</span>
+          <span className={netClass}>Net {formatNumberByAccountingClarity(game, snapshot.netFromLogs, { currency: true, signed: true })}</span>
+          <span>Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true, signed: true })}</span>
         </div>
         {snapshot.cashDrift !== 0 ? (
           <p className="muted-copy">
-            Untracked cash delta ${snapshot.cashDrift}. This usually means older saves or expenses not logged before the accounting pass.
+            Untracked cash delta {formatNumberByAccountingClarity(game, snapshot.cashDrift, { currency: true, signed: true })}. This usually means legacy entries.
           </p>
         ) : null}
+      </article>
+
+      <article className="chrome-card inset-card">
+        <div className="section-label-row">
+          <strong>Bill Breakdown</strong>
+          <span className="chip">Day {game.day}</span>
+        </div>
+        <div className="metric-grid two-up">
+          <span>Rent {formatNumberByAccountingClarity(game, snapshot.categories.officeRentExpense, { currency: true })}</span>
+          <span>Truck {formatNumberByAccountingClarity(game, snapshot.categories.truckPaymentExpense, { currency: true })}</span>
+          <span>Electric {formatNumberByAccountingClarity(game, snapshot.categories.electricExpense, { currency: true })}</span>
+          <span>Water/Sewage {formatNumberByAccountingClarity(game, snapshot.categories.waterSewageExpense, { currency: true })}</span>
+          <span>Dumpster Base {formatNumberByAccountingClarity(game, snapshot.categories.dumpsterBaseExpense, { currency: true })}</span>
+          <span>Late Fees {formatNumberByAccountingClarity(game, snapshot.categories.lateFeeExpense, { currency: true })}</span>
+          {showDetailedFinance ? (
+            <>
+              <span>Accountant Salary {formatNumberByAccountingClarity(game, snapshot.categories.accountantSalaryExpense, { currency: true })}</span>
+              <span>Accountant Hire {formatNumberByAccountingClarity(game, snapshot.categories.accountantHireExpense, { currency: true })}</span>
+              <span>Research {formatNumberByAccountingClarity(game, snapshot.categories.researchExpense, { currency: true })}</span>
+              <span>Dumpster Service {formatNumberByAccountingClarity(game, snapshot.categories.dumpsterServiceExpense, { currency: true })}</span>
+            </>
+          ) : null}
+        </div>
+        {!showDetailedFinance ? <p className="muted-copy">Improve Accounting clarity or hire an accountant to reveal deeper cost lines.</p> : null}
       </article>
 
       <article className="chrome-card inset-card">
@@ -80,9 +111,9 @@ export function AccountingTab() {
                   <span className="chip">Day {row.day}</span>
                 </div>
                 <div className="material-need-meta">
-                  <span>Payout ${row.payout}</span>
-                  <span>Costs ${row.costs}</span>
-                  <span className={profitClass}>Profit ${row.profit}</span>
+                  <span>Payout {formatNumberByAccountingClarity(game, row.payout, { currency: true })}</span>
+                  <span>Costs {formatNumberByAccountingClarity(game, row.costs, { currency: true })}</span>
+                  <span className={profitClass}>Profit {formatNumberByAccountingClarity(game, row.profit, { currency: true, signed: true })}</span>
                 </div>
                 <div className="material-need-meta">
                   <span>Outcome {formatOutcome(row.outcome)}</span>

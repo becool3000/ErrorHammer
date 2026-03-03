@@ -43,6 +43,8 @@ export type SkillId =
   | "scaffolder"
   | "solar_panel_installer";
 
+export type ResearchCategoryId = "core-systems" | "structure" | "exterior" | "interior-finish";
+
 export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 
 export type LocationId = "shop" | "supplier" | "job-site" | "gas-station";
@@ -106,6 +108,7 @@ export interface JobDef {
   tier: number;
   districtId: string;
   requiredTools: string[];
+  trashUnits: number;
   staminaCost: number;
   basePayout: number;
   risk: number;
@@ -341,10 +344,52 @@ export interface ActiveJobState {
   partsQuality: SupplyQuality | null;
   partsQualityScore: number;
   partsQualityModifier: number;
+  trashUnitsPending: number;
   siteSupplies: SupplyInventory;
   supplierCart: SupplyInventory;
   tasks: ActiveTaskState[];
   outcome?: Outcome;
+}
+
+export type ResearchProjectUnlockType = "baba" | "category" | "skill";
+
+export interface ResearchProjectState {
+  projectId: string;
+  label: string;
+  cost: number;
+  daysRequired: number;
+  daysProgress: number;
+  unlockType: ResearchProjectUnlockType;
+  categoryId?: ResearchCategoryId;
+  skillId?: SkillId;
+  startedDay: number;
+}
+
+export interface ResearchState {
+  babaUnlocked: boolean;
+  unlockedCategories: Record<ResearchCategoryId, boolean>;
+  unlockedSkills: Record<SkillId, boolean>;
+  activeProject: ResearchProjectState | null;
+  completedProjectIds: string[];
+}
+
+export interface OfficeSkillsState {
+  readingXp: number;
+  accountingXp: number;
+  readingXpToday: number;
+  accountingXpToday: number;
+}
+
+export interface YardState {
+  dumpsterUnits: number;
+  dumpsterCapacity: number;
+  emptiesPerformed: number;
+}
+
+export interface OperationsState {
+  accountantHired: boolean;
+  accountantHireDay: number | null;
+  lastDailyBillsDay: number;
 }
 
 export interface TaskUnitResult {
@@ -376,6 +421,10 @@ export interface GameState {
   shopSupplies: SupplyInventory;
   truckSupplies: SupplyInventory;
   workday: WorkdayState;
+  research: ResearchState;
+  officeSkills: OfficeSkillsState;
+  yard: YardState;
+  operations: OperationsState;
 }
 
 export interface ContentBundle {

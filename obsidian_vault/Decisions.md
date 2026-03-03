@@ -1,18 +1,24 @@
 # Decisions
 ## Active Decisions
-1. Runtime target remains browser-first React + TypeScript + Vite on `main`.
-2. Gameplay resolution remains deterministic; all random paths must use seeded RNG utilities in `src/core/rng.ts`.
-3. Gameplay mutations stay in core modules under `src/core/**`; UI only dispatches core transitions.
-4. Content remains JSON + schema validated + compiled into tracked `src/generated/content.bundle.json`.
-5. Trade skill contract is locked to 19 skills and every job must declare exactly one `primarySkill`.
-6. Trade job corpus is locked to exactly `95` jobs, with `5` jobs per trade skill.
-7. Bot roster is locked to exactly `10` entries in `content/bots.json`.
-8. Baba fallback jobs remain separate from trade jobs in `content/baba_jobs.json`.
-9. Full contract board generation guarantees one trade offer per skill and deterministic selection by seed/day.
-10. Visible offer order is locked: `Day Labor` first, rotating `Baba G` second, then trade offers.
-11. Baba job risk floor remains high-risk (`>= 60%` effective policy via existing risk rules).
-12. Contracts UI on mobile uses grouped trade tabs instead of a single long contract carousel.
-13. Save compatibility for this migration is handled via version bump and hard-reset policy for incompatible legacy saves.
+1. Runtime remains browser-first React + TypeScript + Vite on `main`.
+2. Gameplay and simulation outcomes remain deterministic; seeded RNG is required for variable paths.
+3. Gameplay mutations stay core-owned in `src/core/**`; UI dispatches transitions and renders state.
+4. Content remains schema-validated JSON compiled into tracked `src/generated/content.bundle.json`.
+5. Trade content baseline remains locked to 19 skills, 95 jobs, and 10 bots.
+6. New-game contract access is hard-gated by research:
+1. Start: Day Labor only.
+2. Baba unlock: dedicated project `rd-baba-network`.
+3. Trade unlocks: category first, then skill projects.
+7. Research model is single active queued project with upfront cost and day-based progress.
+8. Daily bills are deterministic fixed components with company-level scaling and optional accountant effects.
+9. Unpaid operating costs can push negative cash; late fees apply immediately and reputation penalty clamps at zero floor.
+10. Yard dumpster is now a gating resource:
+1. Jobs add trash.
+2. Store-leftovers unloads pending trash into yard dumpster.
+3. Full dumpster blocks non-day-labor acceptance.
+11. Accountant hire is permanent staff with utility discount, daily salary, and accounting clarity boost.
+12. Reading and Accounting clarity effects intentionally obfuscate non-critical copy/values at low skill, while critical action labels remain un-obfuscated.
+13. Save migration policy for this pass is in-place normalization at `SAVE_VERSION=5`; no hard reset.
 14. `Tasks.md` remains the live lane-board source of truth and `Testing.md` remains the evidence summary source.
 
 ## Archive

@@ -1,24 +1,24 @@
 # Vision
 ## Product Direction
-1. Ship Error Hammer as a text-first construction ladder sim with dark humor and mobile-first readability.
-2. Keep the shift loop deterministic and fast: accept work, run tasks, settle outcome, end day.
-3. Keep gameplay logic pure in `src/core/**` and content-driven via validated JSON plus generated bundle.
-4. Keep UI interactions compact and touch-friendly for Android-class mobile devices.
-5. Maintain fallback accessibility: `Day Labor` is always available and `Baba G` provides a rotating high-risk backup offer.
+1. Ship Error Hammer as a mobile-first construction ops sim with deterministic outcomes and readable tactical choices.
+2. Keep the field loop fast and consistent: accept work, run tasks, settle, return/store, end day.
+3. Expand management depth through Office systems without destabilizing core field gameplay.
+4. Preserve dark visual identity while keeping action-critical UI readable on small devices.
 
-## Current Verified Baseline (`main`, 2026-03-02)
-1. Skill model is fully migrated to 19 trade skills with a per-job `primarySkill`.
-2. Content pack now enforces exactly `95` trade jobs and exactly `10` bots.
-3. Baba fallback content is separated into `babaJobs` and rotates daily as the second visible offer.
-4. Contract surface now shows `21` visible offers on full board: `Day Labor`, `Baba G`, and one trade offer per skill.
-5. Contracts UI is grouped for mobile by trade families instead of long horizontal carousel scanning.
-6. Runtime/save compatibility is handled through save-version bump and incompatible-save guardrails.
-7. Regression gate is green for validation, compile, test, and production build.
+## Current Verified Baseline (`main`, 2026-03-03)
+1. Trade baseline remains locked: 19 trade skills, 95 trade jobs, 10 bots, grouped mobile contracts.
+2. New games now start in hard-lock mode with Day Labor only, then unlock via Office Research.
+3. Baba G fallback is now a dedicated research unlock and remains high-risk once unlocked.
+4. Office now includes `Research`, `Yard`, `Trade Index`, and `Accounting` sections.
+5. Daily operations costs now apply at End Day with scaling, late fees, and negative-cash handling.
+6. Jobs now generate trash that fills a yard dumpster; full dumpster blocks non-day-labor acceptance until emptied.
+7. Reading/Accounting clarity systems and accountant hiring now shape financial visibility and detail.
+8. Save compatibility remains at `SAVE_VERSION=5` with safe legacy normalization defaults.
 
 ## Next Focus
-1. Tune economy pacing and progression clarity now that trade-content scope is locked.
-2. Improve post-overhaul explainability (risk, cost drivers, and settlement outcomes) without widening core systems.
-3. Keep further changes scoped as additive planner chains rather than expanding `PLN-011`.
+1. Balance pacing across research unlock cadence, daily bill pressure, and dumpster service frequency.
+2. Improve Office clarity pass (copy density, quick summaries, and mobile scan speed).
+3. Calibrate early-game onboarding so new players understand hard locks and unlock paths immediately.
 
 ## Archive
 1. Closed-chain and verbose board history remains in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).

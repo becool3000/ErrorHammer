@@ -11,9 +11,11 @@ import {
   getSkillDisplayRows,
   getSupplyQuantity,
   getSupplyUnitPrice,
-  getVisibleTaskActions
+  getVisibleTaskActions,
+  hasUsableTools
 } from "../../core/playerFlow";
 import { ActiveTaskState, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
+import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
@@ -30,11 +32,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const lastAction = useUiStore((state) => state.lastAction);
   const notice = useUiStore((state) => state.notice);
   const performTask = useUiStore((state) => state.performTaskUnit);
+  const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const setJobAssignee = useUiStore((state) => state.setJobAssignee);
   const runGasStationStop = useUiStore((state) => state.runGasStationStop);
+  const returnToShopForTools = useUiStore((state) => state.returnToShopForTools);
   const openModal = useUiStore((state) => state.openModal);
   const goToTab = useUiStore((state) => state.goToTab);
   const setCartQuantity = useUiStore((state) => state.setCartQuantity);
+  const [timerNowMs, setTimerNowMs] = useState(() => Date.now());
   if (!game) {
     return null;
   }
@@ -88,6 +93,9 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               : labelForStance(action.stance)
       }))
     : [];
+  const missingWorkTools =
+    Boolean(activeJob && job && currentTask?.taskId === "do_work" && activeJob.location === "job-site") &&
+    !hasUsableTools(game.player, job?.requiredTools ?? []);
   const supplierCatalogRows = materialNeedRows
     .map((need) => {
       const supply = bundle.supplies.find((entry) => entry.id === need.supplyId);
@@ -125,6 +133,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     notice.startsWith("Allocate the needed items by quality before checkout")
       ? notice
       : "";
+  const timedActionProgress = timedTaskAction ? clamp01((timerNowMs - timedTaskAction.startedAtMs) / timedTaskAction.durationMs) : 0;
+  const timedActionRemainingMs = timedTaskAction ? Math.max(0, timedTaskAction.endsAtMs - timerNowMs) : 0;
   const supplierCartTotal = activeJob
     ? supplierCatalogRows.reduce(
         (sum, row) =>
@@ -140,6 +150,15 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   useEffect(() => {
     syncActionCarousel();
   }, [currentTask?.taskId, taskActions.length]);
+
+  useEffect(() => {
+    if (!timedTaskAction) {
+      return;
+    }
+    setTimerNowMs(Date.now());
+    const intervalId = window.setInterval(() => setTimerNowMs(Date.now()), 100);
+    return () => window.clearInterval(intervalId);
+  }, [timedTaskAction?.id]);
 
   function syncActionCarousel() {
     const track = actionTrackRef.current;
@@ -228,7 +247,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         <article className="chrome-card inset-card">
           <p className="eyebrow">Active Job</p>
           <h3>{job.name}</h3>
-          <p>{job.flavor.client_quote}</p>
+          <p>{obfuscateReadableText(game, job.flavor.client_quote, `${job.id}:work-quote`)}</p>
           <div className="metric-grid two-up">
             <span>Locked Payout ${activeJob.lockedPayout}</span>
             <span>Location {activeJob.location}</span>
@@ -373,6 +392,24 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
         {taskGuidance ? <p className="task-guidance">{taskGuidance}</p> : null}
+        {timedTaskAction ? (
+          <div className="action-timer-card">
+            <div className="section-label-row tight-row action-timer-meta">
+              <strong>Resolving: {timedTaskAction.label}</strong>
+              <span>{(timedActionRemainingMs / 1000).toFixed(1)}s</span>
+            </div>
+            <div
+              className="action-timer-track"
+              role="progressbar"
+              aria-label={`Resolving ${timedTaskAction.label}`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(timedActionProgress * 100)}
+            >
+              <span className={`action-timer-fill ${toneClassForStance(timedTaskAction.stance)}`} style={{ width: `${Math.round(timedActionProgress * 100)}%` }} />
+            </div>
+          </div>
+        ) : null}
         {gasStationPlan && currentTask?.taskId !== "refuel_at_station" ? (
           <div className={gasStationPlan.stranded ? "task-inline-notice fuel-warning-block fuel-warning-critical" : "task-inline-notice fuel-warning-block"}>
             <div className="section-label-row tight-row">
@@ -441,7 +478,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
         ) : null}
         {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
-        {currentTask ? (
+        {missingWorkTools ? (
+          <div className="task-inline-actions">
+            <button className="primary-button tone-warning" onClick={() => returnToShopForTools()}>
+              Return To Shop For Tools
+            </button>
+          </div>
+        ) : null}
+        {currentTask && !missingWorkTools ? (
           <div className="action-carousel">
             <div className="action-carousel-header">
               <div className="action-callout">
@@ -452,7 +496,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   type="button"
                   className="icon-button carousel-arrow"
                   aria-label="Scroll task actions left"
-                  disabled={!canScrollActionsLeft}
+                  disabled={Boolean(timedTaskAction) || !canScrollActionsLeft}
                   onClick={() => nudgeActionCarousel("left")}
                 >
                   {"<"}
@@ -461,7 +505,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   type="button"
                   className="icon-button carousel-arrow"
                   aria-label="Scroll task actions right"
-                  disabled={!canScrollActionsRight}
+                  disabled={Boolean(timedTaskAction) || !canScrollActionsRight}
                   onClick={() => nudgeActionCarousel("right")}
                 >
                   {">"}
@@ -474,6 +518,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                   key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
                   className={`${action.allowOvertime ? "ghost-button" : "primary-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
                   onClick={() => performTask(action.stance, action.allowOvertime)}
+                  disabled={Boolean(timedTaskAction)}
                 >
                   {action.label}
                 </button>
@@ -685,7 +730,9 @@ function toneClassForLogLine(line: string): string {
     normalized.includes("fail") ||
     normalized.includes("sideways") ||
     normalized.includes("blocked") ||
-    normalized.includes("rework")
+    normalized.includes("rework") ||
+    normalized.includes("balance declined") ||
+    normalized.includes("declined")
   ) {
     return "tone-danger";
   }
@@ -730,5 +777,9 @@ function formatOutcomeLabel(outcome: string | undefined): string {
     return "neutral (half pay)";
   }
   return outcome;
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
 }
 

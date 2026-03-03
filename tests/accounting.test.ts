@@ -16,9 +16,16 @@ describe("accounting snapshot", () => {
       { day: 2, actorId: state.player.actorId, message: "Bought 2 fuel for $12." },
       { day: 2, actorId: state.player.actorId, message: "Parts quality settled at Medium (+0 quality)." },
       { day: 2, actorId: state.player.actorId, message: "Collected success payment: cash +160, rep 4." },
-      { day: 3, actorId: state.player.actorId, message: "James worked a day-labor shift for 8.0 hours and earned $58." }
+      { day: 3, actorId: state.player.actorId, message: "James worked a day-labor shift for 8.0 hours and earned $58." },
+      { day: 3, actorId: state.player.actorId, message: "Bill office rent: $18." },
+      { day: 3, actorId: state.player.actorId, message: "Bill truck payment: $20." },
+      { day: 3, actorId: state.player.actorId, message: "Bill electric: $6." },
+      { day: 3, actorId: state.player.actorId, message: "Bill water/sewage: $5." },
+      { day: 3, actorId: state.player.actorId, message: "Bill dumpster base: $4." },
+      { day: 3, actorId: state.player.actorId, message: "Late fee applied: $6." },
+      { day: 3, actorId: state.player.actorId, message: "Dumpster emptied for $28." }
     ];
-    state.player.cash = 353;
+    state.player.cash = 266;
 
     const snapshot = getAccountingSnapshot(state);
 
@@ -28,9 +35,16 @@ describe("accounting snapshot", () => {
     expect(snapshot.categories.fuelExpense).toBe(12);
     expect(snapshot.categories.payoutIncome).toBe(160);
     expect(snapshot.categories.dayLaborIncome).toBe(58);
+    expect(snapshot.categories.officeRentExpense).toBe(18);
+    expect(snapshot.categories.truckPaymentExpense).toBe(20);
+    expect(snapshot.categories.electricExpense).toBe(6);
+    expect(snapshot.categories.waterSewageExpense).toBe(5);
+    expect(snapshot.categories.dumpsterBaseExpense).toBe(4);
+    expect(snapshot.categories.lateFeeExpense).toBe(6);
+    expect(snapshot.categories.dumpsterServiceExpense).toBe(28);
     expect(snapshot.totalIncome).toBe(218);
-    expect(snapshot.totalExpenses).toBe(165);
-    expect(snapshot.netFromLogs).toBe(53);
+    expect(snapshot.totalExpenses).toBe(252);
+    expect(snapshot.netFromLogs).toBe(-34);
     expect(snapshot.cashDrift).toBe(0);
     expect(snapshot.jobRows[0]).toMatchObject({
       jobName: "Day Laborer",
@@ -57,5 +71,21 @@ describe("accounting snapshot", () => {
     const snapshot = getAccountingSnapshot(state);
     expect(snapshot.netFromLogs).toBe(100);
     expect(snapshot.cashDrift).toBe(-40);
+  });
+
+  it("rolls accountant salary into expenses", () => {
+    const state = createInitialGameState(bundle, 2203);
+    state.log = [
+      { day: 4, actorId: state.player.actorId, message: "Bill accountant salary: $12." },
+      { day: 4, actorId: state.player.actorId, message: "Bill electric: $5." },
+      { day: 4, actorId: state.player.actorId, message: "Bill water/sewage: $4." },
+      { day: 4, actorId: state.player.actorId, message: "Bill dumpster base: $4." }
+    ];
+    state.player.cash = 275;
+
+    const snapshot = getAccountingSnapshot(state);
+    expect(snapshot.categories.accountantSalaryExpense).toBe(12);
+    expect(snapshot.totalExpenses).toBe(25);
+    expect(snapshot.netFromLogs).toBe(-25);
   });
 });

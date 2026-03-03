@@ -10,9 +10,10 @@ interface BottomNavProps {
   onChange: (tab: GameTabId) => void;
   onEndDay: () => void;
   onOpenSettings: () => void;
+  endDayDisabled?: boolean;
 }
 
-export function BottomNav({ activeTab, onChange, onEndDay, onOpenSettings }: BottomNavProps) {
+export function BottomNav({ activeTab, onChange, onEndDay, onOpenSettings, endDayDisabled = false }: BottomNavProps) {
   const selectedTab: GameTabId =
     activeTab === "contracts" || activeTab === "store" || activeTab === "company" ? "office" : activeTab;
 
@@ -28,7 +29,7 @@ export function BottomNav({ activeTab, onChange, onEndDay, onOpenSettings }: Bot
           <span>{tab.label}</span>
         </button>
       ))}
-      <button className="tab-button" onClick={() => onEndDay()} aria-label="End Day">
+      <button className="tab-button" onClick={() => onEndDay()} aria-label="End Day" disabled={endDayDisabled}>
         <span>End Day</span>
       </button>
       <button className="tab-button settings-gear-button" onClick={() => onOpenSettings()} aria-label="Settings">

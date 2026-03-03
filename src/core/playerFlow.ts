@@ -22,12 +22,23 @@ import {
   TaskStance,
   TaskTimeOutcome,
   TaskUnitResult,
+  ResearchProjectState,
   Weekday,
   WorkdayState,
   TRADE_SKILLS
 } from "./types";
 import { applyToolPriceModifiers, deriveCompanyLevel, getPayoutMultiplier, getRiskValue, isForcedNeutral } from "./economy";
 import { createRng, hashSeed } from "./rng";
+import {
+  awardOfficeSkillXp,
+  emptyDumpster as emptyDumpsterOperation,
+  hireAccountant as hireAccountantOperation,
+  normalizeOfficeSkillsState,
+  normalizeOperationsState,
+  normalizeYardState,
+  resetOfficeSkillDailyCaps
+} from "./operations";
+import { isSkillUnlocked, normalizeResearchState, startResearchProject } from "./research";
 
 export interface StateTransitionResult<T = undefined> {
   nextState: GameState;
@@ -61,6 +72,12 @@ export interface GasStationStopPlan {
   requiredTicks: number;
 }
 
+export interface ReturnToShopForToolsPayload {
+  ticksSpent: number;
+  fuelSpent: number;
+  usedOvertime: boolean;
+}
+
 export interface MaterialQualityResult {
   quality: SupplyQuality;
   score: number;
@@ -81,6 +98,11 @@ export interface SettlementPreview {
   failCash: number;
   riskBand: RiskBand;
   neutralWarning: string;
+}
+
+interface SupplierCheckoutStatus {
+  ok: boolean;
+  notice?: string;
 }
 
 const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -486,6 +508,10 @@ export function getCurrentTaskGuidance(state: GameState, bundle: ContentBundle):
     return getBlockedTaskGuidance(activeTask.taskId, blockedReason, state.activeJob);
   }
 
+  if (activeTask.taskId === "load_from_shop") {
+    return getLoadFromShopGuidance(state, bundle, job);
+  }
+
   return getDefaultTaskGuidance(activeTask.taskId);
 }
 
@@ -494,6 +520,9 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
     return getDayLaborOffer(state, bundle);
   }
   if (isBabaRotatingContractId(contractId)) {
+    if (!state.research.babaUnlocked) {
+      return null;
+    }
     const rotatingOffer = getRotatingBabaOffer(state, bundle);
     if (!rotatingOffer || rotatingOffer.contract.contractId !== contractId) {
       return null;
@@ -515,13 +544,11 @@ export function getAvailableContractOffers(state: GameState, bundle: ContentBund
   const boardOffers = state.contractBoard
     .map((contract) => getJobByContract(state, bundle, contract.contractId))
     .filter((offer): offer is ContractOffer => Boolean(offer));
-  const babaOffers = boardOffers.filter((offer) => offer.job.tags.includes("baba-g"));
-  const standardOffers = boardOffers.filter((offer) => !offer.job.tags.includes("baba-g"));
-  const rotatingBabaOffer = getRotatingBabaOffer(state, bundle);
-  if (rotatingBabaOffer) {
-    return [getDayLaborOffer(state, bundle), rotatingBabaOffer, ...standardOffers];
-  }
-  return [getDayLaborOffer(state, bundle), ...babaOffers, ...standardOffers];
+  const standardOffers = boardOffers.filter(
+    (offer) => !offer.job.tags.includes("baba-g") && isSkillUnlocked(state.research, offer.job.primarySkill)
+  );
+  const rotatingBabaOffer = state.research.babaUnlocked ? getRotatingBabaOffer(state, bundle) : null;
+  return [getDayLaborOffer(state, bundle), ...(rotatingBabaOffer ? [rotatingBabaOffer] : []), ...standardOffers];
 }
 
 function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffer {
@@ -545,6 +572,7 @@ function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffe
       tier: 0,
       districtId: fallbackDistrictId,
       requiredTools: [],
+      trashUnits: 0,
       staminaCost: 0,
       basePayout: payout,
       risk: 0,
@@ -577,6 +605,7 @@ export function setSupplierCartQuantity(
 
   const nextState = cloneState(state);
   setInventoryQuantity(nextState.activeJob!.supplierCart, supplyId, quality, quantity);
+  awardOfficeSkillXp(nextState, { reading: 1 });
 
   return {
     nextState,
@@ -590,13 +619,25 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     return runDayLaborShift(state, bundle);
   }
 
+  if (isBabaRotatingContractId(contractId) && !state.research.babaUnlocked) {
+    return { nextState: state, notice: "Research the Baba G Network first in Office > Research.", digest: digestState(state) };
+  }
+
   if (state.activeJob) {
     return { nextState: state, notice: "Finish the current job first.", digest: digestState(state) };
+  }
+
+  if (state.yard.dumpsterUnits >= state.yard.dumpsterCapacity) {
+    return { nextState: state, notice: "Dumpster is full. Empty it in Office > Yard before taking another job.", digest: digestState(state) };
   }
 
   const picked = getJobByContract(state, bundle, contractId);
   if (!picked) {
     return { nextState: state, notice: "That contract is no longer available.", digest: digestState(state) };
+  }
+
+  if (!picked.job.tags.includes("baba-g") && !isSkillUnlocked(state.research, picked.job.primarySkill)) {
+    return { nextState: state, notice: "That trade is still locked. Unlock it in Office > Research.", digest: digestState(state) };
   }
 
   if (!hasUsableTools(state.player, picked.job.requiredTools)) {
@@ -636,10 +677,12 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     partsQuality: null,
     partsQualityScore: 1,
     partsQualityModifier: 0,
+    trashUnitsPending: 0,
     siteSupplies: {},
     supplierCart: {},
     tasks
   };
+  awardOfficeSkillXp(nextState, { reading: 1 });
   nextState.contractBoard = [];
   appendLog(nextState, {
     day: nextState.day,
@@ -668,6 +711,7 @@ export function runDayLaborShift(state: GameState, bundle: ContentBundle): State
   const nextState = cloneState(state);
   spendTicks(nextState.workday, requiredTicks);
   nextState.player.cash += offer.job.basePayout;
+  awardOfficeSkillXp(nextState, { reading: 1 });
 
   appendLog(nextState, {
     day: nextState.day,
@@ -688,6 +732,7 @@ export function getCrewCapacity(): number {
 }
 
 export function normalizeGameState(state: Partial<GameState>): GameState {
+  const legacyDefaults = state.research === undefined && state.officeSkills === undefined && state.yard === undefined && state.operations === undefined;
   const normalizedPlayer = {
     ...state.player!,
     crews: (state.player?.crews ?? []).map((crew) => ({
@@ -710,10 +755,15 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
           partsQuality: state.activeJob.partsQuality ?? null,
           partsQualityScore: state.activeJob.partsQualityScore ?? 1,
           partsQualityModifier: state.activeJob.partsQualityModifier ?? 0,
+          trashUnitsPending: Math.max(0, Math.floor(state.activeJob.trashUnitsPending ?? 0)),
           siteSupplies: normalizeSupplyInventory(state.activeJob.siteSupplies),
           supplierCart: normalizeSupplyInventory(state.activeJob.supplierCart)
         }
-      : null
+      : null,
+    research: normalizeResearchState(state.research, legacyDefaults),
+    officeSkills: normalizeOfficeSkillsState(state.officeSkills, legacyDefaults),
+    yard: normalizeYardState(state.yard, legacyDefaults),
+    operations: normalizeOperationsState(state.operations, state.day ?? 1, legacyDefaults)
   };
   if (normalizedState.activeJob) {
     repairActiveJobRouting(normalizedState.activeJob);
@@ -743,6 +793,83 @@ function getRotatingBabaOffer(state: GameState, bundle: ContentBundle): Contract
 
 function isBabaRotatingContractId(contractId: string): boolean {
   return contractId.startsWith(BABA_G_ROTATING_CONTRACT_PREFIX);
+}
+
+export function startResearch(state: GameState, projectId: string): StateTransitionResult<ResearchProjectState> {
+  const nextState = cloneState(state);
+  const result = startResearchProject(nextState, projectId);
+  if (!result.ok || !result.startedProject) {
+    return {
+      nextState: state,
+      notice: result.notice ?? "Unable to start research.",
+      digest: digestState(state)
+    };
+  }
+
+  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: `Research started: ${result.startedProject.label} for $${result.startedProject.cost}.`
+  });
+
+  return {
+    nextState,
+    payload: { ...result.startedProject },
+    notice: `Research started: ${result.startedProject.label}.`,
+    digest: digestState(nextState)
+  };
+}
+
+export function hireAccountantStaff(state: GameState): StateTransitionResult {
+  const nextState = cloneState(state);
+  const result = hireAccountantOperation(nextState);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+
+  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function emptyDumpsterAtYard(state: GameState): StateTransitionResult<number> {
+  const nextState = cloneState(state);
+  const result = emptyDumpsterOperation(nextState);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+
+  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+
+  return {
+    nextState,
+    payload: result.cost,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
 }
 
 export function hireCrew(state: GameState): StateTransitionResult<CrewState> {
@@ -831,6 +958,7 @@ export function buyFuel(state: GameState, units = 1): StateTransitionResult<numb
 
   nextState.player.cash -= cost;
   nextState.player.fuel += purchasedUnits;
+  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
@@ -894,6 +1022,7 @@ export function runGasStationStop(state: GameState, bundle: ContentBundle): Stat
   nextState.activeJob!.actualTicksSpent += plan.requiredTicks;
   nextState.player.cash -= plan.totalCost;
   nextState.player.fuel = Math.min(nextState.player.fuelMax, nextState.player.fuel + plan.suggestedFuel);
+  awardOfficeSkillXp(nextState, { accounting: 2 });
 
   appendLog(nextState, {
     day: nextState.day,
@@ -968,6 +1097,7 @@ export function performTaskUnit(
 
   const logLines: string[] = [];
   const skillXpDelta: Partial<Record<SkillId, number>> = {};
+  let taskNotice: string | undefined;
   let qualityOutcome: TaskQualityOutcome | undefined;
   let qualityPointsDelta = 0;
   let unitsCompleted = timing.timeOutcome === "rework" ? 0 : 1;
@@ -1020,9 +1150,15 @@ export function performTaskUnit(
       }
       break;
     case "checkout_supplies":
-      if (timing.timeOutcome !== "rework" && !applySupplierCheckout(nextState, bundle, job, logLines)) {
-        nextActiveTask.requiredUnits += 1;
-        unitsCompleted = 0;
+      if (timing.timeOutcome !== "rework") {
+        const checkoutStatus = applySupplierCheckout(nextState, bundle, job, logLines);
+        if (!checkoutStatus.ok) {
+          nextActiveTask.requiredUnits += 1;
+          unitsCompleted = 0;
+          taskNotice = checkoutStatus.notice;
+        } else {
+          awardOfficeSkillXp(nextState, { accounting: 2 });
+        }
       }
       break;
     case "refuel_at_station":
@@ -1043,6 +1179,7 @@ export function performTaskUnit(
         } else {
           logLines.push("Tank already full at the gas station.");
         }
+        awardOfficeSkillXp(nextState, { accounting: 2 });
       }
       break;
     case "travel_to_job_site":
@@ -1085,6 +1222,7 @@ export function performTaskUnit(
     case "collect_payment":
       if (timing.timeOutcome !== "rework") {
         const outcome = settleActiveJob(nextState, bundle, job);
+        nextState.activeJob!.trashUnitsPending = Math.max(0, Math.floor(job.trashUnits ?? 0));
         logLines.push(...outcome.logLines);
       }
       break;
@@ -1096,12 +1234,20 @@ export function performTaskUnit(
       break;
     case "store_leftovers":
       if (timing.timeOutcome !== "rework") {
+        const pendingTrash = Math.max(0, nextState.activeJob!.trashUnitsPending);
+        if (pendingTrash > 0) {
+          nextState.yard.dumpsterUnits += pendingTrash;
+          nextState.activeJob!.trashUnitsPending = 0;
+          logLines.push(`Dumped ${pendingTrash} trash units into the yard dumpster.`);
+        }
         moveAllSupplies(nextState.truckSupplies, nextState.shopSupplies);
         logLines.push("Stored the leftovers and closed the job folder with deliberate calm.");
         nextState.activeJob = null;
       }
       break;
   }
+
+  awardOfficeSkillXp(nextState, { reading: 3 });
 
   const taskLogLines = logLines.map((line) => formatAssigneeLogLine(assignee.name, line.trim())).filter(Boolean);
   for (const line of taskLogLines) {
@@ -1134,13 +1280,86 @@ export function performTaskUnit(
   return {
     nextState,
     payload,
+    notice: taskNotice,
     digest
+  };
+}
+
+export function returnToShopForTools(
+  state: GameState,
+  bundle: ContentBundle
+): StateTransitionResult<ReturnToShopForToolsPayload> {
+  const activeJob = state.activeJob;
+  if (!activeJob) {
+    return { nextState: state, notice: "No active job.", digest: digestState(state) };
+  }
+
+  const currentTask = getCurrentTask(state);
+  if (!currentTask || currentTask.taskId !== "do_work") {
+    return { nextState: state, notice: "Return-to-shop for tools is only available during on-site work.", digest: digestState(state) };
+  }
+  if (activeJob.location !== "job-site") {
+    return { nextState: state, notice: "You must be at the job site to route back for tools.", digest: digestState(state) };
+  }
+
+  const job = findJobInBundle(bundle, activeJob.jobId);
+  if (!job) {
+    return { nextState: state, notice: "Active job data is incomplete.", digest: digestState(state) };
+  }
+  if (hasUsableTools(state.player, job.requiredTools)) {
+    return { nextState: state, notice: "Usable tools are already available.", digest: digestState(state) };
+  }
+
+  const district = getDistrict(bundle, activeJob.districtId);
+  const travelTicks = district.travel.shopToSiteTicks;
+  const fuelCost = district.travel.shopToSiteFuel;
+  if (state.player.fuel < fuelCost) {
+    return { nextState: state, notice: "Not enough fuel to get back to the shop.", digest: digestState(state) };
+  }
+
+  const canUseRegularTime = canSpendTicks(state.workday, travelTicks, false);
+  const canUseOvertime = canSpendTicks(state.workday, travelTicks, true);
+  if (!canUseRegularTime && !canUseOvertime) {
+    return { nextState: state, notice: "No time remains to return to the shop.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  spendTicks(nextState.workday, travelTicks);
+  nextState.activeJob!.actualTicksSpent += travelTicks;
+  nextState.player.fuel = Math.max(0, nextState.player.fuel - fuelCost);
+  nextState.activeJob!.location = "shop";
+  const travelToSiteTask = nextState.activeJob!.tasks.find((task) => task.taskId === "travel_to_job_site");
+  if (travelToSiteTask) {
+    travelToSiteTask.requiredUnits = Math.max(travelToSiteTask.requiredUnits, travelToSiteTask.completedUnits + 1);
+  }
+
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: nextState.activeJob?.contractId,
+    taskId: "return_to_shop",
+    message: `Returned to the shop to repair or replace broken tools (${formatHours(travelTicks)} travel, fuel -${fuelCost}).`
+  });
+
+  const usedOvertime = !canUseRegularTime && canUseOvertime;
+  return {
+    nextState,
+    payload: {
+      ticksSpent: travelTicks,
+      fuelSpent: fuelCost,
+      usedOvertime
+    },
+    notice: usedOvertime
+      ? "Returned to shop for tools using overtime. Repair or buy tools, then head back to site."
+      : "Returned to shop for tools. Repair or buy tools, then head back to site.",
+    digest: digestState(nextState)
   };
 }
 
 export function prepareForNextDay(state: GameState): GameState {
   const nextState = cloneState(state);
   nextState.day += 1;
+  resetOfficeSkillDailyCaps(nextState);
   const recovery = getRecoveryForWeekday(getWeekday(nextState.day));
   nextState.workday.fatigue.debt = Math.max(0, nextState.workday.fatigue.debt - recovery);
   nextState.workday = createInitialWorkday(nextState.day, nextState.workday.fatigue.debt);
@@ -1385,21 +1604,21 @@ function getTaskLocation(taskId: TaskId): LocationId {
   }
 }
 
-function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: JobDef, logLines: string[]): boolean {
+function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: JobDef, logLines: string[]): SupplierCheckoutStatus {
   const activeJob = state.activeJob!;
   const cartEntries = listInventoryEntries(activeJob.supplierCart);
   const hasRequiredAllocation = hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart);
   if (cartEntries.length === 0) {
     if (hasRequiredAllocation) {
       logLines.push("Supplier stop confirmed: truck supplies already cover the job.");
-      return true;
+      return { ok: true };
     }
     logLines.push("The cart was empty, which impressed nobody.");
-    return false;
+    return { ok: false };
   }
   if (!hasRequiredAllocation) {
     logLines.push("The cart still needs explicit quality picks for the required materials.");
-    return false;
+    return { ok: false };
   }
 
   let total = 0;
@@ -1411,8 +1630,13 @@ function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: Job
     total += getSupplyUnitPrice(supply, quality, getActiveEvents(bundle, state.activeEventIds)) * quantity;
   }
   if (state.player.cash < total) {
-    logLines.push("The supplier admired your taste and declined your balance.");
-    return false;
+    const shortfall = total - state.player.cash;
+    const declineMessage = `Balance declined at supplier checkout. Need $${shortfall} more (total $${total}).`;
+    logLines.push(declineMessage);
+    return {
+      ok: false,
+      notice: `Balance declined. Need $${shortfall} more for supplier checkout.`
+    };
   }
 
   state.player.cash -= total;
@@ -1421,7 +1645,7 @@ function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: Job
   }
   activeJob.supplierCart = {};
   logLines.push(`Checked out supplies for $${total}.`);
-  return true;
+  return { ok: true };
 }
 
 function reserveMaterials(truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): SupplyInventory | null {
@@ -1650,7 +1874,7 @@ function getDefaultTaskGuidance(taskId: TaskId): string {
     case "pickup_site_supplies":
       return "Next step: Pick up site supplies.";
     case "do_work":
-      return "Next step: Take action on the job.";
+      return "Next step: Take action on the job or end day.";
     case "collect_payment":
       return "Next step: Collect payment.";
     case "return_to_shop":
@@ -1660,10 +1884,35 @@ function getDefaultTaskGuidance(taskId: TaskId): string {
   }
 }
 
+function getLoadFromShopGuidance(state: GameState, bundle: ContentBundle, job: JobDef): string {
+  const base = "Next step: Load required supplies at the shop.";
+  const extras = job.materialNeeds
+    .map((material) => {
+      const extraQuantity = getSupplyQuantity(state.shopSupplies, material.supplyId) - material.quantity;
+      if (extraQuantity <= 0) {
+        return null;
+      }
+      const supplyName = bundle.supplies.find((entry) => entry.id === material.supplyId)?.name ?? material.supplyId;
+      return `${supplyName} +${extraQuantity}`;
+    })
+    .filter((entry): entry is string => Boolean(entry));
+
+  if (extras.length === 0) {
+    return base;
+  }
+
+  const topExtras = extras.slice(0, 2);
+  const extraTail = extras.length > 2 ? `, +${extras.length - 2} more` : "";
+  return `${base} You have extra stock for this job: ${topExtras.join(", ")}${extraTail}.`;
+}
+
 function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob: ActiveJobState): string {
   const normalizedReason = blockedReason.toLowerCase();
   if (normalizedReason.includes("fuel")) {
     return "Next step: Refuel at Gas Station.";
+  }
+  if (normalizedReason.includes("missing usable tools")) {
+    return "Next step: Return to Shop for tool repair or replacement.";
   }
   if (normalizedReason.includes("supplier cart") || normalizedReason.includes("quality before checkout")) {
     return "Next step: Allocate materials in Supplier Cart.";
@@ -2049,10 +2298,24 @@ function cloneState(state: GameState): GameState {
     activeJob: cloneActiveJob(state.activeJob),
     shopSupplies: cloneSupplyInventory(state.shopSupplies),
     truckSupplies: cloneSupplyInventory(state.truckSupplies),
+    research: cloneResearchState(state.research),
+    officeSkills: { ...state.officeSkills },
+    yard: { ...state.yard },
+    operations: { ...state.operations },
     workday: {
       ...state.workday,
       fatigue: { ...state.workday.fatigue }
     }
+  };
+}
+
+function cloneResearchState(state: GameState["research"]): GameState["research"] {
+  return {
+    babaUnlocked: state.babaUnlocked,
+    unlockedCategories: { ...state.unlockedCategories },
+    unlockedSkills: { ...state.unlockedSkills },
+    activeProject: state.activeProject ? { ...state.activeProject } : null,
+    completedProjectIds: [...state.completedProjectIds]
   };
 }
 
@@ -2202,6 +2465,7 @@ export function quickBuyMissingTools(
   }
 
   spendTicks(nextState.workday, plan.requiredTicks);
+  awardOfficeSkillXp(nextState, { reading: 1 });
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,

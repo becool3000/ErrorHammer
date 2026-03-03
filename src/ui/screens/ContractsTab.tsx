@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { JobDef, SkillId } from "../../core/types";
+import { GameState, JobDef, SkillId } from "../../core/types";
 import { getPayoutMultiplier } from "../../core/economy";
 import {
   DAY_LABOR_CONTRACT_ID,
@@ -12,6 +12,7 @@ import {
   getSettlementPreview
 } from "../../core/playerFlow";
 import type { SettlementPreview } from "../../core/playerFlow";
+import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
 const GROUPS: Array<{ id: string; label: string; skills: SkillId[] }> = [
@@ -43,6 +44,8 @@ export function ContractsTab() {
   const selectContract = useUiStore((state) => state.selectContract);
   const accept = useUiStore((state) => state.acceptContract);
   const quickBuyTools = useUiStore((state) => state.quickBuyTools);
+  const setOfficeSection = useUiStore((state) => state.setOfficeSection);
+  const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const [activeGroupId, setActiveGroupId] = useState<string>(GROUPS[0]!.id);
 
   const baseJobsById = useMemo(() => new Map(bundle.jobs.map((job) => [job.id, job])), []);
@@ -140,6 +143,52 @@ export function ContractsTab() {
         </div>
       </article>
 
+      {selectedContract && selectedJob ? (
+        <ContractDetails
+          game={game}
+          contractId={selectedContract.contractId}
+          job={selectedJob}
+          payout={payout}
+          settlementPreview={settlementPreview}
+          hasTools={hasTools}
+          dayLaborCooldownActive={dayLaborCelebrationActive}
+          onAccept={accept}
+        />
+      ) : null}
+      {!game.activeJob && tradeOffers.length === 0 ? (
+        <article className="chrome-card inset-card">
+          <div className="section-label-row">
+            <strong>No Trade Contracts Unlocked</strong>
+          </div>
+          <p className="muted-copy">Open Office &gt; Research to unlock category and skill contracts.</p>
+          <button className="ghost-button" onClick={() => setOfficeSection("research")}>
+            Open Research
+          </button>
+        </article>
+      ) : null}
+      {quickBuyPlan && quickBuyPlan.missingTools.length > 0 ? (
+        <article className="chrome-card inset-card quick-buy-card">
+          <p className="eyebrow">Quick Tool Buy</p>
+          <p className="muted-copy">Missing {quickBuyPlan.missingTools.map((line) => line.toolName).join(", ")}</p>
+          <p className="muted-copy">{bundle.strings.quickBuyDescription}</p>
+          <div className="chip-grid">
+            <span className="chip">{formatHours(quickBuyPlan.requiredTicks)}</span>
+            <span className="chip">${quickBuyPlan.totalCost}</span>
+            {!quickBuyPlan.enoughCash ? <span className="chip muted">Need more cash</span> : null}
+            {!quickBuyPlan.enoughTime ? <span className="chip muted">Need more hours</span> : null}
+            {!quickBuyPlan.allowed ? <span className="chip muted">Must be at shop</span> : null}
+          </div>
+          <div className="action-row quick-buy-actions">
+            <button
+              className="primary-button wide-button"
+              onClick={() => selectedContract && quickBuyTools(selectedContract.contractId)}
+              disabled={!quickBuyEnabled}
+            >
+              {bundle.strings.quickBuyButtonLabel} ({formatHours(quickBuyPlan.requiredTicks)} / ${quickBuyPlan.totalCost})
+            </button>
+          </div>
+        </article>
+      ) : null}
       <article className="chrome-card inset-card">
         <div className="section-label-row">
           <div>
@@ -171,60 +220,31 @@ export function ContractsTab() {
           ) : null}
         </div>
       </article>
-
-      {selectedContract && selectedJob ? (
-        <ContractDetails
-          contractId={selectedContract.contractId}
-          job={selectedJob}
-          payout={payout}
-          settlementPreview={settlementPreview}
-          hasTools={hasTools}
-          onAccept={accept}
-        />
-      ) : null}
-      {quickBuyPlan && quickBuyPlan.missingTools.length > 0 ? (
-        <article className="chrome-card inset-card quick-buy-card">
-          <p className="eyebrow">Quick Tool Buy</p>
-          <p className="muted-copy">Missing {quickBuyPlan.missingTools.map((line) => line.toolName).join(", ")}</p>
-          <p className="muted-copy">{bundle.strings.quickBuyDescription}</p>
-          <div className="chip-grid">
-            <span className="chip">{formatHours(quickBuyPlan.requiredTicks)}</span>
-            <span className="chip">${quickBuyPlan.totalCost}</span>
-            {!quickBuyPlan.enoughCash ? <span className="chip muted">Need more cash</span> : null}
-            {!quickBuyPlan.enoughTime ? <span className="chip muted">Need more hours</span> : null}
-            {!quickBuyPlan.allowed ? <span className="chip muted">Must be at shop</span> : null}
-          </div>
-          <div className="action-row quick-buy-actions">
-            <button
-              className="primary-button wide-button"
-              onClick={() => selectedContract && quickBuyTools(selectedContract.contractId)}
-              disabled={!quickBuyEnabled}
-            >
-              {bundle.strings.quickBuyButtonLabel} ({formatHours(quickBuyPlan.requiredTicks)} / ${quickBuyPlan.totalCost})
-            </button>
-          </div>
-        </article>
-      ) : null}
     </section>
   );
 }
 
 function ContractDetails({
+  game,
   contractId,
   job,
   payout,
   settlementPreview,
   hasTools,
+  dayLaborCooldownActive,
   onAccept
 }: {
+  game: GameState;
   contractId: string;
   job: JobDef;
   payout: number;
   settlementPreview: SettlementPreview | null;
   hasTools: boolean;
+  dayLaborCooldownActive: boolean;
   onAccept: (contractId: string) => void;
 }) {
   const isDayLabor = contractId === DAY_LABOR_CONTRACT_ID;
+  const isDayLaborCoolingDown = isDayLabor && dayLaborCooldownActive;
   const [infoOpen, setInfoOpen] = useState(false);
   return (
     <article className="hero-card chrome-card contract-detail-card">
@@ -245,7 +265,7 @@ function ContractDetails({
       </div>
       {infoOpen ? (
         <div id={`contract-info-${contractId}`} className="detail-block">
-          <p>{job.flavor.client_quote}</p>
+          <p className="muted-copy">{obfuscateReadableText(game, job.flavor.client_quote, `${job.id}:quote`)}</p>
           <div className="chip-grid">
             <span className="chip tone-success">Payout ${payout}</span>
             <span className={`chip ${riskToneClass(job.risk)}`}>Risk {Math.round(job.risk * 100)}%</span>
@@ -313,9 +333,14 @@ function ContractDetails({
         </div>
       )}
       <div className="contract-detail-actions">
-        <button className="primary-button wide-button" onClick={() => onAccept(contractId)} disabled={!hasTools}>
-          {hasTools ? (isDayLabor ? "Work Day Laborer Shift" : "Accept Job") : "Missing Tools"}
+        <button
+          className={`${isDayLabor ? "day-labor-shift-button" : "primary-button"} wide-button`}
+          onClick={() => onAccept(contractId)}
+          disabled={!hasTools || isDayLaborCoolingDown}
+        >
+          {isDayLaborCoolingDown ? "Celebration Cooldown..." : hasTools ? (isDayLabor ? "Work Day Laborer Shift" : "Accept Job") : "Missing Tools"}
         </button>
+        {isDayLaborCoolingDown ? <p className="day-labor-cooldown-copy">FX running. Day Labor will unlock in a moment.</p> : null}
       </div>
     </article>
   );
@@ -354,6 +379,7 @@ function buildSettlementPreview(game: Parameters<typeof getSettlementPreview>[0]
         partsQuality: null,
         partsQualityScore: 1,
         partsQualityModifier: 0,
+        trashUnitsPending: 0,
         siteSupplies: {},
         supplierCart: {},
         tasks: []

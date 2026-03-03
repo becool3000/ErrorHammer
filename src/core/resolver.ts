@@ -10,6 +10,8 @@ import { evaluateBotPlan, simulateBotDay } from "./bots";
 import { createRng, hashSeed } from "./rng";
 import { SAVE_VERSION } from "./save";
 import { createBotSkills, createInitialShopSupplies, createInitialSkills, createInitialWorkday, digestState, prepareForNextDay } from "./playerFlow";
+import { applyEndDayOperations, createInitialOfficeSkillsState, createInitialOperationsState, createInitialYardState } from "./operations";
+import { createResearchStateLocked } from "./research";
 import {
   ActorState,
   AssignmentIntent,
@@ -87,7 +89,11 @@ export function createInitialGameState(
     activeJob: null,
     shopSupplies: createInitialShopSupplies(),
     truckSupplies: {},
-    workday: createInitialWorkday(1, 0)
+    workday: createInitialWorkday(1, 0),
+    research: createResearchStateLocked(),
+    officeSkills: createInitialOfficeSkillsState(),
+    yard: createInitialYardState(),
+    operations: createInitialOperationsState()
   };
 }
 
@@ -357,7 +363,17 @@ export function resolveDay(
     activeJob: state.activeJob,
     shopSupplies: { ...state.shopSupplies },
     truckSupplies: { ...state.truckSupplies },
-    workday: createInitialWorkday(nextDay, state.workday.fatigue.debt)
+    workday: createInitialWorkday(nextDay, state.workday.fatigue.debt),
+    research: {
+      babaUnlocked: state.research.babaUnlocked,
+      unlockedCategories: { ...state.research.unlockedCategories },
+      unlockedSkills: { ...state.research.unlockedSkills },
+      activeProject: state.research.activeProject ? { ...state.research.activeProject } : null,
+      completedProjectIds: [...state.research.completedProjectIds]
+    },
+    officeSkills: { ...state.officeSkills },
+    yard: { ...state.yard },
+    operations: { ...state.operations }
   };
 
   return {
@@ -370,12 +386,13 @@ export function resolveDay(
 
 export function endShift(state: GameState, bundle: ContentBundle): ResolverResult {
   const nextState = prepareForNextDay(state);
+  const operationsResult = applyEndDayOperations(nextState);
   nextState.activeEventIds = pickEventIds(bundle, nextState.day, nextState.seed);
   const pricingEvents = nextState.activeEventIds
     .map((id) => bundle.events.find((event) => event.id === id))
     .filter((event): event is EventDef => Boolean(event));
 
-  const dayLog: DayLog[] = [];
+  const dayLog: DayLog[] = [...operationsResult.dayLog];
   const profileById = new Map(bundle.bots.map((bot) => [bot.id, bot]));
   const updatedBots: ActorState[] = [];
 

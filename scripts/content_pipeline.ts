@@ -210,6 +210,9 @@ function crossValidate(bundle: ContentBundle): string[] {
     if (job.workUnits < 1) {
       errors.push(`jobs/${job.id}: workUnits must be >= 1`);
     }
+    if (job.trashUnits < 0) {
+      errors.push(`jobs/${job.id}: trashUnits must be >= 0`);
+    }
 
     for (const toolId of job.requiredTools) {
       if (!toolIds.has(toolId)) {
@@ -249,6 +252,9 @@ function crossValidate(bundle: ContentBundle): string[] {
     }
     if (!districtIds.has(job.districtId)) {
       errors.push(`babaJobs/${job.id}: unknown districtId '${job.districtId}'`);
+    }
+    if (job.trashUnits < 0) {
+      errors.push(`babaJobs/${job.id}: trashUnits must be >= 0`);
     }
     for (const toolId of job.requiredTools) {
       if (!toolIds.has(toolId)) {
@@ -295,6 +301,7 @@ function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[], isBaba
     workUnits
   });
   const normalizedTags = isBaba && !tags.includes("baba-g") ? [...tags, "baba-g"] : tags;
+  const derivedTrashUnits = deriveTrashUnits(workUnits, job.tier ?? 1, isBaba);
 
   return {
     id: job.id ?? "unknown-job",
@@ -303,6 +310,7 @@ function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[], isBaba
     tier: job.tier ?? 1,
     districtId: job.districtId ?? "residential",
     requiredTools,
+    trashUnits: Math.max(0, Math.floor(job.trashUnits ?? derivedTrashUnits)),
     staminaCost: job.staminaCost ?? 2,
     basePayout: job.basePayout ?? 100,
     risk: job.risk ?? 0.15,
@@ -319,6 +327,14 @@ function normalizeJob(job: Partial<JobDef>, availableSupplyIds: string[], isBaba
       neutral_line: job.flavor?.neutral_line ?? "The work happened in a technically observable way."
     }
   };
+}
+
+function deriveTrashUnits(workUnits: number, tier: number, isBaba: boolean): number {
+  const base = clamp(Math.ceil(workUnits * 0.75) + Math.max(0, tier - 1), 1, 12);
+  if (isBaba) {
+    return Math.max(4, base + 2);
+  }
+  return base;
 }
 
 function normalizeMaterialNeeds(
