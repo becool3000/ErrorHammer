@@ -1,8 +1,9 @@
 # Tasks
 ## Current Focus
 1. `PLN-019` Planner reset pass is complete on `main` (2026-03-06).
-2. `BLD-020` implementation is complete on `main`; `TW-020` is now `READY`.
-3. Next Builder pull after 020 chain closeout is `BLD-021`, then `BLD-022`.
+2. `BLD-021` implementation is in progress on `main`; `TW-021` is now `READY`.
+3. `BLD-020` implementation is complete on `main`; `TW-020` is now `READY`.
+4. Next Builder pull after 021 chain is `BLD-022`.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-06.
@@ -40,16 +41,16 @@ Depends On: `VF-020`
 Exit Evidence: README/vault release workflow docs match verified 020 behavior, artifact naming, and platform manifest/index flow.
 5. `BLD-021`
 Lane: `Builder`
-Status: `READY`
+Status: `IN_PROGRESS`
 Priority: `P1`
 Depends On: `PLN-021`
-Exit Evidence: confidence/flow continuation scope implemented for recap clarity, contract triage filters, recovery controls, archetype visibility, and completion feedback polish.
+Exit Evidence: deterministic timing and quantity fixes are in-progress in `src/core/playerFlow.ts` (`SHOP_SUPPLIER_TICKS`, `resolveTiming`, `getRefuelTaskTicks`, `getRefuelPurchaseUnits`, `createTaskTemplate`) and `src/ui/screens/ContractsTab.tsx` (`estimatePlannedHours`) to enforce fixed 0.5h travel/refuel actions with fill fallback.
 6. `TW-021`
 Lane: `TestWriter`
-Status: `BLOCKED`
+Status: `READY`
 Priority: `P1`
 Depends On: `BLD-021`
-Exit Evidence: deterministic suites cover filters, recovery actions, recap extraction, archetypes, and UI-shell confirm/defer/resume/FX-lock behavior.
+Exit Evidence: ready for deterministic scenario definition for fixed 0.5h travel/refuel timing and partial-affordability fill fallback behavior.
 7. `VF-021`
 Lane: `Verifier`
 Status: `BLOCKED`
@@ -92,14 +93,21 @@ Exit Evidence: README and vault summaries capture encounter cadence cap, popup b
 2. Execute `TW-020` deterministic test evidence for release helper guardrails and release metadata rendering.
 3. Move `VF-020` to `READY` when `TW-020` is `DONE`, then complete 020 verification evidence.
 4. Move `DOC-020` to `READY` when `VF-020` is `DONE`, then finalize 020 documentation evidence.
-5. Pull `BLD-021` next after 020 chain closeout unless Planner explicitly reprioritizes.
+5. Keep `BLD-021` active until timing/refuel handoff evidence is complete.
 6. Pull `BLD-022` after 021 chain closeout unless Planner explicitly reprioritizes.
+7. `BLD-021` handoff evidence becomes `DONE` when `TW-021` scenarios are ready.
 
 ### Builder -> TestWriter Handoff `BLD-020 -> TW-020`
 1. Validate strict semver patch bump behavior in `bumpPatchVersion` (`scripts/release_utils.ts`): exact `X.Y.Z` inputs pass; invalid forms like `0.1`, `0.1.2-beta`, and `0.1.2.3` fail with deterministic errors.
 2. Validate build-id guardrails in `formatBuildId` (`scripts/release_utils.ts`): valid `YYYYMMDD` date stamp plus sequence `1..99` passes; invalid stamp/sequence inputs fail deterministically.
 3. Validate daily-sequence cap in `reserveNextBuild` (`scripts/release_utils.ts`): same-day state at sequence `99` must throw on next reserve request instead of emitting an out-of-contract `NNN` suffix.
 4. Reconfirm release metadata rendering contract remains stable in `tests/release_ui.test.tsx` for title and settings surfaces (`Version`, `Build`, `Release`, and `Commit` lines present).
+
+### Builder -> TestWriter Handoff `BLD-021 -> TW-021`
+1. Add a deterministic scenario validating 0.5h timing for `travel_to_supplier` with standard action (`performTaskUnit(..., "standard")` reports both estimated and actual ticks of `1`, and task completion advances to `travel_to_job_site` after 1 tick spent).
+2. Add a deterministic scenario validating 0.5h timing for `travel_to_job_site` with standard action and supplier-required route (`travel_to_job_site` always consumes exactly `1` tick regardless of RNG state).
+3. Add a deterministic scenario validating `refuel_at_station` timing parity between `Buy 1 Fuel` (`"standard"`) and `Fill Tank` (`"careful"`) actions (same `0.5h` duration; differing `fuel` delta only).
+4. Add a deterministic scenario validating fill-fallback behavior: if room is > 1 and cash cannot afford a full top-up, `careful` purchase is exactly 1 gallon, with cost deducted and no negative cash state.
 
 ## Planner Chain `PLN-019` (Cleanup and Archive Reset)
 ### Goals

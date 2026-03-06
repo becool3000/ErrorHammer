@@ -252,7 +252,7 @@ const CREW_TEMPLATES: Array<{
 
 export const BASE_DAY_TICKS = 16;
 export const MAX_OVERTIME_TICKS = 4;
-export const SHOP_SUPPLIER_TICKS = 2;
+export const SHOP_SUPPLIER_TICKS = 1;
 export const SHOP_SUPPLIER_FUEL = 1;
 export const GAS_STATION_STOP_TICKS = 2;
 export const FUEL_PRICE = 5;
@@ -2362,6 +2362,10 @@ function resolveTiming(
     timeOutcome = "delayed";
   }
 
+  if (task.taskId === "travel_to_supplier" || task.taskId === "travel_to_job_site") {
+    return { timeOutcome: "standard", ticksSpent: 1 };
+  }
+
   const baseTicks = getTaskBaseTicks(task, job);
   switch (timeOutcome) {
     case "fast":
@@ -2444,10 +2448,10 @@ function createTaskTemplate(
 ): ActiveTaskState[] {
   return [
     createTask("load_from_shop", 2, requiresShopLoad ? 1 : 0, true),
-    createTask("refuel_at_station", 2, requiresRefuel ? 1 : 0, false),
+    createTask("refuel_at_station", 1, requiresRefuel ? 1 : 0, false),
     createTask("travel_to_supplier", SHOP_SUPPLIER_TICKS, needsSupplier ? 1 : 0, false),
     createTask("checkout_supplies", 2, needsSupplier ? 1 : 0, true),
-    createTask("travel_to_job_site", needsSupplier ? district.travel.supplierToSiteTicks : district.travel.shopToSiteTicks, 1, false),
+    createTask("travel_to_job_site", 1, 1, false),
     createTask("pickup_site_supplies", 2, 0, true),
     createTask("do_work", 2, job.workUnits, true),
     createTask("collect_payment", 2, 1, true),
@@ -3091,13 +3095,7 @@ function getPlannedTaskTicksForAction(task: ActiveTaskState, job: JobDef, stance
 }
 
 function getRefuelTaskTicks(taskStance: TaskStance): number {
-  if (taskStance === "rush") {
-    return 1;
-  }
-  if (taskStance === "careful") {
-    return 3;
-  }
-  return 2;
+  return 1;
 }
 
 function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskStance: TaskStance): number {
@@ -3109,7 +3107,8 @@ function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskSta
     return 1;
   }
   if (taskStance === "careful") {
-    return room;
+    const affordableUnits = Math.max(0, Math.floor(state.player.cash / FUEL_PRICE));
+    return affordableUnits >= room ? room : Math.max(0, Math.min(room, Math.max(1, affordableUnits)));
   }
   if (taskStance === "standard") {
     return 0;

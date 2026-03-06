@@ -725,9 +725,10 @@ function estimatePlannedHours(offer: ContractOffer, game: GameState, preview: Co
     return offer.job.workUnits;
   }
   const needsSupplier = preview.materialsCost > 0;
+  const fixedTravelTicks = 1;
   const loadTicks = offer.job.materialNeeds.length > 0 ? 2 : 0;
-  const supplierTicks = needsSupplier ? SHOP_SUPPLIER_TICKS + 2 + district.travel.supplierToSiteTicks : 0;
-  const siteTicks = needsSupplier ? 0 : district.travel.shopToSiteTicks;
+  const supplierTicks = needsSupplier ? SHOP_SUPPLIER_TICKS + 2 + fixedTravelTicks : 0;
+  const siteTicks = needsSupplier ? 0 : fixedTravelTicks;
   const workTicks = offer.job.workUnits * 2;
   const closeoutTicks = 2 + district.travel.shopToSiteTicks + 2;
   const totalTicks = loadTicks + supplierTicks + siteTicks + workTicks + closeoutTicks;
