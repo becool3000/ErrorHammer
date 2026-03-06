@@ -45,6 +45,21 @@
 27. Platform release manifests/indexes live under `release/platforms/<platform>/...` with global rollup at `release/index.json` for future multi-platform scaling.
 28. Runtime build metadata (`appVersion`, `buildId`, `releaseLabel`, `gitCommit`, `builtAtUtc`) is surfaced in title and settings for support traceability.
 
+## Dated Decision Log
+1. `2026-03-06` `PLN-019-D1`
+Decision: use one dated archive ledger for the board reset (`Tasks-Lane-Board-Reset-2026-03-06.md`).
+Rationale: keeps cleanup history centralized and reduces split-brain archive notes.
+2. `2026-03-06` `PLN-019-D2`
+Decision: supersede unfinished legacy lane cards from chains `015`, `016`, and `018`, then reissue fresh replacement cards now as `PLN-020`, `PLN-021`, and `PLN-022`.
+Rationale: preserves traceability while eliminating stale execution context from the live board.
+3. `2026-03-06` `PLN-019-D3`
+Decision: run cleanup-first planning under `PLN-019` before resuming feature execution.
+Rationale: restores lane discipline and reduces WIP ambiguity before additional implementation work.
+4. `2026-03-06` `PLN-019-D4`
+Decision: enforce active-board scope as active/next-up only; historical detail must live in archive with explicit `legacy -> replacement` mapping rows.
+Rationale: keeps `Tasks.md` operational and ensures handoff continuity remains auditable.
+
 ## Archive
 1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-2. Earlier decision-history notes remain in [Decisions-History-2026-02-13.md](/g:/ErrorHammer/obsidian_vault/archive/Decisions-History-2026-02-13.md).
+2. Planner reset supersession history is archived in [Tasks-Lane-Board-Reset-2026-03-06.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
+3. Earlier decision-history notes remain in [Decisions-History-2026-02-13.md](/g:/ErrorHammer/obsidian_vault/archive/Decisions-History-2026-02-13.md).

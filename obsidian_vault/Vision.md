@@ -5,24 +5,41 @@
 3. Expand management depth through Office systems without destabilizing core field gameplay.
 4. Preserve dark visual identity while keeping action-critical UI readable on small devices.
 
-## Current Verified Baseline (`main`, 2026-03-03)
-1. Trade baseline is expanded: 50 supported trade skills, 188 trade jobs, 10 bots, compact rotating mobile contracts.
-2. Business progression now starts in `Truck Life`, with expansion to `Office` and `Yard` through facility research + buy-in.
-3. Economy is monthly-lump based: bills post every 22 shifts with unpaid carry, late fees, and strike tracking.
-4. Two-strike collapse behavior is active: forced downgrades (`yard -> office -> truck`) and bankruptcy reset at truck tier.
-5. Office now includes `Facilities`, `Research`, `Yard`, `Trade Index`, and `Accounting` sections.
-6. Trash routing now has two cost modes: premium haul (no dumpster) vs yard dumpster service (enabled).
-7. Core Perks are live as deterministic modifiers layered on top of trade skill rolls.
-8. Save format is now `SAVE_VERSION=6` for this architecture change.
-9. Confidence/flow layer is in progress (`PLN-015`): contract triage filters, recovery controls, estimate-vs-actual recap, and completion-feedback polish.
-10. ReleaseOps baseline is now defined (`PLN-018`) to standardize itch build IDs, changelog gating, and per-platform release manifests.
+## Current Verified Baseline (`main`, 2026-03-06)
+1. Trade baseline remains expanded: 50 supported trade skills, 188 trade jobs, 10 bots, and compact rotating mobile contracts.
+2. Business progression remains `truck -> office -> yard` with facility research + buy-in gates.
+3. Economy remains monthly-lump (22-shift cycle) with unpaid carry, late fees, strike tracking, and tiered collapse behavior.
+4. Core Perks remain deterministic modifiers layered on trade-skill rolls.
+5. ReleaseOps baseline remains implemented with build IDs, changelog gates, platform manifests, and runtime build metadata surfaces.
+6. Planner reset `PLN-019` is now active to restore lane discipline and clean board state before new feature execution.
+
+## Planner Reset `PLN-019` (2026-03-06)
+### Goal
+1. Restore lane discipline and reduce board noise by keeping the live board active-only and moving closed or parked history to archive.
+
+### Non-Goals
+1. No runtime logic, balance, content, schema, or UI feature changes.
+2. No new verification evidence generation in this Planner pass.
+
+### Constraints
+1. Preserve full task history through dated archive notes with explicit supersession mapping.
+2. Enforce one `IN_PROGRESS` card maximum per lane in the live board.
+3. Keep deterministic `Exit Evidence` requirements on every active handoff card.
+4. Keep lane order strict: `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
+
+### Acceptance Criteria
+1. Live board contains only replacement chains `PLN-020`, `PLN-021`, and `PLN-022` plus active/next-up cards.
+2. Legacy `DONE` and parked unfinished cards are moved to a dated archive ledger.
+3. Every superseded legacy card has one explicit `legacy -> replacement` mapping row.
+4. `Vision.md`, `Decisions.md`, and `Tasks.md` consistently reference chain IDs `PLN-019`, `PLN-020`, `PLN-021`, and `PLN-022`.
 
 ## Next Focus
-1. Finalize and verify `PLN-015` confidence loop UX (recap clarity, filter scan speed, defer/abandon ergonomics).
-2. Calibrate monthly pressure and downgrade cadence so collapse/recovery loops feel fair.
-3. Tune facility buy-ins and dumpster economics to keep mid-game expansion meaningful but attainable.
-4. Close `PLN-018` verification and documentation chain so every itch ship is one-command and fully traceable.
+1. Pull `BLD-020` first for ReleaseOps continuation.
+2. Keep `BLD-021` queued as second priority after the 020 chain stabilizes.
+3. Keep `BLD-022` queued as third priority unless Planner explicitly reorders.
+4. Continue archiving closed history outside the live board to maintain clean lane execution.
 
 ## Archive
 1. Closed-chain and verbose board history remains in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-2. Historical migration context remains in [Migration-Legacy-2026-02-27.md](/g:/ErrorHammer/obsidian_vault/archive/Migration-Legacy-2026-02-27.md).
+2. `PLN-019` clean-slate reset archive is tracked in [Tasks-Lane-Board-Reset-2026-03-06.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
+3. Historical migration context remains in [Migration-Legacy-2026-02-27.md](/g:/ErrorHammer/obsidian_vault/archive/Migration-Legacy-2026-02-27.md).
