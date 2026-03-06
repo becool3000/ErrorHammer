@@ -10,6 +10,7 @@ export interface AccountingCategoryTotals {
   repairExpense: number;
   researchExpense: number;
   officeRentExpense: number;
+  storageRentExpense: number;
   insuranceAdminExpense: number;
   truckPaymentExpense: number;
   electricExpense: number;
@@ -65,6 +66,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     repairExpense: 0,
     researchExpense: 0,
     officeRentExpense: 0,
+    storageRentExpense: 0,
     insuranceAdminExpense: 0,
     truckPaymentExpense: 0,
     electricExpense: 0,
@@ -201,6 +203,12 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       continue;
     }
 
+    const storageRentMatch = message.match(/^Bill storage rent: \$([0-9]+)\./i);
+    if (storageRentMatch) {
+      categories.storageRentExpense += parseMoneyCapture(storageRentMatch[1]);
+      continue;
+    }
+
     const insuranceMatch = message.match(/^Bill insurance\/admin: \$([0-9]+)\./i);
     if (insuranceMatch) {
       categories.insuranceAdminExpense += parseMoneyCapture(insuranceMatch[1]);
@@ -316,6 +324,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     categories.repairExpense +
     categories.researchExpense +
     categories.officeRentExpense +
+    categories.storageRentExpense +
     categories.insuranceAdminExpense +
     categories.truckPaymentExpense +
     categories.electricExpense +

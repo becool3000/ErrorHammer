@@ -35,7 +35,13 @@ function resetUi() {
   useUiStore.setState({
     screen: "title",
     activeTab: "work",
+    officeCategory: "operations",
     officeSection: "contracts",
+    officeCategorySections: {
+      operations: "contracts",
+      strategy: "rd",
+      finance: "trade-index"
+    },
     storeSection: "tools",
     activeModal: null,
     activeSheet: null,
@@ -317,23 +323,31 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: "New Game" }));
 
     expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /^Office$/i }));
-    fireEvent.click(screen.getByRole("tab", { name: "Shop" }));
-    expect(screen.getByRole("button", { name: /^Office$/i, pressed: true })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Company$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
+    expect(screen.getByRole("button", { name: /^Company$/i, pressed: true })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /^Work$/i }));
     fireEvent.click(screen.getByRole("button", { name: /View Log/i }));
     expect(screen.getByRole("dialog", { name: /Field Log/i })).toBeTruthy();
   });
 
-  it("EH-TW-201: Office segmented control includes Research and Yard", () => {
+  it("EH-TW-201: Company hub shows category tabs and grouped subtabs", () => {
     const game = createInitialGameState(bundle, 9401);
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: null });
 
     render(<App />);
 
-    expect(screen.getByRole("tab", { name: "Research" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Yard" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Operations" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Strategy" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Finance" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Contracts" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Facilities" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Strategy" }));
+    expect(screen.getByRole("tab", { name: "R&D" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Finance" }));
+    expect(screen.getByRole("tab", { name: "Trade Index" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Accounting" })).toBeTruthy();
   });
 
   it("EH-TW-202: new game contracts begin with Day Labor + Baba and no unlocked trade offers", () => {
@@ -351,12 +365,28 @@ describe("compact shell ui", () => {
     game.yard.dumpsterUnits = 9;
     game.player.cash = 500;
     game.operations.facilities.dumpsterEnabled = true;
-    useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "yard", selectedContractId: null });
+    useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "facilities", selectedContractId: null });
 
     render(<App />);
 
     expect(screen.getByText(/Dumpster Management/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Empty Dumpster/i })).toBeTruthy();
+  });
+
+  it("EH-TW-233: facilities keeps one dominant progression action with collapsed secondary options", () => {
+    const game = createInitialGameState(bundle, 9405);
+    useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "facilities", selectedContractId: null });
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: /Progression Action/i })).toBeTruthy();
+    const progressionButton = screen.getByRole("button", { name: /Open Storage/i });
+    expect(progressionButton.className).toContain("primary-button");
+    expect(screen.getByRole("button", { name: /Other Options/i })).toBeTruthy();
+    expect(screen.queryByText(/Close Office/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Other Options/i }));
+    expect(screen.getByText(/Close Office/i)).toBeTruthy();
   });
 
   it("EH-TW-204: accounting hire flow unlocks deeper finance lines and low clarity masks numbers", () => {
@@ -424,7 +454,7 @@ describe("compact shell ui", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /Open Contract Board/i }));
-    expect(screen.getByRole("button", { name: /^Office$/i, pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Company$/i, pressed: true })).toBeTruthy();
   });
 
   it("EH-TW-026 and EH-TW-027: selecting and accepting a contract returns focus to Work", () => {
@@ -480,6 +510,27 @@ describe("compact shell ui", () => {
 
     expect(screen.queryByRole("dialog", { name: /Field Log/i })).toBeNull();
     expect(useUiStore.getState().activeTab).toBe("work");
+  });
+
+  it("EH-TW-232: routine field-log details use bottom sheet on phone widths", () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    try {
+      const game = createInitialGameState(bundle, 9040);
+      useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+      render(<App />);
+      fireEvent.click(screen.getByRole("button", { name: /View Log/i }));
+
+      const dialog = screen.getByRole("dialog", { name: /Field Log/i });
+      expect(dialog.className).toContain("sheet-shell");
+      expect(dialog.className).not.toContain("modal-shell");
+
+      fireEvent.click(screen.getByRole("button", { name: /Close Field Log/i }));
+      expect(screen.queryByRole("dialog", { name: /Field Log/i })).toBeNull();
+    } finally {
+      Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: originalWidth });
+    }
   });
 
   it("EH-TW-054: operator card exposes inventory and skills modals", () => {
@@ -545,6 +596,8 @@ describe("compact shell ui", () => {
 
     expect(screen.getByText(/XP Earned:/i)).toBeTruthy();
     expect(useUiStore.getState().activeProgressPopup?.kind).toBe("skill-level");
+    expect(screen.queryByText(/Skill Leveled Up/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Close result popup/i }));
     expect(screen.getByText(/Skill Leveled Up/i)).toBeTruthy();
   });
 
@@ -588,6 +641,8 @@ describe("compact shell ui", () => {
 
     resolveTimedAction(/^Standard$/i, 6_000);
 
+    expect(screen.queryByText(/Skill Leveled Up/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Close result popup/i }));
     expect(screen.getByText(/Skill Leveled Up/i)).toBeTruthy();
     act(() => {
       vi.advanceTimersByTime(10_000);
@@ -617,14 +672,14 @@ describe("compact shell ui", () => {
       });
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /^Office$/i }));
-    fireEvent.click(screen.getByRole("tab", { name: "Shop" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Company$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
 
     expect(screen.getByText(/tool bench/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Tools" }));
     expect((screen.getAllByRole("button", { name: /^Buy$/i })[0] as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("tab", { name: "Stock" }));
-    expect(screen.getByText(/Shop Stock/i)).toBeTruthy();
+    expect(screen.getByText(/Storage Stock/i)).toBeTruthy();
   });
 
   it("EH-TW-039: quick buy button appears when tools are missing", () => {
@@ -644,6 +699,7 @@ describe("compact shell ui", () => {
       payoutMult: 1,
       expiresDay: 1
     };
+    game.operations.facilities.storageOwned = true;
     game.contractBoard = [quickBuyContract];
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: quickBuyContract.contractId });
 
@@ -668,6 +724,7 @@ describe("compact shell ui", () => {
     expect((babaOffer?.job.requiredTools.length ?? 0)).toBeGreaterThan(0);
     const missingToolId = babaOffer!.job.requiredTools[0]!;
     delete game.player.tools[missingToolId];
+    game.operations.facilities.storageOwned = true;
 
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: babaOffer!.contract.contractId });
 
@@ -684,7 +741,7 @@ describe("compact shell ui", () => {
       screen: "game",
       game,
       activeTab: "office",
-      officeSection: "company",
+      officeSection: "rd",
       selectedContractId: game.contractBoard[0]?.contractId ?? null
     });
 
@@ -697,8 +754,9 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /District Access/i }));
     expect(screen.getByRole("dialog", { name: /District Access/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close District Access/i }));
-    fireEvent.click(screen.getByRole("tab", { name: "Shop" }));
-    expect(screen.getByRole("button", { name: /^Office$/i, pressed: true })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Operations" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
+    expect(screen.getByRole("button", { name: /^Company$/i, pressed: true })).toBeTruthy();
     expect(useUiStore.getState().game?.seed).toBe(6060);
   });
 
@@ -709,7 +767,7 @@ describe("compact shell ui", () => {
       screen: "game",
       game,
       activeTab: "office",
-      officeSection: "company",
+      officeSection: "rd",
       selectedContractId: game.contractBoard[0]?.contractId ?? null
     });
 
@@ -721,12 +779,13 @@ describe("compact shell ui", () => {
     expect(screen.queryByRole("button", { name: /^Hire Crew$/i })).toBeNull();
   });
 
-  it("EH-TW-090: Office includes Accounting and renders the cashflow ledger", () => {
+  it("EH-TW-090: Finance section includes Trade Index and Accounting", () => {
     const game = createInitialGameState(bundle, 7060);
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts" });
 
     render(<App />);
 
+    fireEvent.click(screen.getByRole("tab", { name: "Finance" }));
     expect(screen.getByRole("tab", { name: "Trade Index" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Accounting" })).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Accounting" }));
@@ -1045,7 +1104,7 @@ describe("compact shell ui", () => {
 
     const cashBefore = useUiStore.getState().game?.player.cash ?? 0;
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^Office$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Company$/i }));
 
     act(() => {
       useUiStore.getState().acceptContract(DAY_LABOR_CONTRACT_ID);
@@ -1659,14 +1718,14 @@ describe("compact shell ui", () => {
 
     render(<App />);
 
-    expect(screen.getByText(/Return to Shop for tool repair or replacement/i)).toBeTruthy();
-    const rerouteButton = screen.getByRole("button", { name: /Return To Shop For Tools/i });
+    expect(screen.getByText(/Return to Storage for tool repair or replacement/i)).toBeTruthy();
+    const rerouteButton = screen.getByRole("button", { name: /Return To Storage For Tools/i });
     fireEvent.click(rerouteButton);
 
     const rerouted = useUiStore.getState().game!;
     expect(rerouted.activeJob?.location).toBe("shop");
     expect(getCurrentTask(rerouted)?.taskId).toBe("travel_to_job_site");
-    expect(screen.getAllByText(/Returned to shop for tools/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Returned to storage for tools/i).length).toBeGreaterThan(0);
   });
 
   it("EH-TW-123: End Day transition rolls the day at 500ms and clears at 1000ms", () => {
@@ -1694,12 +1753,13 @@ describe("compact shell ui", () => {
       vi.advanceTimersByTime(1);
     });
     expect(useUiStore.getState().game?.day).toBe(startingDay + 1);
-    expect(screen.getByText(/Fatigue is cutting this shift to 7.0 hours after heavy overtime/i)).toBeTruthy();
+    expect(screen.queryByText(/Fatigue is cutting this shift to 7.0 hours after heavy overtime/i)).toBeNull();
 
     act(() => {
       vi.advanceTimersByTime(500);
     });
     expect(screen.queryByText(/Ending Day\.\.\./i)).toBeNull();
+    expect(screen.getByText(/Fatigue is cutting this shift to 7.0 hours after heavy overtime/i)).toBeTruthy();
   });
 
   it("EH-TW-124: End Day stays disabled while transition is active and allows only one rollover", () => {
@@ -1811,6 +1871,20 @@ describe("compact shell ui", () => {
     expect(successAction.className).toContain("tone-success");
   });
 
+  it("EH-TW-234: work action carousel keeps one dominant CTA in do_work state", () => {
+    const game = buildAcceptableGame(7075);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    acceptCurrentContract();
+    moveAcceptedJobToDoWorkState();
+
+    const actionButtons = screen.getAllByRole("button", { name: /^(Rush|Standard|Careful)$/i });
+    const primaryButtons = actionButtons.filter((button) => button.className.includes("primary-button"));
+    expect(primaryButtons.length).toBe(1);
+    expect(primaryButtons[0]?.textContent ?? "").toMatch(/Standard/i);
+  });
+
   it("EH-TW-101: contracts risk band and outcome snapshot chips map to tone classes", () => {
     const game = buildAcceptableGame(7074);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
@@ -1864,8 +1938,11 @@ describe("compact shell ui", () => {
     moveAcceptedJobToDoWorkState();
 
     resolveTimedAction(/^Standard$/i, 6_000);
+    expect(screen.getByLabelText(/Rebar Bob encounter/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Close encounter popup/i }));
 
-    expect(screen.getByText(/Rebar Bob:/i)).toBeTruthy();
+    const taskResultLines = useUiStore.getState().activeTaskResultPopup?.lines ?? [];
+    expect(taskResultLines.some((line) => /Rebar Bob:/i.test(line))).toBe(true);
   });
 
   it("EH-TW-128: Current Task uses hours done vs estimated format", () => {
@@ -1984,8 +2061,4 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Net Actual/i)).toBeTruthy();
   });
 });
-
-
-
-
 

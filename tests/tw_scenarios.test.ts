@@ -46,6 +46,7 @@ function acceptJob(seed: number, contractId: string) {
     { contractId: "job-beta-contract", jobId: "job-beta", districtId: "residential", payoutMult: 1, expiresDay: 1 },
     { contractId: "job-gamma-contract", jobId: "job-gamma", districtId: "residential", payoutMult: 1, expiresDay: 1 }
   ];
+  state.player.tools.hammer = { toolId: "hammer", durability: 6 };
   state.player.tools.drill = { toolId: "drill", durability: 8 };
   state.player.tools.saw = { toolId: "saw", durability: 7 };
   state.player.cash = 500;
@@ -162,6 +163,7 @@ describe("TW-004 deterministic scenario suite", () => {
     const noMaterialsJob = { ...baseJob, id: "job-alpha-no-materials", materialNeeds: [] };
     bundle.jobs = bundle.jobs.filter((entry) => entry.id !== noMaterialsJob.id).concat(noMaterialsJob);
     state.contractBoard = [{ contractId: "job-no-materials-contract", jobId: noMaterialsJob.id, districtId: "residential", payoutMult: 1, expiresDay: 1 }];
+    state.player.tools.hammer = { toolId: "hammer", durability: 8 };
     state.player.tools.drill = { toolId: "drill", durability: 8 };
     state.player.tools.saw = { toolId: "saw", durability: 8 };
 
@@ -350,7 +352,7 @@ describe("TW-004 deterministic scenario suite", () => {
     state.shopSupplies["fastener-box"] = { medium: 2 };
 
     const guidance = getCurrentTaskGuidance(state, bundle);
-    expect(guidance).toContain("Next step: Load required supplies at the shop.");
+    expect(guidance).toContain("Next step: Load required supplies from storage.");
     expect(guidance).toMatch(/extra stock/i);
     expect(guidance).toContain("Anchor Set +2");
   });
@@ -400,6 +402,7 @@ describe("TW-004 deterministic scenario suite", () => {
     const state = createInitialGameState(bundle, 3303);
     unlockTradeResearch(state);
     state.player.fuel = state.player.fuelMax;
+    state.player.tools.hammer = { toolId: "hammer", durability: 8 };
     state.player.tools.drill = { toolId: "drill", durability: 8 };
     state.player.tools.saw = { toolId: "saw", durability: 8 };
     state.contractBoard = [{ contractId: "job-beta-contract", jobId: "job-beta", districtId: "residential", payoutMult: 1, expiresDay: 1 }];
@@ -890,7 +893,7 @@ describe("TW-004 deterministic scenario suite", () => {
     const reroute = returnToShopForTools(state, bundle);
     expect(reroute.nextState.activeJob?.location).toBe("shop");
     expect(getCurrentTask(reroute.nextState)?.taskId).toBe("travel_to_job_site");
-    expect(reroute.notice).toContain("Returned to shop for tools");
+    expect(reroute.notice).toContain("Returned to storage for tools");
   });
 
   it("EH-TW-040: quick buy uses player/company names in logs", () => {

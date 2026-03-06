@@ -96,7 +96,12 @@ export function ContractsTab() {
     selectedContract && selectedContract.contractId !== DAY_LABOR_CONTRACT_ID
       ? getQuickBuyPlan(game, bundle, selectedContract.contractId)
       : null;
-  const quickBuyEnabled = Boolean(quickBuyPlan?.missingTools.length) && quickBuyPlan?.allowed && quickBuyPlan?.enoughCash && quickBuyPlan?.enoughTime;
+  const quickBuyEnabled =
+    Boolean(quickBuyPlan?.missingTools.length) &&
+    quickBuyPlan?.allowed &&
+    !quickBuyPlan?.starterGateBlocked &&
+    quickBuyPlan?.enoughCash &&
+    quickBuyPlan?.enoughTime;
   const archetype = getPerkArchetypeSnapshot(game);
 
   return (
@@ -194,11 +199,12 @@ export function ContractsTab() {
             <span className="chip">${quickBuyPlan.totalCost}</span>
             {!quickBuyPlan.enoughCash ? <span className="chip muted">Need more cash</span> : null}
             {!quickBuyPlan.enoughTime ? <span className="chip muted">Need more hours</span> : null}
-            {!quickBuyPlan.allowed ? <span className="chip muted">Must be at shop</span> : null}
+            {!quickBuyPlan.allowed ? <span className="chip muted">Must be at storage</span> : null}
+            {quickBuyPlan.starterGateBlocked ? <span className="chip muted">Open storage first</span> : null}
           </div>
           <div className="action-row quick-buy-actions">
             <button
-              className="primary-button wide-button"
+              className="ghost-button secondary-action-button wide-button"
               onClick={() => selectedContract && quickBuyTools(selectedContract.contractId)}
               disabled={!quickBuyEnabled}
             >

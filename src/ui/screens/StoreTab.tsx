@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SUPPLY_QUALITIES, formatSupplyQuality } from "../../core/playerFlow";
+import { isStarterToolId, shouldEnforceStarterToolGate, SUPPLY_QUALITIES, formatSupplyQuality } from "../../core/playerFlow";
 import { formatNumberByAccountingClarity, obfuscateReadableText } from "../readability";
 import { bundle, StoreSectionId, useUiStore } from "../state";
 import { SegmentedControl } from "../components/SegmentedControl";
@@ -21,19 +21,23 @@ export function StoreTab() {
     return null;
   }
 
-  const atShop = !game.activeJob || game.activeJob.location === "shop";
+  const atStorage = !game.activeJob || game.activeJob.location === "shop";
+  const starterGateActive = shouldEnforceStarterToolGate(bundle) && !game.operations.facilities.storageOwned;
 
   return (
     <section className="tab-panel store-tab">
-      {!atShop ? <p className="notice-banner">Return to the shop before using the tool bench.</p> : null}
+      {!atStorage ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
+      {starterGateActive ? (
+        <p className="notice-banner">Truck-only mode: buy all starter tools, then open storage to unlock full tool access.</p>
+      ) : null}
       <article className="chrome-card inset-card">
         <div className="section-label-row">
           <div>
-            <h2>Shop</h2>
+            <h2>Storage</h2>
           </div>
           <span className="chip">Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true })}</span>
         </div>
-        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Shop sections" />
+        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Storage sections" />
       </article>
 
       {storeSection === "tools" ? (
@@ -41,6 +45,7 @@ export function StoreTab() {
           {bundle.tools.map((tool) => {
             const owned = game.player.tools[tool.id];
             const canRepair = Boolean(owned && owned.durability < tool.maxDurability);
+            const blockedByStarterGate = starterGateActive && !isStarterToolId(tool.id);
             const expanded = expandedToolId === tool.id;
             return (
               <article key={tool.id} className="chrome-card inset-card tool-card">
@@ -59,13 +64,14 @@ export function StoreTab() {
                 </div>
                 {expanded ? <p className="muted-copy">{obfuscateReadableText(game, tool.flavor.description, `tool:${tool.id}:desc`)}</p> : null}
                 <div className="action-row">
-                  <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!atShop}>
+                  <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!atStorage || blockedByStarterGate}>
                     Buy
                   </button>
-                  <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!atShop || !canRepair}>
+                  <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!atStorage || !canRepair || blockedByStarterGate}>
                     Repair
                   </button>
                 </div>
+                {blockedByStarterGate ? <p className="muted-copy">Requires Storage unlock.</p> : null}
               </article>
             );
           })}
@@ -74,8 +80,8 @@ export function StoreTab() {
 
       {storeSection === "stock" ? (
         <article className="hero-card chrome-card">
-          <p className="eyebrow">Shop Stock</p>
-          <h3>{bundle.strings.homeSuppliesTitle}</h3>
+          <p className="eyebrow">Storage Stock</p>
+          <h3>Storage Supplies</h3>
           <div className="chip-grid">
             {Object.entries(game.shopSupplies)
               .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))

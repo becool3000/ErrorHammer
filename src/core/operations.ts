@@ -12,6 +12,7 @@ import { advanceResearchProgress, normalizeResearchState } from "./research";
 export interface MonthlyBillBreakdown {
   truckPayment: number;
   insuranceAdmin: number;
+  storageRent: number;
   officeRent: number;
   electric: number;
   waterSewage: number;
@@ -65,7 +66,8 @@ const ACCOUNTANT_SALARY_MONTHLY = 480;
 const ACCOUNTANT_UTILITY_DISCOUNT = 0.1;
 const DUMPSTER_CAPACITY_DEFAULT = 40;
 const BILLING_CYCLE_LENGTH = 22;
-const OFFICE_BUY_IN = 2200;
+const STORAGE_BUY_IN = 250;
+const OFFICE_BUY_IN = 1800;
 const YARD_BUY_IN = 1600;
 const DUMPSTER_ENABLE_COST = 500;
 const DEFERRED_DAILY_CARRY_FEE = 5;
@@ -74,7 +76,8 @@ const DEFERRED_EXPIRY_DAYS = 7;
 const MONTHLY_BILLS = {
   truckPayment: 450,
   insuranceAdmin: 160,
-  officeRent: 730,
+  storageRent: 150,
+  officeRent: 650,
   electric: 95,
   waterSewage: 42,
   yardLease: 480,
@@ -82,6 +85,7 @@ const MONTHLY_BILLS = {
 } as const;
 
 export const FACILITY_ACTION_COSTS = {
+  openStorage: STORAGE_BUY_IN,
   openOffice: OFFICE_BUY_IN,
   openYard: YARD_BUY_IN,
   enableDumpster: DUMPSTER_ENABLE_COST,
@@ -118,6 +122,7 @@ export function createInitialOperationsState(): OperationsState {
     lastDowngradeDay: null,
     businessTier: "truck",
     facilities: {
+      storageOwned: false,
       officeOwned: false,
       yardOwned: false,
       dumpsterEnabled: false
@@ -154,6 +159,7 @@ export function createLegacyOperationsState(currentDay: number): OperationsState
     lastDowngradeDay: null,
     businessTier: "yard",
     facilities: {
+      storageOwned: true,
       officeOwned: true,
       yardOwned: true,
       dumpsterEnabled: true
@@ -244,6 +250,9 @@ export function upgradeBusinessTier(state: GameState, target: BusinessTier): Tie
     return { ok: false, notice: "Truck Life is the base tier." };
   }
   if (target === "office") {
+    if (!state.operations.facilities.storageOwned) {
+      return { ok: false, notice: "Open storage before opening an office." };
+    }
     if (state.operations.facilities.officeOwned) {
       return { ok: false, notice: "Office is already active." };
     }
@@ -271,6 +280,18 @@ export function upgradeBusinessTier(state: GameState, target: BusinessTier): Tie
   return { ok: true, notice: `Opened yard for $${YARD_BUY_IN}.` };
 }
 
+export function openStorage(state: GameState): TierUpgradeResult {
+  if (state.operations.facilities.storageOwned) {
+    return { ok: false, notice: "Storage is already active." };
+  }
+  if (state.player.cash < STORAGE_BUY_IN) {
+    return { ok: false, notice: `Need $${STORAGE_BUY_IN - state.player.cash} more to open storage.` };
+  }
+  state.player.cash -= STORAGE_BUY_IN;
+  state.operations.facilities.storageOwned = true;
+  return { ok: true, notice: `Opened storage for $${STORAGE_BUY_IN}.` };
+}
+
 export function enableDumpsterService(state: GameState): DumpsterEnableResult {
   if (!state.operations.facilities.yardOwned) {
     return { ok: false, notice: "Open a yard before enabling dumpster service." };
@@ -291,7 +312,10 @@ export function closeOfficeManually(state: GameState): TierUpgradeResult {
     return { ok: false, notice: "No office to close." };
   }
   applyDowngradeToTruck(state, state.day);
-  return { ok: true, notice: "Closed office and returned to Truck Life." };
+  return {
+    ok: true,
+    notice: state.operations.facilities.storageOwned ? "Closed office and returned to Storage tier." : "Closed office and returned to Truck Life."
+  };
 }
 
 export function closeYardManually(state: GameState): TierUpgradeResult {
@@ -430,6 +454,7 @@ export function applyEndDayOperations(state: GameState): EndDayOperationsResult 
     bills: {
       truckPayment: due.truck_payment ?? 0,
       insuranceAdmin: due.insurance_admin ?? 0,
+      storageRent: due.storage_rent ?? 0,
       officeRent: due.office_rent ?? 0,
       electric: due.electric ?? 0,
       waterSewage: due.water_sewage ?? 0,
@@ -502,6 +527,9 @@ function buildMonthlyDueByCategory(state: GameState): Record<string, number> {
     truck_payment: MONTHLY_BILLS.truckPayment,
     insurance_admin: MONTHLY_BILLS.insuranceAdmin
   };
+  if (state.operations.facilities.storageOwned) {
+    due.storage_rent = MONTHLY_BILLS.storageRent;
+  }
   if (state.operations.facilities.officeOwned) {
     due.office_rent = MONTHLY_BILLS.officeRent;
     due.electric = applyUtilityDiscount(MONTHLY_BILLS.electric);
@@ -531,6 +559,7 @@ function appendBillLines(
   const labels: Record<string, string> = {
     truck_payment: "Bill truck payment",
     insurance_admin: "Bill insurance/admin",
+    storage_rent: "Bill storage rent",
     office_rent: "Bill office rent",
     electric: "Bill electric",
     water_sewage: "Bill water/sewage",
@@ -620,6 +649,7 @@ function applyDowngradeToTruck(state: GameState, day: number): void {
 
 function normalizeFacilitiesState(input: Partial<FacilitiesState> | null | undefined, fallback: FacilitiesState): FacilitiesState {
   return {
+    storageOwned: Boolean(input?.storageOwned ?? fallback.storageOwned),
     officeOwned: Boolean(input?.officeOwned ?? fallback.officeOwned),
     yardOwned: Boolean(input?.yardOwned ?? fallback.yardOwned),
     dumpsterEnabled: Boolean(input?.dumpsterEnabled ?? fallback.dumpsterEnabled)
@@ -647,6 +677,7 @@ function emptyBillBreakdown(): MonthlyBillBreakdown {
   return {
     truckPayment: 0,
     insuranceAdmin: 0,
+    storageRent: 0,
     officeRent: 0,
     electric: 0,
     waterSewage: 0,

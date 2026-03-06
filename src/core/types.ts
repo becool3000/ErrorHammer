@@ -576,6 +576,7 @@ export interface OfficeSkillsState {
 }
 
 export interface FacilitiesState {
+  storageOwned: boolean;
   officeOwned: boolean;
   yardOwned: boolean;
   dumpsterEnabled: boolean;

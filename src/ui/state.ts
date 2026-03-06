@@ -27,6 +27,7 @@ import {
   runGasStationStop as runGasStationStopFlow,
   setSupplierCartQuantity as setSupplierCartQuantityFlow,
   startResearch as startResearchFlow,
+  openStorage as openStorageFlow,
   spendPerkPoint as spendPerkPointFlow,
   acceptContract as acceptContractFlow,
   upgradeBusinessTier as upgradeBusinessTierFlow,
@@ -56,15 +57,13 @@ import {
 
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "office" | "contracts" | "store" | "company";
-export type OfficeSectionId =
-  | "contracts"
-  | "store"
-  | "company"
-  | "facilities"
-  | "trade-index"
-  | "accounting"
-  | "research"
-  | "yard";
+export type OfficeSectionId = "contracts" | "facilities" | "rd" | "trade-index" | "accounting";
+export type OfficeCategoryId = "operations" | "strategy" | "finance";
+export interface OfficeCategorySectionsState {
+  operations: "contracts" | "facilities";
+  strategy: "rd";
+  finance: "trade-index" | "accounting";
+}
 export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
 export type StoreSectionId = "tools" | "stock";
 export type ActiveModalId =
@@ -141,6 +140,41 @@ export interface EncounterPopupState {
 }
 
 const UI_PREFS_KEY = "error-hammer-ui-prefs-v1";
+const DEFAULT_OFFICE_CATEGORY_SECTIONS: OfficeCategorySectionsState = {
+  operations: "contracts",
+  strategy: "rd",
+  finance: "trade-index"
+};
+
+function getOfficeCategoryForSection(section: OfficeSectionId): OfficeCategoryId {
+  if (section === "contracts" || section === "facilities") {
+    return "operations";
+  }
+  if (section === "rd") {
+    return "strategy";
+  }
+  return "finance";
+}
+
+function rememberOfficeSectionByCategory(current: OfficeCategorySectionsState, section: OfficeSectionId): OfficeCategorySectionsState {
+  if (section === "contracts" || section === "facilities") {
+    return { ...current, operations: section };
+  }
+  if (section === "rd") {
+    return { ...current, strategy: "rd" };
+  }
+  return { ...current, finance: section };
+}
+
+function getOfficeSectionForLegacyTab(tab: Extract<GameTabId, "contracts" | "store" | "company">): OfficeSectionId {
+  if (tab === "contracts") {
+    return "contracts";
+  }
+  if (tab === "store") {
+    return "facilities";
+  }
+  return "rd";
+}
 
 function isUiTextScale(value: unknown): value is UiTextScale {
   return value === "xsmall" || value === "default" || value === "large" || value === "xlarge";
@@ -200,7 +234,9 @@ function saveUiPreferences(prefs: UiPrefsPayload): void {
 interface UiState {
   screen: ScreenId;
   activeTab: GameTabId;
+  officeCategory: OfficeCategoryId;
   officeSection: OfficeSectionId;
+  officeCategorySections: OfficeCategorySectionsState;
   storeSection: StoreSectionId;
   activeModal: ActiveModalId;
   activeSheet: ActiveSheetId;
@@ -240,6 +276,7 @@ interface UiState {
   continueGame: () => void;
   returnToTitle: () => void;
   goToTab: (tab: GameTabId) => void;
+  setOfficeCategory: (category: OfficeCategoryId) => void;
   setOfficeSection: (section: OfficeSectionId) => void;
   openModal: (modal: Exclude<ActiveModalId, null>) => void;
   closeModal: () => void;
@@ -265,6 +302,7 @@ interface UiState {
   resumeDeferredJob: (deferredJobId: string) => void;
   startResearch: (projectId: string) => void;
   spendPerkPoint: (perkId: CorePerkId) => void;
+  openStorage: () => void;
   upgradeBusinessTier: (target: BusinessTier) => void;
   enableDumpsterService: () => void;
   closeOfficeManually: () => void;
@@ -420,8 +458,8 @@ function clearEncounterPopupTimer() {
   // Encounter popup is manual-dismiss only.
 }
 
-function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction" | "jobCompletionFx">): boolean {
-  return Boolean(state.timedTaskAction || state.jobCompletionFx);
+function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction">): boolean {
+  return Boolean(state.timedTaskAction);
 }
 
 function formatTimedActionLabel(game: GameState, taskId: TaskId): string {
@@ -464,7 +502,9 @@ function getGameplayLockNotice(): string {
 export const useUiStore = create<UiState>((set, get) => ({
   screen: "title",
   activeTab: "work",
+  officeCategory: "operations",
   officeSection: "contracts",
+  officeCategorySections: { ...DEFAULT_OFFICE_CATEGORY_SECTIONS },
   storeSection: "tools",
   activeModal: null,
   activeSheet: null,
@@ -547,6 +587,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ activeJobProfitRecap: null });
   },
   dismissJobCompletionFx: () => {
+    clearJobCompletionFxTimer();
     set((state) => ({
       jobCompletionFx: null,
       gameplayMutationLocked: Boolean(state.timedTaskAction)
@@ -572,7 +613,9 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       screen: "game",
       activeTab: "work",
+      officeCategory: "operations",
       officeSection: "contracts",
+      officeCategorySections: { ...DEFAULT_OFFICE_CATEGORY_SECTIONS },
       storeSection: "tools",
       activeModal: null,
       activeSheet: null,
@@ -608,7 +651,9 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({
       screen: "game",
       activeTab: "work",
+      officeCategory: "operations",
       officeSection: "contracts",
+      officeCategorySections: { ...DEFAULT_OFFICE_CATEGORY_SECTIONS },
       storeSection: "tools",
       activeModal: null,
       activeSheet: null,
@@ -639,6 +684,9 @@ export const useUiStore = create<UiState>((set, get) => ({
       screen: "title",
       activeModal: null,
       activeSheet: null,
+      officeCategory: "operations",
+      officeSection: "contracts",
+      officeCategorySections: { ...DEFAULT_OFFICE_CATEGORY_SECTIONS },
       notice: "",
       timedTaskAction: null,
       jobCompletionFx: null,
@@ -653,19 +701,39 @@ export const useUiStore = create<UiState>((set, get) => ({
     })),
 
   goToTab: (tab) =>
-    set(() => {
+    set((state) => {
       if (tab === "contracts" || tab === "store" || tab === "company") {
-        return { activeTab: "office", officeSection: tab, activeModal: null, activeSheet: null };
+        const section = getOfficeSectionForLegacyTab(tab);
+        const category = getOfficeCategoryForSection(section);
+        return {
+          activeTab: "office",
+          officeCategory: category,
+          officeSection: section,
+          officeCategorySections: rememberOfficeSectionByCategory(state.officeCategorySections, section),
+          activeModal: null,
+          activeSheet: null
+        };
       }
       if (tab === "office") {
         return { activeTab: "office", activeModal: null, activeSheet: null };
       }
       return { activeTab: tab, activeModal: null, activeSheet: null };
     }),
+  setOfficeCategory: (category) =>
+    set((state) => ({
+      officeCategory: category,
+      officeSection: state.officeCategorySections[category]
+    })),
   setOfficeSection: (section) =>
     set((state) => {
+      const category = getOfficeCategoryForSection(section);
+      const officeCategorySections = rememberOfficeSectionByCategory(state.officeCategorySections, section);
       if (section !== "accounting" || !state.game) {
-        return { officeSection: section };
+        return {
+          officeCategory: category,
+          officeSection: section,
+          officeCategorySections
+        };
       }
       const nextGame: GameState = {
         ...state.game,
@@ -692,7 +760,9 @@ export const useUiStore = create<UiState>((set, get) => ({
       awardOfficeSkillXp(nextGame, { accounting: 2 });
       saveGame(nextGame);
       return {
+        officeCategory: category,
         officeSection: section,
+        officeCategorySections,
         game: nextGame
       };
     }),
@@ -874,8 +944,24 @@ export const useUiStore = create<UiState>((set, get) => ({
         result.payload && result.payload.taskId === "collect_payment" && result.nextState.activeJob?.contractId
           ? getJobProfitRecap(result.nextState, result.nextState.activeJob.contractId)
           : null;
-      if (shouldShowCompletionFx && result.nextState.activeJob?.outcome) {
+      const completionFxState =
+        shouldShowCompletionFx && result.nextState.activeJob?.outcome
+          ? {
+              startedAtMs: Date.now(),
+              durationMs: JOB_COMPLETION_FX_MS,
+              outcome: result.nextState.activeJob.outcome === "fail" ? "fail" : result.nextState.activeJob.outcome === "neutral" ? "neutral" : "success",
+              net: recap?.actual.net ?? 0
+            }
+          : null;
+      if (completionFxState) {
         clearJobCompletionFxTimer();
+        jobCompletionFxTimer = setTimeout(() => {
+          jobCompletionFxTimer = null;
+          useUiStore.setState((state) => ({
+            jobCompletionFx: null,
+            gameplayMutationLocked: Boolean(state.timedTaskAction)
+          }));
+        }, completionFxState.durationMs);
       }
       saveGame(result.nextState);
       set({
@@ -889,16 +975,8 @@ export const useUiStore = create<UiState>((set, get) => ({
         activeJobProfitRecap: recap,
         activeEncounterPopup: encounterPopup,
         activeTaskResultPopup: taskResultSummary ?? latest.activeTaskResultPopup,
-        jobCompletionFx:
-          shouldShowCompletionFx && result.nextState.activeJob?.outcome
-            ? {
-                startedAtMs: Date.now(),
-                durationMs: JOB_COMPLETION_FX_MS,
-                outcome: result.nextState.activeJob.outcome === "fail" ? "fail" : result.nextState.activeJob.outcome === "neutral" ? "neutral" : "success",
-                net: recap?.actual.net ?? 0
-              }
-            : latest.jobCompletionFx,
-        gameplayMutationLocked: shouldShowCompletionFx ? true : false,
+        jobCompletionFx: completionFxState ?? latest.jobCompletionFx,
+        gameplayMutationLocked: false,
         ...enqueueProgressPopups(latest, progressUpdates)
       });
     }, durationMs);
@@ -1207,6 +1285,24 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = upgradeBusinessTierFlow(current, target);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  openStorage: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = openStorageFlow(current, bundle);
     saveGame(result.nextState);
     set({
       game: result.nextState,

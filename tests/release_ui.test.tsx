@@ -29,7 +29,13 @@ describe("release metadata ui", () => {
       activeModal: null,
       activeSheet: null,
       activeTab: "work",
+      officeCategory: "operations",
       officeSection: "contracts",
+      officeCategorySections: {
+        operations: "contracts",
+        strategy: "rd",
+        finance: "trade-index"
+      },
       storeSection: "tools",
       selectedContractId: null,
       notice: "",
@@ -64,3 +70,4 @@ describe("release metadata ui", () => {
     expect(screen.getByText(`Commit ${releaseInfo.gitCommit}`)).toBeTruthy();
   });
 });
+

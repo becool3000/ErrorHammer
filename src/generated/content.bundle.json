@@ -26,8 +26,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "ladder",
-        "roofing-nailer"
+        "hammer",
+        "work-boots"
       ],
       "risk": 0.68,
       "staminaCost": 2,
@@ -67,8 +67,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "ladder",
-        "roofing-nailer"
+        "hammer",
+        "work-boots"
       ],
       "risk": 0.72,
       "staminaCost": 3,
@@ -191,7 +191,7 @@
       "repLossFail": 2,
       "requiredTools": [
         "level",
-        "post-hole-auger"
+        "work-boots"
       ],
       "risk": 0.63,
       "staminaCost": 2,
@@ -232,7 +232,7 @@
       "repLossFail": 3,
       "requiredTools": [
         "level",
-        "post-hole-auger"
+        "work-boots"
       ],
       "risk": 0.67,
       "staminaCost": 3,
@@ -273,7 +273,7 @@
       "repLossFail": 2,
       "requiredTools": [
         "hammer",
-        "level"
+        "square"
       ],
       "risk": 0.66,
       "staminaCost": 2,
@@ -314,7 +314,7 @@
       "repLossFail": 3,
       "requiredTools": [
         "hammer",
-        "level"
+        "square"
       ],
       "risk": 0.74,
       "staminaCost": 3,
@@ -354,8 +354,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "drill",
-        "multimeter"
+        "square",
+        "tool-belt"
       ],
       "risk": 0.67,
       "staminaCost": 2,
@@ -395,8 +395,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "drill",
-        "multimeter"
+        "square",
+        "tool-belt"
       ],
       "risk": 0.73,
       "staminaCost": 3,
@@ -437,7 +437,7 @@
       "repLossFail": 2,
       "requiredTools": [
         "level",
-        "pipe-threader"
+        "tool-belt"
       ],
       "risk": 0.68,
       "staminaCost": 2,
@@ -478,7 +478,7 @@
       "repLossFail": 3,
       "requiredTools": [
         "level",
-        "pipe-threader"
+        "tool-belt"
       ],
       "risk": 0.74,
       "staminaCost": 3,
@@ -518,8 +518,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "drill",
-        "hvac-gauge"
+        "hammer",
+        "tool-belt"
       ],
       "risk": 0.69,
       "staminaCost": 2,
@@ -559,8 +559,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "drill",
-        "hvac-gauge"
+        "hammer",
+        "tool-belt"
       ],
       "risk": 0.76,
       "staminaCost": 3,
@@ -600,8 +600,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "drywall-knife",
-        "saw"
+        "saw",
+        "tool-belt"
       ],
       "risk": 0.62,
       "staminaCost": 2,
@@ -641,8 +641,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "drywall-knife",
-        "saw"
+        "saw",
+        "tool-belt"
       ],
       "risk": 0.69,
       "staminaCost": 3,
@@ -682,8 +682,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "ladder",
-        "paint-sprayer"
+        "tool-belt",
+        "work-boots"
       ],
       "risk": 0.61,
       "staminaCost": 2,
@@ -723,8 +723,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "ladder",
-        "paint-sprayer"
+        "tool-belt",
+        "work-boots"
       ],
       "risk": 0.67,
       "staminaCost": 3,
@@ -765,7 +765,7 @@
       "repLossFail": 2,
       "requiredTools": [
         "level",
-        "tile-cutter"
+        "square"
       ],
       "risk": 0.65,
       "staminaCost": 2,
@@ -806,7 +806,7 @@
       "repLossFail": 3,
       "requiredTools": [
         "level",
-        "tile-cutter"
+        "square"
       ],
       "risk": 0.71,
       "staminaCost": 3,
@@ -846,8 +846,8 @@
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "cabinet-jig",
-        "saw"
+        "saw",
+        "square"
       ],
       "risk": 0.66,
       "staminaCost": 2,
@@ -887,8 +887,8 @@
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "drill",
-        "miter-saw"
+        "saw",
+        "square"
       ],
       "risk": 0.74,
       "staminaCost": 3,
@@ -9729,13 +9729,13 @@
     },
     {
       "flavor": {
-        "description": "Circular Saw keeps field work moving.",
-        "quip_break": "Circular Saw tapped out mid-shift.",
-        "quip_buy": "Bought Circular Saw."
+        "description": "Skill Saw keeps field work moving.",
+        "quip_break": "Skill Saw tapped out mid-shift.",
+        "quip_buy": "Bought Skill Saw."
       },
       "id": "saw",
       "maxDurability": 8,
-      "name": "Circular Saw",
+      "name": "Skill Saw",
       "price": 95,
       "tags": [
         "carpenter",
@@ -9791,6 +9791,22 @@
     },
     {
       "flavor": {
+        "description": "Square keeps cuts true and corners honest.",
+        "quip_break": "Square bent out of true.",
+        "quip_buy": "Bought Square."
+      },
+      "id": "square",
+      "maxDurability": 12,
+      "name": "Square",
+      "price": 24,
+      "tags": [
+        "cabinet_maker",
+        "carpenter"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
         "description": "Tile Cutter keeps field work moving.",
         "quip_break": "Tile Cutter tapped out mid-shift.",
         "quip_buy": "Bought Tile Cutter."
@@ -9806,6 +9822,22 @@
     },
     {
       "flavor": {
+        "description": "Tool Belt keeps essentials on hand.",
+        "quip_break": "Tool Belt snapped under load.",
+        "quip_buy": "Bought Tool Belt."
+      },
+      "id": "tool-belt",
+      "maxDurability": 11,
+      "name": "Tool Belt",
+      "price": 28,
+      "tags": [
+        "carpenter",
+        "drywall_installer"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
         "description": "Mason Trowel keeps field work moving.",
         "quip_break": "Mason Trowel tapped out mid-shift.",
         "quip_buy": "Bought Mason Trowel."
@@ -9817,6 +9849,22 @@
       "tags": [
         "concrete_finisher",
         "mason"
+      ],
+      "tier": 1
+    },
+    {
+      "flavor": {
+        "description": "Work Boots keep footing stable across rough jobs.",
+        "quip_break": "Work Boots wore out mid-shift.",
+        "quip_buy": "Bought Work Boots."
+      },
+      "id": "work-boots",
+      "maxDurability": 12,
+      "name": "Work Boots",
+      "price": 45,
+      "tags": [
+        "framer",
+        "landscaper"
       ],
       "tier": 1
     }

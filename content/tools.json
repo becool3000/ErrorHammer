@@ -16,6 +16,38 @@
     }
   },
   {
+    "id": "work-boots",
+    "name": "Work Boots",
+    "tier": 1,
+    "price": 45,
+    "maxDurability": 12,
+    "tags": [
+      "framer",
+      "landscaper"
+    ],
+    "flavor": {
+      "description": "Work Boots keep footing stable across rough jobs.",
+      "quip_buy": "Bought Work Boots.",
+      "quip_break": "Work Boots wore out mid-shift."
+    }
+  },
+  {
+    "id": "tool-belt",
+    "name": "Tool Belt",
+    "tier": 1,
+    "price": 28,
+    "maxDurability": 11,
+    "tags": [
+      "carpenter",
+      "drywall_installer"
+    ],
+    "flavor": {
+      "description": "Tool Belt keeps essentials on hand.",
+      "quip_buy": "Bought Tool Belt.",
+      "quip_break": "Tool Belt snapped under load."
+    }
+  },
+  {
     "id": "drill",
     "name": "Drill",
     "tier": 1,
@@ -49,7 +81,7 @@
   },
   {
     "id": "saw",
-    "name": "Circular Saw",
+    "name": "Skill Saw",
     "tier": 1,
     "price": 95,
     "maxDurability": 8,
@@ -58,9 +90,25 @@
       "millworker"
     ],
     "flavor": {
-      "description": "Circular Saw keeps field work moving.",
-      "quip_buy": "Bought Circular Saw.",
-      "quip_break": "Circular Saw tapped out mid-shift."
+      "description": "Skill Saw keeps field work moving.",
+      "quip_buy": "Bought Skill Saw.",
+      "quip_break": "Skill Saw tapped out mid-shift."
+    }
+  },
+  {
+    "id": "square",
+    "name": "Square",
+    "tier": 1,
+    "price": 24,
+    "maxDurability": 12,
+    "tags": [
+      "carpenter",
+      "cabinet_maker"
+    ],
+    "flavor": {
+      "description": "Square keeps cuts true and corners honest.",
+      "quip_buy": "Bought Square.",
+      "quip_break": "Square bent out of true."
     }
   },
   {

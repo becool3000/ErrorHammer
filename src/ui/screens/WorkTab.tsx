@@ -104,6 +104,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               : labelForStance(action.stance)
       }))
     : [];
+  const primaryTaskActionKey = getPrimaryTaskActionKey(taskActions);
   const missingWorkTools =
     Boolean(activeJob && job && currentTask?.taskId === "do_work" && activeJob.location === "job-site") &&
     !hasUsableTools(game.player, job?.requiredTools ?? []);
@@ -316,7 +317,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <p className="eyebrow">Stock</p>
           <div className="inventory-columns">
             <InventoryPanel label="Truck" inventory={game.truckSupplies} />
-            <InventoryPanel label="Shop" inventory={game.shopSupplies} />
+            <InventoryPanel label="Storage" inventory={game.shopSupplies} />
             <InventoryPanel label="Site" inventory={activeJob?.siteSupplies ?? {}} />
           </div>
         </article>
@@ -483,7 +484,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                       <span>Payout ${entry.activeJob.lockedPayout}</span>
                     </div>
                     <div className="action-row">
-                      <button className="primary-button" onClick={() => resumeDeferredJob(entry.deferredJobId)}>
+                      <button className="ghost-button secondary-action-button" onClick={() => resumeDeferredJob(entry.deferredJobId)}>
                         Resume
                       </button>
                       <button className="ghost-button tone-danger" onClick={() => setPendingDeferredAbandonId(entry.deferredJobId)}>
@@ -566,16 +567,20 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               </div>
             </div>
             <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
-              {taskActions.map((action) => (
-                <button
-                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
-                  className={`${action.allowOvertime ? "ghost-button" : "primary-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
-                  onClick={() => performTask(action.stance, action.allowOvertime)}
-                  disabled={Boolean(timedTaskAction)}
-                >
-                  {action.label}
-                </button>
-              ))}
+              {taskActions.map((action) => {
+                const actionKey = getTaskActionKey(action);
+                const isPrimaryAction = actionKey === primaryTaskActionKey;
+                return (
+                  <button
+                    key={actionKey}
+                    className={`${isPrimaryAction ? "primary-button" : "ghost-button secondary-action-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
+                    onClick={() => performTask(action.stance, action.allowOvertime)}
+                    disabled={Boolean(timedTaskAction)}
+                  >
+                    {action.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : null}
@@ -594,7 +599,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               <span>Time {formatHours(gasStationPlan.requiredTicks)}</span>
             </div>
             <div className="task-inline-actions">
-              <button className={gasStationPlan.stranded ? "primary-button" : "ghost-button"} onClick={() => runGasStationStop()}>
+              <button className="ghost-button tone-warning secondary-action-button" onClick={() => runGasStationStop()}>
                 Gas Station Run
               </button>
             </div>
@@ -650,7 +655,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         {missingWorkTools ? (
           <div className="task-inline-actions">
             <button className="primary-button tone-warning" onClick={() => returnToShopForTools()}>
-              Return To Shop For Tools
+              Return To Storage For Tools
             </button>
           </div>
         ) : null}
@@ -872,6 +877,22 @@ function labelForRefuelAction(stance: TaskStance): string {
     return "Fill Tank";
   }
   return "Buy 1 Fuel";
+}
+
+function getPrimaryTaskActionKey(actions: Array<{ stance: TaskStance; allowOvertime?: boolean }>): string | null {
+  const standard = actions.find((action) => action.stance === "standard" && !action.allowOvertime);
+  if (standard) {
+    return getTaskActionKey(standard);
+  }
+  const noOvertime = actions.find((action) => !action.allowOvertime);
+  if (noOvertime) {
+    return getTaskActionKey(noOvertime);
+  }
+  return actions[0] ? getTaskActionKey(actions[0]) : null;
+}
+
+function getTaskActionKey(action: { stance: TaskStance; allowOvertime?: boolean }): string {
+  return `${action.stance}:${action.allowOvertime ? "ot" : "std"}`;
 }
 
 function toneClassForStance(stance: TaskStance): string {

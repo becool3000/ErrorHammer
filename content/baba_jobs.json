@@ -6,8 +6,8 @@
     "tier": 1,
     "districtId": "residential",
     "requiredTools": [
-      "roofing-nailer",
-      "ladder"
+      "work-boots",
+      "hammer"
     ],
     "staminaCost": 2,
     "basePayout": 92,
@@ -46,8 +46,8 @@
     "tier": 2,
     "districtId": "small-commercial",
     "requiredTools": [
-      "roofing-nailer",
-      "ladder"
+      "work-boots",
+      "hammer"
     ],
     "staminaCost": 3,
     "basePayout": 108,
@@ -166,7 +166,7 @@
     "tier": 1,
     "districtId": "residential",
     "requiredTools": [
-      "post-hole-auger",
+      "work-boots",
       "level"
     ],
     "staminaCost": 2,
@@ -197,7 +197,7 @@
     "tier": 2,
     "districtId": "small-commercial",
     "requiredTools": [
-      "post-hole-auger",
+      "work-boots",
       "level"
     ],
     "staminaCost": 3,
@@ -229,7 +229,7 @@
     "districtId": "small-commercial",
     "requiredTools": [
       "hammer",
-      "level"
+      "square"
     ],
     "staminaCost": 2,
     "basePayout": 95,
@@ -269,7 +269,7 @@
     "districtId": "civic-lite",
     "requiredTools": [
       "hammer",
-      "level"
+      "square"
     ],
     "staminaCost": 3,
     "basePayout": 114,
@@ -308,8 +308,8 @@
     "tier": 1,
     "districtId": "small-commercial",
     "requiredTools": [
-      "multimeter",
-      "drill"
+      "tool-belt",
+      "square"
     ],
     "staminaCost": 2,
     "basePayout": 93,
@@ -348,8 +348,8 @@
     "tier": 2,
     "districtId": "civic-lite",
     "requiredTools": [
-      "multimeter",
-      "drill"
+      "tool-belt",
+      "square"
     ],
     "staminaCost": 3,
     "basePayout": 112,
@@ -388,7 +388,7 @@
     "tier": 1,
     "districtId": "small-commercial",
     "requiredTools": [
-      "pipe-threader",
+      "tool-belt",
       "level"
     ],
     "staminaCost": 2,
@@ -428,7 +428,7 @@
     "tier": 2,
     "districtId": "civic-lite",
     "requiredTools": [
-      "pipe-threader",
+      "tool-belt",
       "level"
     ],
     "staminaCost": 3,
@@ -468,8 +468,8 @@
     "tier": 1,
     "districtId": "small-commercial",
     "requiredTools": [
-      "hvac-gauge",
-      "drill"
+      "tool-belt",
+      "hammer"
     ],
     "staminaCost": 2,
     "basePayout": 97,
@@ -508,8 +508,8 @@
     "tier": 2,
     "districtId": "civic-lite",
     "requiredTools": [
-      "hvac-gauge",
-      "drill"
+      "tool-belt",
+      "hammer"
     ],
     "staminaCost": 3,
     "basePayout": 117,
@@ -548,8 +548,8 @@
     "tier": 1,
     "districtId": "residential",
     "requiredTools": [
-      "drywall-knife",
-      "saw"
+      "saw",
+      "tool-belt"
     ],
     "staminaCost": 2,
     "basePayout": 86,
@@ -588,8 +588,8 @@
     "tier": 2,
     "districtId": "small-commercial",
     "requiredTools": [
-      "drywall-knife",
-      "saw"
+      "saw",
+      "tool-belt"
     ],
     "staminaCost": 3,
     "basePayout": 103,
@@ -628,8 +628,8 @@
     "tier": 1,
     "districtId": "residential",
     "requiredTools": [
-      "paint-sprayer",
-      "ladder"
+      "work-boots",
+      "tool-belt"
     ],
     "staminaCost": 2,
     "basePayout": 83,
@@ -668,8 +668,8 @@
     "tier": 2,
     "districtId": "small-commercial",
     "requiredTools": [
-      "paint-sprayer",
-      "ladder"
+      "work-boots",
+      "tool-belt"
     ],
     "staminaCost": 3,
     "basePayout": 101,
@@ -708,8 +708,8 @@
     "tier": 1,
     "districtId": "residential",
     "requiredTools": [
-      "tile-cutter",
-      "level"
+      "level",
+      "square"
     ],
     "staminaCost": 2,
     "basePayout": 89,
@@ -748,8 +748,8 @@
     "tier": 2,
     "districtId": "small-commercial",
     "requiredTools": [
-      "tile-cutter",
-      "level"
+      "level",
+      "square"
     ],
     "staminaCost": 3,
     "basePayout": 107,
@@ -788,8 +788,8 @@
     "tier": 1,
     "districtId": "small-commercial",
     "requiredTools": [
-      "cabinet-jig",
-      "saw"
+      "saw",
+      "square"
     ],
     "staminaCost": 2,
     "basePayout": 96,
@@ -828,8 +828,8 @@
     "tier": 2,
     "districtId": "civic-lite",
     "requiredTools": [
-      "miter-saw",
-      "drill"
+      "saw",
+      "square"
     ],
     "staminaCost": 3,
     "basePayout": 118,

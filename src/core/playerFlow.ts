@@ -46,6 +46,7 @@ import {
   closeYardManually as closeYardManuallyOperation,
   enableDumpsterService as enableDumpsterServiceOperation,
   getPremiumHaulCost,
+  openStorage as openStorageOperation,
   upgradeBusinessTier as upgradeBusinessTierOperation,
   awardOfficeSkillXp,
   emptyDumpster as emptyDumpsterOperation,
@@ -56,7 +57,6 @@ import {
   resetOfficeSkillDailyCaps
 } from "./operations";
 import {
-  isFacilityProjectComplete,
   normalizeResearchState,
   startResearchProject
 } from "./research";
@@ -99,6 +99,7 @@ export interface QuickBuyPlan {
   enoughCash: boolean;
   enoughTime: boolean;
   allowed: boolean;
+  starterGateBlocked: boolean;
 }
 
 export interface GasStationStopPlan {
@@ -164,7 +165,7 @@ const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 const SKILL_IDS: SkillId[] = [...TRADE_SKILLS];
 
 const TASK_LABELS: Record<TaskId, string> = {
-  load_from_shop: "Load From Shop",
+  load_from_shop: "Load From Storage",
   refuel_at_station: "Refuel At Gas Station",
   travel_to_supplier: "Travel To Supplier",
   checkout_supplies: "Checkout Supplies",
@@ -172,7 +173,7 @@ const TASK_LABELS: Record<TaskId, string> = {
   pickup_site_supplies: "Pick Up Site Supplies",
   do_work: "Do The Job",
   collect_payment: "Collect Payment",
-  return_to_shop: "Return To Shop",
+  return_to_shop: "Return To Storage",
   store_leftovers: "Store Leftovers"
 };
 
@@ -256,20 +257,51 @@ export const SHOP_SUPPLIER_TICKS = 1;
 export const SHOP_SUPPLIER_FUEL = 1;
 export const GAS_STATION_STOP_TICKS = 2;
 export const FUEL_PRICE = 5;
+export const TRUCK_SUPPLY_CAPACITY = 8;
+export const STORAGE_SUPPLY_CAPACITY = 40;
 export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
 export const DAY_LABOR_CONTRACT_ID = "day-labor-contract";
 export const DAY_LABOR_JOB_ID = "job-day-laborer";
 export const MINIMUM_WAGE_PER_HOUR = 10.5;
 export const MIN_CONTRACT_RATE_PER_HOUR = 50;
 export const MIN_BABA_CONTRACT_RATE_PER_HOUR = 25;
+export const STARTER_TOOL_IDS = ["work-boots", "tool-belt", "hammer", "level", "square", "saw"] as const;
 const BABA_G_ROTATING_CONTRACT_PREFIX = "baba-g-rotating-contract";
 const UNLOCKED_FALLBACK_CONTRACT_PREFIX = "unlocked-fallback-contract";
+const STARTER_TOOL_ID_SET = new Set<string>(STARTER_TOOL_IDS);
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
   low: "Low",
   medium: "Medium",
   high: "High"
 };
+
+export function isStarterToolId(toolId: string): boolean {
+  return STARTER_TOOL_ID_SET.has(toolId);
+}
+
+export function shouldEnforceStarterToolGate(bundle: ContentBundle): boolean {
+  return STARTER_TOOL_IDS.every((toolId) => bundle.tools.some((tool) => tool.id === toolId));
+}
+
+export function getStarterKitProgress(actor: ActorState): {
+  owned: number;
+  total: number;
+  allOwned: boolean;
+  missingToolIds: string[];
+} {
+  const missingToolIds = STARTER_TOOL_IDS.filter((toolId) => !actor.tools[toolId]);
+  return {
+    owned: STARTER_TOOL_IDS.length - missingToolIds.length,
+    total: STARTER_TOOL_IDS.length,
+    allOwned: missingToolIds.length === 0,
+    missingToolIds
+  };
+}
+
+export function getSupplyInventoryUnits(inventory: SupplyInventory): number {
+  return listInventoryEntries(inventory).reduce((sum, [, , quantity]) => sum + quantity, 0);
+}
 
 export function createInitialSkills(): Record<SkillId, number> {
   return Object.fromEntries(SKILL_IDS.map((skillId) => [skillId, 100])) as Record<SkillId, number>;
@@ -968,6 +1000,14 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     return { nextState: state, notice: "Missing usable tools for that contract.", digest: digestState(state) };
   }
 
+  if (!canStageJobMaterialsWithCurrentTruckLoad(picked.job, state.truckSupplies)) {
+    return {
+      nextState: state,
+      notice: "Truck storage is too full to stage required materials. Clear truck/storage inventory first.",
+      digest: digestState(state)
+    };
+  }
+
   const district = bundle.districts.find((entry) => entry.id === picked.job.districtId);
   if (!district) {
     return { nextState: state, notice: "Unknown district.", digest: digestState(state) };
@@ -1389,22 +1429,41 @@ export function emptyDumpsterAtYard(state: GameState): StateTransitionResult<num
 
 export function upgradeBusinessTier(state: GameState, target: BusinessTier): StateTransitionResult {
   const nextState = cloneState(state);
-  if (target === "office" && !nextState.research.completedProjectIds.includes("rd-facility-office")) {
+  const result = upgradeBusinessTierOperation(nextState, target);
+  if (!result.ok) {
     return {
       nextState: state,
-      notice: "Complete Facility Program: Office in Research first.",
-      digest: digestState(state)
-    };
-  }
-  if (target === "yard" && !nextState.research.completedProjectIds.includes("rd-facility-yard")) {
-    return {
-      nextState: state,
-      notice: "Complete Facility Program: Yard in Research first.",
+      notice: result.notice,
       digest: digestState(state)
     };
   }
 
-  const result = upgradeBusinessTierOperation(nextState, target);
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+  awardOfficeSkillXp(nextState, { accounting: 2 });
+  awardPerkXp(nextState, 2);
+
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function openStorage(state: GameState, bundle: ContentBundle): StateTransitionResult {
+  if (shouldEnforceStarterToolGate(bundle) && !getStarterKitProgress(state.player).allOwned) {
+    return {
+      nextState: state,
+      notice: "Buy the full starter kit before opening storage.",
+      digest: digestState(state)
+    };
+  }
+
+  const nextState = cloneState(state);
+  const result = openStorageOperation(nextState);
   if (!result.ok) {
     return {
       nextState: state,
@@ -1430,14 +1489,6 @@ export function upgradeBusinessTier(state: GameState, target: BusinessTier): Sta
 
 export function enableDumpsterService(state: GameState): StateTransitionResult {
   const nextState = cloneState(state);
-  if (!isFacilityProjectComplete(nextState.research, "dumpster")) {
-    return {
-      nextState: state,
-      notice: "Complete Facility Program: Dumpster in Research first.",
-      digest: digestState(state)
-    };
-  }
-
   const result = enableDumpsterServiceOperation(nextState);
   if (!result.ok) {
     return {
@@ -1547,7 +1598,7 @@ export function buyFuel(state: GameState, units = 1): StateTransitionResult<numb
     return { nextState: state, payload: state.player.fuel, digest: digestState(state) };
   }
   if (state.activeJob && state.activeJob.location !== "shop") {
-    return { nextState: state, notice: "Fuel is only sold at the home shop.", digest: digestState(state) };
+    return { nextState: state, notice: "Fuel is only sold at home storage.", digest: digestState(state) };
   }
 
   const nextState = cloneState(state);
@@ -1936,8 +1987,14 @@ export function performTaskUnit(
         } else if (pendingTrash > 0) {
           nextState.activeJob!.trashUnitsPending = 0;
         }
-        moveAllSupplies(nextState.truckSupplies, nextState.shopSupplies);
-        logLines.push("Stored the leftovers and closed the job folder with deliberate calm.");
+        const storageTransfer = moveTruckSuppliesIntoStorage(nextState.truckSupplies, nextState.shopSupplies);
+        if (storageTransfer.overflowUnits > 0) {
+          logLines.push(
+            `Storage full: moved ${storageTransfer.movedUnits} supply units, ${storageTransfer.overflowUnits} units remain in truck.`
+          );
+        } else {
+          logLines.push("Stored the leftovers in storage and closed the job folder with deliberate calm.");
+        }
         nextState.activeJob = null;
       }
       break;
@@ -2014,7 +2071,7 @@ export function returnToShopForTools(
 
   const currentTask = getCurrentTask(state);
   if (!currentTask || currentTask.taskId !== "do_work") {
-    return { nextState: state, notice: "Return-to-shop for tools is only available during on-site work.", digest: digestState(state) };
+    return { nextState: state, notice: "Return-to-storage for tools is only available during on-site work.", digest: digestState(state) };
   }
   if (activeJob.location !== "job-site") {
     return { nextState: state, notice: "You must be at the job site to route back for tools.", digest: digestState(state) };
@@ -2032,13 +2089,13 @@ export function returnToShopForTools(
   const travelTicks = district.travel.shopToSiteTicks;
   const fuelCost = district.travel.shopToSiteFuel;
   if (state.player.fuel < fuelCost) {
-    return { nextState: state, notice: "Not enough fuel to get back to the shop.", digest: digestState(state) };
+    return { nextState: state, notice: "Not enough fuel to get back to storage.", digest: digestState(state) };
   }
 
   const canUseRegularTime = canSpendTicks(state.workday, travelTicks, false);
   const canUseOvertime = canSpendTicks(state.workday, travelTicks, true);
   if (!canUseRegularTime && !canUseOvertime) {
-    return { nextState: state, notice: "No time remains to return to the shop.", digest: digestState(state) };
+    return { nextState: state, notice: "No time remains to return to storage.", digest: digestState(state) };
   }
 
   const nextState = cloneState(state);
@@ -2056,7 +2113,7 @@ export function returnToShopForTools(
     actorId: nextState.player.actorId,
     contractId: nextState.activeJob?.contractId,
     taskId: "return_to_shop",
-    message: `Returned to the shop to repair or replace broken tools (${formatHours(travelTicks)} travel, fuel -${fuelCost}).`
+    message: `Returned to storage to repair or replace broken tools (${formatHours(travelTicks)} travel, fuel -${fuelCost}).`
   });
 
   const usedOvertime = !canUseRegularTime && canUseOvertime;
@@ -2068,8 +2125,8 @@ export function returnToShopForTools(
       usedOvertime
     },
     notice: usedOvertime
-      ? "Returned to shop for tools using overtime. Repair or buy tools, then head back to site."
-      : "Returned to shop for tools. Repair or buy tools, then head back to site.",
+      ? "Returned to storage for tools using overtime. Repair or buy tools, then head back to site."
+      : "Returned to storage for tools. Repair or buy tools, then head back to site.",
     digest: digestState(nextState)
   };
 }
@@ -2518,6 +2575,20 @@ function applySupplierCheckout(
     return { ok: false };
   }
 
+  const cartUnitTotal = cartEntries.reduce((sum, [, , quantity]) => sum + quantity, 0);
+  const truckUnits = getSupplyInventoryUnits(state.truckSupplies);
+  const availableTruckRoom = Math.max(0, TRUCK_SUPPLY_CAPACITY - truckUnits);
+  if (cartUnitTotal > availableTruckRoom) {
+    const overflowUnits = cartUnitTotal - availableTruckRoom;
+    logLines.push(
+      `Truck capacity exceeded at supplier checkout: ${cartUnitTotal} units requested with ${availableTruckRoom} units free (overflow ${overflowUnits}).`
+    );
+    return {
+      ok: false,
+      notice: `Truck capacity is ${TRUCK_SUPPLY_CAPACITY} units. Clear ${overflowUnits} units before supplier checkout.`
+    };
+  }
+
   let total = 0;
   for (const [supplyId, quality, quantity] of cartEntries) {
     const supply = bundle.supplies.find((entry) => entry.id === supplyId);
@@ -2710,12 +2781,12 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
   }
   switch (task.taskId) {
     case "load_from_shop":
-      return activeJob.location === "shop" ? null : "Return to the shop before loading supplies.";
+      return activeJob.location === "shop" ? null : "Return to storage before loading supplies.";
     case "refuel_at_station":
-      return activeJob.location === "shop" ? null : "Return to the shop before refueling at the gas station.";
+      return activeJob.location === "shop" ? null : "Return to storage before refueling at the gas station.";
     case "travel_to_supplier":
       if (activeJob.location !== "shop") {
-        return "Supplier runs start from the shop.";
+        return "Supplier runs start from storage.";
       }
       return state.player.fuel < SHOP_SUPPLIER_FUEL ? "Not enough fuel for the supplier run." : null;
     case "checkout_supplies":
@@ -2761,10 +2832,10 @@ function getTaskBlockedReason(state: GameState, bundle: ContentBundle, task: Act
         return "Collect payment before heading home.";
       }
       return state.player.fuel < getTravelFuelCost(task.taskId, getDistrict(bundle, job.districtId), activeJob.location)
-        ? "Not enough fuel to get back to the shop."
+        ? "Not enough fuel to get back to storage."
         : null;
     case "store_leftovers":
-      return activeJob.location === "shop" ? null : "Return to the shop before storing leftovers.";
+      return activeJob.location === "shop" ? null : "Return to storage before storing leftovers.";
   }
 }
 
@@ -2825,7 +2896,7 @@ function hasOutstandingSupplierStop(activeJob: ActiveJobState): boolean {
 function getDefaultTaskGuidance(taskId: TaskId): string {
   switch (taskId) {
     case "load_from_shop":
-      return "Next step: Load required supplies at the shop.";
+      return "Next step: Load required supplies from storage.";
     case "refuel_at_station":
       return "Next step: Refuel at Gas Station.";
     case "travel_to_supplier":
@@ -2841,14 +2912,14 @@ function getDefaultTaskGuidance(taskId: TaskId): string {
     case "collect_payment":
       return "Next step: Collect payment.";
     case "return_to_shop":
-      return "Next step: Return to Shop.";
+      return "Next step: Return to Storage.";
     case "store_leftovers":
-      return "Next step: Store leftovers at the shop.";
+      return "Next step: Store leftovers in storage.";
   }
 }
 
 function getLoadFromShopGuidance(state: GameState, bundle: ContentBundle, job: JobDef): string {
-  const base = "Next step: Load required supplies at the shop.";
+  const base = "Next step: Load required supplies from storage.";
   const extras = job.materialNeeds
     .map((material) => {
       const extraQuantity = getSupplyQuantity(state.shopSupplies, material.supplyId) - material.quantity;
@@ -2875,7 +2946,7 @@ function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob
     return "Next step: Refuel at Gas Station.";
   }
   if (normalizedReason.includes("missing usable tools")) {
-    return "Next step: Return to Shop for tool repair or replacement.";
+    return "Next step: Return to Storage for tool repair or replacement.";
   }
   if (normalizedReason.includes("supplier cart") || normalizedReason.includes("quality before checkout")) {
     return "Next step: Allocate materials in Supplier Cart.";
@@ -3052,7 +3123,7 @@ function parseContractCostBreakdown(message: string): { materials: number; fuel:
     normalize(message.match(/Refueled [0-9]+ at the gas station(?: on account)? \(\$([0-9]+)\)\./i)?.[1]) +
     normalize(message.match(/Refueled [0-9]+ at the gas station for \$([0-9]+)\./i)?.[1]);
   const trash = normalize(message.match(/Premium haul-off charged \$([0-9]+) for [0-9]+ trash units\./i)?.[1]);
-  const toolRepair = normalize(message.match(/Returned to the shop to repair or replace broken tools .* fuel -([0-9]+)\./i)?.[1]);
+  const toolRepair = normalize(message.match(/Returned to (?:the )?(?:shop|storage) to repair or replace broken tools .* fuel -([0-9]+)\./i)?.[1]);
   const other = toolRepair;
   return { materials, fuel, trash, other };
 }
@@ -3151,12 +3222,32 @@ function getJobMaterialRoutingPlan(
   return { requiresShopLoad, needsSupplier };
 }
 
+function canStageJobMaterialsWithCurrentTruckLoad(job: JobDef, truckSupplies: SupplyInventory): boolean {
+  if (job.materialNeeds.length === 0) {
+    return true;
+  }
+  const truckUnits = getSupplyInventoryUnits(truckSupplies);
+  if (truckUnits > TRUCK_SUPPLY_CAPACITY) {
+    return false;
+  }
+  const availableRoom = Math.max(0, TRUCK_SUPPLY_CAPACITY - truckUnits);
+  const additionalUnitsNeeded = job.materialNeeds.reduce((sum, material) => {
+    const onTruck = getSupplyQuantity(truckSupplies, material.supplyId);
+    return sum + Math.max(0, material.quantity - onTruck);
+  }, 0);
+  return additionalUnitsNeeded <= availableRoom;
+}
+
 function moveSuppliesForJob(shopSupplies: SupplyInventory, truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): void {
   for (const material of materialNeeds) {
     let remaining = Math.max(0, material.quantity - getSupplyQuantity(truckSupplies, material.supplyId));
     for (const quality of ["high", "medium", "low"] as SupplyQuality[]) {
+      const availableTruckRoom = Math.max(0, TRUCK_SUPPLY_CAPACITY - getSupplyInventoryUnits(truckSupplies));
+      if (availableTruckRoom <= 0) {
+        return;
+      }
       const available = getSupplyQuantity(shopSupplies, material.supplyId, quality);
-      const loadQuantity = Math.min(available, remaining);
+      const loadQuantity = Math.min(available, remaining, availableTruckRoom);
       if (loadQuantity <= 0) {
         continue;
       }
@@ -3170,13 +3261,28 @@ function moveSuppliesForJob(shopSupplies: SupplyInventory, truckSupplies: Supply
   }
 }
 
-function moveAllSupplies(from: SupplyInventory, to: SupplyInventory): void {
+function moveTruckSuppliesIntoStorage(truckSupplies: SupplyInventory, storageSupplies: SupplyInventory): { movedUnits: number; overflowUnits: number } {
+  const storageRoom = Math.max(0, STORAGE_SUPPLY_CAPACITY - getSupplyInventoryUnits(storageSupplies));
+  return moveAllSupplies(truckSupplies, storageSupplies, storageRoom);
+}
+
+function moveAllSupplies(from: SupplyInventory, to: SupplyInventory, maxUnits = Number.MAX_SAFE_INTEGER): { movedUnits: number; overflowUnits: number } {
+  let remainingCapacity = Number.isFinite(maxUnits) ? Math.max(0, Math.floor(maxUnits)) : Number.MAX_SAFE_INTEGER;
+  let movedUnits = 0;
   for (const [supplyId, quality, quantity] of listInventoryEntries(from)) {
-    addSupplyQuantity(to, supplyId, quality, quantity);
+    if (remainingCapacity <= 0) {
+      break;
+    }
+    const transferQuantity = Math.min(quantity, remainingCapacity);
+    if (transferQuantity <= 0) {
+      continue;
+    }
+    addSupplyQuantity(from, supplyId, quality, -transferQuantity);
+    addSupplyQuantity(to, supplyId, quality, transferQuantity);
+    movedUnits += transferQuantity;
+    remainingCapacity -= transferQuantity;
   }
-  for (const supplyId of Object.keys(from)) {
-    delete from[supplyId];
-  }
+  return { movedUnits, overflowUnits: getSupplyInventoryUnits(from) };
 }
 
 function applyToolWear(actor: ActorState, job: JobDef, task: ActiveTaskState): void {
@@ -3720,6 +3826,7 @@ export function getQuickBuyPlan(
   const { job } = picked;
   const events = getActiveEvents(bundle, state.activeEventIds);
   const missingTools: QuickBuyToolLine[] = [];
+  const starterGateActive = shouldEnforceStarterToolGate(bundle) && !state.operations.facilities.storageOwned;
   for (const toolId of job.requiredTools) {
     const toolDef = bundle.tools.find((tool) => tool.id === toolId);
     if (!toolDef) {
@@ -3736,6 +3843,7 @@ export function getQuickBuyPlan(
       price
     });
   }
+  const starterGateBlocked = starterGateActive && missingTools.some((entry) => !isStarterToolId(entry.toolId));
   const totalCost = missingTools.reduce((sum, entry) => sum + entry.price, 0);
   const requiredTicks = missingTools.length * 2;
   const allowed = !state.activeJob || state.activeJob.location === "shop";
@@ -3748,7 +3856,8 @@ export function getQuickBuyPlan(
     requiredTicks,
     enoughCash,
     enoughTime,
-    allowed
+    allowed,
+    starterGateBlocked
   };
 }
 
@@ -3764,8 +3873,16 @@ export function quickBuyMissingTools(
   if (plan.missingTools.length === 0) {
     return { nextState: state, payload: plan, notice: "Tools already stocked.", digest: digestState(state) };
   }
+  if (plan.starterGateBlocked) {
+    return {
+      nextState: state,
+      payload: plan,
+      notice: "Open storage before quick buying non-starter tools.",
+      digest: digestState(state)
+    };
+  }
   if (!plan.allowed) {
-    return { nextState: state, payload: plan, notice: "Return to the shop before quick buying tools.", digest: digestState(state) };
+    return { nextState: state, payload: plan, notice: "Return to storage before quick buying tools.", digest: digestState(state) };
   }
   if (!plan.enoughCash) {
     return { nextState: state, payload: plan, notice: "Not enough cash for the quick-buy list.", digest: digestState(state) };

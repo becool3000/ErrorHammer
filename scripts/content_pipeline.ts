@@ -65,6 +65,23 @@ const CORE_TRADE_TRACKS = [
   "finish_carpentry"
 ] as const;
 
+const BABA_STARTER_TOOL_IDS = ["work-boots", "tool-belt", "hammer", "level", "square", "saw"] as const;
+const BABA_STARTER_TOOL_ID_SET = new Set<string>(BABA_STARTER_TOOL_IDS);
+const REQUIRED_BABA_SKILLS: SkillId[] = [
+  "carpenter",
+  "roofer",
+  "landscaper",
+  "welder",
+  "electrician",
+  "plumber",
+  "hvac_technician",
+  "drywall_installer",
+  "painter",
+  "flooring_installer",
+  "cabinet_maker",
+  "millworker"
+];
+
 const SUPPLY_GROUPS: Partial<Record<SkillId, [string, string]>> = {
   electrician: ["wire-spool", "breaker-kit"],
   plumber: ["pipe-kit", "valve-pack"],
@@ -267,6 +284,11 @@ function crossValidate(bundle: ContentBundle): string[] {
   const toolIds = new Set(bundle.tools.map((tool) => tool.id));
   const districtIds = new Set(bundle.districts.map((district) => district.id));
   const supplyIds = new Set(bundle.supplies.map((supply) => supply.id));
+  const usedBabaStarterTools = new Set<string>();
+  const babaCountsBySkill = new Map<SkillId, number>();
+  for (const skill of REQUIRED_BABA_SKILLS) {
+    babaCountsBySkill.set(skill, 0);
+  }
 
   for (const job of bundle.jobs) {
     if (!TRADE_SKILLS.includes(job.primarySkill)) {
@@ -317,6 +339,9 @@ function crossValidate(bundle: ContentBundle): string[] {
     if (!TRADE_SKILLS.includes(job.primarySkill)) {
       errors.push(`babaJobs/${job.id}: unknown primarySkill '${job.primarySkill}'`);
     }
+    if (babaCountsBySkill.has(job.primarySkill)) {
+      babaCountsBySkill.set(job.primarySkill, (babaCountsBySkill.get(job.primarySkill) ?? 0) + 1);
+    }
     if (!job.tags.includes("baba-g")) {
       errors.push(`babaJobs/${job.id}: missing required 'baba-g' tag`);
     }
@@ -330,11 +355,26 @@ function crossValidate(bundle: ContentBundle): string[] {
       if (!toolIds.has(toolId)) {
         errors.push(`babaJobs/${job.id}: unknown requiredTool '${toolId}'`);
       }
+      if (!BABA_STARTER_TOOL_ID_SET.has(toolId)) {
+        errors.push(`babaJobs/${job.id}: requiredTool '${toolId}' must be in starter kit`);
+      } else {
+        usedBabaStarterTools.add(toolId);
+      }
     }
     for (const material of job.materialNeeds) {
       if (!supplyIds.has(material.supplyId)) {
         errors.push(`babaJobs/${job.id}: unknown supply '${material.supplyId}'`);
       }
+    }
+  }
+  for (const starterToolId of BABA_STARTER_TOOL_IDS) {
+    if (!usedBabaStarterTools.has(starterToolId)) {
+      errors.push(`babaJobs: missing starter coverage for '${starterToolId}'`);
+    }
+  }
+  for (const skill of REQUIRED_BABA_SKILLS) {
+    if ((babaCountsBySkill.get(skill) ?? 0) < 1) {
+      errors.push(`babaJobs: expected at least 1 job for required Baba skill '${skill}'`);
     }
   }
 

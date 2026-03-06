@@ -29,4 +29,44 @@ describe("content validation", () => {
     expect(normalized.jobs.every((job) => job.materialNeeds.length > 0)).toBe(true);
     expect(normalized.districts.every((district) => district.travel.shopToSiteTicks > 0)).toBe(true);
   });
+
+  it("enforces Baba starter-only tools, six-tool coverage, and required Baba skill presence", async () => {
+    const [content, schemas] = await Promise.all([loadRawContent(), loadSchemas()]);
+    const babaJobs = (content.babaJobs as any[]).map((item) => ({
+      ...item,
+      requiredTools: [...(item.requiredTools ?? [])]
+    }));
+
+    const nonStarterToolJobs = babaJobs.map((job, index) =>
+      index === 0
+        ? {
+            ...job,
+            requiredTools: ["drill", "square"]
+          }
+        : job
+    );
+    const nonStarterResult = validateContent({ ...content, babaJobs: nonStarterToolJobs }, schemas);
+    expect(nonStarterResult.ok).toBe(false);
+    expect(nonStarterResult.errors.some((error) => error.includes("must be in starter kit"))).toBe(true);
+
+    const missingCoverageJobs = babaJobs.map((job) => ({
+      ...job,
+      requiredTools: (job.requiredTools as string[]).map((toolId) => (toolId === "square" ? "hammer" : toolId))
+    }));
+    const missingCoverageResult = validateContent({ ...content, babaJobs: missingCoverageJobs }, schemas);
+    expect(missingCoverageResult.ok).toBe(false);
+    expect(missingCoverageResult.errors.some((error) => error.includes("missing starter coverage for 'square'"))).toBe(true);
+
+    const missingSkillJobs = babaJobs.map((job) =>
+      job.primarySkill === "millworker"
+        ? {
+            ...job,
+            primarySkill: "cabinet_maker"
+          }
+        : job
+    );
+    const missingSkillResult = validateContent({ ...content, babaJobs: missingSkillJobs }, schemas);
+    expect(missingSkillResult.ok).toBe(false);
+    expect(missingSkillResult.errors.some((error) => error.includes("required Baba skill 'millworker'"))).toBe(true);
+  });
 });

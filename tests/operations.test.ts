@@ -31,6 +31,7 @@ describe("monthly operations bills", () => {
     state.player.cash = 5000;
     state.operations.billingCycleDay = 21;
     state.operations.accountantHired = true;
+    state.operations.facilities.storageOwned = true;
     state.operations.facilities.officeOwned = true;
     state.operations.facilities.yardOwned = true;
     state.operations.facilities.dumpsterEnabled = true;
@@ -39,12 +40,14 @@ describe("monthly operations bills", () => {
     const result = endShift(state, bundle);
     const messages = result.dayLog.map((entry) => entry.message);
 
+    expect(logIncludes(messages, "Bill storage rent: $150.")).toBe(true);
+    expect(logIncludes(messages, "Bill office rent: $650.")).toBe(true);
     expect(logIncludes(messages, "Bill electric: $86.")).toBe(true);
     expect(logIncludes(messages, "Bill water/sewage: $38.")).toBe(true);
     expect(logIncludes(messages, "Bill dumpster base: $63.")).toBe(true);
     expect(logIncludes(messages, "Bill accountant salary: $480.")).toBe(true);
-    expect(logIncludes(messages, "Monthly operations subtotal: $2487.")).toBe(true);
-    expect(result.nextState.player.cash).toBe(2513);
+    expect(logIncludes(messages, "Monthly operations subtotal: $2557.")).toBe(true);
+    expect(result.nextState.player.cash).toBe(2443);
   });
 
   it("records unpaid balance, late fee, and strike on short payment", () => {

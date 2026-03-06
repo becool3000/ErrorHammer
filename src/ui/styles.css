@@ -721,8 +721,14 @@ p {
 }
 
 .primary-button {
-  background: rgba(229, 236, 242, 0.14);
-  border-color: rgba(235, 241, 248, 0.36);
+  background: linear-gradient(180deg, rgba(224, 233, 242, 0.24), rgba(138, 154, 172, 0.24));
+  border-color: rgba(235, 241, 248, 0.5);
+  color: var(--accent-strong);
+  box-shadow: 0 0 0 1px rgba(235, 241, 248, 0.16), 0 0.45rem 1rem rgba(0, 0, 0, 0.28);
+}
+
+.secondary-action-button {
+  opacity: 0.92;
 }
 
 button.tone-success:disabled,
@@ -844,6 +850,7 @@ button.tone-energy:disabled {
 
 .action-carousel-button {
   min-width: min(7.4rem, 38vw);
+  text-align: center;
 }
 
 .action-carousel-track::-webkit-scrollbar {
@@ -1134,69 +1141,27 @@ button.tone-energy:disabled {
   padding-bottom: 0.2rem;
 }
 
-.office-menu-shell {
+.company-hub-shell {
   display: grid;
   gap: 0.7rem;
 }
 
-.office-menu-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.6rem;
+.company-hub-shell .segmented-control {
+  margin-top: 0;
 }
 
-.office-menu-trigger {
-  width: 2.85rem;
-  min-width: 2.85rem;
-  min-height: 2.5rem;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border-color: rgba(205, 214, 224, 0.28);
+.facilities-other-options {
+  margin-top: 0.6rem;
 }
 
-.office-menu-trigger.active {
-  border-color: var(--tone-energy-border);
-  background: linear-gradient(180deg, rgba(46, 66, 122, 0.38), rgba(28, 37, 70, 0.5));
-  color: var(--tone-energy);
-}
-
-.office-menu-icon {
-  font-size: calc(1.2rem * var(--ui-scale));
-  line-height: 1;
-  font-weight: 700;
-}
-
-.office-menu-current {
+.company-hub-current {
   min-height: 2.1rem;
   display: inline-flex;
   align-items: center;
 }
 
-.office-sections-menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  transition: max-height 180ms ease, opacity 160ms ease, margin 160ms ease;
-  overflow: hidden;
-}
-
-.office-sections-menu.open {
-  max-height: 24rem;
-  opacity: 1;
-}
-
-.office-sections-menu.closed {
-  max-height: 0;
-  opacity: 0;
-  margin-top: -0.15rem;
-  pointer-events: none;
-}
-
-.office-menu-segment {
-  flex: 0 0 auto;
+.company-hub-stack > .tab-panel {
+  gap: 0.85rem;
 }
 
 .segment,
@@ -1651,7 +1616,7 @@ button.tone-energy:disabled {
   position: fixed;
   inset: 0;
   z-index: 28;
-  pointer-events: auto;
+  pointer-events: none;
   display: grid;
   place-items: center;
   padding: 1rem;
@@ -1670,7 +1635,7 @@ button.tone-energy:disabled {
 .job-completion-fx-card {
   position: relative;
   min-width: min(70vw, 18rem);
-  pointer-events: auto;
+  pointer-events: none;
   display: grid;
   justify-items: center;
   gap: 0.35rem;

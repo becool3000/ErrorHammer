@@ -9,7 +9,16 @@ import {
 import { evaluateBotPlan, simulateBotDay } from "./bots";
 import { createRng, hashSeed } from "./rng";
 import { SAVE_VERSION } from "./save";
-import { createBotSkills, createInitialShopSupplies, createInitialSkills, createInitialWorkday, digestState, prepareForNextDay } from "./playerFlow";
+import {
+  createBotSkills,
+  createInitialShopSupplies,
+  createInitialSkills,
+  createInitialWorkday,
+  digestState,
+  isStarterToolId,
+  prepareForNextDay,
+  shouldEnforceStarterToolGate
+} from "./playerFlow";
 import { applyEndDayOperations, createInitialOfficeSkillsState, createInitialOperationsState, createInitialYardState } from "./operations";
 import { createInitialPerksState } from "./perks";
 import { createResearchStateLocked } from "./research";
@@ -45,11 +54,6 @@ export function createInitialGameState(
   playerName = bundle.strings.defaultPlayerName ?? "You",
   companyName = bundle.strings.defaultCompanyName ?? "Field Ops"
 ): GameState {
-  const hammer = bundle.tools.find((tool) => tool.id === "hammer") ?? bundle.tools[0];
-  if (!hammer) {
-    throw new Error("Content bundle has no tools.");
-  }
-
   const player: ActorState = {
     actorId: "player",
     name: playerName,
@@ -63,12 +67,7 @@ export function createInitialGameState(
     fuel: 8,
     fuelMax: 12,
     skills: createInitialSkills(),
-    tools: {
-      [hammer.id]: {
-        toolId: hammer.id,
-        durability: hammer.maxDurability
-      }
-    },
+    tools: {},
     crews: []
   };
 
@@ -532,6 +531,9 @@ export function buyTool(state: GameState, bundle: ContentBundle, toolId: string)
   }
   const tool = bundle.tools.find((item) => item.id === toolId);
   if (!tool) {
+    return state;
+  }
+  if (shouldEnforceStarterToolGate(bundle) && !state.operations.facilities.storageOwned && !isStarterToolId(tool.id)) {
     return state;
   }
 

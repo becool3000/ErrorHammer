@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { bundle, useUiStore } from "../state";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActiveModalId, bundle, useUiStore } from "../state";
 import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
@@ -17,13 +17,46 @@ interface EndDayTransitionState {
 
 const END_DAY_TRANSITION_MS = 1_000;
 const END_DAY_TRANSITION_MIDPOINT_MS = END_DAY_TRANSITION_MS / 2;
+const TIER2_COOLDOWN_MS = 1_500;
+const PHONE_SHEET_BREAKPOINT_PX = 759;
+
+type Tier2SurfaceKind = "balance" | "encounter" | "task-result";
+
+interface Tier2SurfaceCandidate {
+  kind: Tier2SurfaceKind;
+  day: number;
+  fingerprint: string;
+}
+
+interface Tier2SurfaceState extends Tier2SurfaceCandidate {}
+
+const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
+  "job-details",
+  "inventory",
+  "skills",
+  "field-log",
+  "active-events",
+  "districts",
+  "crews",
+  "news",
+  "settings"
+]);
+
+function isRoutineModalId(modalId: ActiveModalId): modalId is Exclude<ActiveModalId, null> {
+  return Boolean(modalId && ROUTINE_MODAL_IDS.has(modalId));
+}
 
 export function GameShell() {
   const [endDayTransition, setEndDayTransition] = useState<EndDayTransitionState | null>(null);
   const [transitionNowMs, setTransitionNowMs] = useState(0);
+  const [isPhoneViewport, setIsPhoneViewport] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= PHONE_SHEET_BREAKPOINT_PX : true
+  );
+  const [tier2Surface, setTier2Surface] = useState<Tier2SurfaceState | null>(null);
   const midpointTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tier2RegistryRef = useRef<Partial<Record<Tier2SurfaceKind, Tier2SurfaceCandidate & { lastShownAtMs: number }>>>({});
   const game = useUiStore((state) => state.game);
   const activeTab = useUiStore((state) => state.activeTab);
   const activeModal = useUiStore((state) => state.activeModal);
@@ -44,21 +77,59 @@ export function GameShell() {
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
-  const dismissJobCompletionFx = useUiStore((state) => state.dismissJobCompletionFx);
   const activeEncounterPopup = useUiStore((state) => state.activeEncounterPopup);
   const dismissEncounterPopup = useUiStore((state) => state.dismissEncounterPopup);
+  const showRoutineModalAsSheet = isPhoneViewport && isRoutineModalId(activeModal);
   const isBalanceDeclinedNotice = notice.toLowerCase().includes("balance declined");
-  const suppressNoticeBanner =
-    (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout")) || isBalanceDeclinedNotice;
   const normalizedActiveTab = activeTab === "contracts" || activeTab === "store" || activeTab === "company" ? "office" : activeTab;
   const endDayProgress = endDayTransition ? clamp01((transitionNowMs - endDayTransition.startedAtMs) / endDayTransition.durationMs) : 0;
   const endDayBlackoutOpacity = endDayProgress <= 0.5 ? endDayProgress * 2 : (1 - endDayProgress) * 2;
   const endDayPieAngle = Math.round(endDayProgress * 360);
+  const tier2Candidates = useMemo<Tier2SurfaceCandidate[]>(() => {
+    const day = game?.day ?? 0;
+    const candidates: Tier2SurfaceCandidate[] = [];
+    if (isBalanceDeclinedNotice) {
+      candidates.push({
+        kind: "balance",
+        day,
+        fingerprint: notice.trim()
+      });
+    }
+    if (activeEncounterPopup) {
+      candidates.push({
+        kind: "encounter",
+        day,
+        fingerprint: activeEncounterPopup.id
+      });
+    }
+    if (activeTaskResultPopup) {
+      candidates.push({
+        kind: "task-result",
+        day,
+        fingerprint: activeTaskResultPopup.digest
+      });
+    }
+    return candidates;
+  }, [activeEncounterPopup, activeTaskResultPopup, game?.day, isBalanceDeclinedNotice, notice]);
+  const suppressLowerTierUi = Boolean(endDayTransition || tier2Surface);
+  const suppressNoticeBanner =
+    suppressLowerTierUi ||
+    (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout")) ||
+    isBalanceDeclinedNotice;
 
   useEffect(() => {
     return () => {
       clearEndDayTransitionTimers(midpointTimerRef, completionTimerRef, transitionTickRef);
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const handleResize = () => setIsPhoneViewport(window.innerWidth <= PHONE_SHEET_BREAKPOINT_PX);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -81,6 +152,37 @@ export function GameShell() {
       }
     };
   }, [endDayTransition?.startedAtMs]);
+
+  useEffect(() => {
+    if (endDayTransition) {
+      setTier2Surface(null);
+      return;
+    }
+    if (tier2Candidates.length === 0) {
+      setTier2Surface(null);
+      return;
+    }
+    setTier2Surface((current) => {
+      if (current && tier2Candidates.some((candidate) => candidate.kind === current.kind && candidate.fingerprint === current.fingerprint)) {
+        return current;
+      }
+      const now = Date.now();
+      for (const candidate of tier2Candidates) {
+        const prior = tier2RegistryRef.current[candidate.kind];
+        const duplicateSameDay = Boolean(prior && prior.day === candidate.day && prior.fingerprint === candidate.fingerprint);
+        const coolingDown = Boolean(prior && prior.day === candidate.day && now - prior.lastShownAtMs < TIER2_COOLDOWN_MS);
+        if (duplicateSameDay || coolingDown) {
+          continue;
+        }
+        tier2RegistryRef.current[candidate.kind] = {
+          ...candidate,
+          lastShownAtMs: now
+        };
+        return candidate;
+      }
+      return null;
+    });
+  }, [endDayTransition, tier2Candidates]);
 
   function handleEndDayTransition() {
     if (timedTaskAction || endDayTransition) {
@@ -122,7 +224,7 @@ export function GameShell() {
   return (
     <main className="screen-shell app-shell">
       {normalizedActiveTab === "work" ? <CompactHeader game={game} activeTab={normalizedActiveTab} /> : null}
-      {activeProgressPopup ? (
+      {activeProgressPopup && !suppressLowerTierUi ? (
         <section
           className={`progress-popup progress-popup-${activeProgressPopup.severity}`}
           role="status"
@@ -148,12 +250,12 @@ export function GameShell() {
           </div>
         </section>
       ) : null}
-      {activeTaskResultPopup ? (
+      {tier2Surface?.kind === "task-result" && activeTaskResultPopup ? (
         <section className="task-result-popup" role="status" aria-live="polite" aria-label={activeTaskResultPopup.title}>
           <article className="task-result-popup-card chrome-card">
             <div className="section-label-row tight-row">
               <strong>{activeTaskResultPopup.title}</strong>
-              <button className="icon-button" onClick={() => dismissTaskResultPopup()} aria-label="Close result popup">
+              <button className="icon-button" onClick={dismissTaskResultPopup} aria-label="Close result popup">
                 Close
               </button>
             </div>
@@ -166,7 +268,7 @@ export function GameShell() {
         </section>
       ) : null}
       {dayLaborCelebrationActive ? <DayLaborCelebrationOverlay /> : null}
-      {isBalanceDeclinedNotice ? (
+      {tier2Surface?.kind === "balance" && isBalanceDeclinedNotice ? (
         <section className="critical-notice-popup" role="alert" aria-live="assertive" aria-label="Balance Declined">
           <div className="section-label-row tight-row">
             <strong>Balance Declined</strong>
@@ -182,7 +284,7 @@ export function GameShell() {
           {notice}
         </button>
       ) : null}
-      {activeEncounterPopup ? (
+      {tier2Surface?.kind === "encounter" && activeEncounterPopup ? (
         <RebarBobEncounterPopup speaker={activeEncounterPopup.speaker} line={activeEncounterPopup.line} onClose={() => dismissEncounterPopup()} />
       ) : null}
       <section className="tab-stage">
@@ -194,39 +296,48 @@ export function GameShell() {
         onChange={goToTab}
         onEndDay={handleEndDayTransition}
         onOpenSettings={() => openModal("settings")}
-        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(jobCompletionFx)}
+        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition)}
       />
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
         <WorkTab sheetOnly />
       </BottomSheet>
-      <Modal open={activeModal === "job-details"} title="Job Details" onClose={closeModal}>
-        <WorkTab modalView="job-details" />
-      </Modal>
-      <Modal open={activeModal === "inventory"} title="Inventory" onClose={closeModal}>
-        <WorkTab modalView="inventory" />
-      </Modal>
-      <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal}>
-        <WorkTab modalView="skills" />
-      </Modal>
-      <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
-        <WorkTab modalView="field-log" />
-      </Modal>
-      <Modal open={activeModal === "active-events"} title="Active Events" onClose={closeModal}>
-        <WorkTab modalView="active-events" />
-      </Modal>
-      <Modal open={activeModal === "districts"} title={bundle.strings.companyDistrictButton} onClose={closeModal}>
-        <CompanyTab modalView="districts" />
-      </Modal>
-      <Modal open={activeModal === "crews"} title={bundle.strings.companyCrewButton} onClose={closeModal}>
-        <CompanyTab modalView="crews" />
-      </Modal>
-      <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal}>
-        <CompanyTab modalView="news" />
-      </Modal>
-      <Modal open={activeModal === "settings"} title="Settings" onClose={closeModal}>
-        <SettingsTab />
-      </Modal>
-      {jobCompletionFx ? <JobCompletionFxOverlay outcome={jobCompletionFx.outcome} net={jobCompletionFx.net} onClose={dismissJobCompletionFx} /> : null}
+      {showRoutineModalAsSheet ? (
+        <BottomSheet open={true} title={getRoutineSurfaceTitle(activeModal)} onClose={closeModal}>
+          {renderRoutineSurfaceBody(activeModal)}
+        </BottomSheet>
+      ) : null}
+      {!showRoutineModalAsSheet ? (
+        <>
+          <Modal open={activeModal === "job-details"} title="Job Details" onClose={closeModal}>
+            <WorkTab modalView="job-details" />
+          </Modal>
+          <Modal open={activeModal === "inventory"} title="Inventory" onClose={closeModal}>
+            <WorkTab modalView="inventory" />
+          </Modal>
+          <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal}>
+            <WorkTab modalView="skills" />
+          </Modal>
+          <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
+            <WorkTab modalView="field-log" />
+          </Modal>
+          <Modal open={activeModal === "active-events"} title="Active Events" onClose={closeModal}>
+            <WorkTab modalView="active-events" />
+          </Modal>
+          <Modal open={activeModal === "districts"} title={bundle.strings.companyDistrictButton} onClose={closeModal}>
+            <CompanyTab modalView="districts" />
+          </Modal>
+          <Modal open={activeModal === "crews"} title={bundle.strings.companyCrewButton} onClose={closeModal}>
+            <CompanyTab modalView="crews" />
+          </Modal>
+          <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal}>
+            <CompanyTab modalView="news" />
+          </Modal>
+          <Modal open={activeModal === "settings"} title="Settings" onClose={closeModal}>
+            <SettingsTab />
+          </Modal>
+        </>
+      ) : null}
+      {jobCompletionFx ? <JobCompletionFxOverlay outcome={jobCompletionFx.outcome} net={jobCompletionFx.net} /> : null}
       {endDayTransition ? <EndDayTransitionOverlay blackoutOpacity={endDayBlackoutOpacity} pieAngle={endDayPieAngle} /> : null}
     </main>
   );
@@ -290,12 +401,10 @@ function DayLaborCelebrationOverlay() {
 
 function JobCompletionFxOverlay({
   outcome,
-  net,
-  onClose
+  net
 }: {
   outcome: "success" | "neutral" | "fail";
   net: number;
-  onClose: () => void;
 }) {
   const outcomeLabel = outcome === "neutral" ? "Low Quality" : outcome === "fail" ? "No Pay" : "Success";
   const outcomeClass = outcome === "neutral" ? "completion-fx-neutral" : outcome === "fail" ? "completion-fx-fail" : "completion-fx-success";
@@ -304,12 +413,7 @@ function JobCompletionFxOverlay({
     <section className={`job-completion-fx-overlay ${outcomeClass}`} role="status" aria-live="polite" aria-label="Job completion popup">
       <div className="job-completion-fx-burst" />
       <article className="job-completion-fx-card chrome-card">
-        <div className="section-label-row tight-row">
-          <p className="eyebrow">Job Complete</p>
-          <button className="icon-button" onClick={onClose} aria-label="Close job completion popup">
-            Close
-          </button>
-        </div>
+        <p className="eyebrow">Job Complete</p>
         <h3>{outcomeLabel}</h3>
         <p className={net >= 0 ? "tone-success" : "tone-danger"}>Net {netLabel}</p>
       </article>
@@ -359,4 +463,60 @@ function clearEndDayTransitionTimers(
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
+  if (modalId === "job-details") {
+    return "Job Details";
+  }
+  if (modalId === "inventory") {
+    return "Inventory";
+  }
+  if (modalId === "skills") {
+    return "Skills";
+  }
+  if (modalId === "field-log") {
+    return "Field Log";
+  }
+  if (modalId === "active-events") {
+    return "Active Events";
+  }
+  if (modalId === "districts") {
+    return bundle.strings.companyDistrictButton;
+  }
+  if (modalId === "crews") {
+    return bundle.strings.companyCrewButton;
+  }
+  if (modalId === "news") {
+    return bundle.strings.companyNewsButton;
+  }
+  return "Settings";
+}
+
+function renderRoutineSurfaceBody(modalId: Exclude<ActiveModalId, null>) {
+  if (modalId === "job-details") {
+    return <WorkTab modalView="job-details" />;
+  }
+  if (modalId === "inventory") {
+    return <WorkTab modalView="inventory" />;
+  }
+  if (modalId === "skills") {
+    return <WorkTab modalView="skills" />;
+  }
+  if (modalId === "field-log") {
+    return <WorkTab modalView="field-log" />;
+  }
+  if (modalId === "active-events") {
+    return <WorkTab modalView="active-events" />;
+  }
+  if (modalId === "districts") {
+    return <CompanyTab modalView="districts" />;
+  }
+  if (modalId === "crews") {
+    return <CompanyTab modalView="crews" />;
+  }
+  if (modalId === "news") {
+    return <CompanyTab modalView="news" />;
+  }
+  return <SettingsTab />;
 }

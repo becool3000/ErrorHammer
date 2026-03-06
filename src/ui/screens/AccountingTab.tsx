@@ -93,7 +93,8 @@ export function AccountingTab() {
           <span className="chip">Day {game.day}</span>
         </div>
         <div className="metric-grid two-up">
-          <span>Rent {formatNumberByAccountingClarity(game, snapshot.categories.officeRentExpense, { currency: true })}</span>
+          <span>Office Rent {formatNumberByAccountingClarity(game, snapshot.categories.officeRentExpense, { currency: true })}</span>
+          <span>Storage Rent {formatNumberByAccountingClarity(game, snapshot.categories.storageRentExpense, { currency: true })}</span>
           <span>Insurance/Admin {formatNumberByAccountingClarity(game, snapshot.categories.insuranceAdminExpense, { currency: true })}</span>
           <span>Truck {formatNumberByAccountingClarity(game, snapshot.categories.truckPaymentExpense, { currency: true })}</span>
           <span>Electric {formatNumberByAccountingClarity(game, snapshot.categories.electricExpense, { currency: true })}</span>

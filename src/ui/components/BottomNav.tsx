@@ -2,7 +2,7 @@ import { GameTabId } from "../state";
 
 const tabs: Array<{ id: GameTabId; label: string }> = [
   { id: "work", label: "Work" },
-  { id: "office", label: "Office" }
+  { id: "office", label: "Company" }
 ];
 
 interface BottomNavProps {
@@ -34,9 +34,10 @@ export function BottomNav({ activeTab, onChange, onEndDay, onOpenSettings, endDa
       </button>
       <button className="tab-button settings-gear-button" onClick={() => onOpenSettings()} aria-label="Settings">
         <span className="settings-gear-icon" aria-hidden="true">
-          ⚙
+          Settings
         </span>
       </button>
     </nav>
   );
 }
+

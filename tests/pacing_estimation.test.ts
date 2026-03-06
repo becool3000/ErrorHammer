@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { createInitialGameState, endShift } from "../src/core/resolver";
+import { createInitialGameState, endShift, buyTool } from "../src/core/resolver";
 import {
   DAY_LABOR_CONTRACT_ID,
+  STARTER_TOOL_IDS,
   acceptContract,
   enableDumpsterService,
   getAvailableContractOffers,
+  openStorage,
   performTaskUnit,
-  startResearch,
   upgradeBusinessTier
 } from "../src/core/playerFlow";
 import { loadContentBundle } from "../src/core/content";
+import { GameState } from "../src/core/types";
 
 const bundle = loadContentBundle();
 
@@ -17,6 +19,8 @@ const SECONDS_PER_DAY_LABOR_CLICK = 2;
 const SECONDS_PER_END_DAY = 1;
 const SECONDS_PER_OFFICE_ACTION = 2;
 const SAFE_YARD_CAPITAL_TARGET = 4600;
+const YARD_BUY_IN = 1600;
+const DUMPSTER_ENABLE_COST = 500;
 
 interface PaceResult {
   dayOffice: number | null;
@@ -34,6 +38,33 @@ interface BaselineSolvencyResult {
   cash: number;
   missedBillStrikes: number;
   tier: "truck" | "office" | "yard";
+}
+
+function progressStarterKitAndStorage(state: GameState): { nextState: GameState; actionSeconds: number } {
+  let nextState = state;
+  let actionSeconds = 0;
+
+  for (const toolId of STARTER_TOOL_IDS) {
+    if (nextState.player.tools[toolId]) {
+      continue;
+    }
+    const updated = buyTool(nextState, bundle, toolId);
+    if (updated === nextState) {
+      break;
+    }
+    nextState = updated;
+    actionSeconds += SECONDS_PER_OFFICE_ACTION;
+  }
+
+  if (!nextState.operations.facilities.storageOwned) {
+    const opened = openStorage(nextState, bundle);
+    if (opened.nextState !== nextState) {
+      nextState = opened.nextState;
+      actionSeconds += SECONDS_PER_OFFICE_ACTION;
+    }
+  }
+
+  return { nextState, actionSeconds };
 }
 
 function runFirstTradeUnlockPolicy(seed: number, maxDays = 40): TradeUnlockResult {
@@ -103,15 +134,11 @@ function runLeanOfficePolicy(seed: number, maxDays = 180): PaceResult {
   let dayDumpster: number | null = null;
 
   while (state.day <= maxDays) {
-    if (!state.research.activeProject && !state.research.completedProjectIds.includes("rd-facility-office") && state.player.cash >= 180) {
-      const started = startResearch(state, "rd-facility-office");
-      if (started.nextState !== state) {
-        state = started.nextState;
-        activeSeconds += SECONDS_PER_OFFICE_ACTION;
-      }
-    }
+    const starterProgress = progressStarterKitAndStorage(state);
+    state = starterProgress.nextState;
+    activeSeconds += starterProgress.actionSeconds;
 
-    if (state.operations.businessTier === "truck" && state.research.completedProjectIds.includes("rd-facility-office")) {
+    if (state.operations.businessTier === "truck" && state.operations.facilities.storageOwned) {
       const upgraded = upgradeBusinessTier(state, "office");
       if (upgraded.nextState !== state) {
         state = upgraded.nextState;
@@ -152,31 +179,15 @@ function runSafeYardPolicy(seed: number, maxDays = 220): PaceResult {
   let dayDumpster: number | null = null;
 
   while (state.day <= maxDays) {
-    const hasOfficeResearch = state.research.completedProjectIds.includes("rd-facility-office");
-    const hasYardResearch = state.research.completedProjectIds.includes("rd-facility-yard");
-    const hasDumpsterResearch = state.research.completedProjectIds.includes("rd-facility-dumpster");
+    const starterProgress = progressStarterKitAndStorage(state);
+    state = starterProgress.nextState;
+    activeSeconds += starterProgress.actionSeconds;
 
-    if (!state.research.activeProject && !hasOfficeResearch && state.player.cash >= SAFE_YARD_CAPITAL_TARGET) {
-      const started = startResearch(state, "rd-facility-office");
-      if (started.nextState !== state) {
-        state = started.nextState;
-        activeSeconds += SECONDS_PER_OFFICE_ACTION;
-      }
-    } else if (!state.research.activeProject && hasOfficeResearch && !hasYardResearch) {
-      const started = startResearch(state, "rd-facility-yard");
-      if (started.nextState !== state) {
-        state = started.nextState;
-        activeSeconds += SECONDS_PER_OFFICE_ACTION;
-      }
-    } else if (!state.research.activeProject && hasYardResearch && !hasDumpsterResearch) {
-      const started = startResearch(state, "rd-facility-dumpster");
-      if (started.nextState !== state) {
-        state = started.nextState;
-        activeSeconds += SECONDS_PER_OFFICE_ACTION;
-      }
-    }
-
-    if (state.operations.businessTier === "truck" && hasOfficeResearch) {
+    if (
+      state.operations.businessTier === "truck" &&
+      state.operations.facilities.storageOwned &&
+      state.player.cash >= SAFE_YARD_CAPITAL_TARGET
+    ) {
       const upgraded = upgradeBusinessTier(state, "office");
       if (upgraded.nextState !== state) {
         state = upgraded.nextState;
@@ -184,7 +195,7 @@ function runSafeYardPolicy(seed: number, maxDays = 220): PaceResult {
         activeSeconds += SECONDS_PER_OFFICE_ACTION;
       }
     }
-    if (state.operations.businessTier === "office" && hasYardResearch) {
+    if (state.operations.businessTier === "office" && state.player.cash >= YARD_BUY_IN) {
       const upgraded = upgradeBusinessTier(state, "yard");
       if (upgraded.nextState !== state) {
         state = upgraded.nextState;
@@ -192,7 +203,7 @@ function runSafeYardPolicy(seed: number, maxDays = 220): PaceResult {
         activeSeconds += SECONDS_PER_OFFICE_ACTION;
       }
     }
-    if (state.operations.businessTier === "yard" && hasDumpsterResearch && !state.operations.facilities.dumpsterEnabled) {
+    if (state.operations.businessTier === "yard" && !state.operations.facilities.dumpsterEnabled && state.player.cash >= DUMPSTER_ENABLE_COST) {
       const enabled = enableDumpsterService(state);
       if (enabled.nextState !== state) {
         state = enabled.nextState;
@@ -274,14 +285,14 @@ describe("progression pacing estimation", () => {
     const officeMedian = median(officeDays);
     const activeMinutesMedian = median(runs.map((run) => run.activeMinutes));
 
-    expect(officeMedian).toBeGreaterThanOrEqual(70);
-    expect(officeMedian).toBeLessThanOrEqual(80);
-    expect(yardMedian).toBeGreaterThanOrEqual(72);
-    expect(yardMedian).toBeLessThanOrEqual(82);
+    expect(officeMedian).toBeGreaterThanOrEqual(80);
+    expect(officeMedian).toBeLessThanOrEqual(95);
+    expect(yardMedian).toBeGreaterThanOrEqual(officeMedian);
+    expect(yardMedian).toBeLessThanOrEqual(officeMedian + 6);
     expect(dumpMedian).toBeGreaterThanOrEqual(yardMedian);
-    expect(dumpMedian).toBeLessThanOrEqual(84);
+    expect(dumpMedian).toBeLessThanOrEqual(yardMedian + 4);
     expect(activeMinutesMedian).toBeGreaterThanOrEqual(3.6);
-    expect(activeMinutesMedian).toBeLessThanOrEqual(4.6);
+    expect(activeMinutesMedian).toBeLessThanOrEqual(4.8);
   });
 
   it("keeps truck-life baseline solvent across three billing cycles with day labor only", () => {
