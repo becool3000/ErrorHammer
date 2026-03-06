@@ -1,94 +1,103 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GameState, JobDef, SkillId } from "../../core/types";
 import { getPayoutMultiplier } from "../../core/economy";
+import { getScaledDurationMs } from "../../core/actionTiming";
+import { TRADE_GROUPS } from "../../core/research";
+import { getPerkArchetypeSnapshot } from "../../core/perks";
 import {
   DAY_LABOR_CONTRACT_ID,
   ContractOffer,
+  FUEL_PRICE,
+  SHOP_SUPPLIER_TICKS,
   formatHours,
   formatSkillCompactLabel,
   formatSkillLabel,
   getAvailableContractOffers,
   getQuickBuyPlan,
+  getContractEconomyPreview,
+  getContractAutoBidPreview,
+  getContractQuotedPayout,
+  getSkillRank,
+  getSupplyUnitPrice,
   getSettlementPreview
 } from "../../core/playerFlow";
-import type { SettlementPreview } from "../../core/playerFlow";
+import type { ContractEconomyPreview, SettlementPreview } from "../../core/playerFlow";
+import type { ContractAutoBidPreview } from "../../core/playerFlow";
 import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
-const GROUPS: Array<{ id: string; label: string; skills: SkillId[] }> = [
-  {
-    id: "core-systems",
-    label: "Core Systems",
-    skills: ["electrician", "plumber", "hvac_technician", "solar_panel_installer", "insulation_installer"]
-  },
-  {
-    id: "structure",
-    label: "Structure",
-    skills: ["framer", "carpenter", "mason", "concrete_finisher", "scaffolder"]
-  },
-  {
-    id: "exterior",
-    label: "Exterior",
-    skills: ["roofer", "siding_installer", "fence_installer", "glazier"]
-  },
-  {
-    id: "interior-finish",
-    label: "Interior Finish",
-    skills: ["drywall_installer", "painter", "flooring_installer", "cabinet_maker", "millworker"]
-  }
-];
+const GROUPS: Array<{ id: string; label: string; skills: SkillId[] }> = TRADE_GROUPS;
+const DAY_LABOR_PREP_BASE_MS = 12_000;
 
 export function ContractsTab() {
   const game = useUiStore((state) => state.game);
   const selectedContractId = useUiStore((state) => state.selectedContractId);
   const selectContract = useUiStore((state) => state.selectContract);
   const accept = useUiStore((state) => state.acceptContract);
+  const endDay = useUiStore((state) => state.endShift);
   const quickBuyTools = useUiStore((state) => state.quickBuyTools);
-  const setOfficeSection = useUiStore((state) => state.setOfficeSection);
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const [activeGroupId, setActiveGroupId] = useState<string>(GROUPS[0]!.id);
 
   const baseJobsById = useMemo(() => new Map(bundle.jobs.map((job) => [job.id, job])), []);
 
+  const allOffers = game ? getAvailableContractOffers(game, bundle) : [];
+  const tradeOffers = allOffers.filter(
+    (offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && !offer.job.tags.includes("baba-g")
+  );
+  const unlockedGroups = GROUPS.filter((group) => tradeOffers.some((offer) => group.skills.includes(offer.job.primarySkill)));
+
+  useEffect(() => {
+    if (unlockedGroups.length === 0) {
+      return;
+    }
+    if (!unlockedGroups.some((group) => group.id === activeGroupId)) {
+      setActiveGroupId(unlockedGroups[0]!.id);
+    }
+  }, [activeGroupId, unlockedGroups]);
+
   if (!game) {
     return null;
   }
 
-  const offers = getAvailableContractOffers(game, bundle);
+  const economyPreviewByContractId = new Map<string, ContractEconomyPreview | null>();
+  for (const offer of allOffers) {
+    economyPreviewByContractId.set(offer.contract.contractId, getContractEconomyPreview(game, bundle, offer.contract.contractId));
+  }
   const jobsById = new Map(baseJobsById);
-  for (const offer of offers) {
+  for (const offer of allOffers) {
     jobsById.set(offer.job.id, offer.job);
   }
 
-  const dayLaborOffer = offers.find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID) ?? null;
-  const babaOffer = offers.find((offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && offer.job.tags.includes("baba-g")) ?? null;
-  const tradeOffers = offers.filter(
-    (offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && !offer.job.tags.includes("baba-g")
-  );
-  const activeGroup = GROUPS.find((group) => group.id === activeGroupId) ?? GROUPS[0]!;
-  const groupOffers = tradeOffers.filter((offer) => activeGroup.skills.includes(offer.job.primarySkill));
-  const contracts = offers.map((offer) => offer.contract);
+  const dayLaborOffer = allOffers.find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID) ?? null;
+  const babaOffer = allOffers.find((offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && offer.job.tags.includes("baba-g")) ?? null;
+  const activeGroup = unlockedGroups.find((group) => group.id === activeGroupId) ?? unlockedGroups[0] ?? null;
+  const groupOffers = activeGroup ? tradeOffers.filter((offer) => activeGroup.skills.includes(offer.job.primarySkill)) : [];
+  const contracts = allOffers.map((offer) => offer.contract);
+  const bestPickContractId = getBestPickContractId(tradeOffers, economyPreviewByContractId, game);
   const effectiveSelected =
-    offers.find((offer) => offer.contract.contractId === selectedContractId)?.contract.contractId ??
+    allOffers.find((offer) => offer.contract.contractId === selectedContractId)?.contract.contractId ??
     dayLaborOffer?.contract.contractId ??
     babaOffer?.contract.contractId ??
+    groupOffers[0]?.contract.contractId ??
     tradeOffers[0]?.contract.contractId ??
     null;
-  const selectedOffer = offers.find((offer) => offer.contract.contractId === effectiveSelected) ?? null;
+  const selectedOffer = allOffers.find((offer) => offer.contract.contractId === effectiveSelected) ?? null;
   const selectedContract = selectedOffer?.contract ?? null;
   const selectedJob = selectedOffer?.job ?? null;
   const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
-  const payout = selectedOffer ? getOfferPayout(selectedOffer, activeEvents) : 0;
-  const hasTools = selectedJob
-    ? selectedJob.requiredTools.every((toolId) => (game.player.tools[toolId]?.durability ?? 0) > 0)
-    : false;
+  const payout = selectedOffer ? getOfferPayout(game, selectedOffer) : 0;
+  const hasTools = selectedJob ? selectedJob.requiredTools.every((toolId) => (game.player.tools[toolId]?.durability ?? 0) > 0) : false;
   const settlementPreview =
     selectedContract && selectedJob ? buildSettlementPreview(game, selectedContract.contractId, selectedJob, payout) : null;
+  const economyPreview = selectedContract ? (economyPreviewByContractId.get(selectedContract.contractId) ?? null) : null;
+  const autoBidPreview = selectedContract ? getContractAutoBidPreview(game, bundle, selectedContract.contractId) : null;
   const quickBuyPlan =
     selectedContract && selectedContract.contractId !== DAY_LABOR_CONTRACT_ID
       ? getQuickBuyPlan(game, bundle, selectedContract.contractId)
       : null;
   const quickBuyEnabled = Boolean(quickBuyPlan?.missingTools.length) && quickBuyPlan?.allowed && quickBuyPlan?.enoughCash && quickBuyPlan?.enoughTime;
+  const archetype = getPerkArchetypeSnapshot(game);
 
   return (
     <section className="tab-panel contracts-tab">
@@ -112,10 +121,10 @@ export function ContractsTab() {
           </div>
         </div>
         <div className="chip-grid compact-chip-grid">
-          {GROUPS.map((group) => (
+          {unlockedGroups.map((group) => (
             <button
               key={group.id}
-              className={group.id === activeGroup.id ? "ghost-button active" : "ghost-button"}
+              className={group.id === activeGroup?.id ? "ghost-button active" : "ghost-button"}
               onClick={() => setActiveGroupId(group.id)}
             >
               {group.label}
@@ -125,7 +134,9 @@ export function ContractsTab() {
         <div className="trade-chip-grid">
           {groupOffers.map((offer) => {
             const isActive = offer.contract.contractId === effectiveSelected;
-            const quoted = getOfferPayout(offer, activeEvents);
+            const quoted = getOfferPayout(game, offer);
+            const offerEconomyPreview = economyPreviewByContractId.get(offer.contract.contractId) ?? null;
+            const likelyLoss = isLikelyLossOffer(offerEconomyPreview);
             return (
               <button
                 key={offer.contract.contractId}
@@ -137,10 +148,15 @@ export function ContractsTab() {
                 <small>
                   ${quoted} | {Math.round(offer.job.risk * 100)}% risk
                 </small>
+                {bestPickContractId === offer.contract.contractId ? <small className="tone-energy">Best Pick</small> : null}
+                {likelyLoss ? <small className="tone-danger trade-offer-loss-flag">Likely Loss</small> : null}
               </button>
             );
           })}
         </div>
+        {!game.activeJob && unlockedGroups.length === 0 ? (
+          <p className="muted-copy">No trade groups unlocked yet.</p>
+        ) : null}
       </article>
 
       {selectedContract && selectedJob ? (
@@ -150,8 +166,13 @@ export function ContractsTab() {
           job={selectedJob}
           payout={payout}
           settlementPreview={settlementPreview}
+          economyPreview={economyPreview}
+          autoBidPreview={autoBidPreview}
           hasTools={hasTools}
           dayLaborCooldownActive={dayLaborCelebrationActive}
+          onEndDay={endDay}
+          activeEvents={activeEvents}
+          archetypeTags={archetype.tags}
           onAccept={accept}
         />
       ) : null}
@@ -160,10 +181,7 @@ export function ContractsTab() {
           <div className="section-label-row">
             <strong>No Trade Contracts Unlocked</strong>
           </div>
-          <p className="muted-copy">Open Office &gt; Research to unlock category and skill contracts.</p>
-          <button className="ghost-button" onClick={() => setOfficeSection("research")}>
-            Open Research
-          </button>
+          <p className="muted-copy">Complete Baba G jobs to unlock core trade tracks.</p>
         </article>
       ) : null}
       {quickBuyPlan && quickBuyPlan.missingTools.length > 0 ? (
@@ -204,8 +222,11 @@ export function ContractsTab() {
               onClick={() => selectContract(dayLaborOffer.contract.contractId)}
             >
               <strong>Day Labor</strong>
-              <span>${getOfferPayout(dayLaborOffer, activeEvents)}</span>
+              <span>${getOfferPayout(game, dayLaborOffer)}</span>
               <small>Fallback</small>
+              {isLikelyLossOffer(economyPreviewByContractId.get(dayLaborOffer.contract.contractId) ?? null) ? (
+                <small className="tone-danger trade-offer-loss-flag">Likely Loss</small>
+              ) : null}
             </button>
           ) : null}
           {babaOffer ? (
@@ -214,8 +235,11 @@ export function ContractsTab() {
               onClick={() => selectContract(babaOffer.contract.contractId)}
             >
               <strong>Baba G</strong>
-              <span>${getOfferPayout(babaOffer, activeEvents)}</span>
+              <span>${getOfferPayout(game, babaOffer)}</span>
               <small>{Math.round(babaOffer.job.risk * 100)}% risk</small>
+              {isLikelyLossOffer(economyPreviewByContractId.get(babaOffer.contract.contractId) ?? null) ? (
+                <small className="tone-danger trade-offer-loss-flag">Likely Loss</small>
+              ) : null}
             </button>
           ) : null}
         </div>
@@ -230,8 +254,13 @@ function ContractDetails({
   job,
   payout,
   settlementPreview,
+  economyPreview,
+  autoBidPreview,
   hasTools,
   dayLaborCooldownActive,
+  onEndDay,
+  activeEvents,
+  archetypeTags,
   onAccept
 }: {
   game: GameState;
@@ -239,13 +268,85 @@ function ContractDetails({
   job: JobDef;
   payout: number;
   settlementPreview: SettlementPreview | null;
+  economyPreview: ContractEconomyPreview | null;
+  autoBidPreview: ContractAutoBidPreview | null;
   hasTools: boolean;
   dayLaborCooldownActive: boolean;
+  onEndDay: () => void;
+  activeEvents: typeof bundle.events;
+  archetypeTags: string[];
   onAccept: (contractId: string) => void;
 }) {
   const isDayLabor = contractId === DAY_LABOR_CONTRACT_ID;
   const isDayLaborCoolingDown = isDayLabor && dayLaborCooldownActive;
+  const likelyLoss = isLikelyLossOffer(economyPreview);
+  const likelyLossWhy = likelyLoss ? buildLikelyLossWhy(economyPreview, !game.operations.facilities.dumpsterEnabled) : "";
   const [infoOpen, setInfoOpen] = useState(false);
+  const [confirmLossOpen, setConfirmLossOpen] = useState(false);
+  const [dayLaborPromptOpen, setDayLaborPromptOpen] = useState(false);
+  const [dayLaborPrepStartedAtMs, setDayLaborPrepStartedAtMs] = useState<number | null>(null);
+  const [dayLaborPrepNowMs, setDayLaborPrepNowMs] = useState(() => Date.now());
+  const noDayLaborHoursRemaining = game.workday.ticksSpent >= game.workday.availableTicks;
+  const dayLaborPrepActive = isDayLabor && dayLaborPrepStartedAtMs !== null;
+  const dayLaborSkillRank = getSkillRank(game.player, job.primarySkill);
+  const dayLaborPrepDurationMs = getScaledDurationMs(DAY_LABOR_PREP_BASE_MS, dayLaborSkillRank);
+  const dayLaborPrepProgress = dayLaborPrepActive
+    ? clamp01((dayLaborPrepNowMs - (dayLaborPrepStartedAtMs ?? dayLaborPrepNowMs)) / dayLaborPrepDurationMs)
+    : 0;
+
+  useEffect(() => {
+    setDayLaborPromptOpen(false);
+    setDayLaborPrepStartedAtMs(null);
+  }, [contractId]);
+
+  useEffect(() => {
+    if (!dayLaborPrepActive) {
+      return;
+    }
+    const intervalId = window.setInterval(() => setDayLaborPrepNowMs(Date.now()), 100);
+    return () => window.clearInterval(intervalId);
+  }, [dayLaborPrepActive]);
+
+  useEffect(() => {
+    if (!dayLaborPrepActive || dayLaborPrepStartedAtMs === null) {
+      return;
+    }
+    const elapsedMs = Date.now() - dayLaborPrepStartedAtMs;
+    const remainingMs = Math.max(0, dayLaborPrepDurationMs - elapsedMs);
+    const timeoutId = window.setTimeout(() => {
+      setDayLaborPrepStartedAtMs(null);
+      onAccept(contractId);
+    }, remainingMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [dayLaborPrepActive, dayLaborPrepStartedAtMs, dayLaborPrepDurationMs, onAccept, contractId]);
+
+  function handleAcceptClick() {
+    if (isDayLabor) {
+      if (noDayLaborHoursRemaining) {
+        onEndDay();
+        return;
+      }
+      setDayLaborPromptOpen(true);
+      return;
+    }
+    if (likelyLoss) {
+      setConfirmLossOpen(true);
+      return;
+    }
+    onAccept(contractId);
+  }
+
+  function confirmLikelyLossAccept() {
+    setConfirmLossOpen(false);
+    onAccept(contractId);
+  }
+
+  function startDayLaborPrep() {
+    setDayLaborPromptOpen(false);
+    setDayLaborPrepNowMs(Date.now());
+    setDayLaborPrepStartedAtMs(Date.now());
+  }
+
   return (
     <article className="hero-card chrome-card contract-detail-card">
       <div className="section-label-row">
@@ -263,6 +364,23 @@ function ContractDetails({
           Info
         </button>
       </div>
+      {economyPreview ? (
+        <div className="material-need-meta">
+          <span>Est Net {formatSignedMoney(economyPreview.projectedNetOnSuccess)}</span>
+          <span>Biggest Cost {formatEstimateCostDriverLabel(economyPreview.biggestCostDriver)}</span>
+        </div>
+      ) : null}
+      {!isDayLabor && !job.tags.includes("baba-g") && autoBidPreview ? (
+        <p className="muted-copy">
+          Auto-Bid ${autoBidPreview.acceptedPayout} (Estimating Lv {autoBidPreview.estimatingLevel})
+        </p>
+      ) : null}
+      {archetypeTags.length > 0 ? <p className="muted-copy">Style Fit: {getStyleFitHint(job.primarySkill, archetypeTags)}</p> : null}
+      {likelyLoss && economyPreview ? (
+        <p className="muted-copy tone-danger contract-loss-warning">
+          Likely Loss: Net on success {formatSignedMoney(economyPreview.projectedNetOnSuccess)}. Why: {likelyLossWhy}
+        </p>
+      ) : null}
       {infoOpen ? (
         <div id={`contract-info-${contractId}`} className="detail-block">
           <p className="muted-copy">{obfuscateReadableText(game, job.flavor.client_quote, `${job.id}:quote`)}</p>
@@ -295,6 +413,21 @@ function ContractDetails({
               <p className="muted-copy">{settlementPreview.neutralWarning}</p>
             </div>
           ) : null}
+          {economyPreview ? (
+            <div className="detail-block">
+              <strong>Cost Preview</strong>
+              <div className="chip-grid">
+                <span className="chip tone-success">Gross ${economyPreview.grossPayout}</span>
+                <span className="chip tone-warning">Materials ${economyPreview.materialsCost}</span>
+                <span className="chip tone-info">Fuel ${economyPreview.fuelCost}</span>
+                <span className="chip tone-danger">Trash ${economyPreview.trashCost}</span>
+                <span className={`chip ${economyPreview.projectedNetOnSuccess >= 0 ? "tone-success" : "tone-danger"}`}>
+                  Est Net {formatSignedMoney(economyPreview.projectedNetOnSuccess)}
+                </span>
+              </div>
+              <p className="muted-copy">Estimate uses medium material pricing, route fuel, and trash handling.</p>
+            </div>
+          ) : null}
         </div>
       ) : null}
       <div className="detail-block">
@@ -314,12 +447,20 @@ function ContractDetails({
       {job.materialNeeds.length > 0 ? (
         <div className="detail-block">
           <strong>Materials</strong>
-          <div className="chip-grid">
-            {job.materialNeeds.map((material) => (
-              <span key={material.supplyId} className="chip large-chip">
-                {material.supplyId} x{material.quantity}
-              </span>
-            ))}
+          <div className="stack-list">
+            {job.materialNeeds.map((material) => {
+              const supply = bundle.supplies.find((entry) => entry.id === material.supplyId);
+              const unitPrice = supply ? getSupplyUnitPrice(supply, "medium", activeEvents) : 0;
+              const totalPrice = unitPrice * material.quantity;
+              return (
+                <div key={material.supplyId} className="material-need-meta">
+                  <span>
+                    {supply?.name ?? material.supplyId} x{material.quantity}
+                  </span>
+                  <span>Med ${unitPrice} ea (${totalPrice})</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : (
@@ -333,20 +474,101 @@ function ContractDetails({
         </div>
       )}
       <div className="contract-detail-actions">
+        {isDayLabor ? <p className="eyebrow">Task</p> : null}
+        {dayLaborPrepActive ? (
+          <div className="action-timer-card day-labor-prep-card">
+            <div className="section-label-row tight-row action-timer-meta">
+              <strong>Laboring...</strong>
+            </div>
+            <div
+              className="action-timer-track"
+              role="progressbar"
+              aria-label="Day Labor shift prep"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(dayLaborPrepProgress * 100)}
+            >
+              <span className="action-timer-fill tone-info" style={{ width: `${Math.round(dayLaborPrepProgress * 100)}%` }} />
+            </div>
+          </div>
+        ) : null}
         <button
-          className={`${isDayLabor ? "day-labor-shift-button" : "primary-button"} wide-button`}
-          onClick={() => onAccept(contractId)}
-          disabled={!hasTools || isDayLaborCoolingDown}
+          className={`${isDayLabor ? (noDayLaborHoursRemaining ? "day-labor-end-day-button" : "day-labor-shift-button") : "primary-button"} wide-button`}
+          onClick={handleAcceptClick}
+          disabled={!hasTools || dayLaborPrepActive || (isDayLaborCoolingDown && !noDayLaborHoursRemaining)}
         >
-          {isDayLaborCoolingDown ? "Celebration Cooldown..." : hasTools ? (isDayLabor ? "Work Day Laborer Shift" : "Accept Job") : "Missing Tools"}
+          {isDayLabor && noDayLaborHoursRemaining
+            ? "End Day"
+            : isDayLaborCoolingDown
+              ? "Celebration Cooldown..."
+            : dayLaborPrepActive
+              ? "Laboring..."
+              : hasTools
+                ? isDayLabor
+                  ? "Work Day Laborer Shift"
+                  : "Accept Job"
+                : "Missing Tools"}
         </button>
-        {isDayLaborCoolingDown ? <p className="day-labor-cooldown-copy">FX running. Day Labor will unlock in a moment.</p> : null}
+        {isDayLaborCoolingDown && !noDayLaborHoursRemaining ? (
+          <p className="day-labor-cooldown-copy">FX running. Day Labor will unlock in a moment.</p>
+        ) : null}
       </div>
+      {dayLaborPromptOpen ? (
+        <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label="Day labor go to work prompt">
+          <article className="modal-shell chrome-card">
+            <div className="overlay-header">
+              <h3>Day Labor Callout</h3>
+              <button className="ghost-button" onClick={() => setDayLaborPromptOpen(false)}>
+                Cancel
+              </button>
+            </div>
+            <div className="overlay-body stack-list">
+              <p>A truck pulls up with room in the back for one more hombre. The driver says, “Órale, Holmes. You ready for work, ese?”</p>
+              <div className="action-row">
+                <button className="primary-button" onClick={startDayLaborPrep}>
+                  Go to Work
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      ) : null}
+      {confirmLossOpen && economyPreview ? (
+        <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label="Likely loss warning">
+          <article className="modal-shell chrome-card">
+            <div className="overlay-header">
+              <h3>Likely Loss</h3>
+              <button className="ghost-button" onClick={() => setConfirmLossOpen(false)}>
+                Cancel
+              </button>
+            </div>
+            <div className="overlay-body stack-list">
+              <p className="loss-confirm-summary">
+                Net on success is projected at {formatSignedMoney(economyPreview.projectedNetOnSuccess)}.
+              </p>
+              <p className="muted-copy">Why: {likelyLossWhy}</p>
+              <div className="action-row">
+                <button className="ghost-button" onClick={() => setConfirmLossOpen(false)}>
+                  Cancel
+                </button>
+                <button className="primary-button tone-danger" onClick={confirmLikelyLossAccept}>
+                  Accept Anyway
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      ) : null}
     </article>
   );
 }
 
-function getOfferPayout(offer: ContractOffer, activeEvents: typeof bundle.events): number {
+function getOfferPayout(game: GameState, offer: ContractOffer): number {
+  const payout = getContractQuotedPayout(game, bundle, offer.contract.contractId);
+  if (payout !== null) {
+    return payout;
+  }
+  const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
   if (offer.contract.contractId === DAY_LABOR_CONTRACT_ID) {
     return offer.job.basePayout;
   }
@@ -379,6 +601,17 @@ function buildSettlementPreview(game: Parameters<typeof getSettlementPreview>[0]
         partsQuality: null,
         partsQualityScore: 1,
         partsQualityModifier: 0,
+        estimateAtAccept: {
+          grossPayout: payout,
+          materialsCost: 0,
+          fuelCost: 0,
+          trashCost: 0,
+          estimatedTotalCost: 0,
+          projectedNetOnSuccess: payout,
+          biggestCostDriver: "none"
+        },
+        recoveryMode: "none",
+        deferredAtDay: null,
         trashUnitsPending: 0,
         siteSupplies: {},
         supplierCart: {},
@@ -417,4 +650,116 @@ function riskToneClass(risk: number): string {
     return "tone-warning";
   }
   return "tone-success";
+}
+
+function formatSignedMoney(value: number): string {
+  const rounded = Math.round(value);
+  return rounded >= 0 ? `+$${rounded}` : `-$${Math.abs(rounded)}`;
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function isLikelyLossOffer(preview: ContractEconomyPreview | null): boolean {
+  return Boolean(preview && preview.projectedNetOnSuccess < 0);
+}
+
+function buildLikelyLossWhy(preview: ContractEconomyPreview | null, premiumHaulLikely: boolean): string {
+  if (!preview) {
+    return "Projected costs exceed payout";
+  }
+  const reasons: string[] = [];
+  if (preview.materialsCost >= Math.max(preview.fuelCost, preview.trashCost) && preview.materialsCost > 0) {
+    reasons.push("Materials high");
+  }
+  if (preview.fuelCost >= FUEL_PRICE * 2) {
+    reasons.push("Long route");
+  }
+  if (premiumHaulLikely && preview.trashCost > 0) {
+    reasons.push("Premium haul");
+  }
+  if (reasons.length === 0) {
+    reasons.push("Projected costs exceed payout");
+  }
+  return reasons.join(", ");
+}
+
+function getBestPickContractId(
+  offers: ContractOffer[],
+  previewByContractId: Map<string, ContractEconomyPreview | null>,
+  game: GameState
+): string | null {
+  let best: { contractId: string; score: number; risk: number; fuel: number } | null = null;
+  for (const offer of offers) {
+    const preview = previewByContractId.get(offer.contract.contractId);
+    if (!preview) {
+      continue;
+    }
+    const plannedHours = estimatePlannedHours(offer, game, preview);
+    const score = preview.projectedNetOnSuccess / Math.max(1, plannedHours);
+    if (!best) {
+      best = {
+        contractId: offer.contract.contractId,
+        score,
+        risk: offer.job.risk,
+        fuel: preview.fuelCost
+      };
+      continue;
+    }
+    if (score > best.score || (score === best.score && offer.job.risk < best.risk) || (score === best.score && offer.job.risk === best.risk && preview.fuelCost < best.fuel)) {
+      best = {
+        contractId: offer.contract.contractId,
+        score,
+        risk: offer.job.risk,
+        fuel: preview.fuelCost
+      };
+    }
+  }
+  return best?.contractId ?? null;
+}
+
+function estimatePlannedHours(offer: ContractOffer, game: GameState, preview: ContractEconomyPreview): number {
+  const district = bundle.districts.find((entry) => entry.id === offer.job.districtId) ?? bundle.districts[0];
+  if (!district) {
+    return offer.job.workUnits;
+  }
+  const needsSupplier = preview.materialsCost > 0;
+  const loadTicks = offer.job.materialNeeds.length > 0 ? 2 : 0;
+  const supplierTicks = needsSupplier ? SHOP_SUPPLIER_TICKS + 2 + district.travel.supplierToSiteTicks : 0;
+  const siteTicks = needsSupplier ? 0 : district.travel.shopToSiteTicks;
+  const workTicks = offer.job.workUnits * 2;
+  const closeoutTicks = 2 + district.travel.shopToSiteTicks + 2;
+  const totalTicks = loadTicks + supplierTicks + siteTicks + workTicks + closeoutTicks;
+  return Math.max(1, totalTicks * 0.5);
+}
+
+function formatEstimateCostDriverLabel(driver: ContractEconomyPreview["biggestCostDriver"]): string {
+  if (driver === "materials") {
+    return "Materials";
+  }
+  if (driver === "fuel") {
+    return "Fuel";
+  }
+  if (driver === "trash") {
+    return "Trash";
+  }
+  return "None";
+}
+
+function getStyleFitHint(skillId: SkillId, archetypeTags: string[]): string {
+  const topTag = archetypeTags[0] ?? "";
+  const precisionSkills: SkillId[] = ["carpenter", "mason", "tile_setter", "welder", "glazier", "cabinet_maker", "millworker"];
+  const safetySkills: SkillId[] = ["demolition_specialist", "scaffolder", "heavy_equipment_operator", "lineman", "roofer"];
+  const marginSkills: SkillId[] = ["plumber", "electrician", "flooring_installer", "painter", "siding_installer"];
+  const diagnosticsSkills: SkillId[] = ["hvac_technician", "refrigeration_technician", "auto_mechanic", "diesel_mechanic", "industrial_maintenance"];
+  const closerSkills: SkillId[] = ["framer", "concrete_finisher", "drywall_installer", "fence_installer", "solar_panel_installer"];
+
+  const fit =
+    (topTag === "Precision Shop" && precisionSkills.includes(skillId)) ||
+    (topTag === "Safety First" && safetySkills.includes(skillId)) ||
+    (topTag === "Margin Master" && marginSkills.includes(skillId)) ||
+    (topTag === "Diagnostics Crew" && diagnosticsSkills.includes(skillId)) ||
+    (topTag === "Field Closer" && closerSkills.includes(skillId));
+  return fit ? `${topTag} bonus alignment` : `${topTag} neutral alignment`;
 }

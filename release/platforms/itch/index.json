@@ -1,0 +1,26 @@
+{
+  "platform": "itch",
+  "latestReleaseId": "v0.1.2+itch.20260306.01",
+  "releases": [
+    {
+      "releaseId": "v0.1.2+itch.20260306.01",
+      "version": "0.1.2",
+      "buildId": "itch.20260306.01",
+      "releaseLabel": "v0.1.2+itch.20260306.01",
+      "builtAtUtc": "2026-03-06T01:54:59.415Z",
+      "notesPath": "release/platforms/itch/releases/v0.1.2+itch.20260306.01/CHANGELOG.md",
+      "artifactName": "error-hammer-v0.1.2+itch.20260306.01-itch.zip",
+      "tag": "itch/v0.1.2+itch.20260306.01"
+    },
+    {
+      "releaseId": "v0.1.1+itch.20260305.01",
+      "version": "0.1.1",
+      "buildId": "itch.20260305.01",
+      "releaseLabel": "v0.1.1+itch.20260305.01",
+      "builtAtUtc": "2026-03-05T02:31:45.819Z",
+      "notesPath": "release/platforms/itch/releases/v0.1.1+itch.20260305.01/CHANGELOG.md",
+      "artifactName": "error-hammer-v0.1.1+itch.20260305.01-itch.zip",
+      "tag": "itch/v0.1.1+itch.20260305.01"
+    }
+  ]
+}

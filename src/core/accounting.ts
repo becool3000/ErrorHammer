@@ -10,18 +10,23 @@ export interface AccountingCategoryTotals {
   repairExpense: number;
   researchExpense: number;
   officeRentExpense: number;
+  insuranceAdminExpense: number;
   truckPaymentExpense: number;
   electricExpense: number;
   waterSewageExpense: number;
+  yardLeaseExpense: number;
   dumpsterBaseExpense: number;
   accountantSalaryExpense: number;
   lateFeeExpense: number;
   accountantHireExpense: number;
   dumpsterServiceExpense: number;
+  premiumHaulExpense: number;
+  deferredCarryExpense: number;
 }
 
 export interface AccountingJobLedgerRow {
   day: number;
+  contractId?: string;
   jobName: string;
   payout: number;
   costs: number;
@@ -41,6 +46,7 @@ export interface AccountingSnapshot {
 
 interface PendingJob {
   day: number;
+  contractId?: string;
   jobName: string;
   costs: number;
   quality: "low" | "medium" | "high" | "n/a";
@@ -59,14 +65,18 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     repairExpense: 0,
     researchExpense: 0,
     officeRentExpense: 0,
+    insuranceAdminExpense: 0,
     truckPaymentExpense: 0,
     electricExpense: 0,
     waterSewageExpense: 0,
+    yardLeaseExpense: 0,
     dumpsterBaseExpense: 0,
     accountantSalaryExpense: 0,
     lateFeeExpense: 0,
     accountantHireExpense: 0,
-    dumpsterServiceExpense: 0
+    dumpsterServiceExpense: 0,
+    premiumHaulExpense: 0,
+    deferredCarryExpense: 0
   };
   const pendingJobsByActor = new Map<string, PendingJob>();
   const jobRows: AccountingJobLedgerRow[] = [];
@@ -81,6 +91,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     if (acceptedMatch) {
       pendingJobsByActor.set(logEntry.actorId, {
         day: logEntry.day,
+        contractId: logEntry.contractId,
         jobName: acceptedMatch[1] ?? "Unknown Job",
         costs: 0,
         quality: "n/a"
@@ -129,6 +140,14 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       continue;
     }
 
+    const refuelTaskMatch = message.match(/Refueled [0-9]+ at the gas station(?: on account)?(?: \(\$([0-9]+)\)| for \$([0-9]+))\./i);
+    if (refuelTaskMatch) {
+      const amount = parseMoneyCapture(refuelTaskMatch[1] ?? refuelTaskMatch[2]);
+      categories.fuelExpense += amount;
+      addExpenseToPendingJob(pendingJobsByActor.get(logEntry.actorId), amount);
+      continue;
+    }
+
     const toolBuyMatch = message.match(/Bought .+ for \$([0-9]+)\./i);
     if (toolBuyMatch && !message.toLowerCase().includes("fuel")) {
       const amount = parseMoneyCapture(toolBuyMatch[1]);
@@ -163,9 +182,28 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       continue;
     }
 
+    const premiumHaulMatch = message.match(/Premium haul-off charged \$([0-9]+) for [0-9]+ trash units\./i);
+    if (premiumHaulMatch) {
+      categories.premiumHaulExpense += parseMoneyCapture(premiumHaulMatch[1]);
+      addExpenseToPendingJob(pendingJobsByActor.get(logEntry.actorId), parseMoneyCapture(premiumHaulMatch[1]));
+      continue;
+    }
+
+    const deferredCarryMatch = message.match(/^Deferred carrying fees: \$([0-9]+) \([0-9]+ jobs\)\./i);
+    if (deferredCarryMatch) {
+      categories.deferredCarryExpense += parseMoneyCapture(deferredCarryMatch[1]);
+      continue;
+    }
+
     const officeRentMatch = message.match(/^Bill office rent: \$([0-9]+)\./i);
     if (officeRentMatch) {
       categories.officeRentExpense += parseMoneyCapture(officeRentMatch[1]);
+      continue;
+    }
+
+    const insuranceMatch = message.match(/^Bill insurance\/admin: \$([0-9]+)\./i);
+    if (insuranceMatch) {
+      categories.insuranceAdminExpense += parseMoneyCapture(insuranceMatch[1]);
       continue;
     }
 
@@ -193,6 +231,12 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       continue;
     }
 
+    const yardLeaseMatch = message.match(/^Bill yard lease: \$([0-9]+)\./i);
+    if (yardLeaseMatch) {
+      categories.yardLeaseExpense += parseMoneyCapture(yardLeaseMatch[1]);
+      continue;
+    }
+
     const salaryMatch = message.match(/^Bill accountant salary: \$([0-9]+)\./i);
     if (salaryMatch) {
       categories.accountantSalaryExpense += parseMoneyCapture(salaryMatch[1]);
@@ -211,6 +255,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       categories.dayLaborIncome += payout;
       jobRows.push({
         day: logEntry.day,
+        contractId: logEntry.contractId,
         jobName: "Day Laborer",
         payout,
         costs: 0,
@@ -230,6 +275,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       const costs = pending?.costs ?? 0;
       jobRows.push({
         day: pending?.day ?? logEntry.day,
+        contractId: pending?.contractId ?? logEntry.contractId,
         jobName: pending?.jobName ?? "Unknown Job",
         payout,
         costs,
@@ -249,6 +295,7 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
       const costs = pending?.costs ?? 0;
       jobRows.push({
         day: pending?.day ?? logEntry.day,
+        contractId: pending?.contractId ?? logEntry.contractId,
         jobName: pending?.jobName ?? "Unknown Job",
         payout,
         costs,
@@ -269,14 +316,18 @@ export function getAccountingSnapshot(state: GameState, limit = 80): AccountingS
     categories.repairExpense +
     categories.researchExpense +
     categories.officeRentExpense +
+    categories.insuranceAdminExpense +
     categories.truckPaymentExpense +
     categories.electricExpense +
     categories.waterSewageExpense +
+    categories.yardLeaseExpense +
     categories.dumpsterBaseExpense +
     categories.accountantSalaryExpense +
     categories.lateFeeExpense +
     categories.accountantHireExpense +
-    categories.dumpsterServiceExpense;
+    categories.dumpsterServiceExpense +
+    categories.premiumHaulExpense +
+    categories.deferredCarryExpense;
   const netFromLogs = totalIncome - totalExpenses;
   const observedCashDelta = state.player.cash - STARTING_CASH;
   const cashDrift = observedCashDelta - netFromLogs;

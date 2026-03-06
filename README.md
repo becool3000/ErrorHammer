@@ -18,11 +18,13 @@
 6. Start local dev server: `npm run dev`
 
 ## Itch.io Publish
-1. Run `npm run content:compile`.
-2. Run `npm run build`.
-3. In PowerShell, change to `dist/` and run `tar -a -c -f ..\error-hammer-itch.zip *`.
-4. Upload `error-hammer-itch.zip` to itch.io.
-5. Do not zip the repo root, `node_modules/`, or source files; the upload archive must contain only the built `dist/` contents.
+1. Run `npm run release:itch`.
+2. If release notes are not filled, the command scaffolds/points to `release/platforms/itch/releases/<releaseId>/CHANGELOG.md` and exits.
+3. Fill all required changelog sections, then run `npm run release:itch` again.
+4. Upload the generated artifact named `error-hammer-vX.Y.Z+itch.YYYYMMDD.NN-itch.zip`.
+5. Release manifests are written to `release/platforms/itch/releases/<releaseId>/release.json`.
+6. Vault release logs are appended in `obsidian_vault/Releases.md` and `obsidian_vault/releases/itch.md`.
+7. Do not commit zip artifacts; keep local only.
 
 ## Usage
 1. Start at the title screen, fill both Player and Company name fields, and only then can `New Game` begin; the chosen names persist into the compact shell header, log, and quick-buy notices.

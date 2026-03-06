@@ -29,7 +29,43 @@ const SCHEMA_FILES = {
   strings: "strings.schema.json"
 } as const;
 
-const SUPPLY_GROUPS: Record<SkillId, [string, string]> = {
+const LEGACY_FIVE_JOB_SKILLS: SkillId[] = [
+  "electrician",
+  "plumber",
+  "carpenter",
+  "mason",
+  "concrete_finisher",
+  "roofer",
+  "hvac_technician",
+  "drywall_installer",
+  "painter",
+  "flooring_installer",
+  "glazier",
+  "insulation_installer",
+  "framer",
+  "siding_installer",
+  "fence_installer",
+  "cabinet_maker",
+  "millworker",
+  "scaffolder",
+  "solar_panel_installer"
+];
+
+const CORE_TRADE_TRACKS = [
+  "carpenter",
+  "roofer",
+  "landscaper",
+  "welder",
+  "electrician",
+  "plumber",
+  "hvac_technician",
+  "drywall_installer",
+  "painter",
+  "flooring_installer",
+  "finish_carpentry"
+] as const;
+
+const SUPPLY_GROUPS: Partial<Record<SkillId, [string, string]>> = {
   electrician: ["wire-spool", "breaker-kit"],
   plumber: ["pipe-kit", "valve-pack"],
   carpenter: ["board-pack", "fastener-box"],
@@ -48,7 +84,38 @@ const SUPPLY_GROUPS: Record<SkillId, [string, string]> = {
   cabinet_maker: ["cabinet-panel-pack", "hinge-pack"],
   millworker: ["millwork-trim-kit", "fastener-box"],
   scaffolder: ["scaffold-coupler-pack", "anchor-set"],
-  solar_panel_installer: ["solar-rack-kit", "wire-spool"]
+  solar_panel_installer: ["solar-rack-kit", "wire-spool"],
+  heavy_equipment_operator: ["anchor-set", "rebar-bundle"],
+  demolition_specialist: ["anchor-set", "fastener-box"],
+  low_voltage_data_tech: ["wire-spool", "breaker-kit"],
+  lineman: ["wire-spool", "breaker-kit"],
+  pipefitter: ["pipe-kit", "valve-pack"],
+  steamfitter: ["pipe-kit", "valve-pack"],
+  sprinkler_fitter: ["pipe-kit", "valve-pack"],
+  gas_fitter: ["pipe-kit", "valve-pack"],
+  refrigeration_technician: ["duct-kit", "filter-pack"],
+  boiler_technician: ["duct-kit", "filter-pack"],
+  sheet_metal_worker: ["duct-kit", "fastener-box"],
+  welder: ["rebar-bundle", "anchor-set"],
+  metal_fabricator: ["rebar-bundle", "anchor-set"],
+  machinist: ["trim-kit", "fastener-box"],
+  cnc_operator: ["trim-kit", "fastener-box"],
+  blacksmith: ["rebar-bundle", "anchor-set"],
+  auto_mechanic: ["filter-pack", "valve-pack"],
+  diesel_mechanic: ["filter-pack", "valve-pack"],
+  small_engine_repair: ["filter-pack", "valve-pack"],
+  motorcycle_technician: ["filter-pack", "valve-pack"],
+  aircraft_mechanic: ["filter-pack", "valve-pack"],
+  landscaper: ["post-anchor-kit", "fence-panel-pack"],
+  arborist: ["post-anchor-kit", "fence-panel-pack"],
+  irrigation_technician: ["pipe-kit", "valve-pack"],
+  well_driller: ["pipe-kit", "rebar-bundle"],
+  industrial_maintenance: ["fastener-box", "anchor-set"],
+  millwright: ["fastener-box", "anchor-set"],
+  elevator_technician: ["wire-spool", "anchor-set"],
+  robotics_technician: ["wire-spool", "breaker-kit"],
+  tile_setter: ["tile-box", "underlayment-roll"],
+  upholsterer: ["trim-kit", "paint-bucket"]
 };
 
 export interface ValidationResult {
@@ -176,11 +243,13 @@ function crossValidate(bundle: ContentBundle): string[] {
   if (bundle.tools.length < 19) {
     errors.push("tools: minimum 19 entries required");
   }
-  if (bundle.jobs.length !== 95) {
-    errors.push(`jobs: expected exactly 95 trade jobs, got ${bundle.jobs.length}`);
+  const expandedSkills = TRADE_SKILLS.filter((skillId) => !LEGACY_FIVE_JOB_SKILLS.includes(skillId));
+  const expectedTradeJobs = LEGACY_FIVE_JOB_SKILLS.length * 5 + expandedSkills.length * 3;
+  if (bundle.jobs.length !== expectedTradeJobs) {
+    errors.push(`jobs: expected exactly ${expectedTradeJobs} trade jobs, got ${bundle.jobs.length}`);
   }
-  if (bundle.babaJobs.length < 8) {
-    errors.push("babaJobs: minimum 8 entries required");
+  if (bundle.babaJobs.length < 22) {
+    errors.push(`babaJobs: minimum 22 entries required, got ${bundle.babaJobs.length}`);
   }
   if (bundle.events.length < 12) {
     errors.push("events: minimum 12 entries required");
@@ -238,8 +307,9 @@ function crossValidate(bundle: ContentBundle): string[] {
     countsBySkill.set(job.primarySkill, (countsBySkill.get(job.primarySkill) ?? 0) + 1);
   }
   for (const skill of TRADE_SKILLS) {
-    if ((countsBySkill.get(skill) ?? 0) !== 5) {
-      errors.push(`jobs: expected 5 jobs for '${skill}', got ${countsBySkill.get(skill) ?? 0}`);
+    const expectedCount = LEGACY_FIVE_JOB_SKILLS.includes(skill) ? 5 : 3;
+    if ((countsBySkill.get(skill) ?? 0) !== expectedCount) {
+      errors.push(`jobs: expected ${expectedCount} jobs for '${skill}', got ${countsBySkill.get(skill) ?? 0}`);
     }
   }
 
@@ -265,6 +335,23 @@ function crossValidate(bundle: ContentBundle): string[] {
       if (!supplyIds.has(material.supplyId)) {
         errors.push(`babaJobs/${job.id}: unknown supply '${material.supplyId}'`);
       }
+    }
+  }
+
+  const babaTrackCounts = new Map<(typeof CORE_TRADE_TRACKS)[number], number>();
+  for (const track of CORE_TRADE_TRACKS) {
+    babaTrackCounts.set(track, 0);
+  }
+  for (const job of bundle.babaJobs) {
+    const track = mapSkillToCoreTrack(job.primarySkill);
+    if (!track) {
+      continue;
+    }
+    babaTrackCounts.set(track, (babaTrackCounts.get(track) ?? 0) + 1);
+  }
+  for (const track of CORE_TRADE_TRACKS) {
+    if ((babaTrackCounts.get(track) ?? 0) < 2) {
+      errors.push(`babaJobs: expected at least 2 jobs for core track '${track}', got ${babaTrackCounts.get(track) ?? 0}`);
     }
   }
 
@@ -372,6 +459,27 @@ function deriveMaterialNeeds(primarySkill: SkillId, requiredTools: string[], tie
     { supplyId: primaryId, quantity: primaryQuantity },
     { supplyId: secondaryId, quantity: secondaryQuantity }
   ];
+}
+
+function mapSkillToCoreTrack(skillId: SkillId): (typeof CORE_TRADE_TRACKS)[number] | null {
+  if (
+    skillId === "carpenter" ||
+    skillId === "roofer" ||
+    skillId === "landscaper" ||
+    skillId === "welder" ||
+    skillId === "electrician" ||
+    skillId === "plumber" ||
+    skillId === "hvac_technician" ||
+    skillId === "drywall_installer" ||
+    skillId === "painter" ||
+    skillId === "flooring_installer"
+  ) {
+    return skillId;
+  }
+  if (skillId === "cabinet_maker" || skillId === "millworker") {
+    return "finish_carpentry";
+  }
+  return null;
 }
 
 function ensureUniqueIds<T extends { id: string }>(items: T[], label: string, errors: string[]): void {

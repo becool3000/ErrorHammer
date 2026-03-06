@@ -1,5 +1,6 @@
 import { createRng, hashSeed } from "./rng";
 import { ContentBundle, ContractInstance, EventDef, JobDef, TRADE_SKILLS } from "./types";
+import { getResearchCategoryForSkill, TRADE_GROUPS } from "./research";
 
 export interface ContractBoardOptions {
   count?: number;
@@ -88,30 +89,47 @@ export function generateContractBoard(
   daySeed: number,
   options: ContractBoardOptions = {}
 ): ContractInstance[] {
-  const count = Math.min(TRADE_SKILLS.length, Math.max(1, options.count ?? TRADE_SKILLS.length));
+  const defaultCompactCount = 8;
+  const count = Math.min(TRADE_SKILLS.length, Math.max(1, options.count ?? defaultCompactCount));
   const districtAllowList = new Set(options.districtIds ?? bundle.districts.map((district) => district.id));
   const maxTier = options.maxTier ?? 3;
 
   const picked: JobDef[] = [];
-  for (const skillId of TRADE_SKILLS.slice(0, count)) {
-    const bySkill = bundle.jobs
-      .filter((job) => job.primarySkill === skillId)
-      .sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id));
-    if (bySkill.length === 0) {
+  const categoryOrder = TRADE_GROUPS.map((group) => group.id);
+  const categoryWindow = Math.min(count, categoryOrder.length);
+  const startIndex = Math.max(0, (day - 1) % categoryOrder.length);
+  const selectedCategories = Array.from({ length: categoryWindow }, (_, index) => categoryOrder[(startIndex + index) % categoryOrder.length]!);
+  const selectedSkills = new Set<string>();
+
+  for (const categoryId of selectedCategories) {
+    const group = TRADE_GROUPS.find((entry) => entry.id === categoryId);
+    if (!group || group.skills.length === 0) {
       continue;
     }
-
-    const eligible = bySkill.filter((job) => districtAllowList.has(job.districtId) && job.tier <= maxTier);
-    if (eligible.length > 0) {
-      const skillRng = createRng(hashSeed(daySeed, "board", day, skillId, "eligible"));
-      picked.push(eligible[skillRng.nextInt(eligible.length)]!);
-      continue;
+    const rng = createRng(hashSeed(daySeed, "group", day, categoryId));
+    const bySkill = [...group.skills];
+    const skillId = bySkill[rng.nextInt(bySkill.length)]!;
+    selectedSkills.add(skillId);
+    const job = pickJobForSkill(bundle, skillId, districtAllowList, maxTier, daySeed, day);
+    if (job) {
+      picked.push(job);
     }
+  }
 
-    const lowestTier = bySkill[0]!.tier;
-    const lowestTierPool = bySkill.filter((job) => job.tier === lowestTier);
-    const fallbackRng = createRng(hashSeed(daySeed, "board", day, skillId, "fallback"));
-    picked.push(lowestTierPool[fallbackRng.nextInt(lowestTierPool.length)]!);
+  if (picked.length < count) {
+    const remainingSkills = TRADE_SKILLS.filter((skillId) => !selectedSkills.has(skillId));
+    const fillRng = createRng(hashSeed(daySeed, "fill", day));
+    while (picked.length < count && remainingSkills.length > 0) {
+      const index = fillRng.nextInt(remainingSkills.length);
+      const [skillId] = remainingSkills.splice(index, 1);
+      if (!skillId) {
+        break;
+      }
+      const job = pickJobForSkill(bundle, skillId, districtAllowList, maxTier, daySeed, day);
+      if (job) {
+        picked.push(job);
+      }
+    }
   }
 
   return picked.map((job, index) => {
@@ -125,6 +143,33 @@ export function generateContractBoard(
       expiresDay: day
     };
   });
+}
+
+function pickJobForSkill(
+  bundle: ContentBundle,
+  skillId: (typeof TRADE_SKILLS)[number],
+  districtAllowList: Set<string>,
+  maxTier: number,
+  daySeed: number,
+  day: number
+): JobDef | null {
+  const bySkill = bundle.jobs
+    .filter((job) => job.primarySkill === skillId)
+    .sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id));
+  if (bySkill.length === 0) {
+    return null;
+  }
+
+  const eligible = bySkill.filter((job) => districtAllowList.has(job.districtId) && job.tier <= maxTier);
+  if (eligible.length > 0) {
+    const skillRng = createRng(hashSeed(daySeed, "board", day, skillId, getResearchCategoryForSkill(skillId), "eligible"));
+    return eligible[skillRng.nextInt(eligible.length)]!;
+  }
+
+  const lowestTier = bySkill[0]!.tier;
+  const lowestTierPool = bySkill.filter((job) => job.tier === lowestTier);
+  const fallbackRng = createRng(hashSeed(daySeed, "board", day, skillId, "fallback"));
+  return lowestTierPool[fallbackRng.nextInt(lowestTierPool.length)]!;
 }
 
 function clamp(value: number, min: number, max: number): number {

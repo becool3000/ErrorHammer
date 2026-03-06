@@ -1,17 +1,29 @@
 import {
+  ActiveRecoveryMode,
   ActiveJobState,
   ActiveTaskState,
   ActorState,
+  BusinessTier,
+  ContractActualSnapshot,
+  ContractFileSnapshot,
+  ContractFileStatus,
+  ContractEstimateSnapshot,
+  ContractFilterId,
   ContentBundle,
   ContractInstance,
+  CoreTradeSkillId,
+  CorePerkId,
   CrewState,
   DayLog,
+  DeferredJobState,
   DistrictDef,
   EventDef,
   GameState,
+  JobProfitRecap,
   JobDef,
   LocationId,
   Outcome,
+  RecoveryActionId,
   SkillId,
   SupplyInventory,
   SupplyQuality,
@@ -27,9 +39,14 @@ import {
   WorkdayState,
   TRADE_SKILLS
 } from "./types";
-import { applyToolPriceModifiers, deriveCompanyLevel, getPayoutMultiplier, getRiskValue, isForcedNeutral } from "./economy";
+import { applyToolPriceModifiers, deriveCompanyLevel, generateContractBoard, getPayoutMultiplier, getRiskValue, isForcedNeutral } from "./economy";
 import { createRng, hashSeed } from "./rng";
 import {
+  closeOfficeManually as closeOfficeManuallyOperation,
+  closeYardManually as closeYardManuallyOperation,
+  enableDumpsterService as enableDumpsterServiceOperation,
+  getPremiumHaulCost,
+  upgradeBusinessTier as upgradeBusinessTierOperation,
   awardOfficeSkillXp,
   emptyDumpster as emptyDumpsterOperation,
   hireAccountant as hireAccountantOperation,
@@ -38,7 +55,28 @@ import {
   normalizeYardState,
   resetOfficeSkillDailyCaps
 } from "./operations";
-import { isSkillUnlocked, normalizeResearchState, startResearchProject } from "./research";
+import {
+  isFacilityProjectComplete,
+  normalizeResearchState,
+  startResearchProject
+} from "./research";
+import {
+  awardPerkXp,
+  consumeRerollToken,
+  getTaskPerkModifiers,
+  normalizePerksState,
+  resetJobRerollTokens,
+  spendPerkPoint as spendPerkPointCore
+} from "./perks";
+import { formatEncounterMarker, rollRebarBobEncounter } from "./encounters";
+import {
+  CORE_TRADE_SKILLS,
+  formatCoreTrackLabel,
+  isCoreTrackUnlocked,
+  mapSkillToCoreTrack,
+  normalizeTradeProgressState,
+  unlockCoreTrack
+} from "./tradeProgress";
 
 export interface StateTransitionResult<T = undefined> {
   nextState: GameState;
@@ -98,6 +136,23 @@ export interface SettlementPreview {
   failCash: number;
   riskBand: RiskBand;
   neutralWarning: string;
+}
+
+export interface ContractEconomyPreview extends ContractEstimateSnapshot {}
+
+export interface ContractAutoBidPreview {
+  baseQuote: number;
+  autoBid: number;
+  acceptedPayout: number;
+  estimatingLevel: number;
+  bidAccuracyBandPct: number;
+  bidNoise: number;
+  isBaba: boolean;
+}
+
+export interface ActiveJobSpendPreview extends ContractEconomyPreview {
+  spentSoFar: number;
+  estimatedRemainingCost: number;
 }
 
 interface SupplierCheckoutStatus {
@@ -200,12 +255,15 @@ export const MAX_OVERTIME_TICKS = 4;
 export const SHOP_SUPPLIER_TICKS = 2;
 export const SHOP_SUPPLIER_FUEL = 1;
 export const GAS_STATION_STOP_TICKS = 2;
-export const FUEL_PRICE = 6;
+export const FUEL_PRICE = 5;
 export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
 export const DAY_LABOR_CONTRACT_ID = "day-labor-contract";
 export const DAY_LABOR_JOB_ID = "job-day-laborer";
-export const MINIMUM_WAGE_PER_HOUR = 7.25;
+export const MINIMUM_WAGE_PER_HOUR = 10.5;
+export const MIN_CONTRACT_RATE_PER_HOUR = 50;
+export const MIN_BABA_CONTRACT_RATE_PER_HOUR = 25;
 const BABA_G_ROTATING_CONTRACT_PREFIX = "baba-g-rotating-contract";
+const UNLOCKED_FALLBACK_CONTRACT_PREFIX = "unlocked-fallback-contract";
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
   low: "Low",
@@ -264,56 +322,31 @@ function findJobInBundle(bundle: ContentBundle, jobId: string): JobDef | null {
   return bundle.jobs.find((entry) => entry.id === jobId) ?? bundle.babaJobs.find((entry) => entry.id === jobId) ?? null;
 }
 
-const SKILL_LABELS: Record<SkillId, string> = {
-  electrician: "Electrician",
-  plumber: "Plumber",
-  carpenter: "Carpenter",
-  mason: "Mason",
-  concrete_finisher: "Concrete Finisher",
-  roofer: "Roofer",
-  hvac_technician: "HVAC Technician",
-  drywall_installer: "Drywall Installer",
-  painter: "Painter",
-  flooring_installer: "Flooring Installer",
-  glazier: "Glazier",
-  insulation_installer: "Insulation Installer",
-  framer: "Framer",
-  siding_installer: "Siding Installer",
-  fence_installer: "Fence Installer",
-  cabinet_maker: "Cabinet Maker",
-  millworker: "Millworker",
-  scaffolder: "Scaffolder",
-  solar_panel_installer: "Solar Panel Installer"
-};
-
-const SKILL_COMPACT_LABELS: Record<SkillId, string> = {
-  electrician: "Elec",
-  plumber: "Plumb",
-  carpenter: "Carp",
-  mason: "Mason",
-  concrete_finisher: "Concrete",
-  roofer: "Roof",
-  hvac_technician: "HVAC",
-  drywall_installer: "Drywall",
-  painter: "Paint",
-  flooring_installer: "Floor",
-  glazier: "Glass",
-  insulation_installer: "Insulate",
-  framer: "Frame",
-  siding_installer: "Siding",
-  fence_installer: "Fence",
-  cabinet_maker: "Cabinet",
-  millworker: "Millwork",
-  scaffolder: "Scaffold",
-  solar_panel_installer: "Solar"
-};
-
 export function formatSkillLabel(skillId: SkillId): string {
-  return SKILL_LABELS[skillId] ?? skillId;
+  return skillId
+    .split("_")
+    .map((word) => {
+      if (word === "hvac") {
+        return "HVAC";
+      }
+      if (word === "cnc") {
+        return "CNC";
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
 }
 
 export function formatSkillCompactLabel(skillId: SkillId): string {
-  return SKILL_COMPACT_LABELS[skillId] ?? formatSkillLabel(skillId);
+  const full = formatSkillLabel(skillId);
+  if (full.length <= 12) {
+    return full;
+  }
+  return full
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 export function formatSupplyQuality(quality: SupplyQuality): string {
@@ -397,6 +430,13 @@ export function getSkillRank(actor: ActorState, skillId: SkillId): number {
   return getLevelForXp(actor.skills?.[skillId] ?? 0);
 }
 
+export function getCoreTrackRank(actor: ActorState, track: CoreTradeSkillId): number {
+  if (track === "finish_carpentry") {
+    return Math.max(getSkillRank(actor, "cabinet_maker"), getSkillRank(actor, "millworker"));
+  }
+  return getSkillRank(actor, track as SkillId);
+}
+
 export function getSkillDisplayRows(actor: ActorState): Array<{
   skillId: SkillId;
   level: number;
@@ -445,10 +485,14 @@ export function getVisibleTaskActions(
   const mapping = getTaskSkillMapping(job, activeTask.taskId);
   const skillRank = getTaskSkillRank(state.player, mapping);
   const difficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, state.activeEventIds));
+  const regularTicksLeft = getRemainingRegularTicks(state.workday);
 
-  return activeTask.availableStances.flatMap((stance) => {
-    const effectiveStance = activeTask.qualityBearing ? stance : "standard";
-    const timing = resolveTiming(state, job, activeTask, effectiveStance, skillRank, difficulty);
+  const actions = activeTask.availableStances.flatMap((stance) => {
+    const effectiveStance = activeTask.qualityBearing || activeTask.taskId === "refuel_at_station" ? stance : "standard";
+    const timing =
+      activeTask.taskId === "refuel_at_station"
+        ? { timeOutcome: "standard" as const, ticksSpent: getRefuelTaskTicks(effectiveStance) }
+        : resolveTiming(state, job, activeTask, effectiveStance, skillRank, difficulty);
     if (canSpendTicks(state.workday, timing.ticksSpent, false)) {
       return [{ stance, allowOvertime: false }];
     }
@@ -457,6 +501,12 @@ export function getVisibleTaskActions(
     }
     return [];
   });
+
+  if (actions.length === 0 && activeTask.taskId === "return_to_shop" && regularTicksLeft > 0) {
+    return [{ stance: "standard", allowOvertime: false }];
+  }
+
+  return actions;
 }
 
 export function getSettlementPreview(state: GameState, bundle: ContentBundle): SettlementPreview | null {
@@ -485,6 +535,243 @@ export function getSettlementPreview(state: GameState, bundle: ContentBundle): S
     failCash: 0,
     riskBand: getRiskBandFromFailChance(failChance),
     neutralWarning
+  };
+}
+
+export function getContractEconomyPreview(state: GameState, bundle: ContentBundle, contractId: string): ContractEconomyPreview | null {
+  const picked = getJobByContract(state, bundle, contractId);
+  if (!picked) {
+    return null;
+  }
+
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  const district = getDistrict(bundle, picked.job.districtId);
+  const grossPayout = getContractAutoBidPreview(state, bundle, contractId)?.acceptedPayout ?? getQuotedPayoutForOffer(state, bundle, picked, events);
+  if (contractId === DAY_LABOR_CONTRACT_ID) {
+    return {
+      grossPayout,
+      materialsCost: 0,
+      fuelCost: 0,
+      trashCost: 0,
+      estimatedTotalCost: 0,
+      projectedNetOnSuccess: grossPayout,
+      biggestCostDriver: "none"
+    };
+  }
+  const materialRouting = getJobMaterialRoutingPlan(picked.job, state.shopSupplies, state.truckSupplies);
+  const needsSupplier = materialRouting.needsSupplier;
+  const materialsCost = estimateMaterialPurchaseCost(state, bundle, picked.job, events);
+  const fuelCost = estimateContractRouteFuelCost(district, needsSupplier);
+  const trashCost = estimateTrashHandlingCost(state, picked.job);
+  const estimatedTotalCost = materialsCost + fuelCost + trashCost;
+
+  return {
+    grossPayout,
+    materialsCost,
+    fuelCost,
+    trashCost,
+    estimatedTotalCost,
+    projectedNetOnSuccess: grossPayout - estimatedTotalCost,
+    biggestCostDriver: getLargestEstimatedCostDriver(materialsCost, fuelCost, trashCost)
+  };
+}
+
+export function getContractEstimateSnapshot(state: GameState, bundle: ContentBundle, contractId: string): ContractEstimateSnapshot | null {
+  return getContractEconomyPreview(state, bundle, contractId);
+}
+
+export function getContractQuotedPayout(state: GameState, bundle: ContentBundle, contractId: string): number | null {
+  const picked = getJobByContract(state, bundle, contractId);
+  if (!picked) {
+    return null;
+  }
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  return getContractAutoBidPreview(state, bundle, contractId)?.acceptedPayout ?? getQuotedPayoutForOffer(state, bundle, picked, events);
+}
+
+export function getContractAutoBidPreview(state: GameState, bundle: ContentBundle, contractId: string): ContractAutoBidPreview | null {
+  const picked = getJobByContract(state, bundle, contractId);
+  if (!picked) {
+    return null;
+  }
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  const quotedBase = getQuotedPayoutForOffer(state, bundle, picked, events);
+  const isBaba = picked.job.tags.includes("baba-g");
+  if (isBaba || contractId === DAY_LABOR_CONTRACT_ID) {
+    return {
+      baseQuote: quotedBase,
+      autoBid: quotedBase,
+      acceptedPayout: quotedBase,
+      estimatingLevel: state.perks.corePerks.estimating ?? 0,
+      bidAccuracyBandPct: 0,
+      bidNoise: 0,
+      isBaba
+    };
+  }
+
+  const estimatingLevel = Math.max(0, state.perks.corePerks.estimating ?? 0);
+  const track = mapSkillToCoreTrack(picked.job.primarySkill);
+  const coreTrackRank = track ? getCoreTrackRank(state.player, track) : 0;
+  const quoteBoostPct =
+    Math.min(0.2, coreTrackRank * 0.02) + Math.min(0.15, estimatingLevel * 0.015) + Math.min(0.12, state.player.reputation / 600);
+  const baseQuote = Math.max(0, Math.round(quotedBase * (1 + quoteBoostPct)));
+  const bidAccuracyBandPct = clamp(0.30 - estimatingLevel * 0.03, 0.06, 0.30);
+  const rng = createRng(hashSeed(state.seed, state.day, contractId, "auto-bid", estimatingLevel));
+  const bidNoise = rng.next() * 2 - 1;
+  const multiplier = clamp(1 + bidNoise * bidAccuracyBandPct, 0.75, 1.25);
+  const autoBid = Math.max(0, Math.round(baseQuote * multiplier));
+  const minimumPayout = getMinimumContractPayout(state, bundle, picked.job);
+  return {
+    baseQuote,
+    autoBid,
+    acceptedPayout: Math.max(autoBid, minimumPayout),
+    estimatingLevel,
+    bidAccuracyBandPct,
+    bidNoise,
+    isBaba: false
+  };
+}
+
+export function getActiveJobSpendPreview(state: GameState, bundle: ContentBundle): ActiveJobSpendPreview | null {
+  const activeJob = state.activeJob;
+  if (!activeJob) {
+    return null;
+  }
+
+  const job = findJobInBundle(bundle, activeJob.jobId);
+  if (!job) {
+    return null;
+  }
+
+  const events = getActiveEvents(bundle, state.activeEventIds);
+  const district = getDistrict(bundle, activeJob.districtId);
+  const materialsCost = estimateMaterialPurchaseCost(state, bundle, job, events, activeJob);
+  const fuelCost = getRemainingTravelFuelUnits(activeJob, district) * FUEL_PRICE;
+  const trashCost = estimateTrashHandlingCost(state, job, activeJob);
+  const spentSoFar = getContractExpenseTotalFromLog(state, activeJob.contractId);
+  const estimatedRemainingCost = materialsCost + fuelCost + trashCost;
+  const estimatedTotalCost = spentSoFar + estimatedRemainingCost;
+  const grossPayout = Math.max(0, activeJob.lockedPayout);
+
+  return {
+    grossPayout,
+    materialsCost,
+    fuelCost,
+    trashCost,
+    estimatedTotalCost,
+    projectedNetOnSuccess: grossPayout - estimatedTotalCost,
+    spentSoFar,
+    estimatedRemainingCost
+  };
+}
+
+export function getContractActualSnapshot(state: GameState, contractId: string): ContractActualSnapshot | null {
+  const contractLines = state.log.filter((entry) => entry.actorId === state.player.actorId && entry.contractId === contractId);
+  if (contractLines.length === 0) {
+    return null;
+  }
+
+  let payout = 0;
+  let materialsCost = 0;
+  let fuelCost = 0;
+  let trashCost = 0;
+  let otherCost = 0;
+
+  for (const entry of contractLines) {
+    const message = entry.message;
+    const payoutMatch = message.match(/Collected (?:success|neutral|fail) payment: cash ([+-]?[0-9]+)/i);
+    if (payoutMatch) {
+      payout += parseSignedInt(payoutMatch[1]);
+      continue;
+    }
+    const halfPayMatch = message.match(/half pay: cash \+([0-9]+)/i);
+    if (halfPayMatch) {
+      payout += parseSignedInt(halfPayMatch[1]);
+      continue;
+    }
+
+    const breakdown = parseContractCostBreakdown(message);
+    materialsCost += breakdown.materials;
+    fuelCost += breakdown.fuel;
+    trashCost += breakdown.trash;
+    otherCost += breakdown.other;
+  }
+
+  const totalCost = Math.max(0, materialsCost + fuelCost + trashCost + otherCost);
+  if (payout === 0 && totalCost === 0) {
+    return null;
+  }
+
+  return {
+    payout,
+    materialsCost,
+    fuelCost,
+    trashCost,
+    otherCost,
+    totalCost,
+    net: payout - totalCost,
+    biggestCostDriver: getLargestActualCostDriver(materialsCost, fuelCost, trashCost, otherCost)
+  };
+}
+
+export function getJobProfitRecap(state: GameState, contractId: string): JobProfitRecap | null {
+  const actual = getContractActualSnapshot(state, contractId);
+  if (!actual) {
+    return null;
+  }
+
+  const estimate = getStoredEstimateAtAccept(state, contractId) ?? {
+    grossPayout: actual.payout,
+    materialsCost: 0,
+    fuelCost: 0,
+    trashCost: 0,
+    estimatedTotalCost: 0,
+    projectedNetOnSuccess: actual.payout,
+    biggestCostDriver: "none"
+  };
+
+  const latestLine = [...state.log].reverse().find((entry) => entry.actorId === state.player.actorId && entry.contractId === contractId);
+  const acceptedLine = state.log.find(
+    (entry) => entry.actorId === state.player.actorId && entry.contractId === contractId && /^Accepted (.+) for \$([0-9]+)/i.test(entry.message)
+  );
+  const acceptedMatch = acceptedLine?.message.match(/^Accepted (.+) for \$([0-9]+)/i);
+  const deferred = state.deferredJobs.find((entry) => entry.activeJob.contractId === contractId);
+  const fallbackJobName =
+    (state.activeJob?.contractId === contractId ? state.activeJob.jobId : null) ??
+    (deferred ? deferred.activeJob.jobId : null) ??
+    contractId;
+  const jobName = acceptedMatch?.[1] ?? fallbackJobName;
+  const deltaNet = actual.net - estimate.projectedNetOnSuccess;
+  const contractFile = state.contractFiles.find((entry) => entry.contractId === contractId) ?? null;
+  const estimatedHoursAtAccept =
+    contractFile?.estimatedHoursAtAccept ??
+    ticksToHours(
+      (state.activeJob?.contractId === contractId ? state.activeJob.plannedTicks : 0) ||
+        (deferred ? deferred.activeJob.plannedTicks : 0)
+    );
+  const actualHoursAtClose =
+    contractFile?.actualHoursAtClose ??
+    ticksToHours(
+      (state.activeJob?.contractId === contractId ? state.activeJob.actualTicksSpent : 0) ||
+        (deferred ? deferred.activeJob.actualTicksSpent : 0)
+    );
+  const summaryLine =
+    actual.payout < estimate.grossPayout
+      ? "Quality payout reduction"
+      : actual.totalCost > estimate.estimatedTotalCost + 15
+        ? `Cost overrun: ${formatCostDriverLabel(actual.biggestCostDriver)}`
+        : "Estimate held within expected variance";
+
+  return {
+    contractId,
+    jobName,
+    estimate,
+    actual,
+    deltaNet,
+    summaryLine,
+    day: latestLine?.day ?? state.day,
+    estimatedHoursAtAccept,
+    actualHoursAtClose
   };
 }
 
@@ -520,14 +807,18 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
     return getDayLaborOffer(state, bundle);
   }
   if (isBabaRotatingContractId(contractId)) {
-    if (!state.research.babaUnlocked) {
-      return null;
-    }
     const rotatingOffer = getRotatingBabaOffer(state, bundle);
     if (!rotatingOffer || rotatingOffer.contract.contractId !== contractId) {
       return null;
     }
     return rotatingOffer;
+  }
+  if (isUnlockedFallbackContractId(contractId)) {
+    const fallbackOffer = getUnlockedFallbackTradeOffer(state, bundle);
+    if (!fallbackOffer || fallbackOffer.contract.contractId !== contractId) {
+      return null;
+    }
+    return fallbackOffer;
   }
   const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
   if (!contract) {
@@ -544,11 +835,44 @@ export function getAvailableContractOffers(state: GameState, bundle: ContentBund
   const boardOffers = state.contractBoard
     .map((contract) => getJobByContract(state, bundle, contract.contractId))
     .filter((offer): offer is ContractOffer => Boolean(offer));
-  const standardOffers = boardOffers.filter(
-    (offer) => !offer.job.tags.includes("baba-g") && isSkillUnlocked(state.research, offer.job.primarySkill)
-  );
-  const rotatingBabaOffer = state.research.babaUnlocked ? getRotatingBabaOffer(state, bundle) : null;
-  return [getDayLaborOffer(state, bundle), ...(rotatingBabaOffer ? [rotatingBabaOffer] : []), ...standardOffers];
+  const standardOffers = boardOffers.filter((offer) => {
+    if (offer.job.tags.includes("baba-g")) {
+      return false;
+    }
+    const track = mapSkillToCoreTrack(offer.job.primarySkill);
+    return Boolean(track && isCoreTrackUnlocked(state, track));
+  });
+  const rotatingBabaOffer = getRotatingBabaOffer(state, bundle);
+  const unlockedFallbackOffer = !state.activeJob && standardOffers.length === 0 ? getUnlockedFallbackTradeOffer(state, bundle) : null;
+  return [getDayLaborOffer(state, bundle), ...(rotatingBabaOffer ? [rotatingBabaOffer] : []), ...standardOffers, ...(unlockedFallbackOffer ? [unlockedFallbackOffer] : [])];
+}
+
+export function getFilteredContractOffers(state: GameState, bundle: ContentBundle, filters: ContractFilterId[]): ContractOffer[] {
+  const activeFilters = [...new Set(filters)];
+  if (activeFilters.length === 0) {
+    return getAvailableContractOffers(state, bundle);
+  }
+
+  const offers = getAvailableContractOffers(state, bundle);
+  return offers.filter((offer) => {
+    if (offer.contract.contractId === DAY_LABOR_CONTRACT_ID) {
+      return true;
+    }
+
+    const preview = getContractEstimateSnapshot(state, bundle, offer.contract.contractId);
+    if (!preview) {
+      return false;
+    }
+
+    const checks = {
+      profitable: preview.projectedNetOnSuccess >= 0,
+      "low-risk": offer.job.risk <= 0.25,
+      "near-route": preview.fuelCost <= FUEL_PRICE * 2,
+      "no-new-tools": hasUsableTools(state.player, offer.job.requiredTools)
+    } as const;
+
+    return activeFilters.every((filterId) => checks[filterId]);
+  });
 }
 
 function getDayLaborOffer(state: GameState, bundle: ContentBundle): ContractOffer {
@@ -606,6 +930,7 @@ export function setSupplierCartQuantity(
   const nextState = cloneState(state);
   setInventoryQuantity(nextState.activeJob!.supplierCart, supplyId, quality, quantity);
   awardOfficeSkillXp(nextState, { reading: 1 });
+  awardPerkXp(nextState, 1);
 
   return {
     nextState,
@@ -619,15 +944,11 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     return runDayLaborShift(state, bundle);
   }
 
-  if (isBabaRotatingContractId(contractId) && !state.research.babaUnlocked) {
-    return { nextState: state, notice: "Research the Baba G Network first in Office > Research.", digest: digestState(state) };
-  }
-
   if (state.activeJob) {
     return { nextState: state, notice: "Finish the current job first.", digest: digestState(state) };
   }
 
-  if (state.yard.dumpsterUnits >= state.yard.dumpsterCapacity) {
+  if (state.operations.facilities.dumpsterEnabled && state.yard.dumpsterUnits >= state.yard.dumpsterCapacity) {
     return { nextState: state, notice: "Dumpster is full. Empty it in Office > Yard before taking another job.", digest: digestState(state) };
   }
 
@@ -636,8 +957,11 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     return { nextState: state, notice: "That contract is no longer available.", digest: digestState(state) };
   }
 
-  if (!picked.job.tags.includes("baba-g") && !isSkillUnlocked(state.research, picked.job.primarySkill)) {
-    return { nextState: state, notice: "That trade is still locked. Unlock it in Office > Research.", digest: digestState(state) };
+  if (!picked.job.tags.includes("baba-g")) {
+    const track = mapSkillToCoreTrack(picked.job.primarySkill);
+    if (!track || !isCoreTrackUnlocked(state, track)) {
+      return { nextState: state, notice: "That trade is still locked. Unlock it by finishing Baba G jobs.", digest: digestState(state) };
+    }
   }
 
   if (!hasUsableTools(state.player, picked.job.requiredTools)) {
@@ -650,13 +974,23 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
   }
 
   const events = getActiveEvents(bundle, state.activeEventIds);
-  const lockedPayout = Math.max(
-    0,
-    Math.round(picked.job.basePayout * picked.contract.payoutMult * getPayoutMultiplier(picked.job, events))
-  );
-  const shortfall = getMaterialShortfall(picked.job.materialNeeds, state.shopSupplies);
-  const needsSupplier = Object.values(shortfall).some((quantity) => quantity > 0);
-  const tasks = createTaskTemplate(picked.job, district, needsSupplier);
+  const bidPreview = getContractAutoBidPreview(state, bundle, contractId);
+  const lockedPayout = bidPreview?.acceptedPayout ?? getQuotedPayoutForOffer(state, bundle, picked, events);
+  const materialRouting = getJobMaterialRoutingPlan(picked.job, state.shopSupplies, state.truckSupplies);
+  const needsSupplier = materialRouting.needsSupplier;
+  const requiresShopLoad = materialRouting.requiresShopLoad;
+  const requiresRefuel = state.player.fuel < state.player.fuelMax;
+  const tasks = createTaskTemplate(picked.job, district, needsSupplier, requiresShopLoad, requiresRefuel);
+  const estimateAtAccept =
+    getContractEstimateSnapshot(state, bundle, contractId) ?? {
+      grossPayout: lockedPayout,
+      materialsCost: 0,
+      fuelCost: 0,
+      trashCost: 0,
+      estimatedTotalCost: 0,
+      projectedNetOnSuccess: lockedPayout,
+      biggestCostDriver: "none"
+    };
 
   const nextState = cloneState(state);
   nextState.activeJob = {
@@ -677,18 +1011,69 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     partsQuality: null,
     partsQualityScore: 1,
     partsQualityModifier: 0,
+    estimateAtAccept,
+    recoveryMode: "none",
+    deferredAtDay: null,
     trashUnitsPending: 0,
     siteSupplies: {},
     supplierCart: {},
     tasks
   };
+  resetJobRerollTokens(nextState);
+  const plannedHoursAtAccept = ticksToHours(tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0));
+  const contractFile: ContractFileSnapshot = {
+    contractId: picked.contract.contractId,
+    jobId: picked.job.id,
+    jobName: picked.job.name,
+    dayAccepted: state.day,
+    dayClosed: null,
+    isBaba: picked.job.tags.includes("baba-g"),
+    baseQuote: bidPreview?.baseQuote ?? lockedPayout,
+    autoBid: bidPreview?.autoBid ?? lockedPayout,
+    acceptedPayout: lockedPayout,
+    estimatingLevelAtBid: bidPreview?.estimatingLevel ?? Math.max(0, state.perks.corePerks.estimating ?? 0),
+    bidAccuracyBandPct: bidPreview?.bidAccuracyBandPct ?? 0,
+    bidNoise: bidPreview?.bidNoise ?? 0,
+    estimatedHoursAtAccept: plannedHoursAtAccept,
+    actualHoursAtClose: 0,
+    estimatedNetAtAccept: estimateAtAccept.projectedNetOnSuccess,
+    actualNetAtClose: 0,
+    outcome: null,
+    status: "active"
+  };
+  nextState.contractFiles = upsertContractFile(nextState.contractFiles, contractFile);
   awardOfficeSkillXp(nextState, { reading: 1 });
+  awardPerkXp(nextState, 1);
   nextState.contractBoard = [];
+  if (!contractFile.isBaba) {
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId,
+      message: `Auto-bid submitted: $${contractFile.autoBid} (Estimating Lv ${contractFile.estimatingLevelAtBid}, band ±${Math.round(
+        contractFile.bidAccuracyBandPct * 100
+      )}%).`
+    });
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId,
+      message: `Client accepted bid at $${contractFile.acceptedPayout}.`
+    });
+  }
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
     contractId,
     message: `Accepted ${picked.job.name} for $${lockedPayout}.`
+  });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId,
+    message: `Estimate at accept: Gross $${estimateAtAccept.grossPayout}, Costs $${estimateAtAccept.estimatedTotalCost}, Net ${formatSignedCurrency(
+      estimateAtAccept.projectedNetOnSuccess
+    )}, Driver ${estimateAtAccept.biggestCostDriver}.`
   });
 
   return {
@@ -712,6 +1097,7 @@ export function runDayLaborShift(state: GameState, bundle: ContentBundle): State
   spendTicks(nextState.workday, requiredTicks);
   nextState.player.cash += offer.job.basePayout;
   awardOfficeSkillXp(nextState, { reading: 1 });
+  awardPerkXp(nextState, 2);
 
   appendLog(nextState, {
     day: nextState.day,
@@ -732,7 +1118,12 @@ export function getCrewCapacity(): number {
 }
 
 export function normalizeGameState(state: Partial<GameState>): GameState {
-  const legacyDefaults = state.research === undefined && state.officeSkills === undefined && state.yard === undefined && state.operations === undefined;
+  const legacyDefaults =
+    state.research === undefined &&
+    state.officeSkills === undefined &&
+    state.yard === undefined &&
+    state.operations === undefined &&
+    state.perks === undefined;
   const normalizedPlayer = {
     ...state.player!,
     crews: (state.player?.crews ?? []).map((crew) => ({
@@ -740,30 +1131,79 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
       stamina: crew.stamina ?? crew.staminaMax
     }))
   };
+  const normalizeActiveJobState = (activeJob: Partial<ActiveJobState> | null | undefined): ActiveJobState | null => {
+    if (!activeJob) {
+      return null;
+    }
+    return {
+      ...(activeJob as ActiveJobState),
+      assignee: "self",
+      staminaCommitted: activeJob.staminaCommitted ?? false,
+      reservedMaterials: normalizeSupplyInventory(activeJob.reservedMaterials),
+      partsQuality: activeJob.partsQuality ?? null,
+      partsQualityScore: activeJob.partsQualityScore ?? 1,
+      partsQualityModifier: activeJob.partsQualityModifier ?? 0,
+      estimateAtAccept: {
+        grossPayout: Math.max(0, activeJob.estimateAtAccept?.grossPayout ?? activeJob.lockedPayout ?? 0),
+        materialsCost: Math.max(0, activeJob.estimateAtAccept?.materialsCost ?? 0),
+        fuelCost: Math.max(0, activeJob.estimateAtAccept?.fuelCost ?? 0),
+        trashCost: Math.max(0, activeJob.estimateAtAccept?.trashCost ?? 0),
+        estimatedTotalCost: Math.max(0, activeJob.estimateAtAccept?.estimatedTotalCost ?? 0),
+        projectedNetOnSuccess: activeJob.estimateAtAccept?.projectedNetOnSuccess ?? (activeJob.lockedPayout ?? 0),
+        biggestCostDriver:
+          activeJob.estimateAtAccept?.biggestCostDriver === "materials" ||
+          activeJob.estimateAtAccept?.biggestCostDriver === "fuel" ||
+          activeJob.estimateAtAccept?.biggestCostDriver === "trash"
+            ? activeJob.estimateAtAccept.biggestCostDriver
+            : "none"
+      },
+      recoveryMode: (activeJob.recoveryMode as ActiveRecoveryMode | undefined) ?? "none",
+      deferredAtDay: activeJob.deferredAtDay ?? null,
+      trashUnitsPending: Math.max(0, Math.floor(activeJob.trashUnitsPending ?? 0)),
+      siteSupplies: normalizeSupplyInventory(activeJob.siteSupplies),
+      supplierCart: normalizeSupplyInventory(activeJob.supplierCart),
+      tasks: (activeJob.tasks ?? []).map((task) => ({ ...task }))
+    };
+  };
 
   const normalizedState: GameState = {
     ...(state as GameState),
     player: normalizedPlayer,
     shopSupplies: normalizeSupplyInventory(state.shopSupplies),
     truckSupplies: normalizeSupplyInventory(state.truckSupplies),
-    activeJob: state.activeJob
-      ? {
-          ...state.activeJob,
-          assignee: state.activeJob.assignee ?? "self",
-          staminaCommitted: state.activeJob.staminaCommitted ?? false,
-          reservedMaterials: normalizeSupplyInventory(state.activeJob.reservedMaterials),
-          partsQuality: state.activeJob.partsQuality ?? null,
-          partsQualityScore: state.activeJob.partsQualityScore ?? 1,
-          partsQualityModifier: state.activeJob.partsQualityModifier ?? 0,
-          trashUnitsPending: Math.max(0, Math.floor(state.activeJob.trashUnitsPending ?? 0)),
-          siteSupplies: normalizeSupplyInventory(state.activeJob.siteSupplies),
-          supplierCart: normalizeSupplyInventory(state.activeJob.supplierCart)
-        }
-      : null,
+    activeJob: normalizeActiveJobState(state.activeJob),
     research: normalizeResearchState(state.research, legacyDefaults),
+    tradeProgress: normalizeTradeProgressState(state.tradeProgress, {
+      legacyUnlockedByDefault: legacyDefaults,
+      legacyUnlockedSkills: state.research?.unlockedSkills
+    }),
     officeSkills: normalizeOfficeSkillsState(state.officeSkills, legacyDefaults),
     yard: normalizeYardState(state.yard, legacyDefaults),
-    operations: normalizeOperationsState(state.operations, state.day ?? 1, legacyDefaults)
+    operations: normalizeOperationsState(state.operations, state.day ?? 1, legacyDefaults),
+    perks: normalizePerksState(state.perks, legacyDefaults),
+    deferredJobs: Array.isArray(state.deferredJobs)
+      ? state.deferredJobs
+          .map((entry) => {
+            if (!entry?.activeJob) {
+              return null;
+            }
+            const normalizedActiveJob = normalizeActiveJobState(entry.activeJob);
+            if (!normalizedActiveJob) {
+              return null;
+            }
+            return {
+              deferredJobId: entry.deferredJobId ?? `${normalizedActiveJob.contractId}:legacy`,
+              deferredAtDay: Math.max(1, entry.deferredAtDay ?? normalizedActiveJob.acceptedDay ?? (state.day ?? 1)),
+              activeJob: normalizedActiveJob
+            };
+          })
+          .filter((entry): entry is DeferredJobState => Boolean(entry))
+      : [],
+    contractFiles: Array.isArray(state.contractFiles)
+      ? state.contractFiles
+          .map((entry) => normalizeContractFile(entry))
+          .filter((entry): entry is ContractFileSnapshot => Boolean(entry))
+      : []
   };
   if (normalizedState.activeJob) {
     repairActiveJobRouting(normalizedState.activeJob);
@@ -776,7 +1216,8 @@ function getRotatingBabaOffer(state: GameState, bundle: ContentBundle): Contract
   if (babaJobs.length === 0) {
     return null;
   }
-  const rotationIndex = Math.max(0, (state.day - 1) % babaJobs.length);
+  const rng = createRng(hashSeed(state.seed, state.day, "baba-rotation"));
+  const rotationIndex = rng.nextInt(babaJobs.length);
   const job = babaJobs[rotationIndex]!;
   const payoutMult = Number((0.95 + ((state.day + rotationIndex) % 16) * 0.01).toFixed(2));
   return {
@@ -791,8 +1232,79 @@ function getRotatingBabaOffer(state: GameState, bundle: ContentBundle): Contract
   };
 }
 
+function getQuotedPayoutForOffer(
+  state: GameState,
+  bundle: ContentBundle,
+  picked: { contract: ContractInstance; job: JobDef },
+  events: EventDef[]
+): number {
+  if (picked.contract.contractId === DAY_LABOR_CONTRACT_ID) {
+    return Math.max(0, picked.job.basePayout);
+  }
+  const basePayout = Math.max(0, Math.round(picked.job.basePayout * picked.contract.payoutMult * getPayoutMultiplier(picked.job, events)));
+  const floorPayout = getMinimumContractPayout(state, bundle, picked.job);
+  return Math.max(basePayout, floorPayout);
+}
+
+function getMinimumContractPayout(state: GameState, bundle: ContentBundle, job: JobDef): number {
+  if (job.id === DAY_LABOR_JOB_ID) {
+    return 0;
+  }
+  const district = getDistrict(bundle, job.districtId);
+  if (!district) {
+    return 0;
+  }
+  const materialRouting = getJobMaterialRoutingPlan(job, state.shopSupplies, state.truckSupplies);
+  const needsSupplier = materialRouting.needsSupplier;
+  const requiresShopLoad = materialRouting.requiresShopLoad;
+  const requiresRefuel = state.player.fuel < state.player.fuelMax;
+  const tasks = createTaskTemplate(job, district, needsSupplier, requiresShopLoad, requiresRefuel);
+  const plannedTicks = tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0);
+  const plannedHours = ticksToHours(plannedTicks);
+  const hourlyRate = job.tags.includes("baba-g") ? MIN_BABA_CONTRACT_RATE_PER_HOUR : MIN_CONTRACT_RATE_PER_HOUR;
+  return Math.max(0, Math.round(plannedHours * hourlyRate));
+}
+
 function isBabaRotatingContractId(contractId: string): boolean {
   return contractId.startsWith(BABA_G_ROTATING_CONTRACT_PREFIX);
+}
+
+function getUnlockedFallbackTradeOffer(state: GameState, bundle: ContentBundle): ContractOffer | null {
+  const unlockedTracks = CORE_TRADE_SKILLS.filter((track) => isCoreTrackUnlocked(state, track));
+  if (unlockedTracks.length === 0) {
+    return null;
+  }
+
+  const rng = createRng(hashSeed(state.seed, state.day, "unlocked-fallback"));
+  const selectedTrack = unlockedTracks[rng.nextInt(unlockedTracks.length)]!;
+  const maxTier = state.player.companyLevel + 1;
+  const districtAllowList = new Set(state.player.districtUnlocks);
+  const bySkill = bundle.jobs
+    .filter((job) => mapSkillToCoreTrack(job.primarySkill) === selectedTrack)
+    .sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id));
+  if (bySkill.length === 0) {
+    return null;
+  }
+
+  const eligible = bySkill.filter((job) => districtAllowList.has(job.districtId) && job.tier <= maxTier);
+  const pool = eligible.length > 0 ? eligible : bySkill;
+  const job = pool[rng.nextInt(pool.length)]!;
+  const payoutMult = Number((0.95 + rng.next() * 0.2).toFixed(2));
+
+  return {
+    contract: {
+      contractId: `${UNLOCKED_FALLBACK_CONTRACT_PREFIX}-D${state.day}-${job.id}`,
+      jobId: job.id,
+      districtId: job.districtId,
+      payoutMult,
+      expiresDay: state.day
+    },
+    job
+  };
+}
+
+function isUnlockedFallbackContractId(contractId: string): boolean {
+  return contractId.startsWith(UNLOCKED_FALLBACK_CONTRACT_PREFIX);
 }
 
 export function startResearch(state: GameState, projectId: string): StateTransitionResult<ResearchProjectState> {
@@ -807,6 +1319,7 @@ export function startResearch(state: GameState, projectId: string): StateTransit
   }
 
   awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  awardPerkXp(nextState, 2);
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
@@ -833,6 +1346,7 @@ export function hireAccountantStaff(state: GameState): StateTransitionResult {
   }
 
   awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  awardPerkXp(nextState, 2);
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
@@ -858,6 +1372,7 @@ export function emptyDumpsterAtYard(state: GameState): StateTransitionResult<num
   }
 
   awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+  awardPerkXp(nextState, 2);
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
@@ -872,68 +1387,158 @@ export function emptyDumpsterAtYard(state: GameState): StateTransitionResult<num
   };
 }
 
-export function hireCrew(state: GameState): StateTransitionResult<CrewState> {
-  if (state.player.companyLevel < 2) {
-    return { nextState: state, notice: "Reach company level 2 before hiring a crew.", digest: digestState(state) };
-  }
-
-  if (state.player.crews.length >= CREW_TEMPLATES.length) {
-    return { nextState: state, notice: "All crew slots are already filled.", digest: digestState(state) };
-  }
-
-  const openTemplate = CREW_TEMPLATES.find((template) => !state.player.crews.some((crew) => crew.crewId === template.crewId));
-  if (!openTemplate) {
-    return { nextState: state, notice: "All crew slots are already filled.", digest: digestState(state) };
-  }
-
+export function upgradeBusinessTier(state: GameState, target: BusinessTier): StateTransitionResult {
   const nextState = cloneState(state);
-  const nextCrew: CrewState = {
-    crewId: openTemplate.crewId,
-    name: openTemplate.name,
-    staminaMax: openTemplate.staminaMax,
-    stamina: openTemplate.staminaMax,
-    efficiency: openTemplate.efficiency,
-    reliability: openTemplate.reliability,
-    morale: openTemplate.morale
-  };
-  nextState.player.crews = [...nextState.player.crews, nextCrew];
+  if (target === "office" && !nextState.research.completedProjectIds.includes("rd-facility-office")) {
+    return {
+      nextState: state,
+      notice: "Complete Facility Program: Office in Research first.",
+      digest: digestState(state)
+    };
+  }
+  if (target === "yard" && !nextState.research.completedProjectIds.includes("rd-facility-yard")) {
+    return {
+      nextState: state,
+      notice: "Complete Facility Program: Yard in Research first.",
+      digest: digestState(state)
+    };
+  }
+
+  const result = upgradeBusinessTierOperation(nextState, target);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
 
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
-    message: `${nextCrew.name} joined the company roster.`
+    message: result.notice
   });
+  awardOfficeSkillXp(nextState, { accounting: 2 });
+  awardPerkXp(nextState, 2);
 
   return {
     nextState,
-    payload: { ...nextCrew },
-    notice: `${nextCrew.name} joined the crew roster.`,
+    notice: result.notice,
     digest: digestState(nextState)
   };
+}
+
+export function enableDumpsterService(state: GameState): StateTransitionResult {
+  const nextState = cloneState(state);
+  if (!isFacilityProjectComplete(nextState.research, "dumpster")) {
+    return {
+      nextState: state,
+      notice: "Complete Facility Program: Dumpster in Research first.",
+      digest: digestState(state)
+    };
+  }
+
+  const result = enableDumpsterServiceOperation(nextState);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+  awardOfficeSkillXp(nextState, { accounting: 2 });
+  awardPerkXp(nextState, 2);
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function closeOfficeManually(state: GameState): StateTransitionResult {
+  const nextState = cloneState(state);
+  const result = closeOfficeManuallyOperation(nextState);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function closeYardManually(state: GameState): StateTransitionResult {
+  const nextState = cloneState(state);
+  const result = closeYardManuallyOperation(nextState);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function spendPerkPoint(state: GameState, perkId: CorePerkId): StateTransitionResult {
+  const nextState = cloneState(state);
+  const result = spendPerkPointCore(nextState, perkId);
+  if (!result.ok) {
+    return {
+      nextState: state,
+      notice: result.notice,
+      digest: digestState(state)
+    };
+  }
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    message: result.notice
+  });
+  return {
+    nextState,
+    notice: result.notice,
+    digest: digestState(nextState)
+  };
+}
+
+export function hireCrew(state: GameState): StateTransitionResult<CrewState> {
+  return { nextState: state, notice: "Crew: Coming Soon", digest: digestState(state) };
 }
 
 export function setActiveJobAssignee(state: GameState, assignee: "self" | string): StateTransitionResult<ActiveJobState> {
   if (!state.activeJob) {
     return { nextState: state, notice: "No active job to assign.", digest: digestState(state) };
   }
-
-  if (assignee !== "self" && !state.player.crews.some((crew) => crew.crewId === assignee)) {
-    return { nextState: state, notice: "That crew is unavailable.", digest: digestState(state) };
-  }
-
-  const workTask = state.activeJob.tasks.find((task) => task.taskId === "do_work");
-  if (state.activeJob.staminaCommitted || (workTask?.completedUnits ?? 0) > 0) {
-    return { nextState: state, notice: "The assignee is locked once work starts.", digest: digestState(state) };
-  }
-
-  const nextState = cloneState(state);
-  nextState.activeJob!.assignee = assignee;
-
   return {
-    nextState,
-    payload: cloneActiveJob(nextState.activeJob),
-    notice: `${getAssigneeDisplayName(nextState.player, assignee)} is set for this job.`,
-    digest: digestState(nextState)
+    nextState: state,
+    payload: cloneActiveJob(state.activeJob),
+    notice: "Crew: Coming Soon",
+    digest: digestState(state)
   };
 }
 
@@ -1079,12 +1684,38 @@ export function performTaskUnit(
   }
 
   const mapping = getTaskSkillMapping(job, activeTask.taskId);
-  const skillRank = getTaskSkillRank(preparedState.player, mapping);
-  const difficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, preparedState.activeEventIds));
-  const timing =
+  const baseSkillRank = getTaskSkillRank(preparedState.player, mapping);
+  const baseDifficulty = getTaskDifficulty(activeTask.taskId, job, district, getActiveEvents(bundle, preparedState.activeEventIds));
+  const perkModifiers = getTaskPerkModifiers(preparedState, job, activeTask.taskId, activeTask.completedUnits === 0);
+  const safetyReduction = Math.min(1, preparedState.perks.corePerks.safety_awareness ?? 0);
+  const effectiveSkillRank = baseSkillRank + perkModifiers.skillBonus + perkModifiers.blueprintFirstTaskBonus;
+  const effectiveDifficulty = Math.max(1, baseDifficulty - safetyReduction);
+  let timing =
     activeTask.taskId === "refuel_at_station"
-      ? { timeOutcome: "standard" as const, ticksSpent: getTaskBaseTicks(activeTask, job) }
-      : resolveTiming(preparedState, job, activeTask, effectiveStance, skillRank, difficulty);
+      ? { timeOutcome: "standard" as const, ticksSpent: getRefuelTaskTicks(effectiveStance) }
+      : resolveTiming(preparedState, job, activeTask, effectiveStance, effectiveSkillRank, effectiveDifficulty);
+  if (timing.timeOutcome === "rework" && activeTask.taskId === "do_work" && consumeRerollToken(preparedState)) {
+    timing = { timeOutcome: "standard", ticksSpent: getTaskBaseTicks(activeTask, job) };
+  }
+  const regularTicksLeft = getRemainingRegularTicks(preparedState.workday);
+  if (
+    activeTask.taskId === "return_to_shop" &&
+    !allowOvertime &&
+    !canSpendTicks(preparedState.workday, timing.ticksSpent, false) &&
+    regularTicksLeft > 0
+  ) {
+    timing = { timeOutcome: "standard", ticksSpent: regularTicksLeft };
+  }
+  if (activeTask.taskId === "refuel_at_station" && effectiveStance === "standard") {
+    const minimumFuelNeeded = getMinimumFuelNeededAfterRefuel(preparedState.activeJob!, district);
+    if (preparedState.player.fuel < minimumFuelNeeded) {
+      return {
+        nextState: state,
+        notice: `Need at least ${minimumFuelNeeded} fuel before skipping refuel.`,
+        digest: digestState(state)
+      };
+    }
+  }
   if (!canSpendTicks(preparedState.workday, timing.ticksSpent, allowOvertime)) {
     return { nextState: preparedState, notice: "This action spills into overtime.", digest: digestState(preparedState) };
   }
@@ -1094,6 +1725,7 @@ export function performTaskUnit(
   if (!nextActiveTask) {
     return { nextState: preparedState, notice: "There is no task to advance.", digest: digestState(preparedState) };
   }
+  const contractId = preparedState.activeJob!.contractId;
 
   const logLines: string[] = [];
   const skillXpDelta: Partial<Record<SkillId, number>> = {};
@@ -1103,7 +1735,7 @@ export function performTaskUnit(
   let unitsCompleted = timing.timeOutcome === "rework" ? 0 : 1;
   let reworkAdded = timing.timeOutcome === "rework" ? 1 : 0;
 
-  spendTicks(nextState.workday, timing.ticksSpent);
+  spendTicks(nextState.workday, timing.ticksSpent, perkModifiers.overtimeFatigueReduction);
   nextState.activeJob!.actualTicksSpent += timing.ticksSpent;
 
   if (isTravelTask(nextActiveTask.taskId)) {
@@ -1121,7 +1753,20 @@ export function performTaskUnit(
   } else {
     nextActiveTask.completedUnits += 1;
     if (nextActiveTask.qualityBearing) {
-      qualityOutcome = resolveQuality(preparedState, job, nextActiveTask, effectiveStance, skillRank, difficulty, timing.timeOutcome);
+      qualityOutcome = resolveQuality(
+        preparedState,
+        job,
+        nextActiveTask,
+        effectiveStance,
+        effectiveSkillRank,
+        effectiveDifficulty,
+        timing.timeOutcome,
+        perkModifiers.qualityBonus
+      );
+      if (qualityOutcome === "botched" && nextActiveTask.taskId === "do_work" && consumeRerollToken(nextState)) {
+        qualityOutcome = "sloppy";
+        logLines.push("Problem Solving perk recovered a botched pass.");
+      }
       qualityPointsDelta = QUALITY_POINT_DELTA[qualityOutcome];
       nextState.activeJob!.qualityPoints += qualityPointsDelta;
       logLines.push(`${TASK_LABELS[nextActiveTask.taskId]} landed ${qualityOutcome}.`);
@@ -1151,7 +1796,7 @@ export function performTaskUnit(
       break;
     case "checkout_supplies":
       if (timing.timeOutcome !== "rework") {
-        const checkoutStatus = applySupplierCheckout(nextState, bundle, job, logLines);
+        const checkoutStatus = applySupplierCheckout(nextState, bundle, job, logLines, perkModifiers.supplyDiscountPct);
         if (!checkoutStatus.ok) {
           nextActiveTask.requiredUnits += 1;
           unitsCompleted = 0;
@@ -1170,7 +1815,9 @@ export function performTaskUnit(
         nextState.player.fuel += fuelPurchased;
         nextState.player.cash -= fuelCost;
         nextActiveTask.completedUnits = nextActiveTask.requiredUnits;
-        if (fuelPurchased > 0) {
+        if (effectiveStance === "standard") {
+          logLines.push("Skipped refuel at the gas station.");
+        } else if (fuelPurchased > 0) {
           logLines.push(
             onAccount
               ? `Refueled ${fuelPurchased} at the gas station on account ($${fuelCost}).`
@@ -1222,23 +1869,72 @@ export function performTaskUnit(
     case "collect_payment":
       if (timing.timeOutcome !== "rework") {
         const outcome = settleActiveJob(nextState, bundle, job);
-        nextState.activeJob!.trashUnitsPending = Math.max(0, Math.floor(job.trashUnits ?? 0));
+        if (job.tags.includes("baba-g") && (outcome.outcome === "success" || outcome.outcome === "neutral")) {
+          const coreTrack = mapSkillToCoreTrack(job.primarySkill);
+          if (coreTrack) {
+            const unlocked = unlockCoreTrack(nextState, coreTrack);
+            if (unlocked.unlockedNow) {
+              logLines.push(`Unlocked trade track: ${formatCoreTrackLabel(coreTrack)} via Baba G contract.`);
+            }
+          }
+        }
+        const pendingTrash = Math.max(0, Math.floor(job.trashUnits ?? 0));
+        if (pendingTrash > 0 && !nextState.operations.facilities.dumpsterEnabled) {
+          const premiumHaul = getPremiumHaulCost(pendingTrash);
+          nextState.player.cash -= premiumHaul;
+          nextState.activeJob!.trashUnitsPending = 0;
+          logLines.push(`Premium haul-off charged $${premiumHaul} for ${pendingTrash} trash units.`);
+        } else {
+          nextState.activeJob!.trashUnitsPending = pendingTrash;
+        }
         logLines.push(...outcome.logLines);
+        const historicalCosts = getContractExpenseTotalFromLog(nextState, nextState.activeJob!.contractId);
+        const taskCosts = getContractExpenseTotalFromMessages(logLines);
+        const totalCosts = historicalCosts + taskCosts;
+        const netCash = outcome.cashDelta - totalCosts;
+        logLines.push(`Job receipt: Payout $${outcome.cashDelta} - Costs $${totalCosts} = Net ${formatSignedCurrency(netCash)}.`);
+        const activeJobSnapshot = nextState.activeJob!;
+        updateContractFile(nextState, contractId, {
+          status: "completed",
+          dayClosed: nextState.day,
+          outcome: outcome.outcome,
+          actualHoursAtClose: ticksToHours(activeJobSnapshot.actualTicksSpent),
+          actualNetAtClose: netCash,
+          estimatedHoursAtAccept: ticksToHours(activeJobSnapshot.plannedTicks),
+          estimatedNetAtAccept: activeJobSnapshot.estimateAtAccept.projectedNetOnSuccess
+        });
       }
       break;
     case "return_to_shop":
       if (timing.timeOutcome !== "rework") {
         nextActiveTask.completedUnits = nextActiveTask.requiredUnits;
         nextState.activeJob!.location = "shop";
+        const storeTask = nextState.activeJob!.tasks.find((task) => task.taskId === "store_leftovers");
+        const hasTruckLeftovers = !isInventoryEmpty(nextState.truckSupplies);
+        if (!hasTruckLeftovers && storeTask) {
+          const pendingTrash = Math.max(0, nextState.activeJob!.trashUnitsPending);
+          if (pendingTrash > 0 && nextState.operations.facilities.dumpsterEnabled) {
+            nextState.yard.dumpsterUnits += pendingTrash;
+            nextState.activeJob!.trashUnitsPending = 0;
+            logLines.push(`Dumped ${pendingTrash} trash units into the yard dumpster.`);
+          } else if (pendingTrash > 0) {
+            nextState.activeJob!.trashUnitsPending = 0;
+          }
+          storeTask.completedUnits = storeTask.requiredUnits;
+          logLines.push("No leftover supplies to store. Job folder closed.");
+          nextState.activeJob = null;
+        }
       }
       break;
     case "store_leftovers":
       if (timing.timeOutcome !== "rework") {
         const pendingTrash = Math.max(0, nextState.activeJob!.trashUnitsPending);
-        if (pendingTrash > 0) {
+        if (pendingTrash > 0 && nextState.operations.facilities.dumpsterEnabled) {
           nextState.yard.dumpsterUnits += pendingTrash;
           nextState.activeJob!.trashUnitsPending = 0;
           logLines.push(`Dumped ${pendingTrash} trash units into the yard dumpster.`);
+        } else if (pendingTrash > 0) {
+          nextState.activeJob!.trashUnitsPending = 0;
         }
         moveAllSupplies(nextState.truckSupplies, nextState.shopSupplies);
         logLines.push("Stored the leftovers and closed the job folder with deliberate calm.");
@@ -1247,7 +1943,20 @@ export function performTaskUnit(
       break;
   }
 
+  const encounter = rollRebarBobEncounter(nextState, nextActiveTask.taskId, effectiveStance);
+  if (encounter) {
+    logLines.push(`${encounter.speaker}: "${encounter.line}"`);
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId: preparedState.activeJob!.contractId,
+      taskId: nextActiveTask.taskId,
+      message: formatEncounterMarker(encounter)
+    });
+  }
+
   awardOfficeSkillXp(nextState, { reading: 3 });
+  awardPerkXp(nextState, 3);
 
   const taskLogLines = logLines.map((line) => formatAssigneeLogLine(assignee.name, line.trim())).filter(Boolean);
   for (const line of taskLogLines) {
@@ -1261,6 +1970,10 @@ export function performTaskUnit(
   }
 
   const digest = digestState(nextState);
+  const taskEstimatedTicksTotal = Math.max(0, getPlannedTaskTicksForAction(nextActiveTask, job, effectiveStance));
+  const taskActualTicksTotal = Math.max(0, timing.ticksSpent);
+  const jobEstimatedTicksTotal = Math.max(0, nextState.activeJob?.plannedTicks ?? preparedState.activeJob?.plannedTicks ?? 0);
+  const jobActualTicksTotal = Math.max(0, nextState.activeJob?.actualTicksSpent ?? preparedState.activeJob!.actualTicksSpent + timing.ticksSpent);
   const payload: TaskUnitResult = {
     day: preparedState.day,
     taskId: nextActiveTask.taskId,
@@ -1273,6 +1986,11 @@ export function performTaskUnit(
     skillXpDelta,
     reworkAdded,
     location: nextState.activeJob?.location ?? "shop",
+    taskEstimatedTicksTotal,
+    taskActualTicksTotal,
+    jobEstimatedTicksTotal,
+    jobActualTicksTotal,
+    encounter,
     logLines: taskLogLines,
     digest
   };
@@ -1356,6 +2074,164 @@ export function returnToShopForTools(
   };
 }
 
+export function runRecoveryAction(
+  state: GameState,
+  bundle: ContentBundle,
+  action: RecoveryActionId
+): StateTransitionResult {
+  if (!state.activeJob) {
+    return { nextState: state, notice: "No active job to recover.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  const activeJob = nextState.activeJob!;
+  const currentTask = getCurrentTask(nextState);
+  const contractId = activeJob.contractId;
+
+  if (action === "finish_cheap") {
+    if (!currentTask || currentTask.taskId !== "do_work") {
+      return { nextState: state, notice: "Finish Cheap is only available while doing the job.", digest: digestState(state) };
+    }
+    const doWorkTask = activeJob.tasks.find((task) => task.taskId === "do_work");
+    if (!doWorkTask) {
+      return { nextState: state, notice: "Work task is unavailable.", digest: digestState(state) };
+    }
+    doWorkTask.completedUnits = doWorkTask.requiredUnits;
+    activeJob.recoveryMode = "finish_cheap";
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId,
+      taskId: "do_work",
+      message: "Cut Losses: Finish Cheap selected (forced low-quality closeout, reduced payout, rep -1)."
+    });
+    return {
+      nextState,
+      notice: "Finish Cheap armed. Collect payment to close at reduced payout.",
+      digest: digestState(nextState)
+    };
+  }
+
+  if (action === "defer") {
+    if (nextState.deferredJobs.length >= 3) {
+      return { nextState: state, notice: "Deferred queue is full (3 max).", digest: digestState(state) };
+    }
+    const deferFee = 20;
+    nextState.player.cash -= deferFee;
+    const deferredAtDay = nextState.day;
+    const deferredJobId = `${contractId}:defer:${nextState.day}:${nextState.log.length}`;
+    activeJob.deferredAtDay = deferredAtDay;
+    nextState.deferredJobs = sortDeferredJobs([
+      ...nextState.deferredJobs,
+      {
+        deferredJobId,
+        deferredAtDay,
+        activeJob: cloneActiveJob(activeJob)!
+      }
+    ]);
+    updateContractFile(nextState, contractId, {
+      status: "deferred",
+      dayClosed: null,
+      outcome: null
+    });
+    nextState.activeJob = null;
+    nextState.contractBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
+      districtIds: nextState.player.districtUnlocks,
+      maxTier: nextState.player.companyLevel + 1
+    });
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId,
+      message: `Cut Losses: Deferred job for $${deferFee}. Resume anytime from Work queue.`
+    });
+    return {
+      nextState,
+      notice: "Job deferred. You can resume it later from Work.",
+      digest: digestState(nextState)
+    };
+  }
+
+  const abandonPenalty = 40;
+  let abandonmentCosts = abandonPenalty;
+  nextState.player.cash -= abandonPenalty;
+  nextState.player.reputation = Math.max(0, nextState.player.reputation - 2);
+  const pendingTrash = Math.max(0, activeJob.trashUnitsPending);
+  if (pendingTrash > 0 && !nextState.operations.facilities.dumpsterEnabled) {
+    const premiumHaul = getPremiumHaulCost(pendingTrash);
+    abandonmentCosts += premiumHaul;
+    nextState.player.cash -= premiumHaul;
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId,
+      message: `Premium haul-off charged $${premiumHaul} for ${pendingTrash} trash units.`
+    });
+  }
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId,
+    message: `Cut Losses: Abandoned job (cash -$${abandonPenalty}, rep -2).`
+  });
+  updateContractFile(nextState, contractId, {
+    status: "abandoned",
+    dayClosed: nextState.day,
+    outcome: "lost",
+    actualHoursAtClose: ticksToHours(activeJob.actualTicksSpent),
+    estimatedHoursAtAccept: ticksToHours(activeJob.plannedTicks),
+    estimatedNetAtAccept: activeJob.estimateAtAccept.projectedNetOnSuccess,
+    actualNetAtClose: -abandonmentCosts
+  });
+  nextState.activeJob = null;
+  nextState.contractBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
+    districtIds: nextState.player.districtUnlocks,
+    maxTier: nextState.player.companyLevel + 1
+  });
+  return {
+    nextState,
+    notice: "Job abandoned with penalties applied.",
+    digest: digestState(nextState)
+  };
+}
+
+export function resumeDeferredJob(state: GameState, deferredJobId: string): StateTransitionResult<ActiveJobState> {
+  if (state.activeJob) {
+    return { nextState: state, notice: "Finish the current job first.", digest: digestState(state) };
+  }
+  const index = state.deferredJobs.findIndex((entry) => entry.deferredJobId === deferredJobId);
+  if (index < 0) {
+    return { nextState: state, notice: "Deferred job is unavailable.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  const picked = nextState.deferredJobs[index]!;
+  nextState.deferredJobs = nextState.deferredJobs.filter((entry) => entry.deferredJobId !== deferredJobId);
+  nextState.activeJob = cloneActiveJob(picked.activeJob);
+  if (nextState.activeJob) {
+    nextState.activeJob.deferredAtDay = null;
+  }
+  updateContractFile(nextState, picked.activeJob.contractId, {
+    status: "active",
+    dayClosed: null,
+    outcome: null
+  });
+  nextState.contractBoard = [];
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: picked.activeJob.contractId,
+    message: `Resumed deferred job ${picked.activeJob.jobId}.`
+  });
+
+  return {
+    nextState,
+    payload: cloneActiveJob(nextState.activeJob)!,
+    notice: "Deferred job resumed.",
+    digest: digestState(nextState)
+  };
+}
+
 export function prepareForNextDay(state: GameState): GameState {
   const nextState = cloneState(state);
   nextState.day += 1;
@@ -1372,7 +2248,11 @@ export function prepareForNextDay(state: GameState): GameState {
   if (nextState.activeJob) {
     const refuelTask = nextState.activeJob.tasks.find((task) => task.taskId === "refuel_at_station");
     if (refuelTask) {
-      refuelTask.requiredUnits += 1;
+      if (nextState.player.fuel < nextState.player.fuelMax) {
+        refuelTask.requiredUnits = Math.max(refuelTask.requiredUnits, refuelTask.completedUnits + 1);
+      } else if (refuelTask.requiredUnits > refuelTask.completedUnits) {
+        refuelTask.completedUnits = refuelTask.requiredUnits;
+      }
     }
   }
 
@@ -1384,19 +2264,19 @@ export function prepareForNextDay(state: GameState): GameState {
       nextState.truckSupplies = {};
       const pickupTask = nextState.activeJob.tasks.find((task) => task.taskId === "pickup_site_supplies");
       if (pickupTask) {
-        pickupTask.requiredUnits += 1;
+        pickupTask.requiredUnits = Math.max(pickupTask.requiredUnits, pickupTask.completedUnits + 1);
       }
     }
 
     if (supplierStopOutstanding) {
       const travelToSupplierTask = nextState.activeJob.tasks.find((task) => task.taskId === "travel_to_supplier");
       if (travelToSupplierTask) {
-        travelToSupplierTask.requiredUnits += 1;
+        travelToSupplierTask.requiredUnits = Math.max(travelToSupplierTask.requiredUnits, travelToSupplierTask.completedUnits + 1);
       }
     } else {
       const travelToSiteTask = nextState.activeJob.tasks.find((task) => task.taskId === "travel_to_job_site");
       if (travelToSiteTask) {
-        travelToSiteTask.requiredUnits += 1;
+        travelToSiteTask.requiredUnits = Math.max(travelToSiteTask.requiredUnits, travelToSiteTask.completedUnits + 1);
       }
     }
     nextState.activeJob.location = "shop";
@@ -1517,14 +2397,15 @@ function resolveQuality(
   stance: TaskStance,
   skillRank: number,
   difficulty: number,
-  timeOutcome: TaskTimeOutcome
+  timeOutcome: TaskTimeOutcome,
+  qualityBonus = 0
 ): TaskQualityOutcome {
   const stanceQualityMod = stance === "rush" ? -15 : stance === "careful" ? 15 : 0;
   const timeQualityMod = timeOutcome === "fast" ? -10 : timeOutcome === "delayed" ? 5 : timeOutcome === "rework" ? -25 : 0;
   const roll = createRng(
     hashSeed(state.seed, state.day, state.activeJob?.contractId ?? "none", task.taskId, task.completedUnits, task.requiredUnits, stance, "quality")
   ).nextInt(100);
-  const qualityRoll = roll + skillRank * 8 + stanceQualityMod + timeQualityMod - difficulty * 12;
+  const qualityRoll = roll + skillRank * 8 + stanceQualityMod + timeQualityMod + qualityBonus - difficulty * 12;
   if (qualityRoll >= 90) {
     return "excellent";
   }
@@ -1554,10 +2435,16 @@ function applySkillXp(
   }
 }
 
-function createTaskTemplate(job: JobDef, district: DistrictDef, needsSupplier: boolean): ActiveTaskState[] {
+function createTaskTemplate(
+  job: JobDef,
+  district: DistrictDef,
+  needsSupplier: boolean,
+  requiresShopLoad: boolean,
+  requiresRefuel: boolean
+): ActiveTaskState[] {
   return [
-    createTask("load_from_shop", 2, 1, true),
-    createTask("refuel_at_station", 0, 1, false),
+    createTask("load_from_shop", 2, requiresShopLoad ? 1 : 0, true),
+    createTask("refuel_at_station", 2, requiresRefuel ? 1 : 0, false),
     createTask("travel_to_supplier", SHOP_SUPPLIER_TICKS, needsSupplier ? 1 : 0, false),
     createTask("checkout_supplies", 2, needsSupplier ? 1 : 0, true),
     createTask("travel_to_job_site", needsSupplier ? district.travel.supplierToSiteTicks : district.travel.shopToSiteTicks, 1, false),
@@ -1604,7 +2491,13 @@ function getTaskLocation(taskId: TaskId): LocationId {
   }
 }
 
-function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: JobDef, logLines: string[]): SupplierCheckoutStatus {
+function applySupplierCheckout(
+  state: GameState,
+  bundle: ContentBundle,
+  job: JobDef,
+  logLines: string[],
+  supplyDiscountPct = 0
+): SupplierCheckoutStatus {
   const activeJob = state.activeJob!;
   const cartEntries = listInventoryEntries(activeJob.supplierCart);
   const hasRequiredAllocation = hasRequiredSupplierAllocation(job, state.truckSupplies, activeJob.supplierCart);
@@ -1629,9 +2522,10 @@ function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: Job
     }
     total += getSupplyUnitPrice(supply, quality, getActiveEvents(bundle, state.activeEventIds)) * quantity;
   }
-  if (state.player.cash < total) {
-    const shortfall = total - state.player.cash;
-    const declineMessage = `Balance declined at supplier checkout. Need $${shortfall} more (total $${total}).`;
+  const discountedTotal = Math.max(0, Math.round(total * (1 - Math.max(0, Math.min(0.2, supplyDiscountPct)))));
+  if (state.player.cash < discountedTotal) {
+    const shortfall = discountedTotal - state.player.cash;
+    const declineMessage = `Balance declined at supplier checkout. Need $${shortfall} more (total $${discountedTotal}).`;
     logLines.push(declineMessage);
     return {
       ok: false,
@@ -1639,12 +2533,15 @@ function applySupplierCheckout(state: GameState, bundle: ContentBundle, job: Job
     };
   }
 
-  state.player.cash -= total;
+  state.player.cash -= discountedTotal;
   for (const [supplyId, quality, quantity] of cartEntries) {
     addSupplyQuantity(state.truckSupplies, supplyId, quality, quantity);
   }
   activeJob.supplierCart = {};
-  logLines.push(`Checked out supplies for $${total}.`);
+  if (discountedTotal < total) {
+    logLines.push(`Estimating perk discount: -$${total - discountedTotal}.`);
+  }
+  logLines.push(`Checked out supplies for $${discountedTotal}.`);
   return { ok: true };
 }
 
@@ -1674,10 +2571,31 @@ function reserveMaterials(truckSupplies: SupplyInventory, materialNeeds: JobDef[
   return reserved;
 }
 
-function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): { outcome: Outcome; logLines: string[] } {
+function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): { outcome: Outcome; cashDelta: number; logLines: string[] } {
   const activeJob = state.activeJob!;
+  if (activeJob.recoveryMode === "finish_cheap") {
+    const cashDelta = Math.max(0, Math.round(activeJob.lockedPayout * 0.7));
+    const reputationBefore = state.player.reputation;
+    state.player.cash += cashDelta;
+    state.player.reputation = Math.max(0, state.player.reputation - 1);
+    const appliedRepDelta = state.player.reputation - reputationBefore;
+    state.player.companyLevel = deriveCompanyLevel(state.player.reputation);
+    state.player.districtUnlocks = unlockDistricts(bundle, state.player.companyLevel);
+    activeJob.outcome = "neutral";
+    return {
+      outcome: "neutral",
+      cashDelta,
+      logLines: [
+        `Parts quality settled at ${formatSupplyQuality(activeJob.partsQuality ?? "low")} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier} quality).`,
+        "Cut Losses: Finish Cheap closed the job at reduced quality.",
+        `Collected neutral payment: cash +${cashDelta}, rep ${appliedRepDelta}.`
+      ]
+    };
+  }
+
   const events = getActiveEvents(bundle, state.activeEventIds);
   const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
+  const perkModifiers = getTaskPerkModifiers(state, job, "collect_payment", false);
   const failChance = getSettlementFailChance(activeJob, job, events, effectiveQualityPoints, state.day);
   let outcome: Outcome = "success";
   if (isForcedNeutral(job, events)) {
@@ -1699,12 +2617,17 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   let cashDelta = 0;
   let repDelta = 0;
   let flavorLine = job.flavor.neutral_line;
+  let payoutBonusLine: string | null = null;
   if (outcome === "success") {
-    cashDelta = activeJob.lockedPayout;
+    const payoutBonus = getSettlementPayoutBonus(activeJob, effectiveQualityPoints);
+    cashDelta = Math.max(0, Math.round(activeJob.lockedPayout * (1 + payoutBonus.totalPct) * perkModifiers.payoutMultiplier));
     repDelta = job.repGainSuccess;
     flavorLine = job.flavor.success_line;
+    payoutBonusLine = `Payout bonus: Time ${formatSignedPercent(payoutBonus.timeBonusPct)} + Quality ${formatSignedPercent(
+      payoutBonus.qualityBonusPct
+    )} = ${formatSignedPercent(payoutBonus.totalPct)}.`;
   } else if (outcome === "neutral") {
-    cashDelta = Math.round(activeJob.lockedPayout * 0.5);
+    cashDelta = Math.max(0, Math.round(activeJob.lockedPayout * 0.5 * (1 + Math.max(0, state.perks.corePerks.negotiation ?? 0) * 0.01)));
     repDelta = 0;
     flavorLine = job.flavor.neutral_line || bundle.strings.neutralLogFallback;
   } else {
@@ -1729,13 +2652,49 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
 
   return {
     outcome,
+    cashDelta,
     logLines: [
       `Parts quality settled at ${formatSupplyQuality(activeJob.partsQuality ?? "medium")} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier} quality).`,
       flavorLine,
       outcome === "neutral"
         ? `Job completed at low quality. Client approved half pay: cash +${cashDelta}, rep ${appliedRepDelta}.`
-        : `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${appliedRepDelta}.`
+        : `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${appliedRepDelta}.`,
+      ...(payoutBonusLine ? [payoutBonusLine] : [])
     ]
+  };
+}
+
+function getSettlementPayoutBonus(
+  activeJob: ActiveJobState,
+  effectiveQualityPoints: number
+): { timeBonusPct: number; qualityBonusPct: number; totalPct: number } {
+  const ticksDelta = activeJob.plannedTicks - activeJob.actualTicksSpent;
+  let timeBonusPct = 0;
+  if (ticksDelta >= 4) {
+    timeBonusPct = 0.15;
+  } else if (ticksDelta >= 2) {
+    timeBonusPct = 0.08;
+  } else if (ticksDelta >= 0) {
+    timeBonusPct = 0.03;
+  } else if (ticksDelta <= -5) {
+    timeBonusPct = -0.1;
+  } else {
+    timeBonusPct = -0.04;
+  }
+
+  let qualityBonusPct = 0;
+  if (effectiveQualityPoints >= 6) {
+    qualityBonusPct = 0.12;
+  } else if (effectiveQualityPoints >= 2) {
+    qualityBonusPct = 0.06;
+  } else if (effectiveQualityPoints < -1) {
+    qualityBonusPct = -0.08;
+  }
+
+  return {
+    timeBonusPct,
+    qualityBonusPct,
+    totalPct: clamp(timeBonusPct + qualityBonusPct, -0.15, 0.3)
   };
 }
 
@@ -1974,6 +2933,137 @@ function getTravelFuelCost(taskId: TaskId, district: DistrictDef, location: Loca
   return district.travel.shopToSiteFuel;
 }
 
+function getMinimumFuelNeededAfterRefuel(activeJob: ActiveJobState, district: DistrictDef): number {
+  if (hasOutstandingSupplierStop(activeJob)) {
+    return SHOP_SUPPLIER_FUEL;
+  }
+
+  if (getTaskUnitsRemaining(activeJob.tasks, "travel_to_job_site") > 0) {
+    return activeJob.location === "supplier" ? district.travel.supplierToSiteFuel : district.travel.shopToSiteFuel;
+  }
+
+  if (getTaskUnitsRemaining(activeJob.tasks, "return_to_shop") > 0) {
+    return district.travel.shopToSiteFuel;
+  }
+
+  return 0;
+}
+
+function estimateContractRouteFuelCost(district: DistrictDef, needsSupplier: boolean): number {
+  const routeFuelUnits =
+    (needsSupplier ? SHOP_SUPPLIER_FUEL + district.travel.supplierToSiteFuel : district.travel.shopToSiteFuel) + district.travel.shopToSiteFuel;
+  return routeFuelUnits * FUEL_PRICE;
+}
+
+function getRemainingTravelFuelUnits(activeJob: ActiveJobState, district: DistrictDef): number {
+  const supplierUnits = getTaskUnitsRemaining(activeJob.tasks, "travel_to_supplier");
+  const toSiteUnits = getTaskUnitsRemaining(activeJob.tasks, "travel_to_job_site");
+  const returnUnits = getTaskUnitsRemaining(activeJob.tasks, "return_to_shop");
+  const toSiteFuelPerUnit = hasOutstandingSupplierStop(activeJob) ? district.travel.supplierToSiteFuel : district.travel.shopToSiteFuel;
+  return Math.max(0, supplierUnits * SHOP_SUPPLIER_FUEL + toSiteUnits * toSiteFuelPerUnit + returnUnits * district.travel.shopToSiteFuel);
+}
+
+function getTaskUnitsRemaining(tasks: ActiveTaskState[], taskId: TaskId): number {
+  const task = tasks.find((entry) => entry.taskId === taskId);
+  if (!task) {
+    return 0;
+  }
+  return Math.max(0, task.requiredUnits - task.completedUnits);
+}
+
+function estimateMaterialPurchaseCost(
+  state: GameState,
+  bundle: ContentBundle,
+  job: JobDef,
+  events: EventDef[],
+  activeJob: ActiveJobState | null = null
+): number {
+  if (job.materialNeeds.length === 0) {
+    return 0;
+  }
+  if (activeJob?.materialsReserved) {
+    return 0;
+  }
+
+  const available = mergeSupplyInventories(cloneSupplyInventory(state.shopSupplies), state.truckSupplies);
+  if (activeJob) {
+    mergeSupplyInventories(available, activeJob.siteSupplies);
+    mergeSupplyInventories(available, activeJob.supplierCart);
+  }
+
+  const shortfall = getMaterialShortfall(job.materialNeeds, available);
+  return Object.entries(shortfall).reduce((sum, [supplyId, quantity]) => {
+    const supply = bundle.supplies.find((entry) => entry.id === supplyId);
+    if (!supply || quantity <= 0) {
+      return sum;
+    }
+    return sum + getSupplyUnitPrice(supply, "medium", events) * quantity;
+  }, 0);
+}
+
+function estimateTrashHandlingCost(state: GameState, job: JobDef, activeJob: ActiveJobState | null = null): number {
+  if (job.id === DAY_LABOR_JOB_ID) {
+    return 0;
+  }
+  const trashUnits = Math.max(0, Math.floor(job.trashUnits ?? 0));
+  if (trashUnits <= 0) {
+    return 0;
+  }
+  if (activeJob && isTaskComplete(activeJob.tasks, "collect_payment")) {
+    return 0;
+  }
+  if (!state.operations.facilities.dumpsterEnabled) {
+    return getPremiumHaulCost(trashUnits);
+  }
+  return trashUnits * 4;
+}
+
+function getContractExpenseTotalFromLog(state: GameState, contractId: string): number {
+  return state.log.reduce((sum, entry) => {
+    if (entry.actorId !== state.player.actorId || entry.contractId !== contractId) {
+      return sum;
+    }
+    return sum + parseContractExpenseFromMessage(entry.message);
+  }, 0);
+}
+
+function getContractExpenseTotalFromMessages(messages: string[]): number {
+  return messages.reduce((sum, message) => sum + parseContractExpenseFromMessage(message), 0);
+}
+
+function parseContractExpenseFromMessage(message: string): number {
+  const breakdown = parseContractCostBreakdown(message);
+  return breakdown.materials + breakdown.fuel + breakdown.trash + breakdown.other;
+}
+
+function parseContractCostBreakdown(message: string): { materials: number; fuel: number; trash: number; other: number } {
+  const normalize = (value: string | undefined): number => {
+    const amount = Number.parseInt(value ?? "0", 10);
+    return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+  };
+
+  const materials = normalize(message.match(/Checked out supplies for \$([0-9]+)\./i)?.[1]);
+  const fuel =
+    normalize(message.match(/Ran a gas-station stop for [0-9]+ fuel(?: on account)? \(\$([0-9]+)\)\./i)?.[1]) +
+    normalize(message.match(/Refueled [0-9]+ at the gas station(?: on account)? \(\$([0-9]+)\)\./i)?.[1]) +
+    normalize(message.match(/Refueled [0-9]+ at the gas station for \$([0-9]+)\./i)?.[1]);
+  const trash = normalize(message.match(/Premium haul-off charged \$([0-9]+) for [0-9]+ trash units\./i)?.[1]);
+  const toolRepair = normalize(message.match(/Returned to the shop to repair or replace broken tools .* fuel -([0-9]+)\./i)?.[1]);
+  const other = toolRepair;
+  return { materials, fuel, trash, other };
+}
+
+function formatSignedCurrency(amount: number): string {
+  const normalized = Number.isFinite(amount) ? Math.round(amount) : 0;
+  return normalized >= 0 ? `+$${normalized}` : `-$${Math.abs(normalized)}`;
+}
+
+function formatSignedPercent(value: number): string {
+  const normalized = Number.isFinite(value) ? value : 0;
+  const percent = Math.round(normalized * 100);
+  return percent >= 0 ? `+${percent}%` : `${percent}%`;
+}
+
 function getRecommendedFieldFuelReserve(state: GameState, bundle: ContentBundle): number {
   const activeJob = state.activeJob;
   if (!activeJob || activeJob.location === "shop") {
@@ -1993,6 +3083,23 @@ function getTaskBaseTicks(task: ActiveTaskState, job: JobDef): number {
   return task.baseTicks;
 }
 
+function getPlannedTaskTicksForAction(task: ActiveTaskState, job: JobDef, stance: TaskStance): number {
+  if (task.taskId === "refuel_at_station") {
+    return getRefuelTaskTicks(stance);
+  }
+  return getTaskBaseTicks(task, job);
+}
+
+function getRefuelTaskTicks(taskStance: TaskStance): number {
+  if (taskStance === "rush") {
+    return 1;
+  }
+  if (taskStance === "careful") {
+    return 3;
+  }
+  return 2;
+}
+
 function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskStance: TaskStance): number {
   const room = Math.max(0, state.player.fuelMax - state.player.fuel);
   if (room <= 0) {
@@ -2003,6 +3110,9 @@ function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskSta
   }
   if (taskStance === "careful") {
     return room;
+  }
+  if (taskStance === "standard") {
+    return 0;
   }
   const activeJob = state.activeJob;
   const district = activeJob ? getDistrict(bundle, activeJob.districtId) : null;
@@ -2017,9 +3127,34 @@ function getRefuelPurchaseUnits(state: GameState, bundle: ContentBundle, taskSta
   return clamp(Math.max(1, targetFuel - state.player.fuel), 1, room);
 }
 
+function getRemainingRegularTicks(workday: WorkdayState): number {
+  return Math.max(0, workday.availableTicks - workday.ticksSpent);
+}
+
+function getJobMaterialRoutingPlan(
+  job: JobDef,
+  shopSupplies: SupplyInventory,
+  truckSupplies: SupplyInventory
+): { requiresShopLoad: boolean; needsSupplier: boolean } {
+  if (job.materialNeeds.length === 0) {
+    return { requiresShopLoad: false, needsSupplier: false };
+  }
+
+  const missingFromTruck = getMaterialShortfall(job.materialNeeds, truckSupplies);
+  const requiresShopLoad = Object.entries(missingFromTruck).some(
+    ([supplyId, quantity]) => quantity > 0 && getSupplyQuantity(shopSupplies, supplyId) > 0
+  );
+
+  const combinedSupplies = mergeSupplyInventories(cloneSupplyInventory(shopSupplies), truckSupplies);
+  const missingAfterShopAndTruck = getMaterialShortfall(job.materialNeeds, combinedSupplies);
+  const needsSupplier = Object.values(missingAfterShopAndTruck).some((quantity) => quantity > 0);
+
+  return { requiresShopLoad, needsSupplier };
+}
+
 function moveSuppliesForJob(shopSupplies: SupplyInventory, truckSupplies: SupplyInventory, materialNeeds: JobDef["materialNeeds"]): void {
   for (const material of materialNeeds) {
-    let remaining = material.quantity;
+    let remaining = Math.max(0, material.quantity - getSupplyQuantity(truckSupplies, material.supplyId));
     for (const quality of ["high", "medium", "low"] as SupplyQuality[]) {
       const available = getSupplyQuantity(shopSupplies, material.supplyId, quality);
       const loadQuantity = Math.min(available, remaining);
@@ -2218,14 +3353,15 @@ function getTimeMods(stance: TaskStance): { fast: number; rework: number; delay:
   return { fast: 0, rework: 0, delay: 0 };
 }
 
-function spendTicks(workday: WorkdayState, ticks: number): void {
+function spendTicks(workday: WorkdayState, ticks: number, overtimeFatigueReduction = 0): void {
   const before = workday.ticksSpent;
   workday.ticksSpent += ticks;
   const overflowStart = Math.max(0, before - workday.availableTicks);
   const overflowEnd = Math.max(0, workday.ticksSpent - workday.availableTicks);
   const overflowDelta = Math.max(0, overflowEnd - overflowStart);
   workday.overtimeUsed += overflowDelta;
-  workday.fatigue.debt += overflowDelta;
+  const reducedFatigue = Math.max(0, overflowDelta - Math.max(0, overtimeFatigueReduction));
+  workday.fatigue.debt += reducedFatigue;
 }
 
 function canSpendTicks(workday: WorkdayState, ticks: number, allowOvertime: boolean): boolean {
@@ -2299,9 +3435,28 @@ function cloneState(state: GameState): GameState {
     shopSupplies: cloneSupplyInventory(state.shopSupplies),
     truckSupplies: cloneSupplyInventory(state.truckSupplies),
     research: cloneResearchState(state.research),
+    tradeProgress: {
+      unlocked: { ...state.tradeProgress.unlocked },
+      unlockedDay: { ...state.tradeProgress.unlockedDay }
+    },
     officeSkills: { ...state.officeSkills },
     yard: { ...state.yard },
-    operations: { ...state.operations },
+    operations: {
+      ...state.operations,
+      monthlyDueByCategory: { ...state.operations.monthlyDueByCategory },
+      facilities: { ...state.operations.facilities }
+    },
+    perks: {
+      ...state.perks,
+      corePerks: { ...state.perks.corePerks },
+      unlockedPerkTrees: { ...state.perks.unlockedPerkTrees }
+    },
+    deferredJobs: state.deferredJobs.map((entry) => ({
+      deferredJobId: entry.deferredJobId,
+      deferredAtDay: entry.deferredAtDay,
+      activeJob: cloneActiveJob(entry.activeJob)!
+    })),
+    contractFiles: state.contractFiles.map((entry) => ({ ...entry })),
     workday: {
       ...state.workday,
       fatigue: { ...state.workday.fatigue }
@@ -2337,11 +3492,180 @@ function cloneActiveJob(activeJob: ActiveJobState | null): ActiveJobState | null
   }
   return {
     ...activeJob,
+    estimateAtAccept: { ...activeJob.estimateAtAccept },
     reservedMaterials: cloneSupplyInventory(activeJob.reservedMaterials),
     siteSupplies: cloneSupplyInventory(activeJob.siteSupplies),
     supplierCart: cloneSupplyInventory(activeJob.supplierCart),
     tasks: activeJob.tasks.map((task) => ({ ...task }))
   };
+}
+
+function getLargestEstimatedCostDriver(
+  materialsCost: number,
+  fuelCost: number,
+  trashCost: number
+): ContractEstimateSnapshot["biggestCostDriver"] {
+  const options: Array<{ key: ContractEstimateSnapshot["biggestCostDriver"]; value: number }> = [
+    { key: "materials", value: materialsCost },
+    { key: "fuel", value: fuelCost },
+    { key: "trash", value: trashCost }
+  ];
+  options.sort((left, right) => right.value - left.value);
+  return (options[0]?.value ?? 0) > 0 ? options[0]!.key : "none";
+}
+
+function getLargestActualCostDriver(
+  materialsCost: number,
+  fuelCost: number,
+  trashCost: number,
+  otherCost: number
+): ContractActualSnapshot["biggestCostDriver"] {
+  const options: Array<{ key: ContractActualSnapshot["biggestCostDriver"]; value: number }> = [
+    { key: "materials", value: materialsCost },
+    { key: "fuel", value: fuelCost },
+    { key: "trash", value: trashCost },
+    { key: "other", value: otherCost }
+  ];
+  options.sort((left, right) => right.value - left.value);
+  return (options[0]?.value ?? 0) > 0 ? options[0]!.key : "none";
+}
+
+function formatCostDriverLabel(driver: ContractActualSnapshot["biggestCostDriver"]): string {
+  if (driver === "materials") {
+    return "materials";
+  }
+  if (driver === "fuel") {
+    return "fuel";
+  }
+  if (driver === "trash") {
+    return "premium haul / trash";
+  }
+  if (driver === "other") {
+    return "other costs";
+  }
+  return "costs";
+}
+
+function parseSignedInt(value: string | undefined): number {
+  const amount = Number.parseInt(value ?? "0", 10);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function parseSignedCurrencyToken(token: string): number {
+  const normalized = token.replace("$", "").trim();
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeContractFile(entry: Partial<ContractFileSnapshot> | null | undefined): ContractFileSnapshot | null {
+  if (!entry || !entry.contractId || !entry.jobId) {
+    return null;
+  }
+  const status: ContractFileStatus =
+    entry.status === "active" || entry.status === "completed" || entry.status === "deferred" || entry.status === "abandoned" || entry.status === "lost"
+      ? entry.status
+      : "completed";
+  return {
+    contractId: entry.contractId,
+    jobId: entry.jobId,
+    jobName: entry.jobName ?? entry.jobId,
+    dayAccepted: Math.max(1, Math.floor(entry.dayAccepted ?? 1)),
+    dayClosed: entry.dayClosed === null || entry.dayClosed === undefined ? null : Math.max(1, Math.floor(entry.dayClosed)),
+    isBaba: Boolean(entry.isBaba),
+    baseQuote: Math.max(0, Math.round(entry.baseQuote ?? 0)),
+    autoBid: Math.max(0, Math.round(entry.autoBid ?? entry.baseQuote ?? 0)),
+    acceptedPayout: Math.max(0, Math.round(entry.acceptedPayout ?? entry.autoBid ?? entry.baseQuote ?? 0)),
+    estimatingLevelAtBid: Math.max(0, Math.floor(entry.estimatingLevelAtBid ?? 0)),
+    bidAccuracyBandPct: clamp(entry.bidAccuracyBandPct ?? 0, 0, 1),
+    bidNoise: clamp(entry.bidNoise ?? 0, -1, 1),
+    estimatedHoursAtAccept: Math.max(0, entry.estimatedHoursAtAccept ?? 0),
+    actualHoursAtClose: Math.max(0, entry.actualHoursAtClose ?? 0),
+    estimatedNetAtAccept: Math.round(entry.estimatedNetAtAccept ?? 0),
+    actualNetAtClose: Math.round(entry.actualNetAtClose ?? 0),
+    outcome: entry.outcome ?? null,
+    status
+  };
+}
+
+function upsertContractFile(existing: ContractFileSnapshot[], next: ContractFileSnapshot): ContractFileSnapshot[] {
+  const withoutCurrent = existing.filter((entry) => entry.contractId !== next.contractId);
+  return [...withoutCurrent, { ...next }];
+}
+
+function updateContractFile(state: GameState, contractId: string, patch: Partial<ContractFileSnapshot>): void {
+  const index = state.contractFiles.findIndex((entry) => entry.contractId === contractId);
+  if (index < 0) {
+    return;
+  }
+  const current = state.contractFiles[index]!;
+  const next: ContractFileSnapshot = normalizeContractFile({
+    ...current,
+    ...patch
+  })!;
+  state.contractFiles = state.contractFiles.map((entry, entryIndex) => (entryIndex === index ? next : entry));
+}
+
+function getStoredEstimateAtAccept(state: GameState, contractId: string): ContractEstimateSnapshot | null {
+  if (state.activeJob?.contractId === contractId) {
+    return { ...state.activeJob.estimateAtAccept };
+  }
+  const deferred = state.deferredJobs.find((entry) => entry.activeJob.contractId === contractId);
+  if (deferred) {
+    return { ...deferred.activeJob.estimateAtAccept };
+  }
+  const contractFile = state.contractFiles.find((entry) => entry.contractId === contractId);
+  if (contractFile) {
+    const estimatedTotalCost = Math.max(0, contractFile.acceptedPayout - contractFile.estimatedNetAtAccept);
+    return {
+      grossPayout: Math.max(0, contractFile.acceptedPayout),
+      materialsCost: 0,
+      fuelCost: 0,
+      trashCost: 0,
+      estimatedTotalCost,
+      projectedNetOnSuccess: contractFile.estimatedNetAtAccept,
+      biggestCostDriver: "none"
+    };
+  }
+
+  const estimateLine = [...state.log]
+    .reverse()
+    .find((entry) => entry.actorId === state.player.actorId && entry.contractId === contractId && entry.message.startsWith("Estimate at accept:"));
+  if (!estimateLine) {
+    return null;
+  }
+  const match = estimateLine.message.match(
+    /^Estimate at accept: Gross \$([0-9]+), Costs \$([0-9]+), Net ([+-]\$?[0-9]+), Driver (materials|fuel|trash|none)\./i
+  );
+  if (!match) {
+    return null;
+  }
+  const grossPayout = Math.max(0, parseSignedInt(match[1]));
+  const estimatedTotalCost = Math.max(0, parseSignedInt(match[2]));
+  const projectedNetOnSuccess = parseSignedCurrencyToken(match[3] ?? "0");
+  const driverRaw = (match[4] ?? "none").toLowerCase();
+  const biggestCostDriver: ContractEstimateSnapshot["biggestCostDriver"] =
+    driverRaw === "materials" || driverRaw === "fuel" || driverRaw === "trash" ? driverRaw : "none";
+  const materialsCost = biggestCostDriver === "materials" ? estimatedTotalCost : 0;
+  const fuelCost = biggestCostDriver === "fuel" ? estimatedTotalCost : 0;
+  const trashCost = biggestCostDriver === "trash" ? estimatedTotalCost : 0;
+  return {
+    grossPayout,
+    materialsCost,
+    fuelCost,
+    trashCost,
+    estimatedTotalCost,
+    projectedNetOnSuccess,
+    biggestCostDriver
+  };
+}
+
+function sortDeferredJobs(entries: DeferredJobState[]): DeferredJobState[] {
+  return [...entries].sort((left, right) => {
+    if (left.deferredAtDay !== right.deferredAtDay) {
+      return left.deferredAtDay - right.deferredAtDay;
+    }
+    return left.deferredJobId.localeCompare(right.deferredJobId);
+  });
 }
 
 function stableStringify(value: unknown): string {

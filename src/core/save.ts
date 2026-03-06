@@ -1,7 +1,7 @@
 import { normalizeGameState } from "./playerFlow";
 import { GameState } from "./types";
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 const SAVE_KEY_V2 = "error-hammer-save-v2";
 const SAVE_KEY_V1 = "error-hammer-save-v1";
 

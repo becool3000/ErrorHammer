@@ -1,6 +1,6 @@
 {
   "name": "error-hammer",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,13 @@
     "test": "vitest run",
     "content:validate": "tsx scripts/content_validate.ts",
     "content:compile": "tsx scripts/content_compile.ts",
-    "benchmark:progression": "tsx scripts/benchmark_progression.ts"
+    "benchmark:progression": "tsx scripts/benchmark_progression.ts",
+    "itch:zip": "tsx scripts/package_itch.ts",
+    "build:itch": "npm run content:compile && npm run build && npm run itch:zip",
+    "release:prepare": "tsx scripts/release_prepare.ts",
+    "release:verify": "tsx scripts/release_verify.ts",
+    "release:finalize": "tsx scripts/release_finalize.ts",
+    "release:itch": "npm run release:prepare && npm run release:verify && npm run release:finalize"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -23,9 +23,10 @@ describe("accounting snapshot", () => {
       { day: 3, actorId: state.player.actorId, message: "Bill water/sewage: $5." },
       { day: 3, actorId: state.player.actorId, message: "Bill dumpster base: $4." },
       { day: 3, actorId: state.player.actorId, message: "Late fee applied: $6." },
-      { day: 3, actorId: state.player.actorId, message: "Dumpster emptied for $28." }
+      { day: 3, actorId: state.player.actorId, message: "Dumpster emptied for $28." },
+      { day: 3, actorId: state.player.actorId, message: "Deferred carrying fees: $10 (2 jobs)." }
     ];
-    state.player.cash = 266;
+    state.player.cash = 256;
 
     const snapshot = getAccountingSnapshot(state);
 
@@ -42,9 +43,10 @@ describe("accounting snapshot", () => {
     expect(snapshot.categories.dumpsterBaseExpense).toBe(4);
     expect(snapshot.categories.lateFeeExpense).toBe(6);
     expect(snapshot.categories.dumpsterServiceExpense).toBe(28);
+    expect(snapshot.categories.deferredCarryExpense).toBe(10);
     expect(snapshot.totalIncome).toBe(218);
-    expect(snapshot.totalExpenses).toBe(252);
-    expect(snapshot.netFromLogs).toBe(-34);
+    expect(snapshot.totalExpenses).toBe(262);
+    expect(snapshot.netFromLogs).toBe(-44);
     expect(snapshot.cashDrift).toBe(0);
     expect(snapshot.jobRows[0]).toMatchObject({
       jobName: "Day Laborer",

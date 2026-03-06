@@ -1,4 +1,3 @@
-import { getCrewCapacity } from "../../core/playerFlow";
 import { bundle, useUiStore } from "../state";
 
 interface CompanyTabProps {
@@ -8,7 +7,6 @@ interface CompanyTabProps {
 export function CompanyTab({ modalView }: CompanyTabProps) {
   const game = useUiStore((state) => state.game);
   const openModal = useUiStore((state) => state.openModal);
-  const hireCrew = useUiStore((state) => state.hireCrew);
 
   if (!game) {
     return null;
@@ -34,57 +32,32 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
   }
 
   if (modalView === "crews") {
-    const crewCapacity = getCrewCapacity();
-    const canHire = game.player.companyLevel >= 2 && game.player.crews.length < crewCapacity;
     return (
       <section className="stack-block">
         <article className="chrome-card inset-card">
           <div className="section-label-row">
             <div>
-              <p className="eyebrow">Crew Roster</p>
-              <h3>
-                {game.player.crews.length}/{crewCapacity} filled
-              </h3>
+              <p className="eyebrow">Crew</p>
+              <h3>Crew: Coming Soon</h3>
             </div>
-            <span className="chip">Level {game.player.companyLevel}</span>
+            <span className="chip">Frozen</span>
           </div>
-          <p className="muted-copy">
-            {game.player.companyLevel >= 2
-              ? "Hire one steady extra set of hands at a time."
-              : "Reach company level 2 to unlock the first crew slot."}
-          </p>
-          <button className="ghost-button" onClick={() => hireCrew()} disabled={!canHire}>
-            {game.player.crews.length >= crewCapacity ? "Crew Cap Reached" : "Hire Crew"}
-          </button>
+          <p className="muted-copy">Crew hiring and assignment are temporarily disabled while the system is being refactored.</p>
         </article>
-        <div className="stack-list">
-          {Array.from({ length: crewCapacity }, (_, index) => game.player.crews[index] ?? null).map((crew, index) =>
-            crew ? (
-              <article key={crew.crewId} className="chrome-card inset-card">
-                <div className="section-label-row tight-row">
-                  <strong>{crew.name}</strong>
-                  <span className="chip">Crew Member</span>
-                </div>
-                <div className="metric-grid two-up">
-                  <span>Efficiency {crew.efficiency}</span>
-                  <span>Reliability {crew.reliability}</span>
-                  <span>Morale {crew.morale}</span>
-                  <span>Slot {index + 1}</span>
-                </div>
-              </article>
-            ) : (
-              <article key={`open-slot-${index + 1}`} className="chrome-card inset-card">
-                <div className="section-label-row tight-row">
-                  <strong>Open Slot {index + 1}</strong>
-                  <span className="chip muted">{game.player.companyLevel >= 2 ? "Ready" : "Locked"}</span>
-                </div>
-                <p className="muted-copy">
-                  {game.player.companyLevel >= 2 ? "This crew slot is ready to hire." : "Progress the company to unlock this slot."}
-                </p>
-              </article>
-            )
+        <article className="chrome-card inset-card">
+          <p className="eyebrow">Roster Archive</p>
+          {game.player.crews.length > 0 ? (
+            <div className="chip-grid">
+              {game.player.crews.map((crew) => (
+                <span key={crew.crewId} className="chip muted">
+                  {crew.name}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="muted-copy">No crew members on file.</p>
           )}
-        </div>
+        </article>
       </section>
     );
   }
@@ -123,7 +96,7 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
             {bundle.strings.companyDistrictButton}
           </button>
           <button className="ghost-button" onClick={() => openModal("crews")}>
-            {bundle.strings.companyCrewButton}
+            Crew: Coming Soon
           </button>
           <button className="ghost-button" onClick={() => openModal("news")}>
             {bundle.strings.companyNewsButton}

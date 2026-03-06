@@ -1,4 +1,4 @@
-import { getDumpsterServiceCost } from "../../core/operations";
+import { getDumpsterServiceCost, getPremiumHaulCost } from "../../core/operations";
 import { useUiStore } from "../state";
 
 export function YardTab() {
@@ -13,6 +13,8 @@ export function YardTab() {
   const capacity = game.yard.dumpsterCapacity;
   const fillRatio = capacity > 0 ? Math.min(1, units / capacity) : 0;
   const serviceCost = getDumpsterServiceCost(units);
+  const premiumExample = getPremiumHaulCost(4);
+  const dumpsterEnabled = game.operations.facilities.dumpsterEnabled;
 
   return (
     <section className="tab-panel yard-tab">
@@ -31,10 +33,22 @@ export function YardTab() {
           <span>Empties {game.yard.emptiesPerformed}</span>
           <span>Service ${serviceCost}</span>
         </div>
-        <button className="primary-button" disabled={units <= 0} onClick={() => emptyDumpster()}>
-          {units <= 0 ? "Dumpster Empty" : `Empty Dumpster ($${serviceCost})`}
+        <button className="primary-button" disabled={!dumpsterEnabled || units <= 0} onClick={() => emptyDumpster()}>
+          {!dumpsterEnabled ? "Enable Dumpster in Facilities" : units <= 0 ? "Dumpster Empty" : `Empty Dumpster ($${serviceCost})`}
         </button>
-        {units >= capacity ? <p className="notice-banner">Dumpster full. Non-day-labor contracts are blocked.</p> : null}
+        {dumpsterEnabled && units >= capacity ? <p className="notice-banner">Dumpster full. Non-day-labor contracts are blocked.</p> : null}
+      </article>
+
+      <article className="chrome-card inset-card yard-card">
+        <p className="eyebrow">Cost Compare</p>
+        <h3>Trash Handling</h3>
+        <div className="material-need-meta">
+          <span>Premium haul/job (4 units) ${premiumExample}</span>
+          <span>Dumpster service now ${serviceCost}</span>
+        </div>
+        <p className="muted-copy">
+          Without dumpster service, jobs charge premium haul-off immediately. Dumpster mode moves trash to the yard and is cheaper at scale.
+        </p>
       </article>
 
       <article className="chrome-card inset-card yard-card">

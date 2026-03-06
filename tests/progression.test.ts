@@ -36,9 +36,9 @@ describe("progression helpers", () => {
 
     const operator = getOperatorLevel(actor);
 
-    expect(operator.avgXp).toBeGreaterThan(100);
-    expect(operator.avgXp).toBeLessThan(250);
-    expect(operator.level).toBe(1);
+    expect(operator.avgXp).toBeGreaterThan(70);
+    expect(operator.avgXp).toBeLessThan(100);
+    expect(operator.level).toBe(0);
   });
 
   it("EH-TW-060: progression popup helpers emit skill and operator level popups", () => {
@@ -73,9 +73,9 @@ describe("progression helpers", () => {
       digest: "progress-seq"
     });
 
-    expect(popups.map((popup) => popup.kind)).toEqual(["skill-level", "skill-level", "operator-level"]);
+    expect(popups.map((popup) => popup.kind)).toEqual(["skill-level", "skill-level"]);
     expect(popups[0]?.title).toBe("Skill Leveled Up");
-    expect(popups.at(-1)?.title).toBe("Operator Leveled Up!");
+    expect(popups.at(-1)?.title).toBe("Skill Leveled Up");
   });
 
   it("EH-TW-061: progression labels preserve acronym-heavy skill names", () => {

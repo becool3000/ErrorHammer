@@ -1,0 +1,19 @@
+{
+  "releaseId": "v0.1.1+itch.20260305.01",
+  "platform": "itch",
+  "version": "0.1.1",
+  "buildId": "itch.20260305.01",
+  "releaseLabel": "v0.1.1+itch.20260305.01",
+  "tag": "itch/v0.1.1+itch.20260305.01",
+  "gitCommit": "5f9aea3",
+  "artifactName": "error-hammer-v0.1.1+itch.20260305.01-itch.zip",
+  "artifactSha256": "2056aef8ac16f2c82ae549415a013609a0ca0c098890b902ff1541dad69c4748",
+  "artifactBytes": 6091065,
+  "builtAtUtc": "2026-03-05T02:31:45.819Z",
+  "notesPath": "release/platforms/itch/releases/v0.1.1+itch.20260305.01/CHANGELOG.md",
+  "highlights": [
+    "Added ReleaseOps command chain (`release:prepare`, `release:verify`, `release:finalize`, `release:itch`) for one-command itch publishing.",
+    "Changed itch artifact naming to include release label: `error-hammer-vX.Y.Z+itch.YYYYMMDD.NN-itch.zip`.",
+    "Fixed release traceability gap by generating runtime release metadata (`appVersion`, `buildId`, `releaseLabel`, `gitCommit`, `builtAtUtc`) for each shipping build."
+  ]
+}

@@ -4,6 +4,7 @@ import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
 import { Modal } from "../components/Modal";
+import rebarBobSprite from "../assets/encounters/rebarbob2026.png";
 import { CompanyTab } from "./CompanyTab";
 import { OfficeTab } from "./OfficeTab";
 import { SettingsTab } from "./SettingsTab";
@@ -34,12 +35,18 @@ export function GameShell() {
   const activeProgressPopup = useUiStore((state) => state.activeProgressPopup);
   const progressQueue = useUiStore((state) => state.progressQueue);
   const dismissProgressPopup = useUiStore((state) => state.dismissProgressPopup);
+  const activeTaskResultPopup = useUiStore((state) => state.activeTaskResultPopup);
+  const dismissTaskResultPopup = useUiStore((state) => state.dismissTaskResultPopup);
   const goToTab = useUiStore((state) => state.goToTab);
   const endShift = useUiStore((state) => state.endShift);
   const openModal = useUiStore((state) => state.openModal);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
+  const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
+  const dismissJobCompletionFx = useUiStore((state) => state.dismissJobCompletionFx);
+  const activeEncounterPopup = useUiStore((state) => state.activeEncounterPopup);
+  const dismissEncounterPopup = useUiStore((state) => state.dismissEncounterPopup);
   const isBalanceDeclinedNotice = notice.toLowerCase().includes("balance declined");
   const suppressNoticeBanner =
     (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout")) || isBalanceDeclinedNotice;
@@ -141,6 +148,23 @@ export function GameShell() {
           </div>
         </section>
       ) : null}
+      {activeTaskResultPopup ? (
+        <section className="task-result-popup" role="status" aria-live="polite" aria-label={activeTaskResultPopup.title}>
+          <article className="task-result-popup-card chrome-card">
+            <div className="section-label-row tight-row">
+              <strong>{activeTaskResultPopup.title}</strong>
+              <button className="icon-button" onClick={() => dismissTaskResultPopup()} aria-label="Close result popup">
+                Close
+              </button>
+            </div>
+            <div className="summary-copy">
+              {activeTaskResultPopup.lines.map((line, index) => (
+                <p key={`${activeTaskResultPopup.digest}-${index}`}>{line}</p>
+              ))}
+            </div>
+          </article>
+        </section>
+      ) : null}
       {dayLaborCelebrationActive ? <DayLaborCelebrationOverlay /> : null}
       {isBalanceDeclinedNotice ? (
         <section className="critical-notice-popup" role="alert" aria-live="assertive" aria-label="Balance Declined">
@@ -158,6 +182,9 @@ export function GameShell() {
           {notice}
         </button>
       ) : null}
+      {activeEncounterPopup ? (
+        <RebarBobEncounterPopup speaker={activeEncounterPopup.speaker} line={activeEncounterPopup.line} onClose={() => dismissEncounterPopup()} />
+      ) : null}
       <section className="tab-stage">
         {normalizedActiveTab === "work" ? <WorkTab /> : null}
         {normalizedActiveTab === "office" ? <OfficeTab /> : null}
@@ -167,7 +194,7 @@ export function GameShell() {
         onChange={goToTab}
         onEndDay={handleEndDayTransition}
         onOpenSettings={() => openModal("settings")}
-        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition)}
+        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(jobCompletionFx)}
       />
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
         <WorkTab sheetOnly />
@@ -199,6 +226,7 @@ export function GameShell() {
       <Modal open={activeModal === "settings"} title="Settings" onClose={closeModal}>
         <SettingsTab />
       </Modal>
+      {jobCompletionFx ? <JobCompletionFxOverlay outcome={jobCompletionFx.outcome} net={jobCompletionFx.net} onClose={dismissJobCompletionFx} /> : null}
       {endDayTransition ? <EndDayTransitionOverlay blackoutOpacity={endDayBlackoutOpacity} pieAngle={endDayPieAngle} /> : null}
     </main>
   );
@@ -256,6 +284,56 @@ function DayLaborCelebrationOverlay() {
         <div className="lager-sprite" role="presentation" aria-hidden="true" />
         <div className="lager-sprite" role="presentation" aria-hidden="true" />
       </div>
+    </section>
+  );
+}
+
+function JobCompletionFxOverlay({
+  outcome,
+  net,
+  onClose
+}: {
+  outcome: "success" | "neutral" | "fail";
+  net: number;
+  onClose: () => void;
+}) {
+  const outcomeLabel = outcome === "neutral" ? "Low Quality" : outcome === "fail" ? "No Pay" : "Success";
+  const outcomeClass = outcome === "neutral" ? "completion-fx-neutral" : outcome === "fail" ? "completion-fx-fail" : "completion-fx-success";
+  const netLabel = net >= 0 ? `+$${Math.round(net)}` : `-$${Math.abs(Math.round(net))}`;
+  return (
+    <section className={`job-completion-fx-overlay ${outcomeClass}`} role="status" aria-live="polite" aria-label="Job completion popup">
+      <div className="job-completion-fx-burst" />
+      <article className="job-completion-fx-card chrome-card">
+        <div className="section-label-row tight-row">
+          <p className="eyebrow">Job Complete</p>
+          <button className="icon-button" onClick={onClose} aria-label="Close job completion popup">
+            Close
+          </button>
+        </div>
+        <h3>{outcomeLabel}</h3>
+        <p className={net >= 0 ? "tone-success" : "tone-danger"}>Net {netLabel}</p>
+      </article>
+    </section>
+  );
+}
+
+function RebarBobEncounterPopup({ speaker, line, onClose }: { speaker: string; line: string; onClose: () => void }) {
+  return (
+    <section className="rebar-bob-encounter-popup" role="status" aria-live="polite" aria-label={`${speaker} encounter`}>
+      <div className="rebar-bob-encounter-stage" aria-hidden="true">
+        <img src={rebarBobSprite} alt="" className="rebar-bob-encounter-sprite" />
+        <div className="rebar-bob-encounter-vignette" />
+      </div>
+      <article className="rebar-bob-encounter-card chrome-card">
+        <div className="rebar-bob-encounter-header">
+          <p className="eyebrow rebar-bob-encounter-eyebrow">Random Encounter</p>
+          <button className="icon-button rebar-bob-encounter-close" onClick={onClose} aria-label="Close encounter popup">
+            Close
+          </button>
+        </div>
+        <strong className="rebar-bob-encounter-speaker">{speaker}</strong>
+        <p className="rebar-bob-encounter-line">"{line}"</p>
+      </article>
     </section>
   );
 }

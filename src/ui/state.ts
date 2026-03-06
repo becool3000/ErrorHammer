@@ -4,35 +4,67 @@ import { loadContentBundle } from "../core/content";
 import {
   BASE_DAY_TICKS,
   buyFuel as buyFuelFlow,
+  closeOfficeManually as closeOfficeManuallyFlow,
+  closeYardManually as closeYardManuallyFlow,
   DAY_LABOR_CONTRACT_ID,
+  enableDumpsterService as enableDumpsterServiceFlow,
   emptyDumpsterAtYard as emptyDumpsterAtYardFlow,
   formatSkillLabel,
   getLevelForXp,
   getAvailableContractOffers,
   getCurrentTask,
+  getJobProfitRecap,
   getGasStationStopPlan,
   getOperatorLevel,
+  getSkillRank,
+  getTaskSkillMapping,
   getVisibleTaskActions,
   quickBuyMissingTools as quickBuyMissingToolsFlow,
   formatHours,
+  ticksToHours,
   performTaskUnit as performTaskUnitFlow,
   returnToShopForTools as returnToShopForToolsFlow,
   runGasStationStop as runGasStationStopFlow,
   setSupplierCartQuantity as setSupplierCartQuantityFlow,
   startResearch as startResearchFlow,
+  spendPerkPoint as spendPerkPointFlow,
   acceptContract as acceptContractFlow,
+  upgradeBusinessTier as upgradeBusinessTierFlow,
   hireAccountantStaff as hireAccountantStaffFlow,
   hireCrew as hireCrewFlow,
-  setActiveJobAssignee as setActiveJobAssigneeFlow
+  setActiveJobAssignee as setActiveJobAssigneeFlow,
+  runRecoveryAction as runRecoveryActionFlow,
+  resumeDeferredJob as resumeDeferredJobFlow
 } from "../core/playerFlow";
 import { awardOfficeSkillXp } from "../core/operations";
 import { hasIncompatibleLegacySave, load as loadGame, save as saveGame } from "../core/save";
 import { buyTool, createInitialGameState, endShift, repairTool } from "../core/resolver";
-import { GameState, SkillId, SupplyQuality, TaskId, TaskStance, TaskUnitResult } from "../core/types";
+import {
+  BusinessTier,
+  ContractFilterId,
+  CorePerkId,
+  EncounterPayload,
+  GameState,
+  JobProfitRecap,
+  RecoveryActionId,
+  SkillId,
+  SupplyQuality,
+  TaskId,
+  TaskStance,
+  TaskUnitResult
+} from "../core/types";
 
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "office" | "contracts" | "store" | "company";
-export type OfficeSectionId = "contracts" | "store" | "company" | "trade-index" | "accounting" | "research" | "yard";
+export type OfficeSectionId =
+  | "contracts"
+  | "store"
+  | "company"
+  | "facilities"
+  | "trade-index"
+  | "accounting"
+  | "research"
+  | "yard";
 export type WorkPanelId = "task" | "job-details" | "supplies" | "inventory" | "field-log";
 export type StoreSectionId = "tools" | "stock";
 export type ActiveModalId =
@@ -49,9 +81,12 @@ export type ActiveModalId =
 export type ActiveSheetId = null | "supplies";
 export type UiTextScale = "xsmall" | "default" | "large" | "xlarge";
 export type UiColorMode = "classic" | "neon";
+export type UiFxMode = "full" | "reduced";
 const DAY_LABOR_CELEBRATION_MS = 5_000;
+const JOB_COMPLETION_FX_MS = 1_600;
 let dayLaborCelebrationTimer: ReturnType<typeof setTimeout> | null = null;
 let timedTaskActionTimer: ReturnType<typeof setTimeout> | null = null;
+let jobCompletionFxTimer: ReturnType<typeof setTimeout> | null = null;
 
 export interface ActionSummary {
   title: string;
@@ -90,6 +125,21 @@ export interface TimedTaskActionState {
   endsAtMs: number;
 }
 
+export interface JobCompletionFxState {
+  startedAtMs: number;
+  durationMs: number;
+  outcome: "success" | "neutral" | "fail";
+  net: number;
+}
+
+export interface EncounterPopupState {
+  id: string;
+  speaker: string;
+  line: string;
+  startedAtMs: number;
+  durationMs: number;
+}
+
 const UI_PREFS_KEY = "error-hammer-ui-prefs-v1";
 
 function isUiTextScale(value: unknown): value is UiTextScale {
@@ -100,27 +150,43 @@ function isUiColorMode(value: unknown): value is UiColorMode {
   return value === "classic" || value === "neon";
 }
 
+function isContractFilterId(value: unknown): value is ContractFilterId {
+  return value === "profitable" || value === "low-risk" || value === "near-route" || value === "no-new-tools";
+}
+
+function normalizeContractFilters(value: unknown): ContractFilterId[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const normalized = value.filter((entry) => isContractFilterId(entry));
+  return [...new Set(normalized)];
+}
+
 interface UiPrefsPayload {
   uiTextScale: UiTextScale;
   uiColorMode: UiColorMode;
+  contractFilters: ContractFilterId[];
+  uiFxMode: UiFxMode;
 }
 
 function loadUiPreferences(): UiPrefsPayload {
   if (typeof localStorage === "undefined") {
-    return { uiTextScale: "default", uiColorMode: "neon" };
+    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
   }
   const raw = localStorage.getItem(UI_PREFS_KEY);
   if (!raw) {
-    return { uiTextScale: "default", uiColorMode: "neon" };
+    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
   }
   try {
-    const parsed = JSON.parse(raw) as { uiTextScale?: unknown; uiColorMode?: unknown };
+    const parsed = JSON.parse(raw) as { uiTextScale?: unknown; uiColorMode?: unknown; contractFilters?: unknown; uiFxMode?: unknown };
     return {
       uiTextScale: isUiTextScale(parsed.uiTextScale) ? parsed.uiTextScale : "default",
-      uiColorMode: isUiColorMode(parsed.uiColorMode) ? parsed.uiColorMode : "neon"
+      uiColorMode: isUiColorMode(parsed.uiColorMode) ? parsed.uiColorMode : "neon",
+      contractFilters: normalizeContractFilters(parsed.contractFilters),
+      uiFxMode: parsed.uiFxMode === "reduced" ? "reduced" : "full"
     };
   } catch {
-    return { uiTextScale: "default", uiColorMode: "neon" };
+    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
   }
 }
 
@@ -143,10 +209,16 @@ interface UiState {
   lastAction: ActionSummary | null;
   notice: string;
   timedTaskAction: TimedTaskActionState | null;
+  jobCompletionFx: JobCompletionFxState | null;
+  activeEncounterPopup: EncounterPopupState | null;
+  activeTaskResultPopup: ActionSummary | null;
   gameplayMutationLocked: boolean;
   uiTextScale: UiTextScale;
   uiColorMode: UiColorMode;
+  uiFxMode: UiFxMode;
+  contractFilters: ContractFilterId[];
   dayLaborCelebrationActive: boolean;
+  activeJobProfitRecap: JobProfitRecap | null;
   sessionTelemetry: SessionTelemetry;
   activeProgressPopup: ProgressPopup | null;
   progressQueue: ProgressPopup[];
@@ -155,6 +227,13 @@ interface UiState {
   hydrateUiPrefs: () => void;
   setUiTextScale: (scale: UiTextScale) => void;
   setUiColorMode: (mode: UiColorMode) => void;
+  setUiFxMode: (mode: UiFxMode) => void;
+  setContractFilter: (filterId: ContractFilterId, enabled: boolean) => void;
+  clearContractFilters: () => void;
+  dismissJobProfitRecap: () => void;
+  dismissJobCompletionFx: () => void;
+  dismissTaskResultPopup: () => void;
+  dismissEncounterPopup: () => void;
   setTitlePlayerName: (name: string) => void;
   setTitleCompanyName: (name: string) => void;
   newGame: (playerName?: string, companyName?: string, seed?: number) => void;
@@ -182,7 +261,14 @@ interface UiState {
   quickBuyTools: (contractId: string) => void;
   hireCrew: () => void;
   setJobAssignee: (assignee: "self" | string) => void;
+  runRecoveryAction: (action: RecoveryActionId) => void;
+  resumeDeferredJob: (deferredJobId: string) => void;
   startResearch: (projectId: string) => void;
+  spendPerkPoint: (perkId: CorePerkId) => void;
+  upgradeBusinessTier: (target: BusinessTier) => void;
+  enableDumpsterService: () => void;
+  closeOfficeManually: () => void;
+  closeYardManually: () => void;
   hireAccountant: () => void;
   emptyDumpster: () => void;
 }
@@ -250,14 +336,26 @@ export function buildProgressPopups(previous: GameState, next: GameState, payloa
 }
 
 function buildTaskResultLines(payload: TaskUnitResult): string[] {
+  const lines = [
+    ...payload.logLines,
+    `Task Hours: Est ${ticksToHours(payload.taskEstimatedTicksTotal).toFixed(1)}h | Actual ${ticksToHours(payload.taskActualTicksTotal).toFixed(1)}h (this action)`
+  ];
+  if (payload.taskId === "collect_payment") {
+    const estimatedHours = ticksToHours(payload.jobEstimatedTicksTotal);
+    const actualHours = ticksToHours(payload.jobActualTicksTotal);
+    const varianceHours = actualHours - estimatedHours;
+    const varianceLabel = varianceHours >= 0 ? `+${varianceHours.toFixed(1)}h` : `${varianceHours.toFixed(1)}h`;
+    lines.push(`Job Hours: Est ${estimatedHours.toFixed(1)}h | Actual ${actualHours.toFixed(1)}h`);
+    lines.push(`Variance: ${varianceLabel}`);
+  }
   const xpEntries = Object.entries(payload.skillXpDelta)
     .filter(([, delta]) => (delta ?? 0) > 0)
     .sort(([left], [right]) => left.localeCompare(right)) as Array<[SkillId, number]>;
   if (xpEntries.length === 0) {
-    return payload.logLines;
+    return lines;
   }
   const xpLine = `XP Earned: ${xpEntries.map(([skillId, delta]) => `${formatSkillLabel(skillId)} +${delta}`).join(" | ")}`;
-  return [...payload.logLines, xpLine];
+  return [...lines, xpLine];
 }
 
 function enqueueProgressPopups(current: Pick<UiState, "activeProgressPopup" | "progressQueue">, incoming: ProgressPopup[]) {
@@ -311,9 +409,32 @@ function clearTimedTaskActionTimer() {
   }
 }
 
-function formatTimedActionLabel(taskId: TaskId, stance: TaskStance, allowOvertime: boolean): string {
-  const baseLabel = taskId === "refuel_at_station" ? labelForRefuelAction(stance) : labelForStance(stance);
-  return allowOvertime ? `${baseLabel} + OT` : baseLabel;
+function clearJobCompletionFxTimer() {
+  if (jobCompletionFxTimer !== null) {
+    clearTimeout(jobCompletionFxTimer);
+    jobCompletionFxTimer = null;
+  }
+}
+
+function clearEncounterPopupTimer() {
+  // Encounter popup is manual-dismiss only.
+}
+
+function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction" | "jobCompletionFx">): boolean {
+  return Boolean(state.timedTaskAction || state.jobCompletionFx);
+}
+
+function formatTimedActionLabel(game: GameState, taskId: TaskId): string {
+  const activeJob = game.activeJob;
+  if (!activeJob) {
+    return "Task";
+  }
+  const job = bundle.jobs.find((entry) => entry.id === activeJob.jobId) ?? bundle.babaJobs.find((entry) => entry.id === activeJob.jobId) ?? null;
+  if (!job) {
+    return "Task";
+  }
+  const mapping = getTaskSkillMapping(job, taskId);
+  return formatSkillLabel(mapping.primary);
 }
 
 function labelForStance(stance: TaskStance): string {
@@ -328,12 +449,12 @@ function labelForStance(stance: TaskStance): string {
 
 function labelForRefuelAction(stance: TaskStance): string {
   if (stance === "rush") {
-    return "Buy 1 Fuel";
+    return "Skip Refuel";
   }
   if (stance === "careful") {
     return "Fill Tank";
   }
-  return "Recommended Fill";
+  return "Buy 1 Fuel";
 }
 
 function getGameplayLockNotice(): string {
@@ -352,10 +473,16 @@ export const useUiStore = create<UiState>((set, get) => ({
   lastAction: null,
   notice: "",
   timedTaskAction: null,
+  jobCompletionFx: null,
+  activeEncounterPopup: null,
+  activeTaskResultPopup: null,
   gameplayMutationLocked: false,
   uiTextScale: loadUiPreferences().uiTextScale,
   uiColorMode: loadUiPreferences().uiColorMode,
+  uiFxMode: loadUiPreferences().uiFxMode,
+  contractFilters: loadUiPreferences().contractFilters,
   dayLaborCelebrationActive: false,
+  activeJobProfitRecap: null,
   sessionTelemetry: createSessionTelemetry(null),
   activeProgressPopup: null,
   progressQueue: [],
@@ -363,22 +490,80 @@ export const useUiStore = create<UiState>((set, get) => ({
   titleCompanyName: "",
   hydrateUiPrefs: () => {
     const prefs = loadUiPreferences();
-    set({ uiTextScale: prefs.uiTextScale, uiColorMode: prefs.uiColorMode });
+    set({ uiTextScale: prefs.uiTextScale, uiColorMode: prefs.uiColorMode, uiFxMode: prefs.uiFxMode, contractFilters: prefs.contractFilters });
   },
   setUiTextScale: (scale) => {
-    const currentColorMode = get().uiColorMode;
-    saveUiPreferences({ uiTextScale: scale, uiColorMode: currentColorMode });
+    const current = get();
+    saveUiPreferences({
+      uiTextScale: scale,
+      uiColorMode: current.uiColorMode,
+      contractFilters: current.contractFilters,
+      uiFxMode: current.uiFxMode
+    });
     set({ uiTextScale: scale });
   },
   setUiColorMode: (mode) => {
-    const currentTextScale = get().uiTextScale;
-    saveUiPreferences({ uiTextScale: currentTextScale, uiColorMode: mode });
+    const current = get();
+    saveUiPreferences({
+      uiTextScale: current.uiTextScale,
+      uiColorMode: mode,
+      contractFilters: current.contractFilters,
+      uiFxMode: current.uiFxMode
+    });
     set({ uiColorMode: mode });
+  },
+  setUiFxMode: (mode) => {
+    const current = get();
+    saveUiPreferences({
+      uiTextScale: current.uiTextScale,
+      uiColorMode: current.uiColorMode,
+      contractFilters: current.contractFilters,
+      uiFxMode: mode
+    });
+    set({ uiFxMode: mode });
+  },
+  setContractFilter: (filterId, enabled) => {
+    const current = get();
+    const nextFilters = enabled ? [...new Set([...current.contractFilters, filterId])] : current.contractFilters.filter((entry) => entry !== filterId);
+    saveUiPreferences({
+      uiTextScale: current.uiTextScale,
+      uiColorMode: current.uiColorMode,
+      contractFilters: nextFilters,
+      uiFxMode: current.uiFxMode
+    });
+    set({ contractFilters: nextFilters });
+  },
+  clearContractFilters: () => {
+    const current = get();
+    saveUiPreferences({
+      uiTextScale: current.uiTextScale,
+      uiColorMode: current.uiColorMode,
+      contractFilters: [],
+      uiFxMode: current.uiFxMode
+    });
+    set({ contractFilters: [] });
+  },
+  dismissJobProfitRecap: () => {
+    set({ activeJobProfitRecap: null });
+  },
+  dismissJobCompletionFx: () => {
+    set((state) => ({
+      jobCompletionFx: null,
+      gameplayMutationLocked: Boolean(state.timedTaskAction)
+    }));
+  },
+  dismissTaskResultPopup: () => {
+    set({ activeTaskResultPopup: null });
+  },
+  dismissEncounterPopup: () => {
+    set({ activeEncounterPopup: null });
   },
 
   newGame: (playerName?: string, companyName?: string, seed?: number) => {
     clearDayLaborCelebrationTimer();
     clearTimedTaskActionTimer();
+    clearJobCompletionFxTimer();
+    clearEncounterPopupTimer();
     const nextSeed = seed ?? Math.floor(Date.now() % 1_000_000_000);
     const resolvedPlayerName = playerName ?? bundle.strings.defaultPlayerName ?? "You";
     const resolvedCompanyName = companyName ?? bundle.strings.defaultCompanyName ?? "Field Ops";
@@ -396,8 +581,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       lastAction: null,
       notice: "",
       timedTaskAction: null,
+      jobCompletionFx: null,
+      activeEncounterPopup: null,
+      activeTaskResultPopup: null,
       gameplayMutationLocked: false,
       dayLaborCelebrationActive: false,
+      activeJobProfitRecap: null,
       sessionTelemetry: createSessionTelemetry(game),
       activeProgressPopup: null,
       progressQueue: [],
@@ -409,6 +598,8 @@ export const useUiStore = create<UiState>((set, get) => ({
   continueGame: () => {
     clearDayLaborCelebrationTimer();
     clearTimedTaskActionTimer();
+    clearJobCompletionFxTimer();
+    clearEncounterPopupTimer();
     const loaded = loadGame();
     if (!loaded) {
       set({ notice: hasIncompatibleLegacySave() ? bundle.strings.continueIncompatible : bundle.strings.continueMissing });
@@ -425,8 +616,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       game: loaded,
       notice: "",
       timedTaskAction: null,
+      jobCompletionFx: null,
+      activeEncounterPopup: null,
+      activeTaskResultPopup: null,
       gameplayMutationLocked: false,
       dayLaborCelebrationActive: false,
+      activeJobProfitRecap: null,
       sessionTelemetry: createSessionTelemetry(loaded),
       activeProgressPopup: null,
       progressQueue: [],
@@ -438,14 +633,20 @@ export const useUiStore = create<UiState>((set, get) => ({
   returnToTitle: () =>
     (clearDayLaborCelebrationTimer(),
     clearTimedTaskActionTimer(),
+    clearJobCompletionFxTimer(),
+    clearEncounterPopupTimer(),
     set({
       screen: "title",
       activeModal: null,
       activeSheet: null,
       notice: "",
       timedTaskAction: null,
+      jobCompletionFx: null,
+      activeEncounterPopup: null,
+      activeTaskResultPopup: null,
       gameplayMutationLocked: false,
       dayLaborCelebrationActive: false,
+      activeJobProfitRecap: null,
       sessionTelemetry: createSessionTelemetry(null),
       activeProgressPopup: null,
       progressQueue: []
@@ -523,7 +724,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -552,6 +753,8 @@ export const useUiStore = create<UiState>((set, get) => ({
             : get().lastAction,
       notice: result.notice ?? "",
       dayLaborCelebrationActive: startedDayLaborCelebration ? true : get().dayLaborCelebrationActive,
+      activeJobProfitRecap: null,
+      activeTaskResultPopup: null,
       sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
       activeModal: null,
       activeSheet: null
@@ -563,7 +766,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -582,7 +785,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (currentState.timedTaskAction) {
+    if (isGameplayMutationBlocked(currentState)) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -600,13 +803,17 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
 
+    const activeJobDef = current.activeJob
+      ? bundle.jobs.find((entry) => entry.id === current.activeJob?.jobId) ?? bundle.babaJobs.find((entry) => entry.id === current.activeJob?.jobId) ?? null
+      : null;
+    const skillRank = activeJobDef ? getSkillRank(current.player, getTaskSkillMapping(activeJobDef, activeTask.taskId).primary) : 1;
     const startedAtMs = Date.now();
-    const durationMs = getActionDurationMs(stance, allowOvertime);
+    const durationMs = getActionDurationMs(stance, allowOvertime, skillRank);
     const timedTaskAction: TimedTaskActionState = {
       id: `${current.day}:${activeTask.taskId}:${stance}:${allowOvertime ? "ot" : "std"}:${startedAtMs}`,
       stance,
       allowOvertime,
-      label: formatTimedActionLabel(activeTask.taskId, stance, allowOvertime),
+      label: formatTimedActionLabel(current, activeTask.taskId),
       taskId: activeTask.taskId,
       startedAtMs,
       durationMs,
@@ -618,7 +825,8 @@ export const useUiStore = create<UiState>((set, get) => ({
       timedTaskAction,
       gameplayMutationLocked: true,
       notice: "",
-      activeSheet: null
+      activeSheet: null,
+      activeTaskResultPopup: null
     });
 
     timedTaskActionTimer = setTimeout(() => {
@@ -653,16 +861,44 @@ export const useUiStore = create<UiState>((set, get) => ({
 
       const result = performTaskUnitFlow(latestGame, bundle, pending.stance, pending.allowOvertime);
       const progressUpdates = buildProgressPopups(latestGame, result.nextState, result.payload);
+      const taskResultSummary = result.payload ? toSummary("Task Result", buildTaskResultLines(result.payload), result.payload.digest) : null;
+      let encounterPopup: EncounterPopupState | null = latest.activeEncounterPopup;
+      if (result.payload?.encounter) {
+        clearEncounterPopupTimer();
+        encounterPopup = createEncounterPopupState(result.payload.encounter, result.payload.digest);
+      }
+      const shouldShowCompletionFx =
+        latest.uiFxMode !== "reduced" &&
+        Boolean(result.payload && result.payload.taskId === "collect_payment" && result.nextState.activeJob?.contractId !== DAY_LABOR_CONTRACT_ID);
+      const recap =
+        result.payload && result.payload.taskId === "collect_payment" && result.nextState.activeJob?.contractId
+          ? getJobProfitRecap(result.nextState, result.nextState.activeJob.contractId)
+          : null;
+      if (shouldShowCompletionFx && result.nextState.activeJob?.outcome) {
+        clearJobCompletionFxTimer();
+      }
       saveGame(result.nextState);
       set({
         game: result.nextState,
-        lastAction: result.payload ? toSummary("Task Result", buildTaskResultLines(result.payload), result.payload.digest) : latest.lastAction,
+        lastAction: taskResultSummary ?? latest.lastAction,
         notice: result.notice ?? "",
         sessionTelemetry: bumpSessionTelemetry(latest.sessionTelemetry),
         activeSheet: null,
         selectedContractId: getDefaultContractId(result.nextState),
         timedTaskAction: null,
-        gameplayMutationLocked: false,
+        activeJobProfitRecap: recap,
+        activeEncounterPopup: encounterPopup,
+        activeTaskResultPopup: taskResultSummary ?? latest.activeTaskResultPopup,
+        jobCompletionFx:
+          shouldShowCompletionFx && result.nextState.activeJob?.outcome
+            ? {
+                startedAtMs: Date.now(),
+                durationMs: JOB_COMPLETION_FX_MS,
+                outcome: result.nextState.activeJob.outcome === "fail" ? "fail" : result.nextState.activeJob.outcome === "neutral" ? "neutral" : "success",
+                net: recap?.actual.net ?? 0
+              }
+            : latest.jobCompletionFx,
+        gameplayMutationLocked: shouldShowCompletionFx ? true : false,
         ...enqueueProgressPopups(latest, progressUpdates)
       });
     }, durationMs);
@@ -673,7 +909,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -701,7 +937,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -721,7 +957,9 @@ export const useUiStore = create<UiState>((set, get) => ({
       sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry, true),
       activeModal: null,
       activeSheet: null,
-      selectedContractId: getDefaultContractId(result.nextState)
+      selectedContractId: getDefaultContractId(result.nextState),
+      activeJobProfitRecap: null,
+      activeTaskResultPopup: null
     });
   },
 
@@ -730,7 +968,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -749,7 +987,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -779,7 +1017,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -800,7 +1038,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -821,7 +1059,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -849,7 +1087,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -868,7 +1106,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -881,16 +1119,148 @@ export const useUiStore = create<UiState>((set, get) => ({
     });
   },
 
+  runRecoveryAction: (action) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = runRecoveryActionFlow(current, bundle, action);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      selectedContractId: getDefaultContractId(result.nextState),
+      activeTab: result.nextState.activeJob ? "work" : get().activeTab,
+      activeJobProfitRecap: action === "abandon" || action === "defer" ? null : get().activeJobProfitRecap,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  resumeDeferredJob: (deferredJobId) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = resumeDeferredJobFlow(current, deferredJobId);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      activeTab: result.notice ? get().activeTab : "work",
+      selectedContractId: getDefaultContractId(result.nextState),
+      notice: result.notice ?? "",
+      activeJobProfitRecap: null,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry)
+    });
+  },
+
   startResearch: (projectId) => {
     const current = get().game;
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
     const result = startResearchFlow(current, projectId);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  spendPerkPoint: (perkId) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = spendPerkPointFlow(current, perkId);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  upgradeBusinessTier: (target) => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = upgradeBusinessTierFlow(current, target);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  enableDumpsterService: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = enableDumpsterServiceFlow(current);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  closeOfficeManually: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = closeOfficeManuallyFlow(current);
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      sessionTelemetry: bumpSessionTelemetry(get().sessionTelemetry),
+      notice: result.notice ?? ""
+    });
+  },
+
+  closeYardManually: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const result = closeYardManuallyFlow(current);
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -904,7 +1274,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -922,7 +1292,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (!current) {
       return;
     }
-    if (get().timedTaskAction) {
+    if (isGameplayMutationBlocked(get())) {
       set({ notice: getGameplayLockNotice() });
       return;
     }
@@ -935,6 +1305,16 @@ export const useUiStore = create<UiState>((set, get) => ({
     });
   }
 }));
+
+function createEncounterPopupState(encounter: EncounterPayload, digest: string): EncounterPopupState {
+  return {
+    id: `${digest}:${encounter.id}`,
+    speaker: encounter.speaker,
+    line: encounter.line,
+    startedAtMs: Date.now(),
+    durationMs: 0
+  };
+}
 
 export { bundle };
 

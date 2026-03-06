@@ -1,139 +1,16 @@
 {
   "babaJobs": [
     {
-      "basePayout": 80,
+      "basePayout": 92,
       "districtId": "residential",
       "durabilityCost": 3,
       "flavor": {
-        "client_quote": "Baba G Pig Head Removal Detail. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Pig Head Removal Detail escalated into folklore before lunch.",
-        "neutral_line": "Baba G Pig Head Removal Detail technically completed, but quality landed halfway.",
-        "success_line": "Baba G Pig Head Removal Detail somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Roof Bucket Rotation. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Roof Bucket Rotation detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Roof Bucket Rotation got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Roof Bucket Rotation somehow worked and Baba G called it \"union-grade art.\""
       },
       "id": "job-baba-g-001",
-      "materialNeeds": [
-        {
-          "quantity": 1,
-          "supplyId": "brick-pack"
-        },
-        {
-          "quantity": 1,
-          "supplyId": "mortar-mix"
-        }
-      ],
-      "name": "Baba G Pig Head Removal Detail",
-      "primarySkill": "mason",
-      "repGainSuccess": 2,
-      "repLossFail": 2,
-      "requiredTools": [
-        "level",
-        "trowel"
-      ],
-      "risk": 0.62,
-      "staminaCost": 2,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "mason"
-      ],
-      "tier": 1,
-      "trashUnits": 5,
-      "workUnits": 3
-    },
-    {
-      "basePayout": 91,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Baba G Grease Trap Catapult Swap. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Grease Trap Catapult Swap escalated into folklore before lunch.",
-        "neutral_line": "Baba G Grease Trap Catapult Swap technically completed, but quality landed halfway.",
-        "success_line": "Baba G Grease Trap Catapult Swap somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-002",
-      "materialNeeds": [
-        {
-          "quantity": 2,
-          "supplyId": "pipe-kit"
-        },
-        {
-          "quantity": 1,
-          "supplyId": "valve-pack"
-        }
-      ],
-      "name": "Baba G Grease Trap Catapult Swap",
-      "primarySkill": "plumber",
-      "repGainSuccess": 3,
-      "repLossFail": 3,
-      "requiredTools": [
-        "level",
-        "pipe-threader"
-      ],
-      "risk": 0.68,
-      "staminaCost": 3,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "plumber"
-      ],
-      "tier": 2,
-      "trashUnits": 6,
-      "workUnits": 4
-    },
-    {
-      "basePayout": 102,
-      "districtId": "civic-lite",
-      "durabilityCost": 5,
-      "flavor": {
-        "client_quote": "Baba G Odor Remediation Relay. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Odor Remediation Relay escalated into folklore before lunch.",
-        "neutral_line": "Baba G Odor Remediation Relay technically completed, but quality landed halfway.",
-        "success_line": "Baba G Odor Remediation Relay somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-003",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "duct-kit"
-        },
-        {
-          "quantity": 1,
-          "supplyId": "filter-pack"
-        }
-      ],
-      "name": "Baba G Odor Remediation Relay",
-      "primarySkill": "hvac_technician",
-      "repGainSuccess": 4,
-      "repLossFail": 4,
-      "requiredTools": [
-        "drill",
-        "hvac-gauge"
-      ],
-      "risk": 0.74,
-      "staminaCost": 4,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "hvac_technician"
-      ],
-      "tier": 3,
-      "trashUnits": 8,
-      "workUnits": 5
-    },
-    {
-      "basePayout": 113,
-      "districtId": "residential",
-      "durabilityCost": 3,
-      "flavor": {
-        "client_quote": "Baba G Roof Bucket Rotation. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Roof Bucket Rotation escalated into folklore before lunch.",
-        "neutral_line": "Baba G Roof Bucket Rotation technically completed, but quality landed halfway.",
-        "success_line": "Baba G Roof Bucket Rotation somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-004",
       "materialNeeds": [
         {
           "quantity": 1,
@@ -152,7 +29,7 @@
         "ladder",
         "roofing-nailer"
       ],
-      "risk": 0.8,
+      "risk": 0.68,
       "staminaCost": 2,
       "tags": [
         "absurd",
@@ -165,139 +42,98 @@
       "workUnits": 3
     },
     {
-      "basePayout": 124,
+      "basePayout": 108,
       "districtId": "small-commercial",
       "durabilityCost": 4,
       "flavor": {
-        "client_quote": "Baba G Freezer Graveyard Cleanup. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Freezer Graveyard Cleanup escalated into folklore before lunch.",
-        "neutral_line": "Baba G Freezer Graveyard Cleanup technically completed, but quality landed halfway.",
-        "success_line": "Baba G Freezer Graveyard Cleanup somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Skylight Leak Lotto. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Skylight Leak Lotto detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Skylight Leak Lotto got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Skylight Leak Lotto somehow worked and Baba G called it \"union-grade art.\""
       },
-      "id": "job-baba-g-005",
+      "id": "job-baba-g-002",
       "materialNeeds": [
         {
           "quantity": 1,
-          "supplyId": "breaker-kit"
+          "supplyId": "roof-flashing-kit"
         },
         {
           "quantity": 2,
-          "supplyId": "wire-spool"
+          "supplyId": "roof-shingle-bundle"
         }
       ],
-      "name": "Baba G Freezer Graveyard Cleanup",
-      "primarySkill": "electrician",
+      "name": "Baba G Skylight Leak Lotto",
+      "primarySkill": "roofer",
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
-        "drill",
-        "multimeter"
+        "ladder",
+        "roofing-nailer"
       ],
-      "risk": 0.62,
+      "risk": 0.72,
       "staminaCost": 3,
       "tags": [
         "absurd",
         "baba-g",
         "commercial",
-        "electrician"
+        "roofer"
       ],
       "tier": 2,
       "trashUnits": 6,
       "workUnits": 4
     },
     {
-      "basePayout": 135,
-      "districtId": "civic-lite",
-      "durabilityCost": 5,
-      "flavor": {
-        "client_quote": "Baba G Mystery Puddle Containment. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Mystery Puddle Containment escalated into folklore before lunch.",
-        "neutral_line": "Baba G Mystery Puddle Containment technically completed, but quality landed halfway.",
-        "success_line": "Baba G Mystery Puddle Containment somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-006",
-      "materialNeeds": [
-        {
-          "quantity": 3,
-          "supplyId": "concrete-mix"
-        },
-        {
-          "quantity": 1,
-          "supplyId": "rebar-bundle"
-        }
-      ],
-      "name": "Baba G Mystery Puddle Containment",
-      "primarySkill": "concrete_finisher",
-      "repGainSuccess": 4,
-      "repLossFail": 4,
-      "requiredTools": [
-        "level",
-        "trowel"
-      ],
-      "risk": 0.68,
-      "staminaCost": 4,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "concrete_finisher"
-      ],
-      "tier": 3,
-      "trashUnits": 8,
-      "workUnits": 5
-    },
-    {
-      "basePayout": 146,
+      "basePayout": 88,
       "districtId": "residential",
       "durabilityCost": 3,
       "flavor": {
-        "client_quote": "Baba G Neon Sign Mood Stabilization. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Neon Sign Mood Stabilization escalated into folklore before lunch.",
-        "neutral_line": "Baba G Neon Sign Mood Stabilization technically completed, but quality landed halfway.",
-        "success_line": "Baba G Neon Sign Mood Stabilization somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Side Door Time Loop Repair. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Side Door Time Loop Repair detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Side Door Time Loop Repair got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Side Door Time Loop Repair somehow worked and Baba G called it \"union-grade art.\""
       },
-      "id": "job-baba-g-007",
+      "id": "job-baba-g-003",
       "materialNeeds": [
         {
           "quantity": 1,
-          "supplyId": "solar-rack-kit"
+          "supplyId": "board-pack"
         },
         {
           "quantity": 1,
-          "supplyId": "wire-spool"
+          "supplyId": "fastener-box"
         }
       ],
-      "name": "Baba G Neon Sign Mood Stabilization",
-      "primarySkill": "solar_panel_installer",
+      "name": "Baba G Side Door Time Loop Repair",
+      "primarySkill": "carpenter",
       "repGainSuccess": 2,
       "repLossFail": 2,
       "requiredTools": [
-        "drill",
-        "solar-crimper"
+        "hammer",
+        "saw"
       ],
-      "risk": 0.74,
+      "risk": 0.64,
       "staminaCost": 2,
       "tags": [
         "absurd",
         "baba-g",
-        "commercial",
-        "solar_panel_installer"
+        "carpenter",
+        "commercial"
       ],
       "tier": 1,
       "trashUnits": 5,
       "workUnits": 3
     },
     {
-      "basePayout": 157,
+      "basePayout": 105,
       "districtId": "small-commercial",
       "durabilityCost": 4,
       "flavor": {
-        "client_quote": "Baba G Side Door Time Loop Repair. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Side Door Time Loop Repair escalated into folklore before lunch.",
-        "neutral_line": "Baba G Side Door Time Loop Repair technically completed, but quality landed halfway.",
-        "success_line": "Baba G Side Door Time Loop Repair somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Taco Counter Shim. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Taco Counter Shim detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Taco Counter Shim got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Taco Counter Shim somehow worked and Baba G called it \"union-grade art.\""
       },
-      "id": "job-baba-g-008",
+      "id": "job-baba-g-004",
       "materialNeeds": [
         {
           "quantity": 2,
@@ -308,7 +144,7 @@
           "supplyId": "fastener-box"
         }
       ],
-      "name": "Baba G Side Door Time Loop Repair",
+      "name": "Baba G Taco Counter Shim",
       "primarySkill": "carpenter",
       "repGainSuccess": 3,
       "repLossFail": 3,
@@ -316,7 +152,7 @@
         "hammer",
         "saw"
       ],
-      "risk": 0.8,
+      "risk": 0.69,
       "staminaCost": 3,
       "tags": [
         "absurd",
@@ -329,115 +165,156 @@
       "workUnits": 4
     },
     {
-      "basePayout": 168,
-      "districtId": "civic-lite",
-      "durabilityCost": 5,
-      "flavor": {
-        "client_quote": "Baba G Countertop Tilt Negotiation. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Countertop Tilt Negotiation escalated into folklore before lunch.",
-        "neutral_line": "Baba G Countertop Tilt Negotiation technically completed, but quality landed halfway.",
-        "success_line": "Baba G Countertop Tilt Negotiation somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-009",
-      "materialNeeds": [
-        {
-          "quantity": 1,
-          "supplyId": "fastener-box"
-        },
-        {
-          "quantity": 3,
-          "supplyId": "millwork-trim-kit"
-        }
-      ],
-      "name": "Baba G Countertop Tilt Negotiation",
-      "primarySkill": "millworker",
-      "repGainSuccess": 4,
-      "repLossFail": 4,
-      "requiredTools": [
-        "drill",
-        "miter-saw"
-      ],
-      "risk": 0.62,
-      "staminaCost": 4,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "millworker"
-      ],
-      "tier": 3,
-      "trashUnits": 8,
-      "workUnits": 5
-    },
-    {
-      "basePayout": 179,
+      "basePayout": 84,
       "districtId": "residential",
       "durabilityCost": 3,
       "flavor": {
-        "client_quote": "Baba G Cooler Door Resurrection. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Cooler Door Resurrection escalated into folklore before lunch.",
-        "neutral_line": "Baba G Cooler Door Resurrection technically completed, but quality landed halfway.",
-        "success_line": "Baba G Cooler Door Resurrection somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Parking Lot Palm Wrangler. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Parking Lot Palm Wrangler detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Parking Lot Palm Wrangler got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Parking Lot Palm Wrangler somehow worked and Baba G called it \"union-grade art.\""
       },
-      "id": "job-baba-g-010",
-      "materialNeeds": [
-        {
-          "quantity": 1,
-          "supplyId": "glass-panel-crate"
-        },
-        {
-          "quantity": 1,
-          "supplyId": "glazing-sealant-tube"
-        }
-      ],
-      "name": "Baba G Cooler Door Resurrection",
-      "primarySkill": "glazier",
-      "repGainSuccess": 2,
-      "repLossFail": 2,
-      "requiredTools": [
-        "glass-suction",
-        "level"
-      ],
-      "risk": 0.68,
-      "staminaCost": 2,
-      "tags": [
-        "absurd",
-        "baba-g",
-        "commercial",
-        "glazier"
-      ],
-      "tier": 1,
-      "trashUnits": 5,
-      "workUnits": 3
-    },
-    {
-      "basePayout": 190,
-      "districtId": "small-commercial",
-      "durabilityCost": 4,
-      "flavor": {
-        "client_quote": "Baba G Parking Lot Fence Diplomacy. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Parking Lot Fence Diplomacy escalated into folklore before lunch.",
-        "neutral_line": "Baba G Parking Lot Fence Diplomacy technically completed, but quality landed halfway.",
-        "success_line": "Baba G Parking Lot Fence Diplomacy somehow worked and Baba G called it elegant."
-      },
-      "id": "job-baba-g-011",
+      "id": "job-baba-g-005",
       "materialNeeds": [
         {
           "quantity": 2,
           "supplyId": "fence-panel-pack"
         },
         {
-          "quantity": 1,
+          "quantity": 2,
           "supplyId": "post-anchor-kit"
         }
       ],
-      "name": "Baba G Parking Lot Fence Diplomacy",
-      "primarySkill": "fence_installer",
+      "name": "Baba G Parking Lot Palm Wrangler",
+      "primarySkill": "landscaper",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.63,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "landscaper"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 99,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Curbside Jungle Trimdown. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Curbside Jungle Trimdown detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Curbside Jungle Trimdown got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Curbside Jungle Trimdown somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-006",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Baba G Curbside Jungle Trimdown",
+      "primarySkill": "landscaper",
       "repGainSuccess": 3,
       "repLossFail": 3,
       "requiredTools": [
         "level",
         "post-hole-auger"
+      ],
+      "risk": 0.67,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "landscaper"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 95,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Shopping Cart Fossil Weld. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Shopping Cart Fossil Weld detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Shopping Cart Fossil Weld got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Shopping Cart Fossil Weld somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-007",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Baba G Shopping Cart Fossil Weld",
+      "primarySkill": "welder",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "hammer",
+        "level"
+      ],
+      "risk": 0.66,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "welder"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 114,
+      "districtId": "civic-lite",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Rebar Statue Straightening. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Rebar Statue Straightening detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Rebar Statue Straightening got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Rebar Statue Straightening somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-008",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Baba G Rebar Statue Straightening",
+      "primarySkill": "welder",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "hammer",
+        "level"
       ],
       "risk": 0.74,
       "staminaCost": 3,
@@ -445,26 +322,272 @@
         "absurd",
         "baba-g",
         "commercial",
-        "fence_installer"
+        "welder"
       ],
       "tier": 2,
       "trashUnits": 6,
       "workUnits": 4
     },
     {
-      "basePayout": 201,
-      "districtId": "civic-lite",
-      "durabilityCost": 5,
+      "basePayout": 93,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
       "flavor": {
-        "client_quote": "Baba G Hallway Drip Choir Silencing. Baba G says \"if it looks impossible, bill it like art.\"",
-        "fail_line": "Baba G Hallway Drip Choir Silencing escalated into folklore before lunch.",
-        "neutral_line": "Baba G Hallway Drip Choir Silencing technically completed, but quality landed halfway.",
-        "success_line": "Baba G Hallway Drip Choir Silencing somehow worked and Baba G called it elegant."
+        "client_quote": "Baba G Freezer Graveyard Cleanup. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Freezer Graveyard Cleanup detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Freezer Graveyard Cleanup got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Freezer Graveyard Cleanup somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-009",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Baba G Freezer Graveyard Cleanup",
+      "primarySkill": "electrician",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.67,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "electrician"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 112,
+      "districtId": "civic-lite",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Outlet Roulette Reset. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Outlet Roulette Reset detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Outlet Roulette Reset got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Outlet Roulette Reset somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-010",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Baba G Outlet Roulette Reset",
+      "primarySkill": "electrician",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.73,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "electrician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 91,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Grease Trap Catapult Swap. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Grease Trap Catapult Swap detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Grease Trap Catapult Swap got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Grease Trap Catapult Swap somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-011",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Baba G Grease Trap Catapult Swap",
+      "primarySkill": "plumber",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.68,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "plumber"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 110,
+      "districtId": "civic-lite",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Mystery Sink Geyser Treaty. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Mystery Sink Geyser Treaty detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Mystery Sink Geyser Treaty got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Mystery Sink Geyser Treaty somehow worked and Baba G called it \"union-grade art.\""
       },
       "id": "job-baba-g-012",
       "materialNeeds": [
         {
-          "quantity": 3,
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Baba G Mystery Sink Geyser Treaty",
+      "primarySkill": "plumber",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.74,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "plumber"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 97,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Odor Remediation Relay. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Odor Remediation Relay detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Odor Remediation Relay got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Odor Remediation Relay somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-013",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Baba G Odor Remediation Relay",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.69,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "hvac_technician"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 117,
+      "districtId": "civic-lite",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Taco Steam Exhaust Intervention. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Taco Steam Exhaust Intervention detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Taco Steam Exhaust Intervention got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Taco Steam Exhaust Intervention somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-014",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Baba G Taco Steam Exhaust Intervention",
+      "primarySkill": "hvac_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "hvac-gauge"
+      ],
+      "risk": 0.76,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "hvac_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 86,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Wall Patch Karaoke. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Wall Patch Karaoke detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Wall Patch Karaoke got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Wall Patch Karaoke somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-015",
+      "materialNeeds": [
+        {
+          "quantity": 1,
           "supplyId": "drywall-sheet-stack"
         },
         {
@@ -472,25 +595,312 @@
           "supplyId": "joint-compound-bucket"
         }
       ],
-      "name": "Baba G Hallway Drip Choir Silencing",
+      "name": "Baba G Wall Patch Karaoke",
       "primarySkill": "drywall_installer",
-      "repGainSuccess": 4,
-      "repLossFail": 4,
+      "repGainSuccess": 2,
+      "repLossFail": 2,
       "requiredTools": [
         "drywall-knife",
         "saw"
       ],
-      "risk": 0.8,
-      "staminaCost": 4,
+      "risk": 0.62,
+      "staminaCost": 2,
       "tags": [
         "absurd",
         "baba-g",
         "commercial",
         "drywall_installer"
       ],
-      "tier": 3,
-      "trashUnits": 8,
-      "workUnits": 5
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 103,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Ceiling Patch Echo Chamber. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Ceiling Patch Echo Chamber detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Ceiling Patch Echo Chamber got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Ceiling Patch Echo Chamber somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-016",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "drywall-sheet-stack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "joint-compound-bucket"
+        }
+      ],
+      "name": "Baba G Ceiling Patch Echo Chamber",
+      "primarySkill": "drywall_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drywall-knife",
+        "saw"
+      ],
+      "risk": 0.69,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "drywall_installer"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 83,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Aisle Stripe Psychotherapy. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Aisle Stripe Psychotherapy detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Aisle Stripe Psychotherapy got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Aisle Stripe Psychotherapy somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-017",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Baba G Aisle Stripe Psychotherapy",
+      "primarySkill": "painter",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.61,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "painter"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 101,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Spill Camouflage Marathon. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Spill Camouflage Marathon detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Spill Camouflage Marathon got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Spill Camouflage Marathon somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-018",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "roller-pack"
+        }
+      ],
+      "name": "Baba G Spill Camouflage Marathon",
+      "primarySkill": "painter",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "ladder",
+        "paint-sprayer"
+      ],
+      "risk": 0.67,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "painter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 89,
+      "districtId": "residential",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Tile Drift Realignment. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Tile Drift Realignment detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Tile Drift Realignment got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Tile Drift Realignment somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-019",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Baba G Tile Drift Realignment",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.65,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "flooring_installer"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 107,
+      "districtId": "small-commercial",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Vinyl Curl Negotiation. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Vinyl Curl Negotiation detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Vinyl Curl Negotiation got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Vinyl Curl Negotiation somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-020",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Baba G Vinyl Curl Negotiation",
+      "primarySkill": "flooring_installer",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.71,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "flooring_installer"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 96,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Baba G Shelf Alignment Diplomacy. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Shelf Alignment Diplomacy detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Shelf Alignment Diplomacy got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Shelf Alignment Diplomacy somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-021",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "cabinet-panel-pack"
+        },
+        {
+          "quantity": 1,
+          "supplyId": "hinge-pack"
+        }
+      ],
+      "name": "Baba G Shelf Alignment Diplomacy",
+      "primarySkill": "cabinet_maker",
+      "repGainSuccess": 2,
+      "repLossFail": 2,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.66,
+      "staminaCost": 2,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "cabinet_maker",
+        "commercial"
+      ],
+      "tier": 1,
+      "trashUnits": 5,
+      "workUnits": 3
+    },
+    {
+      "basePayout": 118,
+      "districtId": "civic-lite",
+      "durabilityCost": 4,
+      "flavor": {
+        "client_quote": "Baba G Countertop Tilt Negotiation. Baba G grins and says, \"beanpole arms, make it look expensive and quick.\"",
+        "fail_line": "Baba G Countertop Tilt Negotiation detonated into chaos before lunch and Baba G just nodded.",
+        "neutral_line": "Baba G Countertop Tilt Negotiation got done, but Baba G said the finish looked \"half awake.\"",
+        "success_line": "Baba G Countertop Tilt Negotiation somehow worked and Baba G called it \"union-grade art.\""
+      },
+      "id": "job-baba-g-022",
+      "materialNeeds": [
+        {
+          "quantity": 1,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "millwork-trim-kit"
+        }
+      ],
+      "name": "Baba G Countertop Tilt Negotiation",
+      "primarySkill": "millworker",
+      "repGainSuccess": 3,
+      "repLossFail": 3,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.74,
+      "staminaCost": 3,
+      "tags": [
+        "absurd",
+        "baba-g",
+        "commercial",
+        "millworker"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 4
     }
   ],
   "bots": [
@@ -942,6 +1352,591 @@
   ],
   "jobs": [
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Hangar Tow Rig Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Hangar Tow Rig Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Hangar Tow Rig Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Hangar Tow Rig Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-aircraft_mechanic-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Hangar Tow Rig Service",
+      "primarySkill": "aircraft_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "aircraft_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Avionics Bay Cleanup called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Avionics Bay Cleanup slipped, and the callback pile grew louder.",
+        "neutral_line": "Avionics Bay Cleanup got done, but the finish quality only hit the minimum line.",
+        "success_line": "Avionics Bay Cleanup wrapped clean and the client signed off fast."
+      },
+      "id": "job-aircraft_mechanic-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Avionics Bay Cleanup",
+      "primarySkill": "aircraft_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "aircraft_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Hydraulic Line Refit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Hydraulic Line Refit slipped, and the callback pile grew louder.",
+        "neutral_line": "Hydraulic Line Refit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Hydraulic Line Refit wrapped clean and the client signed off fast."
+      },
+      "id": "job-aircraft_mechanic-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Hydraulic Line Refit",
+      "primarySkill": "aircraft_mechanic",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "aircraft_mechanic",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Limb Hazard Reduction called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Limb Hazard Reduction slipped, and the callback pile grew louder.",
+        "neutral_line": "Limb Hazard Reduction got done, but the finish quality only hit the minimum line.",
+        "success_line": "Limb Hazard Reduction wrapped clean and the client signed off fast."
+      },
+      "id": "job-arborist-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Limb Hazard Reduction",
+      "primarySkill": "arborist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "saw"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "arborist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Canopy Cable Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Canopy Cable Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Canopy Cable Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Canopy Cable Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-arborist-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Canopy Cable Reset",
+      "primarySkill": "arborist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "saw"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "arborist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Root Zone Stabilization called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Root Zone Stabilization slipped, and the callback pile grew louder.",
+        "neutral_line": "Root Zone Stabilization got done, but the finish quality only hit the minimum line.",
+        "success_line": "Root Zone Stabilization wrapped clean and the client signed off fast."
+      },
+      "id": "job-arborist-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Root Zone Stabilization",
+      "primarySkill": "arborist",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "saw"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "arborist",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Fleet Van Tune-Up called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Fleet Van Tune-Up slipped, and the callback pile grew louder.",
+        "neutral_line": "Fleet Van Tune-Up got done, but the finish quality only hit the minimum line.",
+        "success_line": "Fleet Van Tune-Up wrapped clean and the client signed off fast."
+      },
+      "id": "job-auto_mechanic-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Fleet Van Tune-Up",
+      "primarySkill": "auto_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "auto_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Brake Line Cleanup called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Brake Line Cleanup slipped, and the callback pile grew louder.",
+        "neutral_line": "Brake Line Cleanup got done, but the finish quality only hit the minimum line.",
+        "success_line": "Brake Line Cleanup wrapped clean and the client signed off fast."
+      },
+      "id": "job-auto_mechanic-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Brake Line Cleanup",
+      "primarySkill": "auto_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "auto_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Alternator Swap Sprint called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Alternator Swap Sprint slipped, and the callback pile grew louder.",
+        "neutral_line": "Alternator Swap Sprint got done, but the finish quality only hit the minimum line.",
+        "success_line": "Alternator Swap Sprint wrapped clean and the client signed off fast."
+      },
+      "id": "job-auto_mechanic-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Alternator Swap Sprint",
+      "primarySkill": "auto_mechanic",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "auto_mechanic",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Forged Latch Repair called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Forged Latch Repair slipped, and the callback pile grew louder.",
+        "neutral_line": "Forged Latch Repair got done, but the finish quality only hit the minimum line.",
+        "success_line": "Forged Latch Repair wrapped clean and the client signed off fast."
+      },
+      "id": "job-blacksmith-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Forged Latch Repair",
+      "primarySkill": "blacksmith",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "trowel"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "blacksmith",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Ornamental Bar Rework called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Ornamental Bar Rework slipped, and the callback pile grew louder.",
+        "neutral_line": "Ornamental Bar Rework got done, but the finish quality only hit the minimum line.",
+        "success_line": "Ornamental Bar Rework wrapped clean and the client signed off fast."
+      },
+      "id": "job-blacksmith-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Ornamental Bar Rework",
+      "primarySkill": "blacksmith",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "trowel"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "blacksmith",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Custom Hook Forge called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Custom Hook Forge slipped, and the callback pile grew louder.",
+        "neutral_line": "Custom Hook Forge got done, but the finish quality only hit the minimum line.",
+        "success_line": "Custom Hook Forge wrapped clean and the client signed off fast."
+      },
+      "id": "job-blacksmith-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Custom Hook Forge",
+      "primarySkill": "blacksmith",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "trowel"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "blacksmith",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Boiler Feed Tune-Up called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Boiler Feed Tune-Up slipped, and the callback pile grew louder.",
+        "neutral_line": "Boiler Feed Tune-Up got done, but the finish quality only hit the minimum line.",
+        "success_line": "Boiler Feed Tune-Up wrapped clean and the client signed off fast."
+      },
+      "id": "job-boiler_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Boiler Feed Tune-Up",
+      "primarySkill": "boiler_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "level"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "boiler_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Burner Stack Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Burner Stack Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Burner Stack Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Burner Stack Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-boiler_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Burner Stack Reset",
+      "primarySkill": "boiler_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "level"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "boiler_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Hydronic Balance Pass called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Hydronic Balance Pass slipped, and the callback pile grew louder.",
+        "neutral_line": "Hydronic Balance Pass got done, but the finish quality only hit the minimum line.",
+        "success_line": "Hydronic Balance Pass wrapped clean and the client signed off fast."
+      },
+      "id": "job-boiler_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Hydronic Balance Pass",
+      "primarySkill": "boiler_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "level"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "boiler_technician",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 123,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -1352,6 +2347,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Panel Mill Program called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Panel Mill Program slipped, and the callback pile grew louder.",
+        "neutral_line": "Panel Mill Program got done, but the finish quality only hit the minimum line.",
+        "success_line": "Panel Mill Program wrapped clean and the client signed off fast."
+      },
+      "id": "job-cnc_operator-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Panel Mill Program",
+      "primarySkill": "cnc_operator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "cnc_operator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Bracket Batch Run called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Bracket Batch Run slipped, and the callback pile grew louder.",
+        "neutral_line": "Bracket Batch Run got done, but the finish quality only hit the minimum line.",
+        "success_line": "Bracket Batch Run wrapped clean and the client signed off fast."
+      },
+      "id": "job-cnc_operator-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Bracket Batch Run",
+      "primarySkill": "cnc_operator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "cnc_operator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Precision Slot Revision called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Precision Slot Revision slipped, and the callback pile grew louder.",
+        "neutral_line": "Precision Slot Revision got done, but the finish quality only hit the minimum line.",
+        "success_line": "Precision Slot Revision wrapped clean and the client signed off fast."
+      },
+      "id": "job-cnc_operator-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Precision Slot Revision",
+      "primarySkill": "cnc_operator",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "cnc_operator",
+        "commercial"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 127,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -1555,6 +2667,240 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Partition Tear-Out called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Partition Tear-Out slipped, and the callback pile grew louder.",
+        "neutral_line": "Partition Tear-Out got done, but the finish quality only hit the minimum line.",
+        "success_line": "Partition Tear-Out wrapped clean and the client signed off fast."
+      },
+      "id": "job-demolition_specialist-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Partition Tear-Out",
+      "primarySkill": "demolition_specialist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "demolition_specialist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Slab Breakout Prep called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Slab Breakout Prep slipped, and the callback pile grew louder.",
+        "neutral_line": "Slab Breakout Prep got done, but the finish quality only hit the minimum line.",
+        "success_line": "Slab Breakout Prep wrapped clean and the client signed off fast."
+      },
+      "id": "job-demolition_specialist-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Slab Breakout Prep",
+      "primarySkill": "demolition_specialist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "demolition_specialist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Ceiling Strip and Clear called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Ceiling Strip and Clear slipped, and the callback pile grew louder.",
+        "neutral_line": "Ceiling Strip and Clear got done, but the finish quality only hit the minimum line.",
+        "success_line": "Ceiling Strip and Clear wrapped clean and the client signed off fast."
+      },
+      "id": "job-demolition_specialist-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Ceiling Strip and Clear",
+      "primarySkill": "demolition_specialist",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "saw"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "demolition_specialist"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Diesel Pump Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Diesel Pump Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Diesel Pump Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Diesel Pump Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-diesel_mechanic-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Diesel Pump Service",
+      "primarySkill": "diesel_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "diesel_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Injector Bank Cleanup called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Injector Bank Cleanup slipped, and the callback pile grew louder.",
+        "neutral_line": "Injector Bank Cleanup got done, but the finish quality only hit the minimum line.",
+        "success_line": "Injector Bank Cleanup wrapped clean and the client signed off fast."
+      },
+      "id": "job-diesel_mechanic-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Injector Bank Cleanup",
+      "primarySkill": "diesel_mechanic",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "diesel_mechanic",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Turbo Line Refit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Turbo Line Refit slipped, and the callback pile grew louder.",
+        "neutral_line": "Turbo Line Refit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Turbo Line Refit wrapped clean and the client signed off fast."
+      },
+      "id": "job-diesel_mechanic-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Turbo Line Refit",
+      "primarySkill": "diesel_mechanic",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "diesel_mechanic"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 127,
@@ -1965,6 +3311,123 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Lift Door Track Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Lift Door Track Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Lift Door Track Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Lift Door Track Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-elevator_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Lift Door Track Reset",
+      "primarySkill": "elevator_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "scaffold-wrench"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "elevator_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Control Cabinet Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Control Cabinet Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Control Cabinet Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Control Cabinet Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-elevator_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Control Cabinet Service",
+      "primarySkill": "elevator_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "scaffold-wrench"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "elevator_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Hoistway Sensor Rewire called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Hoistway Sensor Rewire slipped, and the callback pile grew louder.",
+        "neutral_line": "Hoistway Sensor Rewire got done, but the finish quality only hit the minimum line.",
+        "success_line": "Hoistway Sensor Rewire wrapped clean and the client signed off fast."
+      },
+      "id": "job-elevator_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Hoistway Sensor Rewire",
+      "primarySkill": "elevator_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "scaffold-wrench"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "elevator_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 125,
@@ -2582,6 +4045,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Gas Manifold Seal called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Gas Manifold Seal slipped, and the callback pile grew louder.",
+        "neutral_line": "Gas Manifold Seal got done, but the finish quality only hit the minimum line.",
+        "success_line": "Gas Manifold Seal wrapped clean and the client signed off fast."
+      },
+      "id": "job-gas_fitter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Gas Manifold Seal",
+      "primarySkill": "gas_fitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "pipe-threader"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "gas_fitter",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Line Purge and Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Line Purge and Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Line Purge and Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Line Purge and Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-gas_fitter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Line Purge and Reset",
+      "primarySkill": "gas_fitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "pipe-threader"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "gas_fitter",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Meter Room Repipe called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Meter Room Repipe slipped, and the callback pile grew louder.",
+        "neutral_line": "Meter Room Repipe got done, but the finish quality only hit the minimum line.",
+        "success_line": "Meter Room Repipe wrapped clean and the client signed off fast."
+      },
+      "id": "job-gas_fitter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Meter Room Repipe",
+      "primarySkill": "gas_fitter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "multimeter",
+        "pipe-threader"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "gas_fitter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 117,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -2785,6 +4365,123 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Loader Grade Recovery called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Loader Grade Recovery slipped, and the callback pile grew louder.",
+        "neutral_line": "Loader Grade Recovery got done, but the finish quality only hit the minimum line.",
+        "success_line": "Loader Grade Recovery wrapped clean and the client signed off fast."
+      },
+      "id": "job-heavy_equipment_operator-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Loader Grade Recovery",
+      "primarySkill": "heavy_equipment_operator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "heavy_equipment_operator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Backhoe Access Cut called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Backhoe Access Cut slipped, and the callback pile grew louder.",
+        "neutral_line": "Backhoe Access Cut got done, but the finish quality only hit the minimum line.",
+        "success_line": "Backhoe Access Cut wrapped clean and the client signed off fast."
+      },
+      "id": "job-heavy_equipment_operator-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Backhoe Access Cut",
+      "primarySkill": "heavy_equipment_operator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "heavy_equipment_operator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Compactor Ramp Pass called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Compactor Ramp Pass slipped, and the callback pile grew louder.",
+        "neutral_line": "Compactor Ramp Pass got done, but the finish quality only hit the minimum line.",
+        "success_line": "Compactor Ramp Pass wrapped clean and the client signed off fast."
+      },
+      "id": "job-heavy_equipment_operator-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Compactor Ramp Pass",
+      "primarySkill": "heavy_equipment_operator",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "heavy_equipment_operator"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 125,
@@ -2992,6 +4689,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Conveyor Jam Recovery called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Conveyor Jam Recovery slipped, and the callback pile grew louder.",
+        "neutral_line": "Conveyor Jam Recovery got done, but the finish quality only hit the minimum line.",
+        "success_line": "Conveyor Jam Recovery wrapped clean and the client signed off fast."
+      },
+      "id": "job-industrial_maintenance-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Conveyor Jam Recovery",
+      "primarySkill": "industrial_maintenance",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "scaffold-wrench"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "industrial_maintenance",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Plant Line Service Pass called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Plant Line Service Pass slipped, and the callback pile grew louder.",
+        "neutral_line": "Plant Line Service Pass got done, but the finish quality only hit the minimum line.",
+        "success_line": "Plant Line Service Pass wrapped clean and the client signed off fast."
+      },
+      "id": "job-industrial_maintenance-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Plant Line Service Pass",
+      "primarySkill": "industrial_maintenance",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "scaffold-wrench"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "industrial_maintenance",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Gearbox Mount Rework called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Gearbox Mount Rework slipped, and the callback pile grew louder.",
+        "neutral_line": "Gearbox Mount Rework got done, but the finish quality only hit the minimum line.",
+        "success_line": "Gearbox Mount Rework wrapped clean and the client signed off fast."
+      },
+      "id": "job-industrial_maintenance-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Gearbox Mount Rework",
+      "primarySkill": "industrial_maintenance",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "scaffold-wrench"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "industrial_maintenance"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 130,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -3195,6 +5009,591 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Valve Box Rewire called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Valve Box Rewire slipped, and the callback pile grew louder.",
+        "neutral_line": "Valve Box Rewire got done, but the finish quality only hit the minimum line.",
+        "success_line": "Valve Box Rewire wrapped clean and the client signed off fast."
+      },
+      "id": "job-irrigation_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Valve Box Rewire",
+      "primarySkill": "irrigation_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "irrigation_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Zone Head Re-balance called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Zone Head Re-balance slipped, and the callback pile grew louder.",
+        "neutral_line": "Zone Head Re-balance got done, but the finish quality only hit the minimum line.",
+        "success_line": "Zone Head Re-balance wrapped clean and the client signed off fast."
+      },
+      "id": "job-irrigation_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Zone Head Re-balance",
+      "primarySkill": "irrigation_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "irrigation_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Mainline Leak Trace called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Mainline Leak Trace slipped, and the callback pile grew louder.",
+        "neutral_line": "Mainline Leak Trace got done, but the finish quality only hit the minimum line.",
+        "success_line": "Mainline Leak Trace wrapped clean and the client signed off fast."
+      },
+      "id": "job-irrigation_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Mainline Leak Trace",
+      "primarySkill": "irrigation_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "irrigation_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Drain Swale Regrade called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Drain Swale Regrade slipped, and the callback pile grew louder.",
+        "neutral_line": "Drain Swale Regrade got done, but the finish quality only hit the minimum line.",
+        "success_line": "Drain Swale Regrade wrapped clean and the client signed off fast."
+      },
+      "id": "job-landscaper-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Drain Swale Regrade",
+      "primarySkill": "landscaper",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "landscaper",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Retaining Edge Build called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Retaining Edge Build slipped, and the callback pile grew louder.",
+        "neutral_line": "Retaining Edge Build got done, but the finish quality only hit the minimum line.",
+        "success_line": "Retaining Edge Build wrapped clean and the client signed off fast."
+      },
+      "id": "job-landscaper-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Retaining Edge Build",
+      "primarySkill": "landscaper",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "landscaper",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Irrigation Bed Rehab called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Irrigation Bed Rehab slipped, and the callback pile grew louder.",
+        "neutral_line": "Irrigation Bed Rehab got done, but the finish quality only hit the minimum line.",
+        "success_line": "Irrigation Bed Rehab wrapped clean and the client signed off fast."
+      },
+      "id": "job-landscaper-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fence-panel-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "post-anchor-kit"
+        }
+      ],
+      "name": "Irrigation Bed Rehab",
+      "primarySkill": "landscaper",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "post-hole-auger"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "landscaper"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Service Drop Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Service Drop Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Service Drop Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Service Drop Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-lineman-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Service Drop Reset",
+      "primarySkill": "lineman",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "lineman",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Pole Feed Transfer called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Pole Feed Transfer slipped, and the callback pile grew louder.",
+        "neutral_line": "Pole Feed Transfer got done, but the finish quality only hit the minimum line.",
+        "success_line": "Pole Feed Transfer wrapped clean and the client signed off fast."
+      },
+      "id": "job-lineman-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Pole Feed Transfer",
+      "primarySkill": "lineman",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "lineman",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Street Span Fault Hunt called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Street Span Fault Hunt slipped, and the callback pile grew louder.",
+        "neutral_line": "Street Span Fault Hunt got done, but the finish quality only hit the minimum line.",
+        "success_line": "Street Span Fault Hunt wrapped clean and the client signed off fast."
+      },
+      "id": "job-lineman-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Street Span Fault Hunt",
+      "primarySkill": "lineman",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "ladder",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "lineman"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Patch Panel Cleanup called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Patch Panel Cleanup slipped, and the callback pile grew louder.",
+        "neutral_line": "Patch Panel Cleanup got done, but the finish quality only hit the minimum line.",
+        "success_line": "Patch Panel Cleanup wrapped clean and the client signed off fast."
+      },
+      "id": "job-low_voltage_data_tech-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Patch Panel Cleanup",
+      "primarySkill": "low_voltage_data_tech",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "low_voltage_data_tech",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Network Closet Rewire called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Network Closet Rewire slipped, and the callback pile grew louder.",
+        "neutral_line": "Network Closet Rewire got done, but the finish quality only hit the minimum line.",
+        "success_line": "Network Closet Rewire wrapped clean and the client signed off fast."
+      },
+      "id": "job-low_voltage_data_tech-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Network Closet Rewire",
+      "primarySkill": "low_voltage_data_tech",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "low_voltage_data_tech",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Camera Loop Re-home called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Camera Loop Re-home slipped, and the callback pile grew louder.",
+        "neutral_line": "Camera Loop Re-home got done, but the finish quality only hit the minimum line.",
+        "success_line": "Camera Loop Re-home wrapped clean and the client signed off fast."
+      },
+      "id": "job-low_voltage_data_tech-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Camera Loop Re-home",
+      "primarySkill": "low_voltage_data_tech",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "low_voltage_data_tech"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Bushing Turnaround called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Bushing Turnaround slipped, and the callback pile grew louder.",
+        "neutral_line": "Bushing Turnaround got done, but the finish quality only hit the minimum line.",
+        "success_line": "Bushing Turnaround wrapped clean and the client signed off fast."
+      },
+      "id": "job-machinist-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Bushing Turnaround",
+      "primarySkill": "machinist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "machinist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Shaft Collar Remake called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Shaft Collar Remake slipped, and the callback pile grew louder.",
+        "neutral_line": "Shaft Collar Remake got done, but the finish quality only hit the minimum line.",
+        "success_line": "Shaft Collar Remake wrapped clean and the client signed off fast."
+      },
+      "id": "job-machinist-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Shaft Collar Remake",
+      "primarySkill": "machinist",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "machinist",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Fixture Recut Order called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Fixture Recut Order slipped, and the callback pile grew louder.",
+        "neutral_line": "Fixture Recut Order got done, but the finish quality only hit the minimum line.",
+        "success_line": "Fixture Recut Order wrapped clean and the client signed off fast."
+      },
+      "id": "job-machinist-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Fixture Recut Order",
+      "primarySkill": "machinist",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "machinist"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 115,
@@ -3402,6 +5801,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Rail Section Rebuild called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Rail Section Rebuild slipped, and the callback pile grew louder.",
+        "neutral_line": "Rail Section Rebuild got done, but the finish quality only hit the minimum line.",
+        "success_line": "Rail Section Rebuild wrapped clean and the client signed off fast."
+      },
+      "id": "job-metal_fabricator-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Rail Section Rebuild",
+      "primarySkill": "metal_fabricator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "miter-saw",
+        "saw"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "metal_fabricator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Custom Bracket Run called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Custom Bracket Run slipped, and the callback pile grew louder.",
+        "neutral_line": "Custom Bracket Run got done, but the finish quality only hit the minimum line.",
+        "success_line": "Custom Bracket Run wrapped clean and the client signed off fast."
+      },
+      "id": "job-metal_fabricator-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Custom Bracket Run",
+      "primarySkill": "metal_fabricator",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "miter-saw",
+        "saw"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "metal_fabricator",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Guard Plate Refit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Guard Plate Refit slipped, and the callback pile grew louder.",
+        "neutral_line": "Guard Plate Refit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Guard Plate Refit wrapped clean and the client signed off fast."
+      },
+      "id": "job-metal_fabricator-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Guard Plate Refit",
+      "primarySkill": "metal_fabricator",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "miter-saw",
+        "saw"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "metal_fabricator"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 120,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -3605,6 +6121,240 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Machine Base Realign called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Machine Base Realign slipped, and the callback pile grew louder.",
+        "neutral_line": "Machine Base Realign got done, but the finish quality only hit the minimum line.",
+        "success_line": "Machine Base Realign wrapped clean and the client signed off fast."
+      },
+      "id": "job-millwright-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Machine Base Realign",
+      "primarySkill": "millwright",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "millwright",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Bearing Block Swap called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Bearing Block Swap slipped, and the callback pile grew louder.",
+        "neutral_line": "Bearing Block Swap got done, but the finish quality only hit the minimum line.",
+        "success_line": "Bearing Block Swap wrapped clean and the client signed off fast."
+      },
+      "id": "job-millwright-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Bearing Block Swap",
+      "primarySkill": "millwright",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "millwright",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Drive Train Rebalance called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Drive Train Rebalance slipped, and the callback pile grew louder.",
+        "neutral_line": "Drive Train Rebalance got done, but the finish quality only hit the minimum line.",
+        "success_line": "Drive Train Rebalance wrapped clean and the client signed off fast."
+      },
+      "id": "job-millwright-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Drive Train Rebalance",
+      "primarySkill": "millwright",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "millwright"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Bike Clutch Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Bike Clutch Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Bike Clutch Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Bike Clutch Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-motorcycle_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Bike Clutch Reset",
+      "primarySkill": "motorcycle_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "motorcycle_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Chain and Sprocket Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Chain and Sprocket Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Chain and Sprocket Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Chain and Sprocket Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-motorcycle_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Chain and Sprocket Service",
+      "primarySkill": "motorcycle_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "motorcycle_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Street Twin Wiring Tidy called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Street Twin Wiring Tidy slipped, and the callback pile grew louder.",
+        "neutral_line": "Street Twin Wiring Tidy got done, but the finish quality only hit the minimum line.",
+        "success_line": "Street Twin Wiring Tidy wrapped clean and the client signed off fast."
+      },
+      "id": "job-motorcycle_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Street Twin Wiring Tidy",
+      "primarySkill": "motorcycle_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "motorcycle_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 117,
@@ -3812,6 +6562,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Boiler Loop Refit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Boiler Loop Refit slipped, and the callback pile grew louder.",
+        "neutral_line": "Boiler Loop Refit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Boiler Loop Refit wrapped clean and the client signed off fast."
+      },
+      "id": "job-pipefitter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Boiler Loop Refit",
+      "primarySkill": "pipefitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "pipefitter",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Utility Pipe Alignment called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Utility Pipe Alignment slipped, and the callback pile grew louder.",
+        "neutral_line": "Utility Pipe Alignment got done, but the finish quality only hit the minimum line.",
+        "success_line": "Utility Pipe Alignment wrapped clean and the client signed off fast."
+      },
+      "id": "job-pipefitter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Utility Pipe Alignment",
+      "primarySkill": "pipefitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "pipefitter",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Riser Tie-In Pass called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Riser Tie-In Pass slipped, and the callback pile grew louder.",
+        "neutral_line": "Riser Tie-In Pass got done, but the finish quality only hit the minimum line.",
+        "success_line": "Riser Tie-In Pass wrapped clean and the client signed off fast."
+      },
+      "id": "job-pipefitter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Riser Tie-In Pass",
+      "primarySkill": "pipefitter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "pipefitter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 117,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -4015,6 +6882,240 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Walk-In Coil Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Walk-In Coil Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Walk-In Coil Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Walk-In Coil Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-refrigeration_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Walk-In Coil Service",
+      "primarySkill": "refrigeration_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "refrigeration_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Refrigerant Loop Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Refrigerant Loop Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Refrigerant Loop Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Refrigerant Loop Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-refrigeration_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Refrigerant Loop Reset",
+      "primarySkill": "refrigeration_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "refrigeration_technician",
+        "residential"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Condenser Restart called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Condenser Restart slipped, and the callback pile grew louder.",
+        "neutral_line": "Condenser Restart got done, but the finish quality only hit the minimum line.",
+        "success_line": "Condenser Restart wrapped clean and the client signed off fast."
+      },
+      "id": "job-refrigeration_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        }
+      ],
+      "name": "Condenser Restart",
+      "primarySkill": "refrigeration_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hvac-gauge",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "refrigeration_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Arm Axis Calibration called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Arm Axis Calibration slipped, and the callback pile grew louder.",
+        "neutral_line": "Arm Axis Calibration got done, but the finish quality only hit the minimum line.",
+        "success_line": "Arm Axis Calibration wrapped clean and the client signed off fast."
+      },
+      "id": "job-robotics_technician-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Arm Axis Calibration",
+      "primarySkill": "robotics_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "robotics_technician"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "PLC Cell Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "PLC Cell Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "PLC Cell Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "PLC Cell Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-robotics_technician-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "PLC Cell Reset",
+      "primarySkill": "robotics_technician",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "robotics_technician"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Servo Loop Re-tune called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Servo Loop Re-tune slipped, and the callback pile grew louder.",
+        "neutral_line": "Servo Loop Re-tune got done, but the finish quality only hit the minimum line.",
+        "success_line": "Servo Loop Re-tune wrapped clean and the client signed off fast."
+      },
+      "id": "job-robotics_technician-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "breaker-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "wire-spool"
+        }
+      ],
+      "name": "Servo Loop Re-tune",
+      "primarySkill": "robotics_technician",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "multimeter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "robotics_technician"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     },
     {
       "basePayout": 116,
@@ -4427,6 +7528,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Duct Elbow Retrofit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Duct Elbow Retrofit slipped, and the callback pile grew louder.",
+        "neutral_line": "Duct Elbow Retrofit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Duct Elbow Retrofit wrapped clean and the client signed off fast."
+      },
+      "id": "job-sheet_metal_worker-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Duct Elbow Retrofit",
+      "primarySkill": "sheet_metal_worker",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "sheet_metal_worker"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Roof Curb Flash Build called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Roof Curb Flash Build slipped, and the callback pile grew louder.",
+        "neutral_line": "Roof Curb Flash Build got done, but the finish quality only hit the minimum line.",
+        "success_line": "Roof Curb Flash Build wrapped clean and the client signed off fast."
+      },
+      "id": "job-sheet_metal_worker-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Roof Curb Flash Build",
+      "primarySkill": "sheet_metal_worker",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "sheet_metal_worker"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Plenum Re-skin Job called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Plenum Re-skin Job slipped, and the callback pile grew louder.",
+        "neutral_line": "Plenum Re-skin Job got done, but the finish quality only hit the minimum line.",
+        "success_line": "Plenum Re-skin Job wrapped clean and the client signed off fast."
+      },
+      "id": "job-sheet_metal_worker-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "duct-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "fastener-box"
+        }
+      ],
+      "name": "Plenum Re-skin Job",
+      "primarySkill": "sheet_metal_worker",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "miter-saw"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "sheet_metal_worker"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 126,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -4632,6 +7850,123 @@
       "workUnits": 4
     },
     {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Generator Carb Rebuild called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Generator Carb Rebuild slipped, and the callback pile grew louder.",
+        "neutral_line": "Generator Carb Rebuild got done, but the finish quality only hit the minimum line.",
+        "success_line": "Generator Carb Rebuild wrapped clean and the client signed off fast."
+      },
+      "id": "job-small_engine_repair-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Generator Carb Rebuild",
+      "primarySkill": "small_engine_repair",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "small_engine_repair"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Mixer Engine Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Mixer Engine Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Mixer Engine Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Mixer Engine Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-small_engine_repair-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Mixer Engine Reset",
+      "primarySkill": "small_engine_repair",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "small_engine_repair"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Compressor Pull-Cord Fix called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Compressor Pull-Cord Fix slipped, and the callback pile grew louder.",
+        "neutral_line": "Compressor Pull-Cord Fix got done, but the finish quality only hit the minimum line.",
+        "success_line": "Compressor Pull-Cord Fix wrapped clean and the client signed off fast."
+      },
+      "id": "job-small_engine_repair-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "filter-pack"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Compressor Pull-Cord Fix",
+      "primarySkill": "small_engine_repair",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "level"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "small_engine_repair"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
       "basePayout": 131,
       "districtId": "residential",
       "durabilityCost": 2,
@@ -4835,6 +8170,708 @@
       "tier": 3,
       "trashUnits": 5,
       "workUnits": 4
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Sprinkler Head Reset called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Sprinkler Head Reset slipped, and the callback pile grew louder.",
+        "neutral_line": "Sprinkler Head Reset got done, but the finish quality only hit the minimum line.",
+        "success_line": "Sprinkler Head Reset wrapped clean and the client signed off fast."
+      },
+      "id": "job-sprinkler_fitter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Sprinkler Head Reset",
+      "primarySkill": "sprinkler_fitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "pipe-threader"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "sprinkler_fitter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Riser Valve Swap called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Riser Valve Swap slipped, and the callback pile grew louder.",
+        "neutral_line": "Riser Valve Swap got done, but the finish quality only hit the minimum line.",
+        "success_line": "Riser Valve Swap wrapped clean and the client signed off fast."
+      },
+      "id": "job-sprinkler_fitter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Riser Valve Swap",
+      "primarySkill": "sprinkler_fitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "pipe-threader"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "sprinkler_fitter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Fire Loop Pressure Pass called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Fire Loop Pressure Pass slipped, and the callback pile grew louder.",
+        "neutral_line": "Fire Loop Pressure Pass got done, but the finish quality only hit the minimum line.",
+        "success_line": "Fire Loop Pressure Pass wrapped clean and the client signed off fast."
+      },
+      "id": "job-sprinkler_fitter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Fire Loop Pressure Pass",
+      "primarySkill": "sprinkler_fitter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "drill",
+        "pipe-threader"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "sprinkler_fitter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Steam Main Reseal called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Steam Main Reseal slipped, and the callback pile grew louder.",
+        "neutral_line": "Steam Main Reseal got done, but the finish quality only hit the minimum line.",
+        "success_line": "Steam Main Reseal wrapped clean and the client signed off fast."
+      },
+      "id": "job-steamfitter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Steam Main Reseal",
+      "primarySkill": "steamfitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "steamfitter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Trap Bank Retrofit called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Trap Bank Retrofit slipped, and the callback pile grew louder.",
+        "neutral_line": "Trap Bank Retrofit got done, but the finish quality only hit the minimum line.",
+        "success_line": "Trap Bank Retrofit wrapped clean and the client signed off fast."
+      },
+      "id": "job-steamfitter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Trap Bank Retrofit",
+      "primarySkill": "steamfitter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "steamfitter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Steam Header Triage called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Steam Header Triage slipped, and the callback pile grew louder.",
+        "neutral_line": "Steam Header Triage got done, but the finish quality only hit the minimum line.",
+        "success_line": "Steam Header Triage wrapped clean and the client signed off fast."
+      },
+      "id": "job-steamfitter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "valve-pack"
+        }
+      ],
+      "name": "Steam Header Triage",
+      "primarySkill": "steamfitter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "pipe-threader"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "steamfitter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Lobby Tile Patch called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Lobby Tile Patch slipped, and the callback pile grew louder.",
+        "neutral_line": "Lobby Tile Patch got done, but the finish quality only hit the minimum line.",
+        "success_line": "Lobby Tile Patch wrapped clean and the client signed off fast."
+      },
+      "id": "job-tile_setter-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Lobby Tile Patch",
+      "primarySkill": "tile_setter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "tile_setter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Shower Pan Retile called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Shower Pan Retile slipped, and the callback pile grew louder.",
+        "neutral_line": "Shower Pan Retile got done, but the finish quality only hit the minimum line.",
+        "success_line": "Shower Pan Retile wrapped clean and the client signed off fast."
+      },
+      "id": "job-tile_setter-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Shower Pan Retile",
+      "primarySkill": "tile_setter",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "tile_setter"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Entryway Grout Rescue called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Entryway Grout Rescue slipped, and the callback pile grew louder.",
+        "neutral_line": "Entryway Grout Rescue got done, but the finish quality only hit the minimum line.",
+        "success_line": "Entryway Grout Rescue wrapped clean and the client signed off fast."
+      },
+      "id": "job-tile_setter-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "tile-box"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "underlayment-roll"
+        }
+      ],
+      "name": "Entryway Grout Rescue",
+      "primarySkill": "tile_setter",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "level",
+        "tile-cutter"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "tile_setter"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Bench Rewrap Service called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Bench Rewrap Service slipped, and the callback pile grew louder.",
+        "neutral_line": "Bench Rewrap Service got done, but the finish quality only hit the minimum line.",
+        "success_line": "Bench Rewrap Service wrapped clean and the client signed off fast."
+      },
+      "id": "job-upholsterer-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Bench Rewrap Service",
+      "primarySkill": "upholsterer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "upholsterer"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Booth Cushion Rebuild called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Booth Cushion Rebuild slipped, and the callback pile grew louder.",
+        "neutral_line": "Booth Cushion Rebuild got done, but the finish quality only hit the minimum line.",
+        "success_line": "Booth Cushion Rebuild wrapped clean and the client signed off fast."
+      },
+      "id": "job-upholsterer-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Booth Cushion Rebuild",
+      "primarySkill": "upholsterer",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "upholsterer"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Chair Stitch Recovery called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Chair Stitch Recovery slipped, and the callback pile grew louder.",
+        "neutral_line": "Chair Stitch Recovery got done, but the finish quality only hit the minimum line.",
+        "success_line": "Chair Stitch Recovery wrapped clean and the client signed off fast."
+      },
+      "id": "job-upholsterer-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "paint-bucket"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "trim-kit"
+        }
+      ],
+      "name": "Chair Stitch Recovery",
+      "primarySkill": "upholsterer",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "cabinet-jig",
+        "saw"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "upholsterer"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Steel Bracket Stitch called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Steel Bracket Stitch slipped, and the callback pile grew louder.",
+        "neutral_line": "Steel Bracket Stitch got done, but the finish quality only hit the minimum line.",
+        "success_line": "Steel Bracket Stitch wrapped clean and the client signed off fast."
+      },
+      "id": "job-welder-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Steel Bracket Stitch",
+      "primarySkill": "welder",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "level"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "welder"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Gate Hinge Weldback called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Gate Hinge Weldback slipped, and the callback pile grew louder.",
+        "neutral_line": "Gate Hinge Weldback got done, but the finish quality only hit the minimum line.",
+        "success_line": "Gate Hinge Weldback wrapped clean and the client signed off fast."
+      },
+      "id": "job-welder-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Gate Hinge Weldback",
+      "primarySkill": "welder",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "level"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "welder"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Beam Plate Burn-In called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Beam Plate Burn-In slipped, and the callback pile grew louder.",
+        "neutral_line": "Beam Plate Burn-In got done, but the finish quality only hit the minimum line.",
+        "success_line": "Beam Plate Burn-In wrapped clean and the client signed off fast."
+      },
+      "id": "job-welder-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "anchor-set"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Beam Plate Burn-In",
+      "primarySkill": "welder",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "hammer",
+        "level"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "welder"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
+    },
+    {
+      "basePayout": 118,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Pump Access Drill-Out called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Pump Access Drill-Out slipped, and the callback pile grew louder.",
+        "neutral_line": "Pump Access Drill-Out got done, but the finish quality only hit the minimum line.",
+        "success_line": "Pump Access Drill-Out wrapped clean and the client signed off fast."
+      },
+      "id": "job-well_driller-001",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Pump Access Drill-Out",
+      "primarySkill": "well_driller",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "pipe-threader",
+        "post-hole-auger"
+      ],
+      "risk": 0.16,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "well_driller"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 125,
+      "districtId": "residential",
+      "durabilityCost": 2,
+      "flavor": {
+        "client_quote": "Well Casing Patch called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Well Casing Patch slipped, and the callback pile grew louder.",
+        "neutral_line": "Well Casing Patch got done, but the finish quality only hit the minimum line.",
+        "success_line": "Well Casing Patch wrapped clean and the client signed off fast."
+      },
+      "id": "job-well_driller-002",
+      "materialNeeds": [
+        {
+          "quantity": 2,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 2,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Well Casing Patch",
+      "primarySkill": "well_driller",
+      "repGainSuccess": 2,
+      "repLossFail": 1,
+      "requiredTools": [
+        "pipe-threader",
+        "post-hole-auger"
+      ],
+      "risk": 0.19,
+      "staminaCost": 2,
+      "tags": [
+        "residential",
+        "well_driller"
+      ],
+      "tier": 1,
+      "trashUnits": 3,
+      "workUnits": 4
+    },
+    {
+      "basePayout": 200,
+      "districtId": "small-commercial",
+      "durabilityCost": 3,
+      "flavor": {
+        "client_quote": "Pressure Tank Re-tie called in with a same-day deadline and no patience for callbacks.",
+        "fail_line": "Pressure Tank Re-tie slipped, and the callback pile grew louder.",
+        "neutral_line": "Pressure Tank Re-tie got done, but the finish quality only hit the minimum line.",
+        "success_line": "Pressure Tank Re-tie wrapped clean and the client signed off fast."
+      },
+      "id": "job-well_driller-003",
+      "materialNeeds": [
+        {
+          "quantity": 3,
+          "supplyId": "pipe-kit"
+        },
+        {
+          "quantity": 3,
+          "supplyId": "rebar-bundle"
+        }
+      ],
+      "name": "Pressure Tank Re-tie",
+      "primarySkill": "well_driller",
+      "repGainSuccess": 3,
+      "repLossFail": 1,
+      "requiredTools": [
+        "pipe-threader",
+        "post-hole-auger"
+      ],
+      "risk": 0.29,
+      "staminaCost": 2,
+      "tags": [
+        "commercial",
+        "well_driller"
+      ],
+      "tier": 2,
+      "trashUnits": 6,
+      "workUnits": 6
     }
   ],
   "strings": {

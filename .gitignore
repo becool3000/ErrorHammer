@@ -31,3 +31,7 @@ Thumbs.db
 # TypeScript incremental build info
 *.tsbuildinfo
 
+# Local release artifacts
+error-hammer-v*-itch.zip
+error-hammer-itch.zip
+

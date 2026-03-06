@@ -1,0 +1,19 @@
+{
+  "releaseId": "v0.1.2+itch.20260306.01",
+  "platform": "itch",
+  "version": "0.1.2",
+  "buildId": "itch.20260306.01",
+  "releaseLabel": "v0.1.2+itch.20260306.01",
+  "tag": "itch/v0.1.2+itch.20260306.01",
+  "gitCommit": "5f9aea3",
+  "artifactName": "error-hammer-v0.1.2+itch.20260306.01-itch.zip",
+  "artifactSha256": "0621e4d126b6075bbf548cb04900d34b8ef8d8e0331db6babaed9767d833336f",
+  "artifactBytes": 6090891,
+  "builtAtUtc": "2026-03-06T01:54:59.415Z",
+  "notesPath": "release/platforms/itch/releases/v0.1.2+itch.20260306.01/CHANGELOG.md",
+  "highlights": [
+    "Added Baba-driven trade progression loop: Day Labor + Baba are always visible, and Baba completions unlock core trade tracks.",
+    "Changed Contracts flow to hide locked trade offers and only show unlocked core-track groups.",
+    "Fixed Task Result and encounter popup behavior to remain manually dismissible until closed."
+  ]
+}

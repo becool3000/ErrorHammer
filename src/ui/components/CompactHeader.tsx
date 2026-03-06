@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GameState } from "../../core/types";
 import { ticksToHours } from "../../core/playerFlow";
+import { getPerkArchetypeSnapshot } from "../../core/perks";
 import { bundle, GameTabId, useUiStore } from "../state";
 
 interface CompactHeaderProps {
@@ -18,6 +19,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const activeEventCount = game.activeEventIds.length;
   const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
   const showOperatorHud = activeTab === "work";
+  const archetype = getPerkArchetypeSnapshot(game);
 
   useEffect(() => {
     const previousCash = previousCashRef.current;
@@ -45,6 +47,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           <div className="header-day-copy">
             <h1 className="header-day-title">Day {game.day}</h1>
             <span className="header-subtitle">{game.workday.weekday} shift</span>
+            {showOperatorHud && archetype.primary ? <span className="chip tone-energy">Style {archetype.tags[0] ?? "Core"}</span> : null}
           </div>
         </div>
         <div className="header-top-actions">

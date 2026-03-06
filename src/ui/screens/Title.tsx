@@ -1,4 +1,5 @@
 import { bundle, useUiStore } from "../state";
+import { releaseInfo } from "../releaseInfo";
 
 interface TitleProps {
   title: string;
@@ -41,6 +42,11 @@ export function Title({ title, subtitle }: TitleProps) {
           </label>
         </div>
         <p className="muted-copy">{bundle.strings.titleNameHint}</p>
+        <div className="title-version muted-copy">
+          <p>Version {releaseInfo.appVersion}</p>
+          <p>Build {releaseInfo.buildId}</p>
+          <p>Release {releaseInfo.releaseLabel}</p>
+        </div>
         <div className="title-actions">
           <button
             className="primary-button"

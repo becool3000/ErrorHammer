@@ -11,7 +11,9 @@ import { createRng, hashSeed } from "./rng";
 import { SAVE_VERSION } from "./save";
 import { createBotSkills, createInitialShopSupplies, createInitialSkills, createInitialWorkday, digestState, prepareForNextDay } from "./playerFlow";
 import { applyEndDayOperations, createInitialOfficeSkillsState, createInitialOperationsState, createInitialYardState } from "./operations";
+import { createInitialPerksState } from "./perks";
 import { createResearchStateLocked } from "./research";
+import { createTradeProgressState } from "./tradeProgress";
 import {
   ActorState,
   AssignmentIntent,
@@ -91,9 +93,13 @@ export function createInitialGameState(
     truckSupplies: {},
     workday: createInitialWorkday(1, 0),
     research: createResearchStateLocked(),
+    tradeProgress: createTradeProgressState(true),
     officeSkills: createInitialOfficeSkillsState(),
     yard: createInitialYardState(),
-    operations: createInitialOperationsState()
+    operations: createInitialOperationsState(),
+    perks: createInitialPerksState(),
+    deferredJobs: [],
+    contractFiles: []
   };
 }
 
@@ -371,9 +377,34 @@ export function resolveDay(
       activeProject: state.research.activeProject ? { ...state.research.activeProject } : null,
       completedProjectIds: [...state.research.completedProjectIds]
     },
+    tradeProgress: {
+      unlocked: { ...state.tradeProgress.unlocked },
+      unlockedDay: { ...state.tradeProgress.unlockedDay }
+    },
     officeSkills: { ...state.officeSkills },
     yard: { ...state.yard },
-    operations: { ...state.operations }
+    operations: {
+      ...state.operations,
+      monthlyDueByCategory: { ...state.operations.monthlyDueByCategory },
+      facilities: { ...state.operations.facilities }
+    },
+    perks: {
+      ...state.perks,
+      corePerks: { ...state.perks.corePerks },
+      unlockedPerkTrees: { ...state.perks.unlockedPerkTrees }
+    },
+    deferredJobs: state.deferredJobs.map((entry) => ({
+      deferredJobId: entry.deferredJobId,
+      deferredAtDay: entry.deferredAtDay,
+      activeJob: {
+        ...entry.activeJob,
+        estimateAtAccept: { ...entry.activeJob.estimateAtAccept },
+        reservedMaterials: cloneSupplyInventory(entry.activeJob.reservedMaterials),
+        siteSupplies: cloneSupplyInventory(entry.activeJob.siteSupplies),
+        supplierCart: cloneSupplyInventory(entry.activeJob.supplierCart),
+        tasks: entry.activeJob.tasks.map((task) => ({ ...task }))
+      }
+    }))
   };
 
   return {
@@ -673,6 +704,22 @@ export function applyBotPurchasesForNextDay(
     bots: updatedBots,
     purchaseLogs
   };
+}
+
+function cloneSupplyInventory(inventory: Record<string, { low?: number; medium?: number; high?: number }> | undefined) {
+  if (!inventory) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(inventory).map(([supplyId, stack]) => [
+      supplyId,
+      {
+        low: stack.low ?? 0,
+        medium: stack.medium ?? 0,
+        high: stack.high ?? 0
+      }
+    ])
+  );
 }
 
 function createBotActor(profile: BotProfile, bundle: ContentBundle, seed: number, index: number): ActorState {

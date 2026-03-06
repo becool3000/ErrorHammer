@@ -4,6 +4,7 @@ import {
   formatHours,
   formatSkillLabel,
   formatSupplyQuality,
+  getActiveJobSpendPreview,
   getCurrentTask,
   getCurrentTaskGuidance,
   getGasStationStopPlan,
@@ -14,7 +15,8 @@ import {
   getVisibleTaskActions,
   hasUsableTools
 } from "../../core/playerFlow";
-import { ActiveTaskState, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
+import { CORE_PERK_IDS, formatArchetypeLabel, formatPerkLabel, getPerkArchetypeSnapshot } from "../../core/perks";
+import { ActiveTaskState, DeferredJobState, JobProfitRecap, RecoveryActionId, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
 import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
@@ -25,20 +27,28 @@ interface WorkTabProps {
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
+  const [jobSpendOpen, setJobSpendOpen] = useState(false);
+  const [cutLossesOpen, setCutLossesOpen] = useState(false);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
   const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
+  const [pendingRecoveryAction, setPendingRecoveryAction] = useState<RecoveryActionId | null>(null);
+  const [pendingDeferredAbandonId, setPendingDeferredAbandonId] = useState<string | null>(null);
   const actionTrackRef = useRef<HTMLDivElement | null>(null);
   const game = useUiStore((state) => state.game);
   const lastAction = useUiStore((state) => state.lastAction);
   const notice = useUiStore((state) => state.notice);
   const performTask = useUiStore((state) => state.performTaskUnit);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
-  const setJobAssignee = useUiStore((state) => state.setJobAssignee);
   const runGasStationStop = useUiStore((state) => state.runGasStationStop);
   const returnToShopForTools = useUiStore((state) => state.returnToShopForTools);
+  const runRecoveryAction = useUiStore((state) => state.runRecoveryAction);
+  const resumeDeferredJob = useUiStore((state) => state.resumeDeferredJob);
+  const spendPerkPoint = useUiStore((state) => state.spendPerkPoint);
   const openModal = useUiStore((state) => state.openModal);
   const goToTab = useUiStore((state) => state.goToTab);
   const setCartQuantity = useUiStore((state) => state.setCartQuantity);
+  const activeJobProfitRecap = useUiStore((state) => state.activeJobProfitRecap);
+  const dismissJobProfitRecap = useUiStore((state) => state.dismissJobProfitRecap);
   const [timerNowMs, setTimerNowMs] = useState(() => Date.now());
   if (!game) {
     return null;
@@ -55,6 +65,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   );
   const currentTask = getCurrentTask(game);
   const taskGuidance = getCurrentTaskGuidance(game, bundle);
+  const activeJobSpend = getActiveJobSpendPreview(game, bundle);
   const isSupplierCheckoutTask = currentTask?.taskId === "checkout_supplies";
   const activeJob = game.activeJob;
   const job = activeJob
@@ -134,7 +145,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       ? notice
       : "";
   const timedActionProgress = timedTaskAction ? clamp01((timerNowMs - timedTaskAction.startedAtMs) / timedTaskAction.durationMs) : 0;
-  const timedActionRemainingMs = timedTaskAction ? Math.max(0, timedTaskAction.endsAtMs - timerNowMs) : 0;
   const supplierCartTotal = activeJob
     ? supplierCatalogRows.reduce(
         (sum, row) =>
@@ -146,6 +156,15 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         0
       )
     : 0;
+  const deferredJobs = [...game.deferredJobs].sort(sortDeferredByUrgency.bind(null, game.day));
+  const bestDeferredJob = deferredJobs.reduce<DeferredJobState | null>((best, entry) => {
+    if (!best) {
+      return entry;
+    }
+    const bestNet = best.activeJob.estimateAtAccept.projectedNetOnSuccess;
+    const nextNet = entry.activeJob.estimateAtAccept.projectedNetOnSuccess;
+    return nextNet > bestNet ? entry : best;
+  }, null);
 
   useEffect(() => {
     syncActionCarousel();
@@ -180,6 +199,25 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     const delta = Math.max(180, Math.floor(track.clientWidth * 0.78)) * (direction === "left" ? -1 : 1);
     track.scrollBy({ left: delta, behavior: "smooth" });
     window.setTimeout(() => syncActionCarousel(), 180);
+  }
+
+  function confirmRecoveryAction() {
+    if (pendingDeferredAbandonId) {
+      resumeDeferredJob(pendingDeferredAbandonId);
+      useUiStore.getState().runRecoveryAction("abandon");
+      setPendingDeferredAbandonId(null);
+      return;
+    }
+    if (!pendingRecoveryAction) {
+      return;
+    }
+    runRecoveryAction(pendingRecoveryAction);
+    setPendingRecoveryAction(null);
+  }
+
+  function cancelRecoveryAction() {
+    setPendingRecoveryAction(null);
+    setPendingDeferredAbandonId(null);
   }
 
   if (sheetOnly) {
@@ -289,6 +327,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (modalView === "skills") {
     const skillRows = getSkillDisplayRows(game.player);
     const operatorLevel = getOperatorLevel(game.player);
+    const archetype = getPerkArchetypeSnapshot(game);
     return (
       <section className="stack-block">
         <article className="chrome-card inset-card">
@@ -313,6 +352,43 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
                 </div>
               </article>
             ))}
+          </div>
+        </article>
+        <article className="chrome-card inset-card">
+          <div className="section-label-row">
+            <div>
+              <p className="eyebrow">Core Perks</p>
+              <h3>Perk Points {game.perks.corePerkPoints}</h3>
+            </div>
+            <span className="chip">Perk XP {game.perks.corePerkXp}/40</span>
+          </div>
+          {archetype.primary ? (
+            <div className="chip-grid">
+              <span className="chip tone-energy">Style {formatArchetypeLabel(archetype.primary)}</span>
+              {archetype.secondary ? <span className="chip">Alt {formatArchetypeLabel(archetype.secondary)}</span> : null}
+            </div>
+          ) : (
+            <p className="muted-copy">Spend perk points to define your company style.</p>
+          )}
+          <div className="stack-list skill-ledger-list">
+            {CORE_PERK_IDS.map((perkId) => {
+              const level = game.perks.corePerks[perkId];
+              return (
+                <article key={perkId} className="task-summary">
+                  <div className="section-label-row tight-row">
+                    <strong>{formatPerkLabel(perkId)}</strong>
+                    <span>Lv {level}</span>
+                  </div>
+                  <button
+                    className={game.perks.corePerkPoints > 0 ? "ghost-button" : "ghost-button muted"}
+                    disabled={game.perks.corePerkPoints <= 0}
+                    onClick={() => spendPerkPoint(perkId)}
+                  >
+                    Spend Point
+                  </button>
+                </article>
+              );
+            })}
           </div>
         </article>
         <article className="chrome-card inset-card">
@@ -378,6 +454,59 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </button>
           </div>
         </article>
+        {deferredJobs.length > 0 ? (
+          <article className="chrome-card inset-card deferred-jobs-card">
+            <div className="section-label-row">
+              <div>
+                <p className="eyebrow">Deferred Queue</p>
+                <strong>{deferredJobs.length} jobs on hold</strong>
+              </div>
+              {bestDeferredJob ? (
+                <button className="ghost-button" onClick={() => resumeDeferredJob(bestDeferredJob.deferredJobId)}>
+                  Resume Best
+                </button>
+              ) : null}
+            </div>
+            <p className="muted-copy">Carrying fee $5/day per deferred job. Jobs expire after 7 days.</p>
+            <div className="stack-list">
+              {deferredJobs.map((entry) => {
+                const daysHeld = Math.max(0, game.day - entry.deferredAtDay);
+                const daysLeft = Math.max(0, 7 - daysHeld);
+                return (
+                  <article key={entry.deferredJobId} className="task-summary">
+                    <div className="section-label-row tight-row">
+                      <strong>{entry.activeJob.jobId}</strong>
+                      <span className={daysLeft <= 2 ? "tone-warning" : "muted-copy"}>{daysLeft}d left</span>
+                    </div>
+                    <div className="material-need-meta">
+                      <span>Est Net {formatSignedMoney(entry.activeJob.estimateAtAccept.projectedNetOnSuccess)}</span>
+                      <span>Payout ${entry.activeJob.lockedPayout}</span>
+                    </div>
+                    <div className="action-row">
+                      <button className="primary-button" onClick={() => resumeDeferredJob(entry.deferredJobId)}>
+                        Resume
+                      </button>
+                      <button className="ghost-button tone-danger" onClick={() => setPendingDeferredAbandonId(entry.deferredJobId)}>
+                        Abandon
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </article>
+        ) : null}
+        {activeJobProfitRecap ? (
+          <JobProfitRecapCard recap={activeJobProfitRecap} onDismiss={dismissJobProfitRecap} />
+        ) : null}
+        {(pendingRecoveryAction || pendingDeferredAbandonId) && (
+          <RecoveryConfirmModal
+            action={pendingDeferredAbandonId ? "abandon" : pendingRecoveryAction ?? "abandon"}
+            onCancel={cancelRecoveryAction}
+            onConfirm={confirmRecoveryAction}
+            deferredMode={Boolean(pendingDeferredAbandonId)}
+          />
+        )}
       </section>
     );
   }
@@ -387,7 +516,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
       <article className="chrome-card inset-card task-focus-card">
         <div className="section-label-row">
           <div>
-            <p className="eyebrow">Current Task</p>
+            <p className="eyebrow">Current Job: {job.name}</p>
           </div>
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
@@ -395,8 +524,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         {timedTaskAction ? (
           <div className="action-timer-card">
             <div className="section-label-row tight-row action-timer-meta">
-              <strong>Resolving: {timedTaskAction.label}</strong>
-              <span>{(timedActionRemainingMs / 1000).toFixed(1)}s</span>
+              <strong>Working: Earning {timedTaskAction.label} XP</strong>
             </div>
             <div
               className="action-timer-track"
@@ -407,6 +535,47 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               aria-valuenow={Math.round(timedActionProgress * 100)}
             >
               <span className={`action-timer-fill ${toneClassForStance(timedTaskAction.stance)}`} style={{ width: `${Math.round(timedActionProgress * 100)}%` }} />
+            </div>
+          </div>
+        ) : null}
+        {currentTask && !missingWorkTools ? (
+          <div className="action-carousel">
+            <div className="action-carousel-header">
+              <div className="action-callout">
+                <strong>TAKE ACTION</strong>
+              </div>
+              <div className="carousel-nav">
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions left"
+                  disabled={Boolean(timedTaskAction) || !canScrollActionsLeft}
+                  onClick={() => nudgeActionCarousel("left")}
+                >
+                  {"<"}
+                </button>
+                <button
+                  type="button"
+                  className="icon-button carousel-arrow"
+                  aria-label="Scroll task actions right"
+                  disabled={Boolean(timedTaskAction) || !canScrollActionsRight}
+                  onClick={() => nudgeActionCarousel("right")}
+                >
+                  {">"}
+                </button>
+              </div>
+            </div>
+            <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
+              {taskActions.map((action) => (
+                <button
+                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
+                  className={`${action.allowOvertime ? "ghost-button" : "primary-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
+                  onClick={() => performTask(action.stance, action.allowOvertime)}
+                  disabled={Boolean(timedTaskAction)}
+                >
+                  {action.label}
+                </button>
+              ))}
             </div>
           </div>
         ) : null}
@@ -485,59 +654,63 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </button>
           </div>
         ) : null}
-        {currentTask && !missingWorkTools ? (
-          <div className="action-carousel">
-            <div className="action-carousel-header">
-              <div className="action-callout">
-                <strong>TAKE ACTION</strong>
-              </div>
-              <div className="carousel-nav">
-                <button
-                  type="button"
-                  className="icon-button carousel-arrow"
-                  aria-label="Scroll task actions left"
-                  disabled={Boolean(timedTaskAction) || !canScrollActionsLeft}
-                  onClick={() => nudgeActionCarousel("left")}
-                >
-                  {"<"}
-                </button>
-                <button
-                  type="button"
-                  className="icon-button carousel-arrow"
-                  aria-label="Scroll task actions right"
-                  disabled={Boolean(timedTaskAction) || !canScrollActionsRight}
-                  onClick={() => nudgeActionCarousel("right")}
-                >
-                  {">"}
-                </button>
-              </div>
-            </div>
-            <div ref={actionTrackRef} className="carousel-track action-carousel-track" onScroll={syncActionCarousel}>
-              {taskActions.map((action) => (
-                <button
-                  key={`${action.stance}-${action.allowOvertime ? "ot" : "std"}`}
-                  className={`${action.allowOvertime ? "ghost-button" : "primary-button"} action-carousel-button ${toneClassForStance(action.stance)}`}
-                  onClick={() => performTask(action.stance, action.allowOvertime)}
-                  disabled={Boolean(timedTaskAction)}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {lastAction ? (
-          <div className={`last-action-panel ${toneClassForActionTitle(lastAction.title)}`}>
-            <strong>{lastAction.title}</strong>
-            <div className="summary-copy">
-              {lastAction.lines.map((line, index) => (
-                <p key={`${lastAction.digest}-${index}`} className={toneClassForLogLine(line)}>
-                  {line}
+        {activeJobSpend ? (
+          <div className="detail-block task-collapsible-section">
+            <button className="ghost-button task-collapsible-toggle" onClick={() => setJobSpendOpen((open) => !open)} aria-expanded={jobSpendOpen}>
+              <strong>Budget</strong>
+              <span className={`task-collapsible-meta ${activeJobSpend.projectedNetOnSuccess >= 0 ? "tone-success" : "tone-danger"}`}>
+                Net on success {formatSignedMoney(activeJobSpend.projectedNetOnSuccess)}
+              </span>
+            </button>
+            {jobSpendOpen ? (
+              <div className="collapsible-panel open task-collapsible-content">
+                <div className="material-need-meta">
+                  <span>Gross payout ${activeJobSpend.grossPayout}</span>
+                  <span>Spent so far ${activeJobSpend.spentSoFar}</span>
+                </div>
+                <div className="material-need-meta">
+                  <span>Est remaining ${activeJobSpend.estimatedRemainingCost}</span>
+                  <span>Est total ${activeJobSpend.estimatedTotalCost}</span>
+                </div>
+                <div className="material-need-meta">
+                  <span>Materials ${activeJobSpend.materialsCost}</span>
+                  <span>Fuel ${activeJobSpend.fuelCost}</span>
+                  <span>Trash ${activeJobSpend.trashCost}</span>
+                </div>
+                <p className={activeJobSpend.projectedNetOnSuccess >= 0 ? "tone-success" : "tone-danger"}>
+                  Net on success {formatSignedMoney(activeJobSpend.projectedNetOnSuccess)}
                 </p>
-              ))}
-            </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
+        {activeJob ? (
+          <div className="detail-block task-collapsible-section recovery-actions-block">
+            <button className="ghost-button task-collapsible-toggle" onClick={() => setCutLossesOpen((open) => !open)} aria-expanded={cutLossesOpen}>
+              <strong>Cut Losses</strong>
+            </button>
+            {cutLossesOpen ? (
+              <div className="collapsible-panel open task-collapsible-content">
+                <div className="action-row wrap-row">
+                  <button
+                    className={currentTask?.taskId === "do_work" ? "ghost-button tone-warning" : "ghost-button"}
+                    onClick={() => setPendingRecoveryAction("finish_cheap")}
+                    disabled={currentTask?.taskId !== "do_work"}
+                  >
+                    Finish Cheap
+                  </button>
+                  <button className="ghost-button tone-warning" onClick={() => setPendingRecoveryAction("defer")}>
+                    Defer
+                  </button>
+                  <button className="ghost-button tone-danger" onClick={() => setPendingRecoveryAction("abandon")}>
+                    Abandon
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {activeJobProfitRecap ? <JobProfitRecapCard recap={activeJobProfitRecap} onDismiss={dismissJobProfitRecap} /> : null}
       </article>
 
       <article className="hero-card chrome-card active-job-hero">
@@ -572,20 +745,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           <div className="detail-block">
             <strong>Assigned To</strong>
-            <div className="chip-grid">
-              <button className={activeJob.assignee === "self" ? "primary-button" : "ghost-button"} onClick={() => setJobAssignee("self")}>
-                {game.player.name}
-              </button>
-              {game.player.crews.map((crew) => (
-                <button
-                  key={crew.crewId}
-                  className={activeJob.assignee === crew.crewId ? "primary-button" : "ghost-button"}
-                  onClick={() => setJobAssignee(crew.crewId)}
-                >
-                  {crew.name}
-                </button>
-              ))}
-            </div>
+            <p className="muted-copy">Owner/Operator (Crew: Coming Soon)</p>
           </div>
           <div className="action-row wrap-row">
             <button className="ghost-button" onClick={() => openModal("job-details")}>
@@ -597,6 +757,14 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
         </div>
       </article>
+      {(pendingRecoveryAction || pendingDeferredAbandonId) && (
+        <RecoveryConfirmModal
+          action={pendingDeferredAbandonId ? "abandon" : pendingRecoveryAction ?? "abandon"}
+          onCancel={cancelRecoveryAction}
+          onConfirm={confirmRecoveryAction}
+          deferredMode={Boolean(pendingDeferredAbandonId)}
+        />
+      )}
 
     </section>
   );
@@ -642,17 +810,23 @@ function EventCueCard({
 function TaskSummary({ task, currentTaskId }: { task: ActiveTaskState; currentTaskId: string | null }) {
   const complete = task.requiredUnits === 0 || task.completedUnits >= task.requiredUnits;
   const progress = task.requiredUnits === 0 ? 100 : Math.round((task.completedUnits / task.requiredUnits) * 100);
+  const estimatedHours = Math.max(0.5, task.baseTicks * 0.5);
+  const estimatedHoursLabel = Number.isInteger(estimatedHours) ? `${estimatedHours}` : estimatedHours.toFixed(1);
+  const stepsLabel =
+    task.taskId === "do_work" && task.requiredUnits > 1
+      ? `Step ${Math.min(task.requiredUnits, task.completedUnits + 1)} of ${task.requiredUnits}`
+      : null;
 
   return (
     <article className={task.taskId === currentTaskId ? "task-summary current" : "task-summary"}>
       <div className="section-label-row tight-row">
         <strong>{task.label}</strong>
-        <span>{complete ? "Ready" : `${task.completedUnits}/${task.requiredUnits}`}</span>
+        <span>{`Est hours: ${estimatedHoursLabel}`}</span>
       </div>
       <div className="progress-track" aria-hidden="true">
         <span style={{ width: `${complete ? 100 : progress}%` }} />
       </div>
-      <small>{task.location}</small>
+      <small>{stepsLabel ? `${task.location} - ${stepsLabel}` : task.location}</small>
     </article>
   );
 }
@@ -692,12 +866,12 @@ function labelForStance(stance: TaskStance): string {
 
 function labelForRefuelAction(stance: TaskStance): string {
   if (stance === "rush") {
-    return "Buy 1 Fuel";
+    return "Skip Refuel";
   }
   if (stance === "careful") {
     return "Fill Tank";
   }
-  return "Recommended Fill";
+  return "Buy 1 Fuel";
 }
 
 function toneClassForStance(stance: TaskStance): string {
@@ -726,11 +900,18 @@ function toneClassForActionTitle(title: string): string {
 
 function toneClassForLogLine(line: string): string {
   const normalized = line.toLowerCase();
+  if (normalized.includes("rebar bob") || normalized.includes("beanpole arms") || normalized.includes("panty waist")) {
+    return "tone-warning";
+  }
   if (
     normalized.includes("fail") ||
     normalized.includes("sideways") ||
+    normalized.includes("sloppy") ||
+    normalized.includes("botched") ||
     normalized.includes("blocked") ||
+    normalized.includes("dragged out") ||
     normalized.includes("rework") ||
+    normalized.includes("burned") ||
     normalized.includes("balance declined") ||
     normalized.includes("declined")
   ) {
@@ -781,5 +962,120 @@ function formatOutcomeLabel(outcome: string | undefined): string {
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+function formatSignedMoney(value: number): string {
+  const rounded = Math.round(value);
+  return rounded >= 0 ? `+$${rounded}` : `-$${Math.abs(rounded)}`;
+}
+
+function formatActualCostDriverLabel(driver: "materials" | "fuel" | "trash" | "other" | "none"): string {
+  if (driver === "materials") {
+    return "Materials";
+  }
+  if (driver === "fuel") {
+    return "Fuel";
+  }
+  if (driver === "trash") {
+    return "Trash";
+  }
+  if (driver === "other") {
+    return "Other";
+  }
+  return "None";
+}
+
+function sortDeferredByUrgency(currentDay: number, left: DeferredJobState, right: DeferredJobState): number {
+  const leftDaysLeft = 7 - Math.max(0, currentDay - left.deferredAtDay);
+  const rightDaysLeft = 7 - Math.max(0, currentDay - right.deferredAtDay);
+  if (leftDaysLeft !== rightDaysLeft) {
+    return leftDaysLeft - rightDaysLeft;
+  }
+  return left.activeJob.contractId.localeCompare(right.activeJob.contractId);
+}
+
+function RecoveryConfirmModal({
+  action,
+  onCancel,
+  onConfirm,
+  deferredMode
+}: {
+  action: RecoveryActionId;
+  onCancel: () => void;
+  onConfirm: () => void;
+  deferredMode?: boolean;
+}) {
+  const title = action === "finish_cheap" ? "Finish Cheap" : action === "defer" ? "Defer Job" : "Abandon Job";
+  const penaltyCopy =
+    action === "finish_cheap"
+      ? "Force low-quality closeout at 70% payout. Rep -1."
+      : action === "defer"
+        ? "Pay $20 now and $5/day carrying fee. Expires after 7 days (rep -1)."
+        : deferredMode
+          ? "Discard deferred job with abandon penalties: cash -$40 and rep -2."
+          : "Immediately cancel this job: cash -$40 and rep -2.";
+
+  return (
+    <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label={`${title} confirmation`}>
+      <article className="modal-shell chrome-card">
+        <div className="overlay-header">
+          <h3>{title}</h3>
+          <button className="ghost-button" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+        <div className="overlay-body stack-list">
+          <p className="muted-copy">{penaltyCopy}</p>
+          <div className="action-row">
+            <button className="ghost-button" onClick={onCancel}>
+              Cancel
+            </button>
+            <button className={action === "abandon" ? "primary-button tone-danger" : "primary-button"} onClick={onConfirm}>
+              Confirm
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function JobProfitRecapCard({
+  recap,
+  onDismiss
+}: {
+  recap: JobProfitRecap;
+  onDismiss: () => void;
+}) {
+  const deltaClass = recap.deltaNet >= 0 ? "tone-success" : "tone-danger";
+  const netClass = recap.actual.net >= 0 ? "tone-success" : "tone-danger";
+  return (
+    <article className="chrome-card inset-card recap-card">
+      <div className="section-label-row">
+        <div>
+          <p className="eyebrow">Profit Recap</p>
+          <strong>{recap.jobName}</strong>
+        </div>
+        <button className="ghost-button" onClick={onDismiss}>
+          Clear
+        </button>
+      </div>
+      <div className="material-need-meta">
+        <span>Before {formatSignedMoney(recap.estimate.projectedNetOnSuccess)}</span>
+        <span className={netClass}>After {formatSignedMoney(recap.actual.net)}</span>
+        <span className={deltaClass}>Delta {formatSignedMoney(recap.deltaNet)}</span>
+      </div>
+      <div className="material-need-meta">
+        <span>Payout ${recap.actual.payout}</span>
+        <span>Costs ${recap.actual.totalCost}</span>
+        <span>Driver {formatActualCostDriverLabel(recap.actual.biggestCostDriver)}</span>
+      </div>
+      <div className="material-need-meta">
+        <span>Hours Est {recap.estimatedHoursAtAccept.toFixed(1)}h</span>
+        <span>Actual {recap.actualHoursAtClose.toFixed(1)}h</span>
+      </div>
+      <p className="muted-copy">{recap.summaryLine}</p>
+    </article>
+  );
 }
 

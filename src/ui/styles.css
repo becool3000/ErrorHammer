@@ -181,6 +181,21 @@ p {
   color: var(--muted);
 }
 
+.title-version {
+  margin-top: 0.45rem;
+  font-variant-numeric: tabular-nums;
+  display: grid;
+  gap: 0.08rem;
+}
+
+.title-version p {
+  margin: 0;
+}
+
+.release-info-card .metric-grid {
+  margin-top: 0.45rem;
+}
+
 .title-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -934,6 +949,36 @@ button.tone-energy:disabled {
   gap: 0.45rem;
 }
 
+.task-collapsible-section {
+  margin-top: 0.75rem;
+}
+
+.task-collapsible-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-color: rgba(230, 235, 242, 0.16);
+}
+
+.task-collapsible-meta {
+  margin-left: auto;
+  padding-left: 0.75rem;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-collapsible-content {
+  margin-top: 0.5rem;
+}
+
+.task-collapsible-content.open {
+  max-height: 40rem;
+}
+
 .inline-supplier-frame {
   max-height: 20rem;
 }
@@ -1087,6 +1132,71 @@ button.tone-energy:disabled {
 .segmented-control {
   margin-top: 0.95rem;
   padding-bottom: 0.2rem;
+}
+
+.office-menu-shell {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.office-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+}
+
+.office-menu-trigger {
+  width: 2.85rem;
+  min-width: 2.85rem;
+  min-height: 2.5rem;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-color: rgba(205, 214, 224, 0.28);
+}
+
+.office-menu-trigger.active {
+  border-color: var(--tone-energy-border);
+  background: linear-gradient(180deg, rgba(46, 66, 122, 0.38), rgba(28, 37, 70, 0.5));
+  color: var(--tone-energy);
+}
+
+.office-menu-icon {
+  font-size: calc(1.2rem * var(--ui-scale));
+  line-height: 1;
+  font-weight: 700;
+}
+
+.office-menu-current {
+  min-height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.office-sections-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  transition: max-height 180ms ease, opacity 160ms ease, margin 160ms ease;
+  overflow: hidden;
+}
+
+.office-sections-menu.open {
+  max-height: 24rem;
+  opacity: 1;
+}
+
+.office-sections-menu.closed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: -0.15rem;
+  pointer-events: none;
+}
+
+.office-menu-segment {
+  flex: 0 0 auto;
 }
 
 .segment,
@@ -1246,13 +1356,22 @@ button.tone-energy:disabled {
   box-shadow: inset 0 0 0 1px rgba(132, 168, 255, 0.22), 0 0 18px rgba(84, 120, 235, 0.3);
 }
 
+.day-labor-end-day-button {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(255, 170, 110, 0.3), rgba(128, 66, 28, 0.58));
+  border-color: rgba(255, 176, 120, 0.75);
+  color: #fff2e4;
+  box-shadow: inset 0 0 0 1px rgba(255, 184, 138, 0.26), 0 0 18px rgba(163, 88, 40, 0.28);
+}
+
 .day-labor-shift-button:hover {
   background: linear-gradient(180deg, rgba(101, 158, 255, 0.42), rgba(40, 74, 136, 0.68));
   border-color: rgba(152, 194, 255, 0.85);
   box-shadow: inset 0 0 0 1px rgba(132, 168, 255, 0.3), 0 0 24px rgba(84, 120, 235, 0.38);
 }
 
-.day-labor-shift-button:disabled {
+.day-labor-shift-button:disabled,
+.day-labor-end-day-button:disabled {
   opacity: 0.5;
   box-shadow: none;
 }
@@ -1299,6 +1418,41 @@ button.tone-energy:disabled {
 .trade-offer-chip span,
 .trade-offer-chip small {
   color: var(--text-muted);
+}
+
+.trade-offer-loss-flag {
+  font-weight: 700;
+}
+
+.contract-loss-warning {
+  margin-top: 0.35rem;
+}
+
+.loss-confirm-summary {
+  font-weight: 700;
+}
+
+.contract-filter-row {
+  flex-wrap: wrap;
+}
+
+.recovery-actions-block {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid rgba(230, 235, 242, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.deferred-jobs-card {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.recap-card {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .stepper {
@@ -1412,6 +1566,30 @@ button.tone-energy:disabled {
   margin-top: 0.7rem;
 }
 
+.task-result-popup {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 8.1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 47;
+  width: min(calc(100% - 1.2rem), 30rem);
+  pointer-events: none;
+}
+
+.task-result-popup-card {
+  width: 100%;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(104, 176, 255, 0.34);
+  box-shadow: 0 0.75rem 1.9rem rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(16px);
+  background:
+    radial-gradient(120% 150% at 8% 0%, rgba(95, 164, 255, 0.18) 0%, rgba(95, 164, 255, 0) 62%),
+    linear-gradient(160deg, rgba(30, 37, 46, 0.96) 0%, rgba(14, 21, 33, 0.97) 100%);
+  pointer-events: auto;
+}
+
 .end-day-transition-overlay {
   position: fixed;
   inset: 0;
@@ -1467,6 +1645,51 @@ button.tone-energy:disabled {
   z-index: 27;
   pointer-events: none;
   overflow: hidden;
+}
+
+.job-completion-fx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.job-completion-fx-burst {
+  position: absolute;
+  width: min(78vw, 26rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0.65;
+  animation: job-completion-pulse 1.6s ease-out both;
+}
+
+.job-completion-fx-card {
+  position: relative;
+  min-width: min(70vw, 18rem);
+  pointer-events: auto;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(26, 31, 39, 0.92), rgba(10, 12, 17, 0.94));
+  border: 1px solid rgba(230, 235, 242, 0.26);
+}
+
+.completion-fx-success .job-completion-fx-burst {
+  background: radial-gradient(circle, rgba(74, 218, 131, 0.35), rgba(74, 218, 131, 0));
+}
+
+.completion-fx-neutral .job-completion-fx-burst {
+  background: radial-gradient(circle, rgba(255, 201, 99, 0.34), rgba(255, 201, 99, 0));
+}
+
+.completion-fx-fail .job-completion-fx-burst {
+  background: radial-gradient(circle, rgba(255, 124, 110, 0.36), rgba(255, 124, 110, 0));
 }
 
 .day-labor-celebration-banner {
@@ -1933,6 +2156,25 @@ button.tone-energy:disabled {
   }
 }
 
+@keyframes job-completion-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  20% {
+    opacity: 0.9;
+    transform: scale(0.96);
+  }
+  70% {
+    opacity: 0.5;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.22);
+  }
+}
+
 @keyframes sheet-in {
   from {
     transform: translateY(1rem);
@@ -1941,6 +2183,164 @@ button.tone-energy:disabled {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+.rebar-bob-encounter-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 56;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(0.8rem, env(safe-area-inset-top)) 0.6rem calc(5.3rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.rebar-bob-encounter-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 84% at 50% 96%, rgba(178, 42, 42, 0.5) 0%, rgba(10, 14, 21, 0.76) 55%, rgba(3, 6, 10, 0.86) 100%),
+    linear-gradient(180deg, rgba(9, 14, 21, 0.06) 0%, rgba(6, 9, 15, 0.44) 72%, rgba(3, 5, 10, 0.72) 100%);
+  pointer-events: none;
+}
+
+.rebar-bob-encounter-sprite {
+  width: min(100vw, 68rem);
+  height: min(100vh, 68rem);
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: auto;
+  filter:
+    brightness(1.34)
+    contrast(1.16)
+    saturate(1.1)
+    drop-shadow(0 0 1.4rem rgba(186, 32, 32, 0.55))
+    drop-shadow(0 0 1.35rem rgba(0, 0, 0, 0.56));
+  animation: rebar-bob-rise 260ms ease-out;
+}
+
+.rebar-bob-encounter-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(74% 58% at 50% 72%, rgba(255, 120, 50, 0.07) 0%, rgba(0, 0, 0, 0.4) 76%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.06) 32%, rgba(0, 0, 0, 0.42) 100%);
+  pointer-events: none;
+}
+
+.rebar-bob-encounter-card {
+  position: relative;
+  z-index: 1;
+  width: min(96%, 33rem);
+  margin: 0;
+  padding: 0.78rem 0.9rem;
+  display: grid;
+  gap: 0.36rem;
+  justify-items: stretch;
+  text-align: left;
+  border-color: color-mix(in srgb, var(--tone-warning-border) 58%, rgba(145, 196, 255, 0.28));
+  box-shadow: 0 0.6rem 1.5rem rgba(0, 0, 0, 0.46), inset 0 0 0 1px rgba(214, 235, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(14, 22, 34, 0.34) 0%, rgba(11, 19, 30, 0.28) 55%, rgba(9, 16, 28, 0.24) 100%),
+    radial-gradient(140% 100% at 8% 0%, rgba(255, 149, 72, 0.15) 0%, rgba(255, 149, 72, 0) 62%);
+  backdrop-filter: blur(3px) saturate(1.12);
+  -webkit-backdrop-filter: blur(3px) saturate(1.12);
+  pointer-events: auto;
+  animation: rebar-bob-slide 220ms ease-out;
+}
+
+.rebar-bob-encounter-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.rebar-bob-encounter-eyebrow {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.12;
+  padding-top: 0.02rem;
+  text-align: left;
+}
+
+.rebar-bob-encounter-close {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.rebar-bob-encounter-card strong {
+  color: color-mix(in srgb, var(--tone-warning-text) 90%, #ffd99b 10%);
+  font-size: 1.03rem;
+  letter-spacing: 0.01em;
+  width: 100%;
+  text-align: left;
+}
+
+.rebar-bob-encounter-speaker {
+  margin-top: 0.02rem;
+}
+
+.rebar-bob-encounter-line {
+  margin: 0.12rem 0 0;
+  width: 100%;
+  text-align: left;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--tone-warning-text) 72%, #ffffff 28%);
+  text-shadow: 0 0.05rem 0.2rem rgba(0, 0, 0, 0.48);
+  font-weight: 600;
+}
+
+.rebar-bob-encounter-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 36%, rgba(255, 255, 255, 0.01) 100%);
+}
+
+@keyframes rebar-bob-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rebar-bob-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.8rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rebar-bob-encounter-sprite,
+  .rebar-bob-encounter-card {
+    animation: none;
+  }
+}
+
+@media (min-width: 760px) {
+  .task-result-popup {
+    top: 1rem;
+    width: min(calc(100% - 2rem), 34rem);
   }
 }
 

@@ -1,6 +1,7 @@
 import { createInitialSkills } from "../src/core/playerFlow";
 import { createInitialGameState } from "../src/core/resolver";
 import { ContentBundle, EventDef, GameState } from "../src/core/types";
+import { CORE_TRADE_SKILLS } from "../src/core/tradeProgress";
 
 export function makeScenarioBundle(): ContentBundle {
   return {
@@ -49,7 +50,7 @@ export function makeScenarioBundle(): ContentBundle {
       {
         id: "job-alpha",
         name: "Porch Anchor",
-        primarySkill: "framer",
+        primarySkill: "carpenter",
         tier: 1,
         districtId: "residential",
         requiredTools: ["hammer"],
@@ -65,7 +66,7 @@ export function makeScenarioBundle(): ContentBundle {
           { supplyId: "anchor-set", quantity: 1 },
           { supplyId: "fastener-box", quantity: 1 }
         ],
-        tags: ["outdoor", "framer", "residential"],
+        tags: ["outdoor", "carpenter", "residential"],
         flavor: {
           client_quote: "Please make it less dramatic.",
           success_line: "The porch now trusts gravity.",
@@ -305,6 +306,12 @@ export function makeScenarioState(seed = 91): GameState {
   const state = createInitialGameState(makeScenarioBundle(), seed);
   state.player.skills = createInitialSkills();
   return state;
+}
+
+export function unlockAllCoreTradeTracks(state: GameState): void {
+  for (const track of CORE_TRADE_SKILLS) {
+    state.tradeProgress.unlocked[track] = true;
+  }
 }
 
 export function eventById(bundle: ContentBundle, eventId: string): EventDef {

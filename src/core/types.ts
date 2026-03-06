@@ -19,7 +19,38 @@ export const TRADE_SKILLS = [
   "cabinet_maker",
   "millworker",
   "scaffolder",
-  "solar_panel_installer"
+  "solar_panel_installer",
+  "heavy_equipment_operator",
+  "demolition_specialist",
+  "low_voltage_data_tech",
+  "lineman",
+  "pipefitter",
+  "steamfitter",
+  "sprinkler_fitter",
+  "gas_fitter",
+  "refrigeration_technician",
+  "boiler_technician",
+  "sheet_metal_worker",
+  "welder",
+  "metal_fabricator",
+  "machinist",
+  "cnc_operator",
+  "blacksmith",
+  "auto_mechanic",
+  "diesel_mechanic",
+  "small_engine_repair",
+  "motorcycle_technician",
+  "aircraft_mechanic",
+  "landscaper",
+  "arborist",
+  "irrigation_technician",
+  "well_driller",
+  "industrial_maintenance",
+  "millwright",
+  "elevator_technician",
+  "robotics_technician",
+  "tile_setter",
+  "upholsterer"
 ] as const;
 
 export type SkillId =
@@ -41,9 +72,80 @@ export type SkillId =
   | "cabinet_maker"
   | "millworker"
   | "scaffolder"
-  | "solar_panel_installer";
+  | "solar_panel_installer"
+  | "heavy_equipment_operator"
+  | "demolition_specialist"
+  | "low_voltage_data_tech"
+  | "lineman"
+  | "pipefitter"
+  | "steamfitter"
+  | "sprinkler_fitter"
+  | "gas_fitter"
+  | "refrigeration_technician"
+  | "boiler_technician"
+  | "sheet_metal_worker"
+  | "welder"
+  | "metal_fabricator"
+  | "machinist"
+  | "cnc_operator"
+  | "blacksmith"
+  | "auto_mechanic"
+  | "diesel_mechanic"
+  | "small_engine_repair"
+  | "motorcycle_technician"
+  | "aircraft_mechanic"
+  | "landscaper"
+  | "arborist"
+  | "irrigation_technician"
+  | "well_driller"
+  | "industrial_maintenance"
+  | "millwright"
+  | "elevator_technician"
+  | "robotics_technician"
+  | "tile_setter"
+  | "upholsterer";
 
-export type ResearchCategoryId = "core-systems" | "structure" | "exterior" | "interior-finish";
+export type CoreTradeSkillId =
+  | "carpenter"
+  | "roofer"
+  | "landscaper"
+  | "welder"
+  | "electrician"
+  | "plumber"
+  | "hvac_technician"
+  | "drywall_installer"
+  | "painter"
+  | "flooring_installer"
+  | "finish_carpentry";
+
+export type TradeCategoryId =
+  | "construction"
+  | "electrical-utility-power"
+  | "plumbing-pipe"
+  | "hvac-mechanical"
+  | "metal-fabrication"
+  | "automotive-engine"
+  | "outdoor-utility-ground"
+  | "industrial-systems"
+  | "finishing-specialty";
+
+export type ResearchCategoryId = TradeCategoryId;
+
+export type BusinessTier = "truck" | "office" | "yard";
+
+export type PerkTreeId = "fundamentals" | "safety" | "finance" | "specialization";
+
+export type CorePerkId =
+  | "precision"
+  | "blueprint_reading"
+  | "safety_awareness"
+  | "physical_endurance"
+  | "problem_solving"
+  | "estimating"
+  | "tool_mastery"
+  | "project_management"
+  | "diagnostics"
+  | "negotiation";
 
 export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 
@@ -63,11 +165,25 @@ export type TaskId =
 
 export type TaskStance = "rush" | "standard" | "careful";
 
+export type RecoveryActionId = "finish_cheap" | "defer" | "abandon";
+export type ActiveRecoveryMode = "none" | "finish_cheap";
+export type ContractFilterId = "profitable" | "low-risk" | "near-route" | "no-new-tools";
+export type PerkArchetypeId = "precision-shop" | "safety-first" | "margin-master" | "diagnostics-crew" | "field-closer";
+export type ContractFileStatus = "active" | "completed" | "deferred" | "abandoned" | "lost";
+
 export type TaskTimeOutcome = "fast" | "standard" | "delayed" | "rework";
 
 export type TaskQualityOutcome = "excellent" | "solid" | "sloppy" | "botched";
 
 export type SupplyQuality = "low" | "medium" | "high";
+
+export type EncounterId = "rebar-bob";
+
+export interface EncounterPayload {
+  id: EncounterId;
+  speaker: string;
+  line: string;
+}
 
 export type SupplyTierValues = Record<SupplyQuality, number>;
 
@@ -344,6 +460,9 @@ export interface ActiveJobState {
   partsQuality: SupplyQuality | null;
   partsQualityScore: number;
   partsQualityModifier: number;
+  estimateAtAccept: ContractEstimateSnapshot;
+  recoveryMode: ActiveRecoveryMode;
+  deferredAtDay: number | null;
   trashUnitsPending: number;
   siteSupplies: SupplyInventory;
   supplierCart: SupplyInventory;
@@ -351,7 +470,76 @@ export interface ActiveJobState {
   outcome?: Outcome;
 }
 
-export type ResearchProjectUnlockType = "baba" | "category" | "skill";
+export interface DeferredJobState {
+  deferredJobId: string;
+  activeJob: ActiveJobState;
+  deferredAtDay: number;
+}
+
+export interface ContractEstimateSnapshot {
+  grossPayout: number;
+  materialsCost: number;
+  fuelCost: number;
+  trashCost: number;
+  estimatedTotalCost: number;
+  projectedNetOnSuccess: number;
+  biggestCostDriver: "materials" | "fuel" | "trash" | "none";
+}
+
+export interface ContractActualSnapshot {
+  payout: number;
+  materialsCost: number;
+  fuelCost: number;
+  trashCost: number;
+  otherCost: number;
+  totalCost: number;
+  net: number;
+  biggestCostDriver: "materials" | "fuel" | "trash" | "other" | "none";
+}
+
+export interface JobProfitRecap {
+  contractId: string;
+  jobName: string;
+  estimate: ContractEstimateSnapshot;
+  actual: ContractActualSnapshot;
+  deltaNet: number;
+  summaryLine: string;
+  day: number;
+  estimatedHoursAtAccept: number;
+  actualHoursAtClose: number;
+}
+
+export interface ContractFileSnapshot {
+  contractId: string;
+  jobId: string;
+  jobName: string;
+  dayAccepted: number;
+  dayClosed: number | null;
+  isBaba: boolean;
+  baseQuote: number;
+  autoBid: number;
+  acceptedPayout: number;
+  estimatingLevelAtBid: number;
+  bidAccuracyBandPct: number;
+  bidNoise: number;
+  estimatedHoursAtAccept: number;
+  actualHoursAtClose: number;
+  estimatedNetAtAccept: number;
+  actualNetAtClose: number;
+  outcome: Outcome | null;
+  status: ContractFileStatus;
+}
+
+export interface PerkArchetypeSnapshot {
+  primary: PerkArchetypeId | null;
+  secondary: PerkArchetypeId | null;
+  scores: Record<PerkArchetypeId, number>;
+  tags: string[];
+}
+
+export type ResearchProjectUnlockType = "baba" | "category" | "skill" | "facility" | "perk-tree";
+
+export type FacilityUnlockId = "office" | "yard" | "dumpster";
 
 export interface ResearchProjectState {
   projectId: string;
@@ -362,6 +550,8 @@ export interface ResearchProjectState {
   unlockType: ResearchProjectUnlockType;
   categoryId?: ResearchCategoryId;
   skillId?: SkillId;
+  facilityId?: FacilityUnlockId;
+  perkTreeId?: PerkTreeId;
   startedDay: number;
 }
 
@@ -373,11 +563,22 @@ export interface ResearchState {
   completedProjectIds: string[];
 }
 
+export interface TradeProgressState {
+  unlocked: Record<CoreTradeSkillId, boolean>;
+  unlockedDay: Partial<Record<CoreTradeSkillId, number>>;
+}
+
 export interface OfficeSkillsState {
   readingXp: number;
   accountingXp: number;
   readingXpToday: number;
   accountingXpToday: number;
+}
+
+export interface FacilitiesState {
+  officeOwned: boolean;
+  yardOwned: boolean;
+  dumpsterEnabled: boolean;
 }
 
 export interface YardState {
@@ -390,6 +591,21 @@ export interface OperationsState {
   accountantHired: boolean;
   accountantHireDay: number | null;
   lastDailyBillsDay: number;
+  billingCycleDay: number;
+  monthlyDueByCategory: Record<string, number>;
+  unpaidBalance: number;
+  missedBillStrikes: number;
+  lastDowngradeDay: number | null;
+  businessTier: BusinessTier;
+  facilities: FacilitiesState;
+}
+
+export interface PerksState {
+  corePerks: Record<CorePerkId, number>;
+  corePerkXp: number;
+  corePerkPoints: number;
+  unlockedPerkTrees: Record<PerkTreeId, boolean>;
+  rerollTokens: number;
 }
 
 export interface TaskUnitResult {
@@ -404,6 +620,11 @@ export interface TaskUnitResult {
   skillXpDelta: Partial<Record<SkillId, number>>;
   reworkAdded: number;
   location: LocationId;
+  taskEstimatedTicksTotal: number;
+  taskActualTicksTotal: number;
+  jobEstimatedTicksTotal: number;
+  jobActualTicksTotal: number;
+  encounter?: EncounterPayload;
   logLines: string[];
   digest: string;
 }
@@ -422,9 +643,13 @@ export interface GameState {
   truckSupplies: SupplyInventory;
   workday: WorkdayState;
   research: ResearchState;
+  tradeProgress: TradeProgressState;
   officeSkills: OfficeSkillsState;
   yard: YardState;
   operations: OperationsState;
+  perks: PerksState;
+  deferredJobs: DeferredJobState[];
+  contractFiles: ContractFileSnapshot[];
 }
 
 export interface ContentBundle {

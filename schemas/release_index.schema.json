@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Release Index",
+  "type": "object",
+  "required": ["latestByPlatform", "releases"],
+  "properties": {
+    "latestByPlatform": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["releaseId", "platform", "version", "buildId", "releaseLabel", "builtAtUtc", "notesPath", "manifestPath"],
+        "properties": {
+          "releaseId": { "type": "string", "minLength": 1 },
+          "platform": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "buildId": { "type": "string", "minLength": 1 },
+          "releaseLabel": { "type": "string", "minLength": 1 },
+          "builtAtUtc": { "type": "string", "format": "date-time" },
+          "notesPath": { "type": "string", "minLength": 1 },
+          "manifestPath": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

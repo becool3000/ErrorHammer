@@ -7,16 +7,15 @@ import {
   getAvailableContractOffers,
   performTaskUnit
 } from "../src/core/playerFlow";
-import { TRADE_SKILLS } from "../src/core/types";
+import { CORE_TRADE_SKILLS } from "../src/core/tradeProgress";
 import { loadContentBundle } from "../src/core/content";
 
 const bundle = loadContentBundle();
 
 function makeAcceptedTradeState(seed: number) {
   const state = createInitialGameState(bundle, seed);
-  state.research.babaUnlocked = true;
-  for (const skillId of TRADE_SKILLS) {
-    state.research.unlockedSkills[skillId] = true;
+  for (const track of CORE_TRADE_SKILLS) {
+    state.tradeProgress.unlocked[track] = true;
   }
   for (const tool of bundle.tools) {
     state.player.tools[tool.id] = { toolId: tool.id, durability: tool.maxDurability };
@@ -39,6 +38,7 @@ function makeAcceptedTradeState(seed: number) {
 describe("yard dumpster flow", () => {
   it("assigns trash units to active job when payment is collected", () => {
     const state = makeAcceptedTradeState(9201);
+    state.operations.facilities.dumpsterEnabled = true;
     const activeJob = state.activeJob!;
     const job = bundle.jobs.find((entry) => entry.id === activeJob.jobId)!;
 
@@ -74,6 +74,7 @@ describe("yard dumpster flow", () => {
 
   it("moves pending trash into yard dumpster during store leftovers", () => {
     const state = makeAcceptedTradeState(9202);
+    state.operations.facilities.dumpsterEnabled = true;
     const activeJob = state.activeJob!;
 
     state.activeJob = {
@@ -104,14 +105,14 @@ describe("yard dumpster flow", () => {
 
   it("blocks non-day-labor acceptance when dumpster is full", () => {
     const state = createInitialGameState(bundle, 9203);
-    state.research.babaUnlocked = true;
-    for (const skillId of TRADE_SKILLS) {
-      state.research.unlockedSkills[skillId] = true;
+    for (const track of CORE_TRADE_SKILLS) {
+      state.tradeProgress.unlocked[track] = true;
     }
     for (const tool of bundle.tools) {
       state.player.tools[tool.id] = { toolId: tool.id, durability: tool.maxDurability };
     }
     state.yard.dumpsterUnits = state.yard.dumpsterCapacity;
+    state.operations.facilities.dumpsterEnabled = true;
 
     const offer = getAvailableContractOffers(state, bundle).find(
       (entry) => entry.contract.contractId !== DAY_LABOR_CONTRACT_ID && !entry.job.tags.includes("baba-g")
@@ -127,14 +128,15 @@ describe("yard dumpster flow", () => {
 
   it("empties dumpster for exact service cost", () => {
     const state = createInitialGameState(bundle, 9204);
+    state.operations.facilities.dumpsterEnabled = true;
     state.yard.dumpsterUnits = 10;
-    state.player.cash = 100;
+    state.player.cash = 300;
 
     const result = emptyDumpsterAtYard(state);
 
-    expect(result.payload).toBe(42);
+    expect(result.payload).toBe(125);
     expect(result.nextState.yard.dumpsterUnits).toBe(0);
     expect(result.nextState.yard.emptiesPerformed).toBe(1);
-    expect(result.nextState.player.cash).toBe(58);
+    expect(result.nextState.player.cash).toBe(175);
   });
 });

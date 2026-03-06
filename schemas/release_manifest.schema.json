@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Itch Release Manifest",
+  "type": "object",
+  "required": [
+    "releaseId",
+    "platform",
+    "version",
+    "buildId",
+    "releaseLabel",
+    "tag",
+    "gitCommit",
+    "artifactName",
+    "artifactSha256",
+    "artifactBytes",
+    "builtAtUtc",
+    "notesPath",
+    "highlights"
+  ],
+  "properties": {
+    "releaseId": { "type": "string", "minLength": 1 },
+    "platform": { "type": "string", "const": "itch" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "buildId": { "type": "string", "pattern": "^itch\\.[0-9]{8}\\.[0-9]{2}$" },
+    "releaseLabel": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+\\+itch\\.[0-9]{8}\\.[0-9]{2}$" },
+    "tag": { "type": "string", "minLength": 1 },
+    "gitCommit": { "type": "string", "minLength": 1 },
+    "artifactName": { "type": "string", "minLength": 1 },
+    "artifactSha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "artifactBytes": { "type": "integer", "minimum": 1 },
+    "builtAtUtc": { "type": "string", "format": "date-time" },
+    "notesPath": { "type": "string", "minLength": 1 },
+    "highlights": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 8
+    }
+  },
+  "additionalProperties": false
+}

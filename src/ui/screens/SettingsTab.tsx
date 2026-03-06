@@ -1,5 +1,6 @@
 import { SegmentedControl } from "../components/SegmentedControl";
-import { UiTextScale, useUiStore } from "../state";
+import { releaseInfo } from "../releaseInfo";
+import { UiFxMode, UiTextScale, useUiStore } from "../state";
 
 const textScaleOptions: Array<{ id: UiTextScale; label: string }> = [
   { id: "xsmall", label: "XS" },
@@ -8,9 +9,17 @@ const textScaleOptions: Array<{ id: UiTextScale; label: string }> = [
   { id: "xlarge", label: "XL" }
 ];
 
+const fxModeOptions: Array<{ id: UiFxMode; label: string }> = [
+  { id: "full", label: "Full FX" },
+  { id: "reduced", label: "Reduced FX" }
+];
+
 export function SettingsTab() {
   const uiTextScale = useUiStore((state) => state.uiTextScale);
   const setUiTextScale = useUiStore((state) => state.setUiTextScale);
+  const uiFxMode = useUiStore((state) => state.uiFxMode);
+  const setUiFxMode = useUiStore((state) => state.setUiFxMode);
+  const builtAtLabel = releaseInfo.builtAtUtc ? new Date(releaseInfo.builtAtUtc).toUTCString() : "Local build";
 
   return (
     <section className="stack-block">
@@ -19,6 +28,21 @@ export function SettingsTab() {
           <p className="eyebrow">Text Size</p>
           <SegmentedControl value={uiTextScale} options={textScaleOptions} onChange={setUiTextScale} label="Text size" />
           <p className="muted-copy">Pinch with two fingers to zoom HUD sections when you need detail.</p>
+        </div>
+        <div className="text-size-control">
+          <p className="eyebrow">FX Intensity</p>
+          <SegmentedControl value={uiFxMode} options={fxModeOptions} onChange={setUiFxMode} label="Effects mode" />
+          <p className="muted-copy">Reduced FX keeps core feedback and removes heavy completion overlays.</p>
+        </div>
+        <div className="text-size-control release-info-card">
+          <p className="eyebrow">Build Info</p>
+          <div className="metric-grid two-up">
+            <span>Version {releaseInfo.appVersion}</span>
+            <span>Build {releaseInfo.buildId}</span>
+            <span>Release {releaseInfo.releaseLabel}</span>
+            <span>Commit {releaseInfo.gitCommit}</span>
+          </div>
+          <p className="muted-copy">Built {builtAtLabel}</p>
         </div>
       </article>
     </section>

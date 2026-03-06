@@ -1,12 +1,16 @@
 import {
+  FacilityUnlockId,
   GameState,
+  PerkTreeId,
   ResearchCategoryId,
   ResearchProjectState,
   ResearchProjectUnlockType,
   ResearchState,
   SkillId,
-  TRADE_SKILLS
+  TRADE_SKILLS,
+  TradeCategoryId
 } from "./types";
+import { unlockPerkTree } from "./perks";
 
 export interface ResearchProjectDef {
   projectId: string;
@@ -16,6 +20,9 @@ export interface ResearchProjectDef {
   unlockType: ResearchProjectUnlockType;
   categoryId?: ResearchCategoryId;
   skillId?: SkillId;
+  facilityId?: FacilityUnlockId;
+  perkTreeId?: PerkTreeId;
+  requiresProjectIds?: string[];
 }
 
 export interface ResearchStartResult {
@@ -41,72 +48,63 @@ export interface ResearchProjectWithStatus extends ResearchProjectDef {
 }
 
 export const RESEARCH_CATEGORY_SKILLS: Record<ResearchCategoryId, SkillId[]> = {
-  "core-systems": ["electrician", "plumber", "hvac_technician", "solar_panel_installer", "insulation_installer"],
-  structure: ["framer", "carpenter", "mason", "concrete_finisher", "scaffolder"],
-  exterior: ["roofer", "siding_installer", "fence_installer", "glazier"],
-  "interior-finish": ["drywall_installer", "painter", "flooring_installer", "cabinet_maker", "millworker"]
+  construction: ["carpenter", "framer", "mason", "concrete_finisher", "roofer", "siding_installer", "fence_installer", "scaffolder", "heavy_equipment_operator", "demolition_specialist"],
+  "electrical-utility-power": ["electrician", "low_voltage_data_tech", "lineman", "solar_panel_installer"],
+  "plumbing-pipe": ["plumber", "pipefitter", "steamfitter", "sprinkler_fitter", "gas_fitter"],
+  "hvac-mechanical": ["hvac_technician", "refrigeration_technician", "boiler_technician", "sheet_metal_worker"],
+  "metal-fabrication": ["welder", "metal_fabricator", "machinist", "cnc_operator", "blacksmith"],
+  "automotive-engine": ["auto_mechanic", "diesel_mechanic", "small_engine_repair", "motorcycle_technician", "aircraft_mechanic"],
+  "outdoor-utility-ground": ["landscaper", "arborist", "irrigation_technician", "well_driller"],
+  "industrial-systems": ["industrial_maintenance", "millwright", "elevator_technician", "robotics_technician"],
+  "finishing-specialty": ["drywall_installer", "painter", "flooring_installer", "glazier", "insulation_installer", "cabinet_maker", "millworker", "tile_setter", "upholsterer"]
 };
 
-const BABA_PROJECT_ID = "rd-baba-network";
-const CATEGORY_PREFIX = "rd-category";
-const SKILL_PREFIX = "rd-skill";
+export const TRADE_GROUPS: Array<{ id: TradeCategoryId; label: string; skills: SkillId[] }> = [
+  { id: "construction", label: "Construction", skills: RESEARCH_CATEGORY_SKILLS.construction },
+  { id: "electrical-utility-power", label: "Electrical & Utility", skills: RESEARCH_CATEGORY_SKILLS["electrical-utility-power"] },
+  { id: "plumbing-pipe", label: "Plumbing & Pipe", skills: RESEARCH_CATEGORY_SKILLS["plumbing-pipe"] },
+  { id: "hvac-mechanical", label: "HVAC & Mechanical", skills: RESEARCH_CATEGORY_SKILLS["hvac-mechanical"] },
+  { id: "metal-fabrication", label: "Metal & Fabrication", skills: RESEARCH_CATEGORY_SKILLS["metal-fabrication"] },
+  { id: "automotive-engine", label: "Automotive & Engine", skills: RESEARCH_CATEGORY_SKILLS["automotive-engine"] },
+  { id: "outdoor-utility-ground", label: "Outdoor & Utility", skills: RESEARCH_CATEGORY_SKILLS["outdoor-utility-ground"] },
+  { id: "industrial-systems", label: "Industrial Systems", skills: RESEARCH_CATEGORY_SKILLS["industrial-systems"] },
+  { id: "finishing-specialty", label: "Finishing & Specialty", skills: RESEARCH_CATEGORY_SKILLS["finishing-specialty"] }
+];
 
-const CATEGORY_LABELS: Record<ResearchCategoryId, string> = {
-  "core-systems": "Core Systems Certification",
-  structure: "Structure Certification",
-  exterior: "Exterior Certification",
-  "interior-finish": "Interior Finish Certification"
-};
-
-const SKILL_LABELS: Record<SkillId, string> = {
-  electrician: "Electrician",
-  plumber: "Plumber",
-  carpenter: "Carpenter",
-  mason: "Mason",
-  concrete_finisher: "Concrete Finisher",
-  roofer: "Roofer",
-  hvac_technician: "HVAC Technician",
-  drywall_installer: "Drywall Installer",
-  painter: "Painter",
-  flooring_installer: "Flooring Installer",
-  glazier: "Glazier",
-  insulation_installer: "Insulation Installer",
-  framer: "Framer",
-  siding_installer: "Siding Installer",
-  fence_installer: "Fence Installer",
-  cabinet_maker: "Cabinet Maker",
-  millworker: "Millworker",
-  scaffolder: "Scaffolder",
-  solar_panel_installer: "Solar Panel Installer"
-};
+const FACILITY_PREFIX = "rd-facility";
+const FACILITY_PROJECT_COST = {
+  office: 140,
+  yard: 180,
+  dumpster: 100
+} as const;
 
 const RESEARCH_PROJECTS: ResearchProjectDef[] = [
   {
-    projectId: BABA_PROJECT_ID,
-    label: "Baba G Network",
-    cost: 45,
+    projectId: `${FACILITY_PREFIX}-office`,
+    label: "Facility Program: Office",
+    cost: FACILITY_PROJECT_COST.office,
     daysRequired: 1,
-    unlockType: "baba"
+    unlockType: "facility",
+    facilityId: "office"
   },
-  ...(
-    Object.keys(RESEARCH_CATEGORY_SKILLS) as ResearchCategoryId[]
-  ).map((categoryId) => ({
-    projectId: `${CATEGORY_PREFIX}-${categoryId}`,
-    label: CATEGORY_LABELS[categoryId],
-    cost: 60,
+  {
+    projectId: `${FACILITY_PREFIX}-yard`,
+    label: "Facility Program: Yard",
+    cost: FACILITY_PROJECT_COST.yard,
     daysRequired: 1,
-    unlockType: "category" as const,
-    categoryId
-  })),
-  ...TRADE_SKILLS.map((skillId) => ({
-    projectId: `${SKILL_PREFIX}-${skillId}`,
-    label: `${SKILL_LABELS[skillId]} Skill Unlock`,
-    cost: 35,
+    unlockType: "facility",
+    facilityId: "yard",
+    requiresProjectIds: [`${FACILITY_PREFIX}-office`]
+  },
+  {
+    projectId: `${FACILITY_PREFIX}-dumpster`,
+    label: "Facility Program: Dumpster",
+    cost: FACILITY_PROJECT_COST.dumpster,
     daysRequired: 1,
-    unlockType: "skill" as const,
-    skillId,
-    categoryId: getResearchCategoryForSkill(skillId)
-  }))
+    unlockType: "facility",
+    facilityId: "dumpster",
+    requiresProjectIds: [`${FACILITY_PREFIX}-yard`]
+  }
 ];
 
 export function getResearchProjectCatalog(): ResearchProjectDef[] {
@@ -123,14 +121,18 @@ export function getResearchCategoryForSkill(skillId: SkillId): ResearchCategoryI
       return categoryId;
     }
   }
-  return "structure";
+  return "construction";
+}
+
+export function isFacilityProjectComplete(research: ResearchState, facilityId: FacilityUnlockId): boolean {
+  return research.completedProjectIds.includes(`${FACILITY_PREFIX}-${facilityId}`);
 }
 
 export function createResearchStateLocked(): ResearchState {
   return {
-    babaUnlocked: false,
-    unlockedCategories: createCategoryUnlockMap(false),
-    unlockedSkills: createSkillUnlockMap(false),
+    babaUnlocked: true,
+    unlockedCategories: createCategoryUnlockMap(true),
+    unlockedSkills: createSkillUnlockMap(true),
     activeProject: null,
     completedProjectIds: []
   };
@@ -211,6 +213,9 @@ export function canStartResearchProject(state: GameState, projectId: string): Re
       return { ok: false, notice: "That skill is already unlocked." };
     }
   }
+  if (project.requiresProjectIds?.some((requiredId) => !state.research.completedProjectIds.includes(requiredId))) {
+    return { ok: false, notice: "Finish prerequisite research first." };
+  }
   return { ok: true };
 }
 
@@ -234,6 +239,8 @@ export function startResearchProject(state: GameState, projectId: string): Resea
     unlockType: project.unlockType,
     categoryId: project.categoryId,
     skillId: project.skillId,
+    facilityId: project.facilityId,
+    perkTreeId: project.perkTreeId,
     startedDay: state.day
   };
 
@@ -279,22 +286,21 @@ export function getResearchProjectsWithStatus(state: GameState): ResearchProject
     if (state.research.completedProjectIds.includes(project.projectId) || isProjectAlreadyUnlocked(state, project)) {
       return { ...project, status: "completed" };
     }
-    if (project.unlockType === "skill") {
-      if (!project.categoryId || !state.research.unlockedCategories[project.categoryId]) {
-        return { ...project, status: "locked" };
-      }
+    if (project.requiresProjectIds?.some((requiredId) => !state.research.completedProjectIds.includes(requiredId))) {
+      return { ...project, status: "locked" };
+    }
+    if (project.unlockType === "skill" && project.categoryId && !state.research.unlockedCategories[project.categoryId]) {
+      return { ...project, status: "locked" };
     }
     return { ...project, status: "available" };
   });
 }
 
 function createCategoryUnlockMap(value: boolean): Record<ResearchCategoryId, boolean> {
-  return {
-    "core-systems": value,
-    structure: value,
-    exterior: value,
-    "interior-finish": value
-  };
+  return Object.fromEntries((Object.keys(RESEARCH_CATEGORY_SKILLS) as ResearchCategoryId[]).map((key) => [key, value])) as Record<
+    ResearchCategoryId,
+    boolean
+  >;
 }
 
 function createSkillUnlockMap(value: boolean): Record<SkillId, boolean> {
@@ -312,6 +318,10 @@ function applyResearchUnlock(state: GameState, activeProject: ResearchProjectSta
   }
   if (activeProject.unlockType === "skill" && activeProject.skillId) {
     state.research.unlockedSkills[activeProject.skillId] = true;
+    return;
+  }
+  if (activeProject.unlockType === "perk-tree" && activeProject.perkTreeId) {
+    unlockPerkTree(state, activeProject.perkTreeId);
   }
 }
 
@@ -322,6 +332,18 @@ function isProjectAlreadyUnlocked(state: GameState, project: ResearchProjectDef)
   if (project.unlockType === "category") {
     return Boolean(project.categoryId && state.research.unlockedCategories[project.categoryId]);
   }
-  return Boolean(project.skillId && state.research.unlockedSkills[project.skillId]);
+  if (project.unlockType === "skill") {
+    return Boolean(project.skillId && state.research.unlockedSkills[project.skillId]);
+  }
+  if (project.unlockType === "facility") {
+    return Boolean(project.facilityId && isFacilityProjectComplete(state.research, project.facilityId));
+  }
+  return Boolean(project.perkTreeId && state.perks.unlockedPerkTrees[project.perkTreeId]);
 }
 
+function formatSkillLabel(skillId: SkillId): string {
+  return skillId
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
