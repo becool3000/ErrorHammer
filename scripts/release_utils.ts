@@ -99,6 +99,10 @@ const REQUIRED_CHANGELOG_SECTIONS = [
   "Technical",
   "Known Issues"
 ];
+const SEMVER_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
+const UTC_DATE_STAMP_PATTERN = /^\d{8}$/;
+const MIN_BUILD_SEQUENCE = 1;
+const MAX_BUILD_SEQUENCE = 99;
 
 export function ensureReleaseDirectories(): void {
   mkdirSync(RELEASE_TEMPLATE_DIR, { recursive: true });
@@ -128,7 +132,11 @@ export function writePackageVersion(nextVersion: string): void {
 }
 
 export function bumpPatchVersion(version: string): string {
-  const [majorRaw, minorRaw, patchRaw] = version.split(".");
+  const match = SEMVER_PATTERN.exec(version.trim());
+  if (!match) {
+    throw new Error(`Invalid semver version "${version}". Expected X.Y.Z`);
+  }
+  const [, majorRaw, minorRaw, patchRaw] = match;
   const major = Number.parseInt(majorRaw ?? "", 10);
   const minor = Number.parseInt(minorRaw ?? "", 10);
   const patch = Number.parseInt(patchRaw ?? "", 10);
@@ -146,6 +154,12 @@ export function getUtcDateStamp(date = new Date()): string {
 }
 
 export function formatBuildId(dateStamp: string, sequence: number): string {
+  if (!UTC_DATE_STAMP_PATTERN.test(dateStamp)) {
+    throw new Error(`Invalid UTC date stamp "${dateStamp}". Expected YYYYMMDD.`);
+  }
+  if (!Number.isInteger(sequence) || sequence < MIN_BUILD_SEQUENCE || sequence > MAX_BUILD_SEQUENCE) {
+    throw new Error(`Invalid build sequence "${sequence}". Expected integer 1-99.`);
+  }
   return `itch.${dateStamp}.${`${sequence}`.padStart(2, "0")}`;
 }
 
@@ -180,7 +194,13 @@ export function loadItchState(): ItchReleaseState {
 }
 
 export function reserveNextBuild(state: ItchReleaseState, dateStamp: string): { nextState: ItchReleaseState; sequence: number } {
+  if (!UTC_DATE_STAMP_PATTERN.test(dateStamp)) {
+    throw new Error(`Invalid UTC date stamp "${dateStamp}". Expected YYYYMMDD.`);
+  }
   const sequence = state.lastUtcDate === dateStamp ? state.lastSequence + 1 : 1;
+  if (sequence > MAX_BUILD_SEQUENCE) {
+    throw new Error(`Daily build sequence exceeded for ${dateStamp}. Maximum supported sequence is ${MAX_BUILD_SEQUENCE}.`);
+  }
   return {
     sequence,
     nextState: {
@@ -324,4 +344,3 @@ export function ensureReleaseIndexes(): void {
 export function toRepoRelativePath(absolutePath: string): string {
   return path.relative(ROOT_DIR, absolutePath).replace(/\\/g, "/");
 }
-

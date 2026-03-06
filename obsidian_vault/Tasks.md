@@ -1,8 +1,8 @@
 # Tasks
 ## Current Focus
 1. `PLN-019` Planner reset pass is complete on `main` (2026-03-06).
-2. Live board now runs on clean replacement chains `020`, `021`, and `022`.
-3. Pull order baseline is `BLD-020` first, then `BLD-021`, then `BLD-022`.
+2. `BLD-020` implementation is complete on `main`; `TW-020` is now `READY`.
+3. Next Builder pull after 020 chain closeout is `BLD-021`, then `BLD-022`.
 
 ## Active Lane Board (Kanban)
 Snapshot date: 2026-03-06.
@@ -16,13 +16,13 @@ Snapshot date: 2026-03-06.
 ### Lane Cards
 1. `BLD-020`
 Lane: `Builder`
-Status: `READY`
+Status: `DONE`
 Priority: `P0`
 Depends On: `PLN-020`
-Exit Evidence: ReleaseOps continuation implemented for remaining lane scope from prior 018 chain with deterministic behavior and no regressions in existing release command path.
+Exit Evidence: ReleaseOps helper invariants hardened in `scripts/release_utils.ts` (strict `X.Y.Z` patch bump validation, `itch.YYYYMMDD.NN` date/sequence guardrails, and daily sequence cap at `99`) with no regression in release command path (`npm.cmd run release:verify`, `npm.cmd run test -- tests/release_ops.test.ts`, and `npm.cmd run test -- tests/release_ui.test.tsx` all pass on `main`).
 2. `TW-020`
 Lane: `TestWriter`
-Status: `BLOCKED`
+Status: `READY`
 Priority: `P0`
 Depends On: `BLD-020`
 Exit Evidence: deterministic suites for build-id formatting, semver patch bump helper behavior, changelog gating, and release metadata rendering are updated and passing.
@@ -88,12 +88,18 @@ Depends On: `VF-022`
 Exit Evidence: README and vault summaries capture encounter cadence cap, popup behavior, and flavor-only scope.
 
 ### Active Handoff Steps
-1. Pull `BLD-020` as the top `P0` card and complete implementation evidence.
-2. Move `TW-020` to `READY` when `BLD-020` is `DONE`, then complete deterministic 020 test evidence.
+1. `BLD-020` implementation evidence is complete on `main`; handoff is now with `TW-020`.
+2. Execute `TW-020` deterministic test evidence for release helper guardrails and release metadata rendering.
 3. Move `VF-020` to `READY` when `TW-020` is `DONE`, then complete 020 verification evidence.
 4. Move `DOC-020` to `READY` when `VF-020` is `DONE`, then finalize 020 documentation evidence.
 5. Pull `BLD-021` next after 020 chain closeout unless Planner explicitly reprioritizes.
 6. Pull `BLD-022` after 021 chain closeout unless Planner explicitly reprioritizes.
+
+### Builder -> TestWriter Handoff `BLD-020 -> TW-020`
+1. Validate strict semver patch bump behavior in `bumpPatchVersion` (`scripts/release_utils.ts`): exact `X.Y.Z` inputs pass; invalid forms like `0.1`, `0.1.2-beta`, and `0.1.2.3` fail with deterministic errors.
+2. Validate build-id guardrails in `formatBuildId` (`scripts/release_utils.ts`): valid `YYYYMMDD` date stamp plus sequence `1..99` passes; invalid stamp/sequence inputs fail deterministically.
+3. Validate daily-sequence cap in `reserveNextBuild` (`scripts/release_utils.ts`): same-day state at sequence `99` must throw on next reserve request instead of emitting an out-of-contract `NNN` suffix.
+4. Reconfirm release metadata rendering contract remains stable in `tests/release_ui.test.tsx` for title and settings surfaces (`Version`, `Build`, `Release`, and `Commit` lines present).
 
 ## Planner Chain `PLN-019` (Cleanup and Archive Reset)
 ### Goals
