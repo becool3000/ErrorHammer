@@ -5,7 +5,6 @@ import { CompanyTab } from "./CompanyTab";
 import { ContractsTab } from "./ContractsTab";
 import { FacilitiesTab } from "./FacilitiesTab";
 import { StoreTab } from "./StoreTab";
-import { TradeIndexTab } from "./TradeIndexTab";
 import { YardTab } from "./YardTab";
 
 const MAX_CATEGORY_SEGMENTS = 3;
@@ -13,7 +12,6 @@ const MAX_SECTION_SEGMENTS = 3;
 
 const officeCategories: Array<{ id: OfficeCategoryId; label: string }> = [
   { id: "operations", label: "Operations" },
-  { id: "strategy", label: "Strategy" },
   { id: "finance", label: "Finance" }
 ];
 
@@ -22,29 +20,17 @@ const officeSectionsByCategory: Record<OfficeCategoryId, Array<{ id: OfficeSecti
     { id: "contracts", label: "Contracts" },
     { id: "facilities", label: "Facilities" }
   ],
-  strategy: [{ id: "rd", label: "R&D" }],
-  finance: [
-    { id: "trade-index", label: "Trade Index" },
-    { id: "accounting", label: "Accounting" }
-  ]
+  finance: [{ id: "accounting", label: "Accounting" }]
 };
 
 const officeSectionLabels: Record<OfficeSectionId, string> = {
   contracts: "Contracts",
   facilities: "Facilities",
-  rd: "R&D",
-  "trade-index": "Trade Index",
   accounting: "Accounting"
 };
 
 function getOfficeCategoryForSection(section: OfficeSectionId): OfficeCategoryId {
-  if (section === "contracts" || section === "facilities") {
-    return "operations";
-  }
-  if (section === "rd") {
-    return "strategy";
-  }
-  return "finance";
+  return section === "accounting" ? "finance" : "operations";
 }
 
 export function OfficeTab() {
@@ -64,6 +50,7 @@ export function OfficeTab() {
   const activeSectionId = activeSection?.id ?? officeSection;
   const activeSectionLabel = officeSectionLabels[activeSectionId];
   const activeCategoryLabel = activeCategory?.label ?? "Company";
+  const showSectionControl = categorySections.length > 1;
 
   if (!game) {
     return null;
@@ -77,8 +64,11 @@ export function OfficeTab() {
           <span className="chip company-hub-current">{activeSectionLabel}</span>
         </div>
         <SegmentedControl value={activeCategoryId} options={categoryOptions} onChange={setOfficeCategory} label="Company categories" />
-        <SegmentedControl value={activeSectionId} options={categorySections} onChange={setOfficeSection} label={`${activeCategoryLabel} sections`} />
+        {showSectionControl ? (
+          <SegmentedControl value={activeSectionId} options={categorySections} onChange={setOfficeSection} label={`${activeCategoryLabel} sections`} />
+        ) : null}
       </article>
+      {activeCategoryId === "operations" ? <CompanyTab showOverview={false} /> : null}
       {activeSectionId === "contracts" ? <ContractsTab /> : null}
       {activeSectionId === "facilities" ? (
         <section className="stack-list company-hub-stack">
@@ -87,12 +77,6 @@ export function OfficeTab() {
           <StoreTab />
         </section>
       ) : null}
-      {activeSectionId === "rd" ? (
-        <section className="stack-list company-hub-stack">
-          <CompanyTab />
-        </section>
-      ) : null}
-      {activeSectionId === "trade-index" ? <TradeIndexTab /> : null}
       {activeSectionId === "accounting" ? <AccountingTab /> : null}
     </section>
   );

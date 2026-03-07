@@ -33,12 +33,12 @@ describe("release metadata ui", () => {
       officeSection: "contracts",
       officeCategorySections: {
         operations: "contracts",
-        strategy: "rd",
-        finance: "trade-index"
+        finance: "accounting"
       },
       storeSection: "tools",
       selectedContractId: null,
       notice: "",
+      activeResultsScreen: null,
       titlePlayerName: "",
       titleCompanyName: ""
     });

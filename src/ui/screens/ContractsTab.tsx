@@ -17,6 +17,7 @@ import {
   getContractEconomyPreview,
   getContractAutoBidPreview,
   getContractQuotedPayout,
+  shouldIgnoreLikelyLossWarning,
   getSkillRank,
   getSupplyUnitPrice,
   getSettlementPreview
@@ -287,6 +288,7 @@ function ContractDetails({
   const isDayLaborCoolingDown = isDayLabor && dayLaborCooldownActive;
   const likelyLoss = isLikelyLossOffer(economyPreview);
   const likelyLossWhy = likelyLoss ? buildLikelyLossWhy(economyPreview, !game.operations.facilities.dumpsterEnabled) : "";
+  const ignoreLikelyLossWarning = likelyLoss ? shouldIgnoreLikelyLossWarning(game, contractId) : false;
   const [infoOpen, setInfoOpen] = useState(false);
   const [confirmLossOpen, setConfirmLossOpen] = useState(false);
   const [dayLaborPromptOpen, setDayLaborPromptOpen] = useState(false);
@@ -335,7 +337,7 @@ function ContractDetails({
       setDayLaborPromptOpen(true);
       return;
     }
-    if (likelyLoss) {
+    if (likelyLoss && !ignoreLikelyLossWarning) {
       setConfirmLossOpen(true);
       return;
     }
@@ -387,6 +389,7 @@ function ContractDetails({
           Likely Loss: Net on success {formatSignedMoney(economyPreview.projectedNetOnSuccess)}. Why: {likelyLossWhy}
         </p>
       ) : null}
+      {likelyLoss && ignoreLikelyLossWarning ? <p className="muted-copy tone-warning">Overconfidence ignored the caution prompt.</p> : null}
       {infoOpen ? (
         <div id={`contract-info-${contractId}`} className="detail-block">
           <p className="muted-copy">{obfuscateReadableText(game, job.flavor.client_quote, `${job.id}:quote`)}</p>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GameState } from "../../core/types";
-import { ticksToHours } from "../../core/playerFlow";
+import { getSelfEsteemStatusWord, getSelfEsteemTooltip, ticksToHours } from "../../core/playerFlow";
 import { getPerkArchetypeSnapshot } from "../../core/perks";
 import { bundle, GameTabId, useUiStore } from "../state";
 
@@ -16,10 +16,11 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);
   const baseHours = ticksToHours(game.workday.ticksPerDay);
-  const activeEventCount = game.activeEventIds.length;
   const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
   const showOperatorHud = activeTab === "work";
   const archetype = getPerkArchetypeSnapshot(game);
+  const selfEsteemStatus = getSelfEsteemStatusWord(game.selfEsteem.currentSelfEsteem);
+  const selfEsteemToneClass = getSelfEsteemToneClass(selfEsteemStatus);
 
   useEffect(() => {
     const previousCash = previousCashRef.current;
@@ -48,9 +49,18 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
             <h1 className="header-day-title">Day {game.day}</h1>
             <span className="header-subtitle">{game.workday.weekday} shift</span>
             {showOperatorHud && archetype.primary ? <span className="chip tone-energy">Style {archetype.tags[0] ?? "Core"}</span> : null}
+            {showOperatorHud && game.selfEsteem.hasGrizzled ? <span className="chip tone-warning">Grizzled</span> : null}
           </div>
         </div>
         <div className="header-top-actions">
+          <div className="header-company-glance" role="list" aria-label="Company summary">
+            <span role="listitem" className="header-company-metric">
+              Level {game.player.companyLevel}
+            </span>
+            <span role="listitem" className="header-company-metric">
+              Reputation {game.player.reputation}
+            </span>
+          </div>
           {showOperatorHud ? (
             <div className="header-action-row">
               <button className="hud-link-button" onClick={() => openModal("inventory")}>
@@ -61,9 +71,6 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
               </button>
             </div>
           ) : null}
-          <button type="button" className="hud-link-button" onClick={() => openModal("active-events")}>
-            Active Events {activeEventCount}
-          </button>
         </div>
       </div>
       <div className="status-strip header-metric-grid" role="list" aria-label="Player HUD">
@@ -87,12 +94,31 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           <span>Fatigue</span>
           <strong>{game.workday.fatigue.debt}</strong>
         </span>
+        <span role="listitem" className={`status-metric ${selfEsteemToneClass}`} title={getSelfEsteemTooltip()}>
+          <span>Self Esteem</span>
+          <strong>
+            {game.selfEsteem.currentSelfEsteem} ({selfEsteemStatus})
+          </strong>
+        </span>
       </div>
       {isFatigued ? (
         <p className="muted-copy">Fatigue from overtime shortens this shift to {totalHours.toFixed(1)} of {baseHours.toFixed(1)} hours.</p>
       ) : null}
     </header>
   );
+}
+
+function getSelfEsteemToneClass(status: ReturnType<typeof getSelfEsteemStatusWord>): string {
+  if (status === "Solid") {
+    return "tone-success";
+  }
+  if (status === "Low" || status === "Cocky") {
+    return "tone-warning";
+  }
+  if (status === "Shaken" || status === "Reckless") {
+    return "tone-danger";
+  }
+  return "";
 }
 
 

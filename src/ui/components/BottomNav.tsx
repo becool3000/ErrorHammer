@@ -34,7 +34,7 @@ export function BottomNav({ activeTab, onChange, onEndDay, onOpenSettings, endDa
       </button>
       <button className="tab-button settings-gear-button" onClick={() => onOpenSettings()} aria-label="Settings">
         <span className="settings-gear-icon" aria-hidden="true">
-          Settings
+          ⚙
         </span>
       </button>
     </nav>

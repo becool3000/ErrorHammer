@@ -6,8 +6,6 @@ import { useUiStore } from "../state";
 
 export function AccountingTab() {
   const game = useUiStore((state) => state.game);
-  const sessionTelemetry = useUiStore((state) => state.sessionTelemetry);
-  const hireAccountant = useUiStore((state) => state.hireAccountant);
   const snapshot = useMemo(() => (game ? getAccountingSnapshot(game, 24) : null), [game]);
 
   if (!game || !snapshot) {
@@ -15,7 +13,7 @@ export function AccountingTab() {
   }
 
   const accountingClarity = getAccountingClarity(game);
-  const showDetailedFinance = accountingClarity >= 0.75 || game.operations.accountantHired;
+  const showDetailedFinance = accountingClarity >= 0.75;
   const contractRecaps = useMemo(
     () =>
       snapshot.jobRows
@@ -24,11 +22,6 @@ export function AccountingTab() {
     [game, snapshot.jobRows]
   );
   const netClass = snapshot.netFromLogs >= 0 ? "tone-success" : "tone-danger";
-  const sessionMinutes = Math.max(0, (Date.now() - sessionTelemetry.startedAtMs) / 60000);
-  const repsGained = game.player.reputation - sessionTelemetry.startReputation;
-  const daysAdvanced = Math.max(0, game.day - sessionTelemetry.startDay);
-  const repsPerDay = daysAdvanced > 0 ? repsGained / daysAdvanced : repsGained;
-  const interactionsPerMinute = sessionMinutes > 0 ? sessionTelemetry.interactions / sessionMinutes : sessionTelemetry.interactions;
   const nextMonthlyDue = Object.values(game.operations.monthlyDueByCategory).reduce((sum, value) => sum + Math.max(0, value), 0);
   const projectedCashPressure = nextMonthlyDue + game.operations.unpaidBalance + game.deferredJobs.length * 5;
   const highRiskCashGap = projectedCashPressure > game.player.cash * 1.2;
@@ -48,9 +41,6 @@ export function AccountingTab() {
           <span>Accounting XP {Math.round(game.officeSkills.accountingXp)}</span>
           <span>Clarity {(accountingClarity * 100).toFixed(0)}%</span>
         </div>
-        <button className="ghost-button" onClick={() => hireAccountant()} disabled={game.operations.accountantHired}>
-          {game.operations.accountantHired ? "Accountant On Staff" : "Hire Accountant ($1800)"}
-        </button>
       </article>
 
       <article className="chrome-card inset-card">
@@ -113,22 +103,7 @@ export function AccountingTab() {
             </>
           ) : null}
         </div>
-        {!showDetailedFinance ? <p className="muted-copy">Improve Accounting clarity or hire an accountant to reveal deeper cost lines.</p> : null}
-      </article>
-
-      <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <strong>Session Telemetry</strong>
-          <span className="chip">{sessionMinutes.toFixed(1)} min</span>
-        </div>
-        <div className="metric-grid two-up">
-          <span>Interactions {sessionTelemetry.interactions}</span>
-          <span>End Day presses {sessionTelemetry.endDayPresses}</span>
-          <span>Rate {interactionsPerMinute.toFixed(1)} taps/min</span>
-          <span>Rep gain {repsGained >= 0 ? "+" : ""}{repsGained}</span>
-          <span>Days advanced {daysAdvanced}</span>
-          <span>Rep/day {repsPerDay.toFixed(2)}</span>
-        </div>
+        {!showDetailedFinance ? <p className="muted-copy">Improve Accounting clarity to reveal deeper cost lines.</p> : null}
       </article>
 
       <article className="chrome-card inset-card">

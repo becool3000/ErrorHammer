@@ -28,6 +28,7 @@ import {
   SupplyInventory,
   SupplyQuality,
   SupplyStack,
+  SelfEsteemBand,
   TaskId,
   TaskQualityOutcome,
   TaskSkillMapping,
@@ -204,6 +205,13 @@ const QUALITY_XP_BONUS: Record<TaskQualityOutcome, number> = {
   botched: 1
 };
 
+const QUALITY_SELF_ESTEEM_DELTA: Record<TaskQualityOutcome, number> = {
+  excellent: 4,
+  solid: 1,
+  sloppy: -2,
+  botched: -5
+};
+
 const TASK_ORDER: TaskId[] = [
   "load_from_shop",
   "refuel_at_station",
@@ -276,8 +284,128 @@ const QUALITY_LABELS: Record<SupplyQuality, string> = {
   high: "High"
 };
 
+interface SelfEsteemBandEffects {
+  qualityRoll: number;
+  fastChance: number;
+  reworkChance: number;
+  delayChance: number;
+  settlementFailChance: number;
+  ignoreLikelyLossPrompt: number;
+}
+
+const SELF_ESTEEM_TOOLTIP =
+  "How you’re feeling about yourself on the job. Too low and you freeze up. Too high and you start acting stupid.";
+const SELF_ESTEEM_CENTER = 50;
+const SELF_ESTEEM_MIN = 0;
+const SELF_ESTEEM_MAX = 100;
+const SELF_ESTEEM_EXTREME_PENALTY_SCALE = 0.6;
+const SELF_ESTEEM_GRIZZLED_IGNORE_REDUCTION = 0.65;
+
+const SELF_ESTEEM_BAND_EFFECTS: Record<SelfEsteemBand, SelfEsteemBandEffects> = {
+  shaken: {
+    qualityRoll: -16,
+    fastChance: -8,
+    reworkChance: 10,
+    delayChance: 8,
+    settlementFailChance: 0.12,
+    ignoreLikelyLossPrompt: 0
+  },
+  low: {
+    qualityRoll: -8,
+    fastChance: -4,
+    reworkChance: 5,
+    delayChance: 4,
+    settlementFailChance: 0.06,
+    ignoreLikelyLossPrompt: 0
+  },
+  solid: {
+    qualityRoll: 8,
+    fastChance: 4,
+    reworkChance: -4,
+    delayChance: -3,
+    settlementFailChance: -0.06,
+    ignoreLikelyLossPrompt: 0
+  },
+  cocky: {
+    qualityRoll: -4,
+    fastChance: 10,
+    reworkChance: 6,
+    delayChance: -4,
+    settlementFailChance: 0.05,
+    ignoreLikelyLossPrompt: 0.22
+  },
+  reckless: {
+    qualityRoll: -12,
+    fastChance: 15,
+    reworkChance: 12,
+    delayChance: -6,
+    settlementFailChance: 0.14,
+    ignoreLikelyLossPrompt: 0.48
+  }
+};
+
 export function isStarterToolId(toolId: string): boolean {
   return STARTER_TOOL_ID_SET.has(toolId);
+}
+
+export function createInitialSelfEsteemState(): GameState["selfEsteem"] {
+  return {
+    currentSelfEsteem: 50,
+    dailySelfEsteemDrift: 4,
+    lifetimeTimesAtZero: 0,
+    lifetimeTimesAtHundred: 0,
+    fullExtremeSwings: 0,
+    hasGrizzled: false
+  };
+}
+
+export function getSelfEsteemBand(value: number): SelfEsteemBand {
+  const clamped = clamp(Math.round(value), SELF_ESTEEM_MIN, SELF_ESTEEM_MAX);
+  if (clamped <= 19) {
+    return "shaken";
+  }
+  if (clamped <= 39) {
+    return "low";
+  }
+  if (clamped <= 69) {
+    return "solid";
+  }
+  if (clamped <= 84) {
+    return "cocky";
+  }
+  return "reckless";
+}
+
+export function getSelfEsteemStatusWord(value: number): "Shaken" | "Low" | "Solid" | "Cocky" | "Reckless" {
+  const band = getSelfEsteemBand(value);
+  if (band === "shaken") {
+    return "Shaken";
+  }
+  if (band === "low") {
+    return "Low";
+  }
+  if (band === "solid") {
+    return "Solid";
+  }
+  if (band === "cocky") {
+    return "Cocky";
+  }
+  return "Reckless";
+}
+
+export function getSelfEsteemTooltip(): string {
+  return SELF_ESTEEM_TOOLTIP;
+}
+
+export function shouldIgnoreLikelyLossWarning(state: GameState, contractId: string): boolean {
+  if (contractId === DAY_LABOR_CONTRACT_ID) {
+    return false;
+  }
+  const chance = clamp(getSelfEsteemBandEffects(state).ignoreLikelyLossPrompt, 0, 0.99);
+  if (chance <= 0) {
+    return false;
+  }
+  return createRng(hashSeed(state.seed, state.day, contractId, "self-esteem-ignore-warning", state.selfEsteem.currentSelfEsteem)).bool(chance);
 }
 
 export function shouldEnforceStarterToolGate(bundle: ContentBundle): boolean {
@@ -554,7 +682,7 @@ export function getSettlementPreview(state: GameState, bundle: ContentBundle): S
 
   const events = getActiveEvents(bundle, state.activeEventIds);
   const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
-  const failChance = getSettlementFailChance(activeJob, job, events, effectiveQualityPoints, state.day);
+  const failChance = getSettlementFailChance(state, activeJob, job, events, effectiveQualityPoints, state.day);
   const neutralWarning = isForcedNeutral(job, events)
     ? "Current event conditions can force a low-quality half-pay result."
     : effectiveQualityPoints <= -2
@@ -1138,6 +1266,7 @@ export function runDayLaborShift(state: GameState, bundle: ContentBundle): State
   nextState.player.cash += offer.job.basePayout;
   awardOfficeSkillXp(nextState, { reading: 1 });
   awardPerkXp(nextState, 2);
+  applySelfEsteemDelta(nextState, 5);
 
   appendLog(nextState, {
     day: nextState.day,
@@ -1155,6 +1284,111 @@ export function runDayLaborShift(state: GameState, bundle: ContentBundle): State
 
 export function getCrewCapacity(): number {
   return CREW_TEMPLATES.length;
+}
+
+function normalizeSelfEsteemState(state: Partial<GameState["selfEsteem"]> | null | undefined): GameState["selfEsteem"] {
+  const base = createInitialSelfEsteemState();
+  const normalized: GameState["selfEsteem"] = {
+    currentSelfEsteem: clamp(Math.round(state?.currentSelfEsteem ?? base.currentSelfEsteem), SELF_ESTEEM_MIN, SELF_ESTEEM_MAX),
+    dailySelfEsteemDrift: Math.max(1, Math.floor(state?.dailySelfEsteemDrift ?? base.dailySelfEsteemDrift)),
+    lifetimeTimesAtZero: Math.max(0, Math.floor(state?.lifetimeTimesAtZero ?? base.lifetimeTimesAtZero)),
+    lifetimeTimesAtHundred: Math.max(0, Math.floor(state?.lifetimeTimesAtHundred ?? base.lifetimeTimesAtHundred)),
+    fullExtremeSwings: Math.max(0, Math.floor(state?.fullExtremeSwings ?? base.fullExtremeSwings)),
+    hasGrizzled: Boolean(state?.hasGrizzled ?? base.hasGrizzled)
+  };
+  if (hasUnlockedGrizzled(normalized)) {
+    normalized.hasGrizzled = true;
+  }
+  return normalized;
+}
+
+function hasUnlockedGrizzled(selfEsteem: GameState["selfEsteem"]): boolean {
+  return (
+    (selfEsteem.lifetimeTimesAtZero >= 10 && selfEsteem.lifetimeTimesAtHundred >= 10) ||
+    selfEsteem.fullExtremeSwings >= 10
+  );
+}
+
+function scaleTowardZero(value: number, factor: number): number {
+  if (value > 0) {
+    return Math.floor(value * factor);
+  }
+  if (value < 0) {
+    return Math.ceil(value * factor);
+  }
+  return 0;
+}
+
+function getSelfEsteemBandEffects(state: GameState): SelfEsteemBandEffects {
+  const band = getSelfEsteemBand(state.selfEsteem.currentSelfEsteem);
+  const base = SELF_ESTEEM_BAND_EFFECTS[band];
+  const ignoreChance = state.selfEsteem.hasGrizzled
+    ? base.ignoreLikelyLossPrompt * SELF_ESTEEM_GRIZZLED_IGNORE_REDUCTION
+    : base.ignoreLikelyLossPrompt;
+
+  if (!state.selfEsteem.hasGrizzled || (band !== "shaken" && band !== "reckless")) {
+    return {
+      ...base,
+      ignoreLikelyLossPrompt: ignoreChance
+    };
+  }
+
+  return {
+    qualityRoll: base.qualityRoll < 0 ? scaleTowardZero(base.qualityRoll, SELF_ESTEEM_EXTREME_PENALTY_SCALE) : base.qualityRoll,
+    fastChance: base.fastChance < 0 ? scaleTowardZero(base.fastChance, SELF_ESTEEM_EXTREME_PENALTY_SCALE) : base.fastChance,
+    reworkChance: base.reworkChance > 0 ? scaleTowardZero(base.reworkChance, SELF_ESTEEM_EXTREME_PENALTY_SCALE) : base.reworkChance,
+    delayChance: base.delayChance > 0 ? scaleTowardZero(base.delayChance, SELF_ESTEEM_EXTREME_PENALTY_SCALE) : base.delayChance,
+    settlementFailChance:
+      base.settlementFailChance > 0
+        ? base.settlementFailChance * SELF_ESTEEM_EXTREME_PENALTY_SCALE
+        : base.settlementFailChance,
+    ignoreLikelyLossPrompt: ignoreChance
+  };
+}
+
+function noteSelfEsteemExtremeIfReached(selfEsteem: GameState["selfEsteem"], previousValue: number, nextValue: number): void {
+  const hitZero = previousValue !== 0 && nextValue === 0;
+  if (hitZero) {
+    selfEsteem.lifetimeTimesAtZero += 1;
+    if (selfEsteem.lifetimeTimesAtHundred > selfEsteem.fullExtremeSwings) {
+      selfEsteem.fullExtremeSwings += 1;
+    }
+  }
+  const hitHundred = previousValue !== 100 && nextValue === 100;
+  if (hitHundred) {
+    selfEsteem.lifetimeTimesAtHundred += 1;
+    if (selfEsteem.lifetimeTimesAtZero > selfEsteem.fullExtremeSwings) {
+      selfEsteem.fullExtremeSwings += 1;
+    }
+  }
+  if (hasUnlockedGrizzled(selfEsteem)) {
+    selfEsteem.hasGrizzled = true;
+  }
+}
+
+function applySelfEsteemDelta(state: GameState, delta: number): void {
+  const step = Math.round(delta);
+  if (step === 0) {
+    return;
+  }
+  const previousValue = clamp(Math.round(state.selfEsteem.currentSelfEsteem), SELF_ESTEEM_MIN, SELF_ESTEEM_MAX);
+  const nextValue = clamp(previousValue + step, SELF_ESTEEM_MIN, SELF_ESTEEM_MAX);
+  state.selfEsteem.currentSelfEsteem = nextValue;
+  noteSelfEsteemExtremeIfReached(state.selfEsteem, previousValue, nextValue);
+}
+
+function applyDailySelfEsteemUpdate(state: GameState): void {
+  const sortedEventIds = [...state.activeEventIds].sort((left, right) => left.localeCompare(right));
+  let eventSwing = createRng(hashSeed(state.seed, state.day, ...sortedEventIds, "self-esteem-event-swing")).nextInt(7) - 3;
+  if (state.selfEsteem.hasGrizzled) {
+    eventSwing = scaleTowardZero(eventSwing, 0.5);
+  }
+  applySelfEsteemDelta(state, eventSwing);
+
+  const driftBudget = state.selfEsteem.dailySelfEsteemDrift + (state.selfEsteem.hasGrizzled ? 1 : 0);
+  const toCenter = SELF_ESTEEM_CENTER - state.selfEsteem.currentSelfEsteem;
+  const towardCenter = Math.sign(toCenter) * Math.min(Math.abs(toCenter), Math.max(0, driftBudget));
+  applySelfEsteemDelta(state, towardCenter);
 }
 
 export function normalizeGameState(state: Partial<GameState>): GameState {
@@ -1221,6 +1455,7 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
     yard: normalizeYardState(state.yard, legacyDefaults),
     operations: normalizeOperationsState(state.operations, state.day ?? 1, legacyDefaults),
     perks: normalizePerksState(state.perks, legacyDefaults),
+    selfEsteem: normalizeSelfEsteemState(state.selfEsteem),
     deferredJobs: Array.isArray(state.deferredJobs)
       ? state.deferredJobs
           .map((entry) => {
@@ -1785,6 +2020,7 @@ export function performTaskUnit(
   let qualityPointsDelta = 0;
   let unitsCompleted = timing.timeOutcome === "rework" ? 0 : 1;
   let reworkAdded = timing.timeOutcome === "rework" ? 1 : 0;
+  let selfEsteemDelta = 0;
 
   spendTicks(nextState.workday, timing.ticksSpent, perkModifiers.overtimeFatigueReduction);
   nextState.activeJob!.actualTicksSpent += timing.ticksSpent;
@@ -1800,6 +2036,7 @@ export function performTaskUnit(
     qualityOutcome = "botched";
     qualityPointsDelta = QUALITY_POINT_DELTA.botched;
     nextState.activeJob!.qualityPoints += qualityPointsDelta;
+    selfEsteemDelta += QUALITY_SELF_ESTEEM_DELTA.botched - 3;
     logLines.push(`${TASK_LABELS[nextActiveTask.taskId]} went sideways and needs another pass.`);
   } else {
     nextActiveTask.completedUnits += 1;
@@ -1820,8 +2057,13 @@ export function performTaskUnit(
       }
       qualityPointsDelta = QUALITY_POINT_DELTA[qualityOutcome];
       nextState.activeJob!.qualityPoints += qualityPointsDelta;
+      selfEsteemDelta += QUALITY_SELF_ESTEEM_DELTA[qualityOutcome];
       logLines.push(`${TASK_LABELS[nextActiveTask.taskId]} landed ${qualityOutcome}.`);
     }
+  }
+
+  if (nextActiveTask.taskId === "do_work" && timing.timeOutcome === "fast") {
+    selfEsteemDelta += 2;
   }
 
   applySkillXp(
@@ -2014,6 +2256,7 @@ export function performTaskUnit(
 
   awardOfficeSkillXp(nextState, { reading: 3 });
   awardPerkXp(nextState, 3);
+  applySelfEsteemDelta(nextState, selfEsteemDelta);
 
   const taskLogLines = logLines.map((line) => formatAssigneeLogLine(assignee.name, line.trim())).filter(Boolean);
   for (const line of taskLogLines) {
@@ -2202,6 +2445,7 @@ export function runRecoveryAction(
       contractId,
       message: `Cut Losses: Deferred job for $${deferFee}. Resume anytime from Work queue.`
     });
+    applySelfEsteemDelta(nextState, -6);
     return {
       nextState,
       notice: "Job deferred. You can resume it later from Work.",
@@ -2240,6 +2484,7 @@ export function runRecoveryAction(
     estimatedNetAtAccept: activeJob.estimateAtAccept.projectedNetOnSuccess,
     actualNetAtClose: -abandonmentCosts
   });
+  applySelfEsteemDelta(nextState, -10);
   nextState.activeJob = null;
   nextState.contractBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
     districtIds: nextState.player.districtUnlocks,
@@ -2280,6 +2525,7 @@ export function resumeDeferredJob(state: GameState, deferredJobId: string): Stat
     contractId: picked.activeJob.contractId,
     message: `Resumed deferred job ${picked.activeJob.jobId}.`
   });
+  applySelfEsteemDelta(nextState, 3);
 
   return {
     nextState,
@@ -2291,6 +2537,7 @@ export function resumeDeferredJob(state: GameState, deferredJobId: string): Stat
 
 export function prepareForNextDay(state: GameState): GameState {
   const nextState = cloneState(state);
+  applyDailySelfEsteemUpdate(nextState);
   nextState.day += 1;
   resetOfficeSkillDailyCaps(nextState);
   const recovery = getRecoveryForWeekday(getWeekday(nextState.day));
@@ -2405,7 +2652,28 @@ function resolveTiming(
   skillRank: number,
   difficulty: number
 ): { timeOutcome: TaskTimeOutcome; ticksSpent: number } {
-  const { fastChance, reworkChance, delayChance, standardChance } = getTaskTimeChances(skillRank, difficulty, stance);
+  const baseChances = getTaskTimeChances(skillRank, difficulty, stance);
+  const selfEsteemEffects = getSelfEsteemBandEffects(state);
+  let fastChance = clamp(baseChances.fastChance + selfEsteemEffects.fastChance, 0, 95);
+  let reworkChance = clamp(baseChances.reworkChance + selfEsteemEffects.reworkChance, 0, 95);
+  let delayChance = clamp(baseChances.delayChance + selfEsteemEffects.delayChance, 0, 95);
+  let overflow = fastChance + reworkChance + delayChance - 100;
+  if (overflow > 0) {
+    const cutDelay = Math.min(delayChance, overflow);
+    delayChance -= cutDelay;
+    overflow -= cutDelay;
+  }
+  if (overflow > 0) {
+    const cutRework = Math.min(reworkChance, overflow);
+    reworkChance -= cutRework;
+    overflow -= cutRework;
+  }
+  if (overflow > 0) {
+    const cutFast = Math.min(fastChance, overflow);
+    fastChance -= cutFast;
+    overflow -= cutFast;
+  }
+  const standardChance = Math.max(0, 100 - fastChance - reworkChance - delayChance);
   const roll = createRng(hashSeed(state.seed, state.day, state.activeJob?.contractId ?? "none", task.taskId, task.completedUnits, task.requiredUnits, stance)).nextInt(100);
 
   let timeOutcome: TaskTimeOutcome = "standard";
@@ -2463,10 +2731,11 @@ function resolveQuality(
 ): TaskQualityOutcome {
   const stanceQualityMod = stance === "rush" ? -15 : stance === "careful" ? 15 : 0;
   const timeQualityMod = timeOutcome === "fast" ? -10 : timeOutcome === "delayed" ? 5 : timeOutcome === "rework" ? -25 : 0;
+  const selfEsteemQualityMod = getSelfEsteemBandEffects(state).qualityRoll;
   const roll = createRng(
     hashSeed(state.seed, state.day, state.activeJob?.contractId ?? "none", task.taskId, task.completedUnits, task.requiredUnits, stance, "quality")
   ).nextInt(100);
-  const qualityRoll = roll + skillRank * 8 + stanceQualityMod + timeQualityMod + qualityBonus - difficulty * 12;
+  const qualityRoll = roll + skillRank * 8 + stanceQualityMod + timeQualityMod + qualityBonus + selfEsteemQualityMod - difficulty * 12;
   if (qualityRoll >= 90) {
     return "excellent";
   }
@@ -2657,6 +2926,7 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
     state.player.companyLevel = deriveCompanyLevel(state.player.reputation);
     state.player.districtUnlocks = unlockDistricts(bundle, state.player.companyLevel);
     activeJob.outcome = "neutral";
+    applySelfEsteemDelta(state, -2);
     return {
       outcome: "neutral",
       cashDelta,
@@ -2671,7 +2941,7 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   const events = getActiveEvents(bundle, state.activeEventIds);
   const effectiveQualityPoints = activeJob.qualityPoints + activeJob.partsQualityModifier;
   const perkModifiers = getTaskPerkModifiers(state, job, "collect_payment", false);
-  const failChance = getSettlementFailChance(activeJob, job, events, effectiveQualityPoints, state.day);
+  const failChance = getSettlementFailChance(state, activeJob, job, events, effectiveQualityPoints, state.day);
   let outcome: Outcome = "success";
   if (isForcedNeutral(job, events)) {
     outcome = "neutral";
@@ -2724,6 +2994,11 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   state.player.companyLevel = deriveCompanyLevel(state.player.reputation);
   state.player.districtUnlocks = unlockDistricts(bundle, state.player.companyLevel);
   activeJob.outcome = outcome;
+  let selfEsteemDelta = outcome === "success" ? 8 : outcome === "neutral" ? 2 : -10;
+  if (outcome === "success" && cashDelta >= activeJob.lockedPayout * 1.15) {
+    selfEsteemDelta += 2;
+  }
+  applySelfEsteemDelta(state, selfEsteemDelta);
 
   return {
     outcome,
@@ -2970,6 +3245,7 @@ function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob
 }
 
 function getSettlementFailChance(
+  state: GameState,
   activeJob: ActiveJobState,
   job: JobDef,
   events: EventDef[],
@@ -2977,8 +3253,13 @@ function getSettlementFailChance(
   day: number
 ): number {
   const onboardingFailBuffer = day <= 5 ? 0.1 : 0;
+  const selfEsteemRiskDelta = getSelfEsteemBandEffects(state).settlementFailChance;
   return clamp(
-    getRiskValue(job, events) + activeJob.reworkCount * 0.04 - Math.max(0, effectiveQualityPoints) * 0.02 - onboardingFailBuffer,
+    getRiskValue(job, events) +
+      activeJob.reworkCount * 0.04 -
+      Math.max(0, effectiveQualityPoints) * 0.02 -
+      onboardingFailBuffer +
+      selfEsteemRiskDelta,
     0,
     0.95
   );
@@ -3556,6 +3837,7 @@ function cloneState(state: GameState): GameState {
       corePerks: { ...state.perks.corePerks },
       unlockedPerkTrees: { ...state.perks.unlockedPerkTrees }
     },
+    selfEsteem: { ...state.selfEsteem },
     deferredJobs: state.deferredJobs.map((entry) => ({
       deferredJobId: entry.deferredJobId,
       deferredAtDay: entry.deferredAtDay,

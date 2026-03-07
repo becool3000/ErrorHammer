@@ -26,7 +26,6 @@ interface WorkTabProps {
 }
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
-  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
   const [jobSpendOpen, setJobSpendOpen] = useState(false);
   const [cutLossesOpen, setCutLossesOpen] = useState(false);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
@@ -718,50 +717,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         {activeJobProfitRecap ? <JobProfitRecapCard recap={activeJobProfitRecap} onDismiss={dismissJobProfitRecap} /> : null}
       </article>
 
-      <article className="hero-card chrome-card active-job-hero">
-        <div className="section-label-row active-job-header-row">
-          <span className="summary-toggle-copy">
-            <span className="eyebrow">Active Job</span>
-            <span className="summary-toggle-title">{job.name}</span>
-          </span>
-          <button
-            type="button"
-            className="ghost-button summary-detail-button"
-            aria-label={`Toggle active job details for ${job.name}`}
-            aria-expanded={jobDetailsOpen}
-            aria-controls="active-job-panel"
-            onClick={() => setJobDetailsOpen((open) => !open)}
-          >
-            Details
-          </button>
-        </div>
-        <div
-          id="active-job-panel"
-          className={jobDetailsOpen ? "collapsible-panel open" : "collapsible-panel"}
-          aria-hidden={!jobDetailsOpen}
-        >
-          <p className="muted-copy">{job.flavor.client_quote}</p>
-          <div className="metric-grid two-up">
-            <span>Payout ${activeJob.lockedPayout}</span>
-            <span>Quality {activeJob.qualityPoints}</span>
-            <span>Parts {activeJob.partsQuality ? `${formatSupplyQuality(activeJob.partsQuality)} (${activeJob.partsQualityModifier >= 0 ? "+" : ""}${activeJob.partsQualityModifier})` : "pending"}</span>
-            <span>Time {formatHours(activeJob.actualTicksSpent)}/{formatHours(activeJob.plannedTicks)}</span>
-            <span>Rework {activeJob.reworkCount}</span>
-          </div>
-          <div className="detail-block">
-            <strong>Assigned To</strong>
-            <p className="muted-copy">Owner/Operator (Crew: Coming Soon)</p>
-          </div>
-          <div className="action-row wrap-row">
-            <button className="ghost-button" onClick={() => openModal("job-details")}>
-              Job Details
-            </button>
-            <button className="ghost-button" onClick={() => openModal("field-log")}>
-              Field Log
-            </button>
-          </div>
-        </div>
-      </article>
       {(pendingRecoveryAction || pendingDeferredAbandonId) && (
         <RecoveryConfirmModal
           action={pendingDeferredAbandonId ? "abandon" : pendingRecoveryAction ?? "abandon"}

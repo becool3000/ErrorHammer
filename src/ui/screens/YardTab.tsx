@@ -15,6 +15,9 @@ export function YardTab() {
   const serviceCost = getDumpsterServiceCost(units);
   const premiumExample = getPremiumHaulCost(4);
   const dumpsterEnabled = game.operations.facilities.dumpsterEnabled;
+  if (!dumpsterEnabled) {
+    return null;
+  }
 
   return (
     <section className="tab-panel yard-tab">
@@ -33,10 +36,10 @@ export function YardTab() {
           <span>Empties {game.yard.emptiesPerformed}</span>
           <span>Service ${serviceCost}</span>
         </div>
-        <button className="primary-button" disabled={!dumpsterEnabled || units <= 0} onClick={() => emptyDumpster()}>
-          {!dumpsterEnabled ? "Enable Dumpster in Facilities" : units <= 0 ? "Dumpster Empty" : `Empty Dumpster ($${serviceCost})`}
+        <button className="primary-button" disabled={units <= 0} onClick={() => emptyDumpster()}>
+          {units <= 0 ? "Dumpster Empty" : `Empty Dumpster ($${serviceCost})`}
         </button>
-        {dumpsterEnabled && units >= capacity ? <p className="notice-banner">Dumpster full. Non-day-labor contracts are blocked.</p> : null}
+        {units >= capacity ? <p className="notice-banner">Dumpster full. Non-day-labor contracts are blocked.</p> : null}
       </article>
 
       <article className="chrome-card inset-card yard-card">
@@ -51,17 +54,6 @@ export function YardTab() {
         </p>
       </article>
 
-      <article className="chrome-card inset-card yard-card">
-        <p className="eyebrow">Fleet</p>
-        <h3>Coming Soon</h3>
-        <p className="muted-copy">Truck and company vehicle management will live here.</p>
-      </article>
-
-      <article className="chrome-card inset-card yard-card">
-        <p className="eyebrow">Equipment</p>
-        <h3>Coming Soon</h3>
-        <p className="muted-copy">Machinery and yard equipment systems are planned for a future pass.</p>
-      </article>
     </section>
   );
 }

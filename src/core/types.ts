@@ -432,6 +432,17 @@ export interface FatigueState {
   debt: number;
 }
 
+export type SelfEsteemBand = "shaken" | "low" | "solid" | "cocky" | "reckless";
+
+export interface SelfEsteemState {
+  currentSelfEsteem: number;
+  dailySelfEsteemDrift: number;
+  lifetimeTimesAtZero: number;
+  lifetimeTimesAtHundred: number;
+  fullExtremeSwings: number;
+  hasGrizzled: boolean;
+}
+
 export interface WorkdayState {
   ticksPerDay: number;
   availableTicks: number;
@@ -649,6 +660,7 @@ export interface GameState {
   yard: YardState;
   operations: OperationsState;
   perks: PerksState;
+  selfEsteem: SelfEsteemState;
   deferredJobs: DeferredJobState[];
   contractFiles: ContractFileSnapshot[];
 }

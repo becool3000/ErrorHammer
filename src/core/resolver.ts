@@ -97,6 +97,14 @@ export function createInitialGameState(
     yard: createInitialYardState(),
     operations: createInitialOperationsState(),
     perks: createInitialPerksState(),
+    selfEsteem: {
+      currentSelfEsteem: 50,
+      dailySelfEsteemDrift: 4,
+      lifetimeTimesAtZero: 0,
+      lifetimeTimesAtHundred: 0,
+      fullExtremeSwings: 0,
+      hasGrizzled: false
+    },
     deferredJobs: [],
     contractFiles: []
   };
@@ -392,6 +400,7 @@ export function resolveDay(
       corePerks: { ...state.perks.corePerks },
       unlockedPerkTrees: { ...state.perks.unlockedPerkTrees }
     },
+    selfEsteem: { ...state.selfEsteem },
     deferredJobs: state.deferredJobs.map((entry) => ({
       deferredJobId: entry.deferredJobId,
       deferredAtDay: entry.deferredAtDay,

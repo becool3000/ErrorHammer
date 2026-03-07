@@ -2,9 +2,10 @@ import { bundle, useUiStore } from "../state";
 
 interface CompanyTabProps {
   modalView?: "districts" | "crews" | "news";
+  showOverview?: boolean;
 }
 
-export function CompanyTab({ modalView }: CompanyTabProps) {
+export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) {
   const game = useUiStore((state) => state.game);
   const openModal = useUiStore((state) => state.openModal);
 
@@ -76,20 +77,21 @@ export function CompanyTab({ modalView }: CompanyTabProps) {
   }
 
   return (
-    <section className="tab-panel company-tab">
-      <article className="hero-card chrome-card">
-        <div className="section-label-row">
-          <div>
-            <h2>{game.player.companyName}</h2>
+    <section className={showOverview ? "tab-panel company-tab" : "stack-list company-hub-stack"}>
+      {showOverview ? (
+        <article className="hero-card chrome-card">
+          <div className="section-label-row">
+            <div>
+              <h2>{game.player.companyName}</h2>
+            </div>
+            <span className="chip">Level {game.player.companyLevel}</span>
           </div>
-          <span className="chip">Level {game.player.companyLevel}</span>
-        </div>
-        <div className="metric-grid two-up">
-          <span>Reputation {game.player.reputation}</span>
-          <span>Districts {game.player.districtUnlocks.length}</span>
-        </div>
-      </article>
-
+          <div className="metric-grid two-up">
+            <span>Reputation {game.player.reputation}</span>
+            <span>Districts {game.player.districtUnlocks.length}</span>
+          </div>
+        </article>
+      ) : null}
       <article className="chrome-card inset-card company-action-card">
         <div className="action-grid company-action-grid">
           <button className="primary-button" onClick={() => openModal("districts")}>

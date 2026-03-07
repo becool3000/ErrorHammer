@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ActiveModalId, bundle, useUiStore } from "../state";
+import { useEffect, useRef, useState } from "react";
+import { ActiveModalId, bundle, ResultsRow, ResultsSection, useUiStore } from "../state";
 import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
 import { Modal } from "../components/Modal";
-import rebarBobSprite from "../assets/encounters/rebarbob2026.png";
 import { CompanyTab } from "./CompanyTab";
 import { OfficeTab } from "./OfficeTab";
 import { SettingsTab } from "./SettingsTab";
@@ -17,18 +16,8 @@ interface EndDayTransitionState {
 
 const END_DAY_TRANSITION_MS = 1_000;
 const END_DAY_TRANSITION_MIDPOINT_MS = END_DAY_TRANSITION_MS / 2;
-const TIER2_COOLDOWN_MS = 1_500;
 const PHONE_SHEET_BREAKPOINT_PX = 759;
-
-type Tier2SurfaceKind = "balance" | "encounter" | "task-result";
-
-interface Tier2SurfaceCandidate {
-  kind: Tier2SurfaceKind;
-  day: number;
-  fingerprint: string;
-}
-
-interface Tier2SurfaceState extends Tier2SurfaceCandidate {}
+const RESULTS_SECTIONS: ResultsSection[] = ["Money", "Stats", "Inventory/Tools", "Operations/Office", "Progress/Other"];
 
 const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
   "job-details",
@@ -52,11 +41,9 @@ export function GameShell() {
   const [isPhoneViewport, setIsPhoneViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= PHONE_SHEET_BREAKPOINT_PX : true
   );
-  const [tier2Surface, setTier2Surface] = useState<Tier2SurfaceState | null>(null);
   const midpointTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tier2RegistryRef = useRef<Partial<Record<Tier2SurfaceKind, Tier2SurfaceCandidate & { lastShownAtMs: number }>>>({});
   const game = useUiStore((state) => state.game);
   const activeTab = useUiStore((state) => state.activeTab);
   const activeModal = useUiStore((state) => state.activeModal);
@@ -68,8 +55,8 @@ export function GameShell() {
   const activeProgressPopup = useUiStore((state) => state.activeProgressPopup);
   const progressQueue = useUiStore((state) => state.progressQueue);
   const dismissProgressPopup = useUiStore((state) => state.dismissProgressPopup);
-  const activeTaskResultPopup = useUiStore((state) => state.activeTaskResultPopup);
-  const dismissTaskResultPopup = useUiStore((state) => state.dismissTaskResultPopup);
+  const activeResultsScreen = useUiStore((state) => state.activeResultsScreen);
+  const dismissResultsScreen = useUiStore((state) => state.dismissResultsScreen);
   const goToTab = useUiStore((state) => state.goToTab);
   const endShift = useUiStore((state) => state.endShift);
   const openModal = useUiStore((state) => state.openModal);
@@ -77,45 +64,13 @@ export function GameShell() {
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
-  const activeEncounterPopup = useUiStore((state) => state.activeEncounterPopup);
-  const dismissEncounterPopup = useUiStore((state) => state.dismissEncounterPopup);
   const showRoutineModalAsSheet = isPhoneViewport && isRoutineModalId(activeModal);
-  const isBalanceDeclinedNotice = notice.toLowerCase().includes("balance declined");
   const normalizedActiveTab = activeTab === "contracts" || activeTab === "store" || activeTab === "company" ? "office" : activeTab;
   const endDayProgress = endDayTransition ? clamp01((transitionNowMs - endDayTransition.startedAtMs) / endDayTransition.durationMs) : 0;
   const endDayBlackoutOpacity = endDayProgress <= 0.5 ? endDayProgress * 2 : (1 - endDayProgress) * 2;
   const endDayPieAngle = Math.round(endDayProgress * 360);
-  const tier2Candidates = useMemo<Tier2SurfaceCandidate[]>(() => {
-    const day = game?.day ?? 0;
-    const candidates: Tier2SurfaceCandidate[] = [];
-    if (isBalanceDeclinedNotice) {
-      candidates.push({
-        kind: "balance",
-        day,
-        fingerprint: notice.trim()
-      });
-    }
-    if (activeEncounterPopup) {
-      candidates.push({
-        kind: "encounter",
-        day,
-        fingerprint: activeEncounterPopup.id
-      });
-    }
-    if (activeTaskResultPopup) {
-      candidates.push({
-        kind: "task-result",
-        day,
-        fingerprint: activeTaskResultPopup.digest
-      });
-    }
-    return candidates;
-  }, [activeEncounterPopup, activeTaskResultPopup, game?.day, isBalanceDeclinedNotice, notice]);
-  const suppressLowerTierUi = Boolean(endDayTransition || tier2Surface);
-  const suppressNoticeBanner =
-    suppressLowerTierUi ||
-    (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout")) ||
-    isBalanceDeclinedNotice;
+  const suppressLowerTierUi = Boolean(endDayTransition || activeResultsScreen);
+  const suppressNoticeBanner = suppressLowerTierUi || (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout"));
 
   useEffect(() => {
     return () => {
@@ -153,39 +108,8 @@ export function GameShell() {
     };
   }, [endDayTransition?.startedAtMs]);
 
-  useEffect(() => {
-    if (endDayTransition) {
-      setTier2Surface(null);
-      return;
-    }
-    if (tier2Candidates.length === 0) {
-      setTier2Surface(null);
-      return;
-    }
-    setTier2Surface((current) => {
-      if (current && tier2Candidates.some((candidate) => candidate.kind === current.kind && candidate.fingerprint === current.fingerprint)) {
-        return current;
-      }
-      const now = Date.now();
-      for (const candidate of tier2Candidates) {
-        const prior = tier2RegistryRef.current[candidate.kind];
-        const duplicateSameDay = Boolean(prior && prior.day === candidate.day && prior.fingerprint === candidate.fingerprint);
-        const coolingDown = Boolean(prior && prior.day === candidate.day && now - prior.lastShownAtMs < TIER2_COOLDOWN_MS);
-        if (duplicateSameDay || coolingDown) {
-          continue;
-        }
-        tier2RegistryRef.current[candidate.kind] = {
-          ...candidate,
-          lastShownAtMs: now
-        };
-        return candidate;
-      }
-      return null;
-    });
-  }, [endDayTransition, tier2Candidates]);
-
   function handleEndDayTransition() {
-    if (timedTaskAction || endDayTransition) {
+    if (timedTaskAction || endDayTransition || activeResultsScreen) {
       return;
     }
     clearEndDayTransitionTimers(midpointTimerRef, completionTimerRef, transitionTickRef);
@@ -250,42 +174,11 @@ export function GameShell() {
           </div>
         </section>
       ) : null}
-      {tier2Surface?.kind === "task-result" && activeTaskResultPopup ? (
-        <section className="task-result-popup" role="status" aria-live="polite" aria-label={activeTaskResultPopup.title}>
-          <article className="task-result-popup-card chrome-card">
-            <div className="section-label-row tight-row">
-              <strong>{activeTaskResultPopup.title}</strong>
-              <button className="icon-button" onClick={dismissTaskResultPopup} aria-label="Close result popup">
-                Close
-              </button>
-            </div>
-            <div className="summary-copy">
-              {activeTaskResultPopup.lines.map((line, index) => (
-                <p key={`${activeTaskResultPopup.digest}-${index}`}>{line}</p>
-              ))}
-            </div>
-          </article>
-        </section>
-      ) : null}
       {dayLaborCelebrationActive ? <DayLaborCelebrationOverlay /> : null}
-      {tier2Surface?.kind === "balance" && isBalanceDeclinedNotice ? (
-        <section className="critical-notice-popup" role="alert" aria-live="assertive" aria-label="Balance Declined">
-          <div className="section-label-row tight-row">
-            <strong>Balance Declined</strong>
-            <button className="icon-button" onClick={() => clearNotice()} aria-label="Dismiss balance declined notice">
-              Close
-            </button>
-          </div>
-          <p>{notice}</p>
-        </section>
-      ) : null}
       {notice && !suppressNoticeBanner ? (
         <button className="notice-banner notice-action" onClick={() => clearNotice()}>
           {notice}
         </button>
-      ) : null}
-      {tier2Surface?.kind === "encounter" && activeEncounterPopup ? (
-        <RebarBobEncounterPopup speaker={activeEncounterPopup.speaker} line={activeEncounterPopup.line} onClose={() => dismissEncounterPopup()} />
       ) : null}
       <section className="tab-stage">
         {normalizedActiveTab === "work" ? <WorkTab /> : null}
@@ -296,7 +189,7 @@ export function GameShell() {
         onChange={goToTab}
         onEndDay={handleEndDayTransition}
         onOpenSettings={() => openModal("settings")}
-        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition)}
+        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(activeResultsScreen)}
       />
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
         <WorkTab sheetOnly />
@@ -339,6 +232,9 @@ export function GameShell() {
       ) : null}
       {jobCompletionFx ? <JobCompletionFxOverlay outcome={jobCompletionFx.outcome} net={jobCompletionFx.net} /> : null}
       {endDayTransition ? <EndDayTransitionOverlay blackoutOpacity={endDayBlackoutOpacity} pieAngle={endDayPieAngle} /> : null}
+      {activeResultsScreen && !endDayTransition ? (
+        <ResultsScreenOverlay onContinue={() => dismissResultsScreen()} rows={activeResultsScreen.rows} detailLines={activeResultsScreen.detailLines} title={activeResultsScreen.title} />
+      ) : null}
     </main>
   );
 }
@@ -421,25 +317,80 @@ function JobCompletionFxOverlay({
   );
 }
 
-function RebarBobEncounterPopup({ speaker, line, onClose }: { speaker: string; line: string; onClose: () => void }) {
+function ResultsScreenOverlay({
+  title,
+  rows,
+  detailLines,
+  onContinue
+}: {
+  title: string;
+  rows: ResultsRow[];
+  detailLines: string[];
+  onContinue: () => void;
+}) {
+  const groupedRows = RESULTS_SECTIONS.map((section) => ({
+    section,
+    rows: rows.filter((row) => row.section === section)
+  })).filter((group) => group.rows.length > 0);
+
   return (
-    <section className="rebar-bob-encounter-popup" role="status" aria-live="polite" aria-label={`${speaker} encounter`}>
-      <div className="rebar-bob-encounter-stage" aria-hidden="true">
-        <img src={rebarBobSprite} alt="" className="rebar-bob-encounter-sprite" />
-        <div className="rebar-bob-encounter-vignette" />
-      </div>
-      <article className="rebar-bob-encounter-card chrome-card">
-        <div className="rebar-bob-encounter-header">
-          <p className="eyebrow rebar-bob-encounter-eyebrow">Random Encounter</p>
-          <button className="icon-button rebar-bob-encounter-close" onClick={onClose} aria-label="Close encounter popup">
-            Close
+    <section className="results-screen-overlay" role="dialog" aria-modal="true" aria-label="Results Screen">
+      <article className="results-screen-card chrome-card">
+        <div className="section-label-row tight-row">
+          <div>
+            <h3>{title}</h3>
+          </div>
+          <button className="primary-button results-screen-continue" onClick={onContinue} aria-label="Continue after results">
+            Continue
           </button>
         </div>
-        <strong className="rebar-bob-encounter-speaker">{speaker}</strong>
-        <p className="rebar-bob-encounter-line">"{line}"</p>
+        <div className="results-screen-scroll">
+          {groupedRows.map((group) => (
+            <section key={group.section} className="results-screen-section">
+              <h4>{group.section}</h4>
+                <div className="results-screen-grid" role="table" aria-label={`${group.section} changes`}>
+                  <div className="results-screen-row results-screen-row-head" role="row">
+                    <span className="results-screen-cell results-screen-label">Item</span>
+                    <span className="results-screen-cell">Before</span>
+                    <span className="results-screen-cell">After</span>
+                  </div>
+                  {group.rows.map((row, index) => (
+                    <div key={`${group.section}-${row.label}-${index}`} className={`results-screen-row ${getResultsToneClass(row.tone)}`} role="row">
+                      <span className="results-screen-cell results-screen-label">{row.label}</span>
+                      <span className="results-screen-cell">{row.before}</span>
+                      <span className="results-screen-cell">{row.after}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+          ))}
+          {detailLines.length > 0 ? (
+            <section className="results-screen-details">
+              <h4>Details</h4>
+              <div className="summary-copy">
+                {detailLines.map((line, index) => (
+                  <p key={`detail-${index}`}>{line}</p>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
       </article>
     </section>
   );
+}
+
+function getResultsToneClass(tone: ResultsRow["tone"]): string {
+  if (tone === "positive") {
+    return "tone-success";
+  }
+  if (tone === "negative") {
+    return "tone-danger";
+  }
+  if (tone === "warning") {
+    return "tone-warning";
+  }
+  return "tone-info";
 }
 
 function clearEndDayTransitionTimers(

@@ -94,22 +94,11 @@ export function FacilitiesTab() {
       onClick: () => closeOfficeManually()
     }
   ];
-  const primaryActionId: FacilityActionRow["id"] | null = !operations.facilities.storageOwned
-    ? "open-storage"
-    : !operations.facilities.officeOwned
-      ? "open-office"
-      : !operations.facilities.yardOwned
-        ? "open-yard"
-        : !operations.facilities.dumpsterEnabled
-          ? "enable-dumpster"
-          : null;
-  const primaryAction = primaryActionId ? actions.find((action) => action.id === primaryActionId) ?? null : null;
-  const secondaryActions = actions.filter((action) => action.id !== primaryActionId);
-  const availableSecondaryCount = secondaryActions.filter((action) => !action.disabled).length;
+  const availableActionsCount = actions.filter((action) => !action.disabled).length;
   const otherOptionsToggleLabel = otherOptionsOpen
     ? "Hide Other Options"
-    : availableSecondaryCount > 0
-      ? `Other Options (${availableSecondaryCount})`
+    : availableActionsCount > 0
+      ? `Other Options (${availableActionsCount})`
       : "Other Options";
 
   return (
@@ -169,24 +158,8 @@ export function FacilitiesTab() {
       <article className="chrome-card inset-card">
         <div className="section-label-row">
           <div>
-            <p className="eyebrow">Next Step</p>
-            <h3>{primaryAction ? "Progression Action" : "Core Tiers Active"}</h3>
-          </div>
-        </div>
-        {primaryAction ? (
-          <button className="primary-button wide-button" onClick={primaryAction.onClick} disabled={primaryAction.disabled}>
-            {primaryAction.label}
-          </button>
-        ) : (
-          <p className="muted-copy">Storage, Office, Yard, and dumpster access are all active.</p>
-        )}
-      </article>
-
-      <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <div>
             <p className="eyebrow">Other Options</p>
-            <h3>Secondary Facility Actions</h3>
+            <h3>Facility Actions</h3>
           </div>
           <button
             type="button"
@@ -200,27 +173,15 @@ export function FacilitiesTab() {
         </div>
         {otherOptionsOpen ? (
           <div id="facility-other-options" className="stack-list facilities-other-options">
-            {secondaryActions.map((action) => (
+            {actions.map((action) => (
               <button key={action.id} className="ghost-button secondary-action-button" onClick={action.onClick} disabled={action.disabled}>
                 {action.label}
               </button>
             ))}
           </div>
         ) : (
-          <p className="muted-copy">Routine actions are collapsed to keep one dominant progression button in view.</p>
+          <p className="muted-copy">Expand to manage storage, office, yard, and dumpster actions.</p>
         )}
-      </article>
-
-      <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Policy</p>
-            <h3>Billing and Downgrade Rules</h3>
-          </div>
-        </div>
-        <p className="muted-copy">
-          Two missed monthly bills force a downgrade. Collapse is hard reset for that tier.
-        </p>
       </article>
     </section>
   );
