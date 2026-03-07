@@ -330,13 +330,13 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("dialog", { name: /Field Log/i })).toBeTruthy();
   });
 
-  it("EH-TW-201: Company hub shows category tabs and grouped subtabs", () => {
+  it("EH-TW-201: Company hub shows flat section tabs for Contracts, Facilities, and Finance", () => {
     const game = createInitialGameState(bundle, 9401);
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: null });
 
     render(<App />);
 
-    expect(screen.getByRole("tab", { name: "Operations" })).toBeTruthy();
+    expect(screen.queryByRole("tab", { name: "Operations" })).toBeNull();
     expect(screen.queryByRole("tab", { name: "Strategy" })).toBeNull();
     expect(screen.getByRole("tab", { name: "Finance" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Contracts" })).toBeTruthy();
@@ -765,7 +765,6 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /District Access/i }));
     expect(screen.getByRole("dialog", { name: /District Access/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close District Access/i }));
-    fireEvent.click(screen.getByRole("tab", { name: "Operations" }));
     fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
     expect(screen.getByRole("button", { name: /^Company$/i, pressed: true })).toBeTruthy();
     expect(useUiStore.getState().game?.seed).toBe(6060);
