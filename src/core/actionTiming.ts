@@ -1,9 +1,9 @@
 import { TaskStance } from "./types";
 
 const BASE_ACTION_DURATION_MS: Record<TaskStance, number> = {
-  rush: 3_000,
-  standard: 6_000,
-  careful: 12_000
+  rush: 1_500,
+  standard: 3_000,
+  careful: 6_000
 };
 
 const SKILL_SPEED_BASELINE_LEVEL = 1;

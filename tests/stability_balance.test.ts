@@ -6,7 +6,9 @@ import {
   getAvailableContractOffers,
   getContractEstimateSnapshot,
   getCurrentTask,
-  performTaskUnit
+  getOutOfGasRescuePlan,
+  performTaskUnit,
+  runOutOfGasRescue
 } from "../src/core/playerFlow";
 import { loadContentBundle } from "../src/core/content";
 import { GameState } from "../src/core/types";
@@ -64,7 +66,7 @@ describe("stability + balance", () => {
     }
   });
 
-  it("does not allow zero-fuel refuel skip to complete the gas-station task", () => {
+  it("uses out-of-gas rescue instead of mandatory refuel tasks when route travel is fuel-blocked", () => {
     const state = createInitialGameState(bundle, 7201);
     unlockAllTradeResearch(state);
     for (const tool of bundle.tools) {
@@ -86,16 +88,17 @@ describe("stability + balance", () => {
     const accepted = acceptContract(state, bundle, tradeOffer.contract.contractId).nextState;
     const afterLoad = performTaskUnit(accepted, bundle, "standard", false).nextState;
 
-    expect(getCurrentTask(afterLoad)?.taskId).toBe("refuel_at_station");
+    expect(getCurrentTask(afterLoad)?.taskId).not.toBe("refuel_at_station");
     expect(afterLoad.player.fuel).toBe(0);
 
-    const skipAttempt = performTaskUnit(afterLoad, bundle, "standard", false);
-    expect(skipAttempt.notice).toContain("Need at least 1 fuel before skipping refuel.");
-    expect(skipAttempt.nextState).toBe(afterLoad);
+    const blockedTravel = performTaskUnit(afterLoad, bundle, "standard", false);
+    expect(blockedTravel.notice).toContain("fuel");
+    expect(blockedTravel.nextState.player.fuel).toBe(0);
 
-    const rushAttempt = performTaskUnit(afterLoad, bundle, "rush", false);
-    expect(rushAttempt.nextState).not.toBe(afterLoad);
-    expect(getCurrentTask(rushAttempt.nextState)?.taskId).toBe("travel_to_supplier");
-    expect(rushAttempt.nextState.player.fuel).toBeGreaterThanOrEqual(1);
+    const rescuePlan = getOutOfGasRescuePlan(afterLoad, bundle);
+    expect(rescuePlan).not.toBeNull();
+    const rescued = runOutOfGasRescue(afterLoad, bundle);
+    expect(rescued.nextState.player.fuel).toBe(1);
+    expect(rescued.nextState.player.oshaCanOwned).toBe(true);
   });
 });

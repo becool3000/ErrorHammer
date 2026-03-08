@@ -149,6 +149,38 @@ export type CorePerkId =
 
 export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 
+export type DigPhase = "excavate" | "backfill" | "grade" | "complete" | "failed";
+
+export interface DigMinigameConfig {
+  gridWidth: number;
+  gridHeight: number;
+  maxLoad: number;
+  digRadius: number;
+  dumpRadius: number;
+  simStepIntervalMs: number;
+  excavationClearThreshold: number;
+  backfillTargetThreshold: number;
+  overfillTolerance: number;
+  timeLimitMs: number;
+}
+
+export interface DigMinigameState {
+  phase: DigPhase;
+  currentLoad: number;
+  elapsedMs: number;
+  score: number;
+  isPointerDown: boolean;
+}
+
+export interface DayLaborMinigameResult {
+  success: boolean;
+  score: number;
+  excavationAccuracy: number;
+  backfillAccuracy: number;
+  timeUsedMs: number;
+  failureReason?: string;
+}
+
 export type LocationId = "shop" | "supplier" | "job-site" | "gas-station";
 
 export type TaskId =
@@ -353,6 +385,7 @@ export interface ActorState {
   stamina: number;
   fuel: number;
   fuelMax: number;
+  oshaCanOwned?: boolean;
   skills: Record<SkillId, number>;
   tools: Record<string, ToolInstance>;
   crews: CrewState[];

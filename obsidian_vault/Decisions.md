@@ -53,10 +53,11 @@
 2. `Strategy`: `R&D` (Company content only).
 3. `Finance`: `Trade Index`, `Accounting`.
 34. Facility progression is cash-only and storage-first: `truck -> storage -> office -> yard`; facility research completion is no longer a gate for office/yard/dumpster actions.
-35. Starter-tool gate is explicit before storage unlock:
-1. Required tools: `work-boots`, `tool-belt`, `hammer`, `level`, `square`, `saw` (displayed as Skill Saw).
-2. New games start with no free hammer.
-3. Pre-storage purchases are starter-kit only; quick-buy cannot buy non-starter tools.
+35. Starter-kit gate is explicit before storage unlock:
+1. Required tools remain `work-boots`, `tool-belt`, `hammer`, `level`, `square`, `saw` (displayed as Skill Saw).
+2. OSHA can ownership is also required and is acquired through first successful out-of-gas rescue.
+3. New games start with no free hammer and no OSHA can.
+4. Pre-storage purchases are starter-tool only; quick-buy cannot buy non-starter tools.
 36. Supply capacity is deterministic:
 1. Truck inflow cap is 8 units.
 2. Storage inventory cap is 40 units.
@@ -69,6 +70,19 @@
 1. Primary tab identity remains `office`.
 2. Internal ids (`shop`, `load_from_shop`) remain unchanged.
 3. User-facing copy uses `Storage` where surfaced.
+39. `PLN-025` supersedes `PLN-024` for fuel progression governance.
+40. Fuel progression policy is rescue-first and deterministic:
+1. Mandatory refuel-stop units are removed from active progression.
+2. Out-of-gas rescue applies only when active contract progression is fuel-blocked at exactly `0` fuel.
+3. Rescue grants `+1` fuel and consumes `2` ticks.
+41. Rescue economics are cash-only:
+1. First rescue costs `$25` OSHA can + `$5` fuel.
+2. Later rescues cost `$5` fuel.
+3. No on-account debt is allowed; short cash returns explicit day-labor guidance.
+42. Fuel capacity baseline is updated to `40` max fuel for player and bots with start fuel unchanged at `8`.
+43. Bot parity follows the same rescue/cash rules:
+1. Bots attempt rescue when fuel-blocked.
+2. Cash-short bots run day labor fallback and retry deterministically.
 
 ## Dated Decision Log
 1. `2026-03-06` `PLN-019-D1`
@@ -101,6 +115,15 @@ Rationale: creates clear early-game ownership milestones before broader tool cat
 10. `2026-03-06` `PLN-024-D3`
 Decision: `R&D` remains a nav destination but renders Company content only in active hub flow.
 Rationale: preserves IA compatibility while removing facility program UX from the main Company progression path.
+11. `2026-03-07` `PLN-025-D1`
+Decision: remove mandatory gas-station stop progression and replace it with zero-fuel rescue action flow.
+Rationale: removes forced station detours while preserving deterministic recovery when routes are fuel-blocked.
+12. `2026-03-07` `PLN-025-D2`
+Decision: make OSHA can ownership part of the starter-kit gate for storage unlock, acquired only through first successful rescue.
+Rationale: ties early infrastructure unlock to fuel-recovery competency and keeps gate progression explicit.
+13. `2026-03-07` `PLN-025-D3`
+Decision: rescue is cash-only with explicit day-labor guidance on shortfall; bots follow the same rescue/day-labor fallback rules.
+Rationale: prevents hidden debt mechanics and keeps player/bot recovery economics aligned and deterministic.
 
 ## Archive
 1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).

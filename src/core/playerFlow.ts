@@ -17,6 +17,7 @@ import {
   CrewState,
   DayLog,
   DeferredJobState,
+  DayLaborMinigameResult,
   DistrictDef,
   EventDef,
   GameState,
@@ -104,13 +105,31 @@ export interface QuickBuyPlan {
   starterGateBlocked: boolean;
 }
 
-export interface GasStationStopPlan {
-  stranded: boolean;
+export interface OutOfGasRescuePlan {
   warning: string;
-  suggestedFuel: number;
+  fuelBlockedTaskId: TaskId;
+  canCost: number;
+  fuelCost: number;
   totalCost: number;
-  onAccount: boolean;
   requiredTicks: number;
+  fuelAdded: number;
+  canOwnedAfter: boolean;
+  cashShortfall: number;
+}
+
+export type ManualGasStationMode = "single" | "fill";
+
+export interface ManualGasStationPlan {
+  mode: ManualGasStationMode;
+  warning: string;
+  requestedFuel: number;
+  fuelAdded: number;
+  canCost: number;
+  fuelCost: number;
+  totalCost: number;
+  requiredTicks: number;
+  cashShortfall: number;
+  timeBlocked: boolean;
 }
 
 export interface ReturnToShopForToolsPayload {
@@ -264,8 +283,12 @@ export const BASE_DAY_TICKS = 16;
 export const MAX_OVERTIME_TICKS = 4;
 export const SHOP_SUPPLIER_TICKS = 1;
 export const SHOP_SUPPLIER_FUEL = 1;
-export const GAS_STATION_STOP_TICKS = 2;
 export const FUEL_PRICE = 5;
+export const FUEL_TANK_MAX = 40;
+export const MANUAL_GAS_STATION_TICKS = 2;
+export const OUT_OF_GAS_RESCUE_TICKS = 2;
+export const OUT_OF_GAS_RESCUE_FUEL = 1;
+export const OSHA_CAN_PRICE = 25;
 export const TRUCK_SUPPLY_CAPACITY = 8;
 export const STORAGE_SUPPLY_CAPACITY = 40;
 export const SUPPLY_QUALITIES: SupplyQuality[] = ["low", "medium", "high"];
@@ -275,6 +298,8 @@ export const MINIMUM_WAGE_PER_HOUR = 10.5;
 export const MIN_CONTRACT_RATE_PER_HOUR = 50;
 export const MIN_BABA_CONTRACT_RATE_PER_HOUR = 25;
 export const STARTER_TOOL_IDS = ["work-boots", "tool-belt", "hammer", "level", "square", "saw"] as const;
+export const STARTER_OSHA_CAN_ID = "osha-can";
+export const STARTER_OSHA_CAN_LABEL = "OSHA Gas Can";
 const BABA_G_ROTATING_CONTRACT_PREFIX = "baba-g-rotating-contract";
 const UNLOCKED_FALLBACK_CONTRACT_PREFIX = "unlocked-fallback-contract";
 const STARTER_TOOL_ID_SET = new Set<string>(STARTER_TOOL_IDS);
@@ -418,13 +443,18 @@ export function getStarterKitProgress(actor: ActorState): {
   total: number;
   allOwned: boolean;
   missingToolIds: string[];
+  missingOshaCan: boolean;
 } {
   const missingToolIds = STARTER_TOOL_IDS.filter((toolId) => !actor.tools[toolId]);
+  const missingOshaCan = !Boolean(actor.oshaCanOwned);
+  const total = STARTER_TOOL_IDS.length + 1;
+  const owned = total - missingToolIds.length - (missingOshaCan ? 1 : 0);
   return {
-    owned: STARTER_TOOL_IDS.length - missingToolIds.length,
-    total: STARTER_TOOL_IDS.length,
-    allOwned: missingToolIds.length === 0,
-    missingToolIds
+    owned,
+    total,
+    allOwned: missingToolIds.length === 0 && !missingOshaCan,
+    missingToolIds,
+    missingOshaCan
   };
 }
 
@@ -1148,13 +1178,11 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
   const materialRouting = getJobMaterialRoutingPlan(picked.job, state.shopSupplies, state.truckSupplies);
   const needsSupplier = materialRouting.needsSupplier;
   const requiresShopLoad = materialRouting.requiresShopLoad;
-  const requiresRefuel = state.player.fuel < state.player.fuelMax;
   const tasks = createTaskTemplate(
     picked.job,
     district,
     needsSupplier,
     requiresShopLoad,
-    requiresRefuel,
     state.operations.facilities.storageOwned
   );
   const estimateAtAccept =
@@ -1260,6 +1288,41 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
 }
 
 export function runDayLaborShift(state: GameState, bundle: ContentBundle): StateTransitionResult {
+  return settleDayLaborShift(state, bundle, { success: true, payout: getDayLaborOffer(state, bundle).job.basePayout });
+}
+
+export function resolveDayLaborMinigameResult(
+  state: GameState,
+  bundle: ContentBundle,
+  result: DayLaborMinigameResult
+): StateTransitionResult {
+  const detailLine = [
+    `Mini-game ${result.success ? "success" : "failed"}`,
+    `Score ${Math.max(0, Math.round(result.score))}`,
+    `Excavate ${Math.round(clamp(result.excavationAccuracy, 0, 1) * 100)}%`,
+    `Backfill Accuracy ${Math.round(clamp(result.backfillAccuracy, 0, 1) * 100)}%`,
+    `Time ${(Math.max(0, result.timeUsedMs) / 1000).toFixed(1)}s`
+  ]
+    .concat(result.failureReason ? [result.failureReason] : [])
+    .join(" | ");
+
+  const payout = result.success ? getDayLaborOffer(state, bundle).job.basePayout : 0;
+  return settleDayLaborShift(state, bundle, {
+    success: result.success,
+    payout,
+    detailLines: [detailLine]
+  });
+}
+
+function settleDayLaborShift(
+  state: GameState,
+  bundle: ContentBundle,
+  options: {
+    success: boolean;
+    payout: number;
+    detailLines?: string[];
+  }
+): StateTransitionResult {
   const offer = getDayLaborOffer(state, bundle);
   const requiredTicks = getRemainingDayLaborTicks(state.workday);
   if (requiredTicks <= 0) {
@@ -1271,21 +1334,36 @@ export function runDayLaborShift(state: GameState, bundle: ContentBundle): State
 
   const nextState = cloneState(state);
   spendTicks(nextState.workday, requiredTicks);
-  nextState.player.cash += offer.job.basePayout;
-  awardOfficeSkillXp(nextState, { reading: 1 });
-  awardPerkXp(nextState, 2);
-  applySelfEsteemDelta(nextState, 5);
+  const payout = Math.max(0, Math.round(options.payout));
+  nextState.player.cash += payout;
+  if (options.success) {
+    awardOfficeSkillXp(nextState, { reading: 1 });
+    awardPerkXp(nextState, 2);
+    applySelfEsteemDelta(nextState, 5);
+  } else {
+    applySelfEsteemDelta(nextState, -3);
+  }
 
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
     contractId: DAY_LABOR_CONTRACT_ID,
-    message: `${nextState.player.name} worked a day-labor shift for ${formatHours(requiredTicks)} and earned $${offer.job.basePayout}.`
+    message: `${nextState.player.name} worked a day-labor shift for ${formatHours(requiredTicks)} and earned $${payout}.`
   });
+  for (const detailLine of options.detailLines ?? []) {
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId: DAY_LABOR_CONTRACT_ID,
+      message: detailLine
+    });
+  }
 
   return {
     nextState,
-    notice: `Day Laborer paid $${offer.job.basePayout} for ${formatHours(requiredTicks)} at minimum wage.`,
+    notice: options.success
+      ? `Day Laborer paid $${offer.job.basePayout} for ${formatHours(requiredTicks)} at minimum wage.`
+      : `Day Laborer shift failed for ${formatHours(requiredTicks)} and earned $0.`,
     digest: digestState(nextState)
   };
 }
@@ -1444,37 +1522,50 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
       trashUnitsPending: Math.max(0, Math.floor(activeJob.trashUnitsPending ?? 0)),
       siteSupplies: normalizeSupplyInventory(activeJob.siteSupplies),
       supplierCart: normalizeSupplyInventory(activeJob.supplierCart),
-      tasks: (activeJob.tasks ?? []).map((task) => ({ ...task }))
+      tasks: (activeJob.tasks ?? []).map((task) =>
+        task.taskId === "refuel_at_station"
+          ? {
+              ...task,
+              requiredUnits: 0,
+              completedUnits: 0
+            }
+          : { ...task }
+      )
     };
   };
-  const normalizeActorState = (actor: Partial<ActorState> | null | undefined, fallbackId: string): ActorState => ({
-    ...(actor as ActorState),
-    actorId: actor?.actorId ?? fallbackId,
-    name: actor?.name ?? fallbackId,
-    companyName: actor?.companyName ?? actor?.name ?? fallbackId,
-    cash: Math.max(0, Math.floor(actor?.cash ?? 0)),
-    reputation: Math.max(0, Math.floor(actor?.reputation ?? 0)),
-    companyLevel: Math.max(1, Math.floor(actor?.companyLevel ?? 1)),
-    districtUnlocks: Array.isArray(actor?.districtUnlocks) ? [...actor!.districtUnlocks] : [],
-    staminaMax: Math.max(1, Math.floor(actor?.staminaMax ?? 4)),
-    stamina: Math.max(0, Math.floor(actor?.stamina ?? actor?.staminaMax ?? 4)),
-    fuel: Math.max(0, Math.floor(actor?.fuel ?? 0)),
-    fuelMax: Math.max(1, Math.floor(actor?.fuelMax ?? 12)),
-    skills: { ...createEmptySkills(), ...(actor?.skills ?? {}) },
-    tools: Object.fromEntries(
-      Object.entries(actor?.tools ?? {}).map(([toolId, tool]) => [
-        toolId,
-        {
-          toolId: tool?.toolId ?? toolId,
-          durability: Math.max(0, Math.floor(tool?.durability ?? 0))
-        }
-      ])
-    ),
-    crews: (actor?.crews ?? []).map((crew) => ({
-      ...crew,
-      stamina: crew.stamina ?? crew.staminaMax
-    }))
-  });
+  const normalizeActorState = (actor: Partial<ActorState> | null | undefined, fallbackId: string): ActorState => {
+    const normalizedFuelMax = Math.max(FUEL_TANK_MAX, Math.floor(actor?.fuelMax ?? FUEL_TANK_MAX));
+    const normalizedFuel = Math.max(0, Math.min(normalizedFuelMax, Math.floor(actor?.fuel ?? 0)));
+    return {
+      ...(actor as ActorState),
+      actorId: actor?.actorId ?? fallbackId,
+      name: actor?.name ?? fallbackId,
+      companyName: actor?.companyName ?? actor?.name ?? fallbackId,
+      cash: Math.max(0, Math.floor(actor?.cash ?? 0)),
+      reputation: Math.max(0, Math.floor(actor?.reputation ?? 0)),
+      companyLevel: Math.max(1, Math.floor(actor?.companyLevel ?? 1)),
+      districtUnlocks: Array.isArray(actor?.districtUnlocks) ? [...actor!.districtUnlocks] : [],
+      staminaMax: Math.max(1, Math.floor(actor?.staminaMax ?? 4)),
+      stamina: Math.max(0, Math.floor(actor?.stamina ?? actor?.staminaMax ?? 4)),
+      fuel: normalizedFuel,
+      fuelMax: normalizedFuelMax,
+      oshaCanOwned: Boolean(actor?.oshaCanOwned ?? false),
+      skills: { ...createEmptySkills(), ...(actor?.skills ?? {}) },
+      tools: Object.fromEntries(
+        Object.entries(actor?.tools ?? {}).map(([toolId, tool]) => [
+          toolId,
+          {
+            toolId: tool?.toolId ?? toolId,
+            durability: Math.max(0, Math.floor(tool?.durability ?? 0))
+          }
+        ])
+      ),
+      crews: (actor?.crews ?? []).map((crew) => ({
+        ...crew,
+        stamina: crew.stamina ?? crew.staminaMax
+      }))
+    };
+  };
   const normalizeBotCareerState = (career: Partial<BotCareerState> | null | undefined, index: number): BotCareerState | null => {
     if (!career?.actor) {
       return null;
@@ -1650,8 +1741,7 @@ function getMinimumContractPayout(state: GameState, bundle: ContentBundle, job: 
   const materialRouting = getJobMaterialRoutingPlan(job, state.shopSupplies, state.truckSupplies);
   const needsSupplier = materialRouting.needsSupplier;
   const requiresShopLoad = materialRouting.requiresShopLoad;
-  const requiresRefuel = state.player.fuel < state.player.fuelMax;
-  const tasks = createTaskTemplate(job, district, needsSupplier, requiresShopLoad, requiresRefuel, state.operations.facilities.storageOwned);
+  const tasks = createTaskTemplate(job, district, needsSupplier, requiresShopLoad, state.operations.facilities.storageOwned);
   const plannedTicks = tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0);
   const plannedHours = ticksToHours(plannedTicks);
   const hourlyRate = job.tags.includes("baba-g") ? MIN_BABA_CONTRACT_RATE_PER_HOUR : MIN_CONTRACT_RATE_PER_HOUR;
@@ -1810,7 +1900,7 @@ export function openStorage(state: GameState, bundle: ContentBundle): StateTrans
   if (shouldEnforceStarterToolGate(bundle) && !getStarterKitProgress(state.player).allOwned) {
     return {
       nextState: state,
-      notice: "Buy the full starter kit before opening storage.",
+      notice: "Buy the full starter kit (including the OSHA gas can) before opening storage.",
       digest: digestState(state)
     };
   }
@@ -1950,104 +2040,244 @@ export function buyFuel(state: GameState, units = 1): StateTransitionResult<numb
   if (units <= 0) {
     return { nextState: state, payload: state.player.fuel, digest: digestState(state) };
   }
-  if (state.activeJob && state.activeJob.location !== "shop") {
-    return { nextState: state, notice: "Fuel is only sold at home storage.", digest: digestState(state) };
+  if (state.player.fuel <= 0) {
+    return { nextState: state, payload: state.player.fuel, notice: "Need at least 1 fuel to travel to the gas station.", digest: digestState(state) };
   }
-
-  const nextState = cloneState(state);
-  const room = Math.max(0, nextState.player.fuelMax - nextState.player.fuel);
-  const purchasedUnits = Math.min(room, units);
-  const cost = purchasedUnits * FUEL_PRICE;
-  if (purchasedUnits <= 0) {
-    return { nextState, payload: nextState.player.fuel, digest: digestState(nextState) };
-  }
-  if (nextState.player.cash < cost) {
-    return { nextState: state, notice: "Not enough cash for fuel.", digest: digestState(state) };
-  }
-
-  nextState.player.cash -= cost;
-  nextState.player.fuel += purchasedUnits;
-  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
-  appendLog(nextState, {
-    day: nextState.day,
-    actorId: nextState.player.actorId,
-    message: `Bought ${purchasedUnits} fuel for $${cost}.`
-  });
+  const normalizedUnits = Math.max(1, Math.floor(units));
+  const fallbackMode: ManualGasStationMode = normalizedUnits > 1 ? "fill" : "single";
+  const plan = buildManualGasStationPlan(state, fallbackMode, normalizedUnits);
+  const result = executeManualGasStationRun(state, plan);
   return {
-    nextState,
-    payload: nextState.player.fuel,
-    digest: digestState(nextState)
+    nextState: result.nextState,
+    payload: result.nextState.player.fuel,
+    notice: result.notice,
+    digest: result.digest
   };
 }
 
-export function getGasStationStopPlan(state: GameState, bundle: ContentBundle): GasStationStopPlan | null {
-  const activeJob = state.activeJob;
-  if (!activeJob || activeJob.location === "shop") {
+export function getManualGasStationPlan(state: GameState, mode: ManualGasStationMode): ManualGasStationPlan | null {
+  if (state.player.fuel <= 0) {
     return null;
   }
+  return buildManualGasStationPlan(state, mode);
+}
 
-  const district = bundle.districts.find((entry) => entry.id === activeJob.districtId);
-  if (!district) {
+export function runManualGasStation(state: GameState, mode: ManualGasStationMode): StateTransitionResult<ManualGasStationPlan> {
+  const plan = getManualGasStationPlan(state, mode);
+  if (!plan) {
+    return { nextState: state, notice: "Need at least 1 fuel to travel to the gas station.", digest: digestState(state) };
+  }
+  return executeManualGasStationRun(state, plan);
+}
+
+export function getOutOfGasRescuePlan(state: GameState, bundle: ContentBundle): OutOfGasRescuePlan | null {
+  const activeJob = state.activeJob;
+  if (!activeJob || state.player.fuel !== 0) {
     return null;
   }
 
   const currentTask = getCurrentTask(state);
-  const immediateTravelFuel = currentTask && isTravelTask(currentTask.taskId) ? getTravelFuelCost(currentTask.taskId, district, activeJob.location) : 0;
-  const reserveFuel = getRecommendedFieldFuelReserve(state, bundle);
-  const threshold = Math.min(state.player.fuelMax, Math.max(immediateTravelFuel, reserveFuel + 1));
-  if (threshold <= 0 || state.player.fuel > threshold) {
+  const job = findJobInBundle(bundle, activeJob.jobId);
+  if (!currentTask || !job) {
     return null;
   }
 
-  const suggestedFuel = Math.max(1, threshold - state.player.fuel);
-  const totalCost = suggestedFuel * FUEL_PRICE;
-  const nextDriveLabel = currentTask && isTravelTask(currentTask.taskId) ? TASK_LABELS[currentTask.taskId].toLowerCase() : "finish the field route";
-  const stranded = immediateTravelFuel > 0 && state.player.fuel < immediateTravelFuel;
-  const warning = stranded
-    ? `Truck fuel is too low to ${nextDriveLabel}.`
-    : `Truck fuel is running low for the current field route.`;
+  const blockedReason = getTaskBlockedReason(state, bundle, currentTask, job);
+  if (!blockedReason || !blockedReason.toLowerCase().includes("fuel")) {
+    return null;
+  }
+
+  const canCost = state.player.oshaCanOwned ? 0 : OSHA_CAN_PRICE;
+  const fuelCost = OUT_OF_GAS_RESCUE_FUEL * FUEL_PRICE;
+  const totalCost = canCost + fuelCost;
+  const cashShortfall = Math.max(0, totalCost - state.player.cash);
+  const nextDriveLabel = TASK_LABELS[currentTask.taskId].toLowerCase();
+  const warning =
+    cashShortfall > 0
+      ? `Truck is out of fuel for ${nextDriveLabel}. Need $${cashShortfall} more and work a Day Labor shift first.`
+      : `Truck is out of fuel for ${nextDriveLabel}. Walk to the nearest gas station for an emergency can refill.`;
 
   return {
-    stranded,
     warning,
-    suggestedFuel,
+    fuelBlockedTaskId: currentTask.taskId,
+    canCost,
+    fuelCost,
     totalCost,
-    onAccount: state.player.cash < totalCost,
-    requiredTicks: GAS_STATION_STOP_TICKS
+    requiredTicks: OUT_OF_GAS_RESCUE_TICKS,
+    fuelAdded: OUT_OF_GAS_RESCUE_FUEL,
+    canOwnedAfter: true,
+    cashShortfall
   };
 }
 
-export function runGasStationStop(state: GameState, bundle: ContentBundle): StateTransitionResult<GasStationStopPlan> {
-  const plan = getGasStationStopPlan(state, bundle);
-  if (!plan) {
-    return { nextState: state, notice: "The truck does not need a gas-station run right now.", digest: digestState(state) };
+function buildManualGasStationPlan(
+  state: GameState,
+  mode: ManualGasStationMode,
+  requestedFuelOverride?: number
+): ManualGasStationPlan {
+  const room = Math.max(0, state.player.fuelMax - state.player.fuel);
+  const requestedFuel =
+    typeof requestedFuelOverride === "number"
+      ? Math.max(1, Math.floor(requestedFuelOverride))
+      : mode === "fill"
+        ? Math.max(1, room)
+        : 1;
+  const fuelAdded = Math.max(0, Math.min(room, requestedFuel));
+  const canCost = !state.player.oshaCanOwned && fuelAdded > 0 ? OSHA_CAN_PRICE : 0;
+  const fuelCost = fuelAdded * FUEL_PRICE;
+  const totalCost = canCost + fuelCost;
+  const cashShortfall = Math.max(0, totalCost - state.player.cash);
+  const timeBlocked = !canSpendTicks(state.workday, MANUAL_GAS_STATION_TICKS, true);
+
+  let warning = "Travel to the nearest gas station for a manual refill.";
+  if (fuelAdded <= 0) {
+    warning = "Tank already full.";
+  } else if (cashShortfall > 0) {
+    warning = `Need $${cashShortfall} more for a gas station run. Work a Day Labor shift first.`;
+  } else if (timeBlocked) {
+    warning = "No time is left for a gas station run.";
   }
-  if (!canSpendTicks(state.workday, plan.requiredTicks, true)) {
-    return { nextState: state, payload: plan, notice: "No time is left for a gas-station run.", digest: digestState(state) };
+
+  return {
+    mode,
+    warning,
+    requestedFuel,
+    fuelAdded,
+    canCost,
+    fuelCost,
+    totalCost,
+    requiredTicks: MANUAL_GAS_STATION_TICKS,
+    cashShortfall,
+    timeBlocked
+  };
+}
+
+function executeManualGasStationRun(state: GameState, plan: ManualGasStationPlan): StateTransitionResult<ManualGasStationPlan> {
+  if (plan.fuelAdded <= 0) {
+    return { nextState: state, payload: plan, notice: "Tank already full.", digest: digestState(state) };
+  }
+  if (plan.cashShortfall > 0) {
+    return {
+      nextState: state,
+      payload: plan,
+      notice: `Need $${plan.cashShortfall} more. Work Day Laborer Shift in Contracts to earn gas money.`,
+      digest: digestState(state)
+    };
+  }
+  if (plan.timeBlocked) {
+    return {
+      nextState: state,
+      payload: plan,
+      notice: "No time is left for a gas station run.",
+      digest: digestState(state)
+    };
   }
 
   const nextState = cloneState(state);
+  const activeJob = nextState.activeJob;
+
   spendTicks(nextState.workday, plan.requiredTicks);
-  nextState.activeJob!.actualTicksSpent += plan.requiredTicks;
+  if (activeJob) {
+    activeJob.actualTicksSpent += plan.requiredTicks;
+  }
+
   nextState.player.cash -= plan.totalCost;
-  nextState.player.fuel = Math.min(nextState.player.fuelMax, nextState.player.fuel + plan.suggestedFuel);
-  awardOfficeSkillXp(nextState, { accounting: 2 });
+  nextState.player.fuel = Math.min(nextState.player.fuelMax, nextState.player.fuel + plan.fuelAdded);
+
+  if (!nextState.player.oshaCanOwned && plan.canCost > 0) {
+    nextState.player.oshaCanOwned = true;
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId: activeJob?.contractId,
+      message: `Bought OSHA-approved gas can for $${OSHA_CAN_PRICE}.`
+    });
+  }
 
   appendLog(nextState, {
     day: nextState.day,
     actorId: nextState.player.actorId,
-    contractId: nextState.activeJob?.contractId,
-    message: plan.onAccount
-      ? `Ran a gas-station stop for ${plan.suggestedFuel} fuel on account ($${plan.totalCost}).`
-      : `Ran a gas-station stop for ${plan.suggestedFuel} fuel ($${plan.totalCost}).`
+    contractId: activeJob?.contractId,
+    message: `Bought ${plan.fuelAdded} fuel for $${plan.fuelCost}.`
+  });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: activeJob?.contractId,
+    message: `Manual gas station run: traveled to the nearest gas station and returned (${formatHours(plan.requiredTicks)}).`
   });
 
+  awardOfficeSkillXp(nextState, { reading: 1, accounting: 2 });
+
+  const firstPurchase = plan.canCost > 0;
+  const fillLabel = plan.mode === "fill" ? "filled the tank" : `added ${plan.fuelAdded} fuel`;
   return {
     nextState,
     payload: plan,
-    notice: plan.onAccount
-      ? `Gas Station Run added ${plan.suggestedFuel} fuel and charged $${plan.totalCost} to the company account.`
-      : `Gas Station Run added ${plan.suggestedFuel} fuel for $${plan.totalCost}.`,
+    notice: firstPurchase
+      ? `Traveled to nearest gas station, bought OSHA can, and ${fillLabel} for $${plan.totalCost}.`
+      : `Traveled to nearest gas station and ${fillLabel} for $${plan.totalCost}.`,
+    digest: digestState(nextState)
+  };
+}
+
+export function runOutOfGasRescue(state: GameState, bundle: ContentBundle): StateTransitionResult<OutOfGasRescuePlan> {
+  const plan = getOutOfGasRescuePlan(state, bundle);
+  if (!plan) {
+    return { nextState: state, notice: "No out-of-gas rescue is needed right now.", digest: digestState(state) };
+  }
+  if (plan.cashShortfall > 0) {
+    return {
+      nextState: state,
+      payload: plan,
+      notice: `Need $${plan.cashShortfall} more. Work Day Laborer Shift in Contracts to earn gas money.`,
+      digest: digestState(state)
+    };
+  }
+  if (!canSpendTicks(state.workday, plan.requiredTicks, true)) {
+    return { nextState: state, payload: plan, notice: "No time is left for an out-of-gas rescue.", digest: digestState(state) };
+  }
+
+  const nextState = cloneState(state);
+  const activeJob = nextState.activeJob!;
+  spendTicks(nextState.workday, plan.requiredTicks);
+  activeJob.actualTicksSpent += plan.requiredTicks;
+  nextState.player.cash -= plan.totalCost;
+  nextState.player.fuel = Math.min(nextState.player.fuelMax, nextState.player.fuel + plan.fuelAdded);
+
+  if (!nextState.player.oshaCanOwned) {
+    nextState.player.oshaCanOwned = true;
+    appendLog(nextState, {
+      day: nextState.day,
+      actorId: nextState.player.actorId,
+      contractId: activeJob.contractId,
+      message: `Bought OSHA-approved gas can for $${OSHA_CAN_PRICE}.`
+    });
+  }
+
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: activeJob.contractId,
+    message: `Bought ${plan.fuelAdded} fuel for $${plan.fuelCost}.`
+  });
+  appendLog(nextState, {
+    day: nextState.day,
+    actorId: nextState.player.actorId,
+    contractId: activeJob.contractId,
+    message: `Out-of-gas rescue: walked to the nearest gas station (${formatHours(plan.requiredTicks)}).`
+  });
+
+  awardOfficeSkillXp(nextState, { accounting: 10 });
+  awardPerkXp(nextState, 2);
+
+  const firstRescue = plan.canCost > 0;
+  return {
+    nextState,
+    payload: plan,
+    notice: firstRescue
+      ? `Walked to nearest gas station, bought OSHA can, and added ${plan.fuelAdded} fuel for $${plan.totalCost}.`
+      : `Walked to nearest gas station and added ${plan.fuelAdded} fuel for $${plan.totalCost}.`,
     digest: digestState(nextState)
   };
 }
@@ -2109,16 +2339,6 @@ export function performTaskUnit(
     regularTicksLeft > 0
   ) {
     timing = { timeOutcome: "standard", ticksSpent: regularTicksLeft };
-  }
-  if (activeTask.taskId === "refuel_at_station" && effectiveStance === "standard") {
-    const minimumFuelNeeded = getMinimumFuelNeededAfterRefuel(preparedState.activeJob!, district);
-    if (preparedState.player.fuel < minimumFuelNeeded) {
-      return {
-        nextState: state,
-        notice: `Need at least ${minimumFuelNeeded} fuel before skipping refuel.`,
-        digest: digestState(state)
-      };
-    }
   }
   if (!canSpendTicks(preparedState.workday, timing.ticksSpent, allowOvertime)) {
     return { nextState: preparedState, notice: "This action spills into overtime.", digest: digestState(preparedState) };
@@ -2672,17 +2892,6 @@ export function prepareForNextDay(state: GameState): GameState {
     stamina: crew.staminaMax
   }));
 
-  if (nextState.activeJob) {
-    const refuelTask = nextState.activeJob.tasks.find((task) => task.taskId === "refuel_at_station");
-    if (refuelTask) {
-      if (nextState.player.fuel < nextState.player.fuelMax) {
-        refuelTask.requiredUnits = Math.max(refuelTask.requiredUnits, refuelTask.completedUnits + 1);
-      } else if (refuelTask.requiredUnits > refuelTask.completedUnits) {
-        refuelTask.completedUnits = refuelTask.requiredUnits;
-      }
-    }
-  }
-
   if (nextState.activeJob && nextState.activeJob.location !== "shop") {
     const supplierStopOutstanding = hasOutstandingSupplierStop(nextState.activeJob);
 
@@ -2893,12 +3102,11 @@ function createTaskTemplate(
   district: DistrictDef,
   needsSupplier: boolean,
   requiresShopLoad: boolean,
-  requiresRefuel: boolean,
   storageOwned: boolean
 ): ActiveTaskState[] {
   const tasks: ActiveTaskState[] = [
     createTask("load_from_shop", 2, requiresShopLoad ? 1 : 0, true),
-    createTask("refuel_at_station", 1, requiresRefuel ? 1 : 0, false),
+    createTask("refuel_at_station", 1, 0, false),
     createTask("travel_to_supplier", SHOP_SUPPLIER_TICKS, needsSupplier ? 1 : 0, false),
     createTask("checkout_supplies", 2, needsSupplier ? 1 : 0, true),
     createTask("travel_to_job_site", 1, 1, false),
@@ -3299,7 +3507,7 @@ function getDefaultTaskGuidance(taskId: TaskId): string {
     case "load_from_shop":
       return "Next step: Load required supplies from storage.";
     case "refuel_at_station":
-      return "Next step: Refuel at Gas Station.";
+      return "Next step: Continue route tasks. Refuel stops are optional unless you hit zero fuel.";
     case "travel_to_supplier":
       return "Next step: Travel to Supplier.";
     case "checkout_supplies":
@@ -3344,7 +3552,7 @@ function getLoadFromShopGuidance(state: GameState, bundle: ContentBundle, job: J
 function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob: ActiveJobState): string {
   const normalizedReason = blockedReason.toLowerCase();
   if (normalizedReason.includes("fuel")) {
-    return "Next step: Refuel at Gas Station.";
+    return "Next step: Walk to the nearest gas station for rescue fuel (or run Day Labor for gas money).";
   }
   if (normalizedReason.includes("missing usable tools")) {
     return "Next step: Return to Storage for tool repair or replacement.";
@@ -3527,12 +3735,14 @@ function parseContractCostBreakdown(message: string): { materials: number; fuel:
 
   const materials = normalize(message.match(/Checked out supplies for \$([0-9]+)\./i)?.[1]);
   const fuel =
+    normalize(message.match(/Bought [0-9]+ fuel for \$([0-9]+)\./i)?.[1]) +
     normalize(message.match(/Ran a gas-station stop for [0-9]+ fuel(?: on account)? \(\$([0-9]+)\)\./i)?.[1]) +
     normalize(message.match(/Refueled [0-9]+ at the gas station(?: on account)? \(\$([0-9]+)\)\./i)?.[1]) +
     normalize(message.match(/Refueled [0-9]+ at the gas station for \$([0-9]+)\./i)?.[1]);
   const trash = normalize(message.match(/Premium haul-off charged \$([0-9]+) for [0-9]+ trash units\./i)?.[1]);
   const toolRepair = normalize(message.match(/Returned to (?:the )?(?:shop|storage) to repair or replace broken tools .* fuel -([0-9]+)\./i)?.[1]);
-  const other = toolRepair;
+  const canCost = normalize(message.match(/Bought OSHA-approved gas can for \$([0-9]+)\./i)?.[1]);
+  const other = toolRepair + canCost;
   return { materials, fuel, trash, other };
 }
 

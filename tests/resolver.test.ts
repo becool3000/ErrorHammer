@@ -61,7 +61,7 @@ describe("resolver", () => {
       staminaMax: 2,
       stamina: 2,
       fuel: 8,
-      fuelMax: 12,
+      fuelMax: 40,
       skills: createInitialGameState(bundle, 3).bots[0]!.skills,
       tools: {
         hammer: {

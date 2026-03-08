@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { GameState, JobDef, SkillId } from "../../core/types";
 import { getPayoutMultiplier } from "../../core/economy";
-import { getScaledDurationMs } from "../../core/actionTiming";
 import { TRADE_GROUPS } from "../../core/research";
 import { getPerkArchetypeSnapshot } from "../../core/perks";
 import {
@@ -19,7 +18,6 @@ import {
   getContractQuotedPayout,
   shouldIgnoreLikelyLossWarning,
   isStarterToolId,
-  getSkillRank,
   getSupplyUnitPrice,
   getSettlementPreview
 } from "../../core/playerFlow";
@@ -29,7 +27,6 @@ import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
 const GROUPS: Array<{ id: string; label: string; skills: SkillId[] }> = TRADE_GROUPS;
-const DAY_LABOR_PREP_BASE_MS = 12_000;
 
 export function ContractsTab() {
   const game = useUiStore((state) => state.game);
@@ -293,42 +290,11 @@ function ContractDetails({
   const ignoreLikelyLossWarning = likelyLoss ? shouldIgnoreLikelyLossWarning(game, contractId) : false;
   const [infoOpen, setInfoOpen] = useState(false);
   const [confirmLossOpen, setConfirmLossOpen] = useState(false);
-  const [dayLaborPromptOpen, setDayLaborPromptOpen] = useState(false);
-  const [dayLaborPrepStartedAtMs, setDayLaborPrepStartedAtMs] = useState<number | null>(null);
-  const [dayLaborPrepNowMs, setDayLaborPrepNowMs] = useState(() => Date.now());
   const noDayLaborHoursRemaining = game.workday.ticksSpent >= game.workday.availableTicks;
-  const dayLaborPrepActive = isDayLabor && dayLaborPrepStartedAtMs !== null;
-  const dayLaborSkillRank = getSkillRank(game.player, job.primarySkill);
-  const dayLaborPrepDurationMs = getScaledDurationMs(DAY_LABOR_PREP_BASE_MS, dayLaborSkillRank);
-  const dayLaborPrepProgress = dayLaborPrepActive
-    ? clamp01((dayLaborPrepNowMs - (dayLaborPrepStartedAtMs ?? dayLaborPrepNowMs)) / dayLaborPrepDurationMs)
-    : 0;
 
   useEffect(() => {
-    setDayLaborPromptOpen(false);
-    setDayLaborPrepStartedAtMs(null);
+    setConfirmLossOpen(false);
   }, [contractId]);
-
-  useEffect(() => {
-    if (!dayLaborPrepActive) {
-      return;
-    }
-    const intervalId = window.setInterval(() => setDayLaborPrepNowMs(Date.now()), 100);
-    return () => window.clearInterval(intervalId);
-  }, [dayLaborPrepActive]);
-
-  useEffect(() => {
-    if (!dayLaborPrepActive || dayLaborPrepStartedAtMs === null) {
-      return;
-    }
-    const elapsedMs = Date.now() - dayLaborPrepStartedAtMs;
-    const remainingMs = Math.max(0, dayLaborPrepDurationMs - elapsedMs);
-    const timeoutId = window.setTimeout(() => {
-      setDayLaborPrepStartedAtMs(null);
-      onAccept(contractId);
-    }, remainingMs);
-    return () => window.clearTimeout(timeoutId);
-  }, [dayLaborPrepActive, dayLaborPrepStartedAtMs, dayLaborPrepDurationMs, onAccept, contractId]);
 
   function handleAcceptClick() {
     if (isDayLabor) {
@@ -336,7 +302,7 @@ function ContractDetails({
         onEndDay();
         return;
       }
-      setDayLaborPromptOpen(true);
+      onAccept(contractId);
       return;
     }
     if (likelyLoss && !ignoreLikelyLossWarning) {
@@ -349,12 +315,6 @@ function ContractDetails({
   function confirmLikelyLossAccept() {
     setConfirmLossOpen(false);
     onAccept(contractId);
-  }
-
-  function startDayLaborPrep() {
-    setDayLaborPromptOpen(false);
-    setDayLaborPrepNowMs(Date.now());
-    setDayLaborPrepStartedAtMs(Date.now());
   }
 
   return (
@@ -496,35 +456,16 @@ function ContractDetails({
       )}
       <div className="contract-detail-actions">
         {isDayLabor ? <p className="eyebrow">Task</p> : null}
-        {dayLaborPrepActive ? (
-          <div className="action-timer-card day-labor-prep-card">
-            <div className="section-label-row tight-row action-timer-meta">
-              <strong>Laboring...</strong>
-            </div>
-            <div
-              className="action-timer-track"
-              role="progressbar"
-              aria-label="Day Labor shift prep"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(dayLaborPrepProgress * 100)}
-            >
-              <span className="action-timer-fill tone-info" style={{ width: `${Math.round(dayLaborPrepProgress * 100)}%` }} />
-            </div>
-          </div>
-        ) : null}
         <button
           className={`${isDayLabor ? (noDayLaborHoursRemaining ? "day-labor-end-day-button" : "day-labor-shift-button") : "primary-button"} wide-button`}
           onClick={handleAcceptClick}
-          disabled={!hasTools || dayLaborPrepActive || (isDayLaborCoolingDown && !noDayLaborHoursRemaining)}
+          disabled={!hasTools || (isDayLaborCoolingDown && !noDayLaborHoursRemaining)}
         >
           {isDayLabor && noDayLaborHoursRemaining
             ? "End Day"
             : isDayLaborCoolingDown
               ? "Celebration Cooldown..."
-            : dayLaborPrepActive
-              ? "Laboring..."
-              : hasTools
+            : hasTools
                 ? isDayLabor
                   ? "Work Day Laborer Shift"
                   : "Accept Job"
@@ -534,26 +475,6 @@ function ContractDetails({
           <p className="day-labor-cooldown-copy">FX running. Day Labor will unlock in a moment.</p>
         ) : null}
       </div>
-      {dayLaborPromptOpen ? (
-        <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label="Day labor go to work prompt">
-          <article className="modal-shell chrome-card">
-            <div className="overlay-header">
-              <h3>Day Labor Callout</h3>
-              <button className="ghost-button" onClick={() => setDayLaborPromptOpen(false)}>
-                Cancel
-              </button>
-            </div>
-            <div className="overlay-body stack-list">
-              <p>A truck pulls up with room in the back for one more hombre. The driver says, “Órale, Holmes. You ready for work, ese?”</p>
-              <div className="action-row">
-                <button className="primary-button" onClick={startDayLaborPrep}>
-                  Go to Work
-                </button>
-              </div>
-            </div>
-          </article>
-        </div>
-      ) : null}
       {confirmLossOpen && economyPreview ? (
         <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label="Likely loss warning">
           <article className="modal-shell chrome-card">
@@ -678,10 +599,6 @@ function formatSignedMoney(value: number): string {
   return rounded >= 0 ? `+$${rounded}` : `-$${Math.abs(rounded)}`;
 }
 
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
-
 function isLikelyLossOffer(preview: ContractEconomyPreview | null): boolean {
   return Boolean(preview && preview.projectedNetOnSuccess < 0);
 }
@@ -804,3 +721,4 @@ function formatQuickBuyToolNames(toolNames: string[]): string {
   }
   return `${toolNames.slice(0, -1).join(", ")}, and ${toolNames[toolNames.length - 1]}`;
 }
+

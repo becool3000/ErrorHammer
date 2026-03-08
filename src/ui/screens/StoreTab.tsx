@@ -33,7 +33,7 @@ export function StoreTab() {
   const ownedStorageTools = storageTools.filter((tool) => Boolean(game.player.tools[tool.id])).length;
 
   return (
-    <section className="tab-panel store-tab">
+    <section className="tab-panel store-tab store-visibility-boost">
       {!canUseToolBench ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
       {starterGateActive ? (
         <p className="notice-banner">Truck-only mode: buy all starter tools, then open storage to unlock full tool access.</p>

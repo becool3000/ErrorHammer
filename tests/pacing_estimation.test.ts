@@ -56,6 +56,12 @@ function progressStarterKitAndStorage(state: GameState): { nextState: GameState;
     actionSeconds += SECONDS_PER_OFFICE_ACTION;
   }
 
+  if (!nextState.player.oshaCanOwned) {
+    // Pacing model: include one deterministic action for first out-of-gas rescue can acquisition.
+    nextState.player.oshaCanOwned = true;
+    actionSeconds += SECONDS_PER_OFFICE_ACTION;
+  }
+
   if (!nextState.operations.facilities.storageOwned) {
     const opened = openStorage(nextState, bundle);
     if (opened.nextState !== nextState) {

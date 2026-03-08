@@ -14,17 +14,20 @@ import {
   getAvailableContractOffers,
   getCurrentTask,
   getJobProfitRecap,
-  getGasStationStopPlan,
+  getOutOfGasRescuePlan,
   getOperatorLevel,
+  getManualGasStationPlan,
   getSkillRank,
   getTaskSkillMapping,
   getVisibleTaskActions,
   quickBuyMissingTools as quickBuyMissingToolsFlow,
+  resolveDayLaborMinigameResult as resolveDayLaborMinigameResultFlow,
   formatHours,
   ticksToHours,
   performTaskUnit as performTaskUnitFlow,
   returnToShopForTools as returnToShopForToolsFlow,
-  runGasStationStop as runGasStationStopFlow,
+  runManualGasStation as runManualGasStationFlow,
+  runOutOfGasRescue as runOutOfGasRescueFlow,
   setSupplierCartQuantity as setSupplierCartQuantityFlow,
   startResearch as startResearchFlow,
   openStorage as openStorageFlow,
@@ -44,6 +47,8 @@ import {
   ContractFilterId,
   CorePerkId,
   EncounterPayload,
+  DayLaborMinigameResult,
+  DigMinigameConfig,
   GameState,
   JobProfitRecap,
   RecoveryActionId,
@@ -53,6 +58,7 @@ import {
   TaskStance,
   TaskUnitResult
 } from "../core/types";
+import { DEFAULT_DIG_MINIGAME_CONFIG } from "../features/dayLaborDig/DigTypes";
 
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "office" | "contracts" | "store" | "company";
@@ -172,6 +178,12 @@ const DEFAULT_OFFICE_CATEGORY_SECTIONS: OfficeCategorySectionsState = {
 
 function getOfficeCategoryForSection(section: OfficeSectionId): OfficeCategoryId {
   return section === "accounting" ? "finance" : "operations";
+}
+
+export interface ActiveDayLaborMinigameState {
+  sessionId: number;
+  launchedAtMs: number;
+  config: DigMinigameConfig;
 }
 
 function rememberOfficeSectionByCategory(current: OfficeCategorySectionsState, section: OfficeSectionId): OfficeCategorySectionsState {
@@ -338,6 +350,7 @@ interface UiState {
   activeTaskResultPopup: ActionSummary | null;
   activeResultsScreen: ResultsScreenState | null;
   gameplayMutationLocked: boolean;
+  activeDayLaborMinigame: ActiveDayLaborMinigameState | null;
   uiTextScale: UiTextScale;
   uiColorMode: UiColorMode;
   uiFxMode: UiFxMode;
@@ -385,13 +398,18 @@ interface UiState {
   selectContract: (contractId: string | null) => void;
   clearNotice: () => void;
   dismissProgressPopup: () => void;
+  launchDayLaborMinigame: () => void;
+  restartDayLaborMinigame: () => void;
+  submitDayLaborMinigameResult: (result: DayLaborMinigameResult) => void;
+  forfeitDayLaborMinigame: () => void;
   acceptContract: (contractId: string) => void;
   setCartQuantity: (supplyId: string, quality: SupplyQuality, quantity: number) => void;
   performTaskUnit: (stance: TaskStance, allowOvertime?: boolean) => void;
   returnToShopForTools: () => void;
   endShift: () => void;
   buyFuel: (units?: number) => void;
-  runGasStationStop: () => void;
+  runManualGasStation: (mode?: "single" | "fill") => void;
+  runOutOfGasRescue: () => void;
   buyTool: (toolId: string) => void;
   repairTool: (toolId: string) => void;
   quickBuyTools: (contractId: string) => void;
@@ -933,8 +951,8 @@ function clearEncounterPopupTimer() {
   // Encounter popup is manual-dismiss only.
 }
 
-function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction" | "activeResultsScreen">): boolean {
-  return Boolean(state.timedTaskAction || state.activeResultsScreen);
+function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction" | "activeResultsScreen" | "activeDayLaborMinigame">): boolean {
+  return Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame);
 }
 
 function formatTimedActionLabel(game: GameState, taskId: TaskId): string {
@@ -971,7 +989,7 @@ function labelForRefuelAction(stance: TaskStance): string {
 }
 
 function getGameplayLockNotice(): string {
-  return "Action locked. Finish the current result screen or timer first.";
+  return "Action locked. Finish the current result screen, timer, or Day Labor run first.";
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
@@ -988,6 +1006,7 @@ export const useUiStore = create<UiState>((set, get) => ({
   lastAction: null,
   notice: "",
   timedTaskAction: null,
+  activeDayLaborMinigame: null,
   jobCompletionFx: null,
   activeEncounterPopup: null,
   activeTaskResultPopup: null,
@@ -1055,13 +1074,13 @@ export const useUiStore = create<UiState>((set, get) => ({
     clearJobCompletionFxTimer();
     set((state) => ({
       jobCompletionFx: null,
-      gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen)
+      gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame)
     }));
   },
   dismissResultsScreen: () => {
     set((state) => ({
       activeResultsScreen: null,
-      gameplayMutationLocked: Boolean(state.timedTaskAction)
+      gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeDayLaborMinigame)
     }));
   },
   dismissTaskResultPopup: () => {
@@ -1095,6 +1114,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       lastAction: null,
       notice: "",
       timedTaskAction: null,
+      activeDayLaborMinigame: null,
       jobCompletionFx: null,
       activeEncounterPopup: null,
       activeTaskResultPopup: null,
@@ -1132,6 +1152,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       game: loaded,
       notice: "",
       timedTaskAction: null,
+      activeDayLaborMinigame: null,
       jobCompletionFx: null,
       activeEncounterPopup: null,
       activeTaskResultPopup: null,
@@ -1160,6 +1181,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       officeCategorySections: { ...DEFAULT_OFFICE_CATEGORY_SECTIONS },
       notice: "",
       timedTaskAction: null,
+      activeDayLaborMinigame: null,
       jobCompletionFx: null,
       activeEncounterPopup: null,
       activeTaskResultPopup: null,
@@ -1423,6 +1445,117 @@ export const useUiStore = create<UiState>((set, get) => ({
     persistUiPrefsFromState(get());
   },
 
+  launchDayLaborMinigame: () => {
+    const currentState = get();
+    const current = currentState.game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(currentState)) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    if (currentState.dayLaborCelebrationActive) {
+      set({ notice: "Celebration cooldown active. Day Labor resumes in a few seconds." });
+      return;
+    }
+    if (current.workday.ticksSpent >= current.workday.availableTicks) {
+      set({ notice: "No shift hours remain for day labor." });
+      return;
+    }
+    set({
+      activeDayLaborMinigame: {
+        sessionId: Date.now(),
+        launchedAtMs: Date.now(),
+        config: { ...DEFAULT_DIG_MINIGAME_CONFIG }
+      },
+      gameplayMutationLocked: true,
+      activeModal: null,
+      activeSheet: null,
+      notice: ""
+    });
+  },
+
+  restartDayLaborMinigame: () => {
+    const session = get().activeDayLaborMinigame;
+    if (!session) {
+      return;
+    }
+    set({
+      activeDayLaborMinigame: {
+        ...session,
+        sessionId: session.sessionId + 1,
+        launchedAtMs: Date.now()
+      },
+      gameplayMutationLocked: true,
+      notice: ""
+    });
+  },
+
+  submitDayLaborMinigameResult: (minigameResult) => {
+    const currentState = get();
+    const current = currentState.game;
+    if (!current || !currentState.activeDayLaborMinigame) {
+      return;
+    }
+
+    const result = resolveDayLaborMinigameResultFlow(current, bundle, minigameResult);
+    const startedDayLaborCelebration = minigameResult.success && result.nextState !== current;
+    const summaryLines = [result.notice ?? "Worked a day-labor shift."];
+    const detailLines = [
+      `Mini-game score ${Math.max(0, Math.round(minigameResult.score))}`,
+      `Excavate ${Math.round(Math.max(0, Math.min(1, minigameResult.excavationAccuracy)) * 100)}%`,
+      `Backfill ${Math.round(Math.max(0, Math.min(1, minigameResult.backfillAccuracy)) * 100)}%`,
+      `Time ${(Math.max(0, minigameResult.timeUsedMs) / 1000).toFixed(1)}s`
+    ];
+    if (minigameResult.failureReason) {
+      detailLines.push(`Failure: ${minigameResult.failureReason}`);
+    }
+    const nextActionSummary = toSummary("Day Laborer", summaryLines, result.digest);
+    const resultsScreen = buildActionResults(current, result.nextState, {
+      title: nextActionSummary.title,
+      digest: nextActionSummary.digest,
+      summaryLines: nextActionSummary.lines,
+      notice: result.notice,
+      extraLines: detailLines
+    });
+
+    if (startedDayLaborCelebration) {
+      clearDayLaborCelebrationTimer();
+      dayLaborCelebrationTimer = setTimeout(() => {
+        useUiStore.setState({ dayLaborCelebrationActive: false });
+      }, DAY_LABOR_CELEBRATION_MS);
+    }
+
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      activeDayLaborMinigame: null,
+      activeTab: result.notice ? currentState.activeTab : "work",
+      selectedContractId: getDefaultContractId(result.nextState),
+      lastAction: nextActionSummary,
+      notice: result.notice ?? "",
+      dayLaborCelebrationActive: startedDayLaborCelebration ? true : currentState.dayLaborCelebrationActive,
+      activeJobProfitRecap: null,
+      activeTaskResultPopup: null,
+      activeResultsScreen: resultsScreen,
+      gameplayMutationLocked: Boolean(resultsScreen),
+      activeModal: null,
+      activeSheet: null
+    });
+  },
+
+  forfeitDayLaborMinigame: () => {
+    get().submitDayLaborMinigameResult({
+      success: false,
+      score: 0,
+      excavationAccuracy: 0,
+      backfillAccuracy: 0,
+      timeUsedMs: 0,
+      failureReason: "Shift forfeited."
+    });
+  },
+
   acceptContract: (contractId) => {
     const current = get().game;
     if (!current) {
@@ -1436,26 +1569,21 @@ export const useUiStore = create<UiState>((set, get) => ({
       set({ notice: "Celebration cooldown active. Day Labor resumes in a few seconds." });
       return;
     }
+    if (contractId === DAY_LABOR_CONTRACT_ID) {
+      get().launchDayLaborMinigame();
+      return;
+    }
     const result = acceptContractFlow(current, bundle, contractId);
-    const startedDayLaborCelebration = contractId === DAY_LABOR_CONTRACT_ID && result.nextState !== current;
     const nextActionSummary =
-        contractId === DAY_LABOR_CONTRACT_ID
-          ? toSummary("Day Laborer", [result.notice ?? "Worked a day-labor shift."], result.digest)
-          : result.payload
-          ? toSummary("Contract Accepted", [formatAcceptedContractLine(result.payload.jobId)], result.digest)
-          : get().lastAction;
+      result.payload
+        ? toSummary("Contract Accepted", [formatAcceptedContractLine(result.payload.jobId)], result.digest)
+        : get().lastAction;
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary?.title ?? "Action Result",
       digest: nextActionSummary?.digest ?? result.digest,
       summaryLines: nextActionSummary?.lines,
       notice: result.notice
     });
-    if (startedDayLaborCelebration) {
-      clearDayLaborCelebrationTimer();
-      dayLaborCelebrationTimer = setTimeout(() => {
-        useUiStore.setState({ dayLaborCelebrationActive: false });
-      }, DAY_LABOR_CELEBRATION_MS);
-    }
     saveGame(result.nextState);
     set({
       game: result.nextState,
@@ -1463,7 +1591,6 @@ export const useUiStore = create<UiState>((set, get) => ({
       selectedContractId: getDefaultContractId(result.nextState),
       lastAction: nextActionSummary,
       notice: result.notice ?? "",
-      dayLaborCelebrationActive: startedDayLaborCelebration ? true : get().dayLaborCelebrationActive,
       activeJobProfitRecap: null,
       activeTaskResultPopup: null,
       activeResultsScreen: resultsScreen,
@@ -1537,6 +1664,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       gameplayMutationLocked: true,
       notice: "",
       activeSheet: null,
+      activeEncounterPopup: null,
       activeTaskResultPopup: null,
       activeResultsScreen: null
     });
@@ -1574,6 +1702,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       const result = performTaskUnitFlow(latestGame, bundle, pending.stance, pending.allowOvertime);
       const progressUpdates = buildProgressPopups(latestGame, result.nextState, result.payload);
       const taskResultSummary = result.payload ? toSummary("Task Result", buildTaskResultLines(result.payload), result.payload.digest) : null;
+      const encounterPopup = result.payload?.encounter ? createEncounterPopupState(result.payload.encounter, result.digest) : null;
       const resultsScreen = taskResultSummary
         ? buildActionResults(latestGame, result.nextState, {
             title: taskResultSummary.title,
@@ -1604,7 +1733,7 @@ export const useUiStore = create<UiState>((set, get) => ({
           jobCompletionFxTimer = null;
           useUiStore.setState((state) => ({
             jobCompletionFx: null,
-            gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen)
+            gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame)
           }));
         }, completionFxState.durationMs);
       }
@@ -1617,7 +1746,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         selectedContractId: getDefaultContractId(result.nextState),
         timedTaskAction: null,
         activeJobProfitRecap: recap,
-        activeEncounterPopup: null,
+        activeEncounterPopup: encounterPopup,
         activeTaskResultPopup: null,
         activeResultsScreen: resultsScreen,
         jobCompletionFx: completionFxState ?? latest.jobCompletionFx,
@@ -1732,7 +1861,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     });
   },
 
-  runGasStationStop: () => {
+  runManualGasStation: (mode = "single") => {
     const current = get().game;
     if (!current) {
       return;
@@ -1741,12 +1870,52 @@ export const useUiStore = create<UiState>((set, get) => ({
       set({ notice: getGameplayLockNotice() });
       return;
     }
-    const planBefore = getGasStationStopPlan(current, bundle);
-    const result = runGasStationStopFlow(current, bundle);
+    const planBefore = getManualGasStationPlan(current, mode);
+    const result = runManualGasStationFlow(current, mode);
     const nextActionSummary =
       result.payload ?? planBefore
         ? toSummary(
-            "Gas Station Run",
+            "Travel To Gas Station",
+            [
+              `Fuel now at ${result.nextState.player.fuel}/${result.nextState.player.fuelMax}.`,
+              `Cash now at $${result.nextState.player.cash}.`
+            ],
+            result.digest
+          )
+        : get().lastAction;
+    const resultsScreen = nextActionSummary
+      ? buildActionResults(current, result.nextState, {
+          title: nextActionSummary.title,
+          digest: nextActionSummary.digest,
+          summaryLines: nextActionSummary.lines,
+          notice: result.notice
+        })
+      : null;
+    saveGame(result.nextState);
+    set({
+      game: result.nextState,
+      lastAction: nextActionSummary,
+      notice: result.notice ?? "",
+      activeResultsScreen: resultsScreen,
+      gameplayMutationLocked: Boolean(resultsScreen)
+    });
+  },
+
+  runOutOfGasRescue: () => {
+    const current = get().game;
+    if (!current) {
+      return;
+    }
+    if (isGameplayMutationBlocked(get())) {
+      set({ notice: getGameplayLockNotice() });
+      return;
+    }
+    const planBefore = getOutOfGasRescuePlan(current, bundle);
+    const result = runOutOfGasRescueFlow(current, bundle);
+    const nextActionSummary =
+      result.payload ?? planBefore
+        ? toSummary(
+            "Out-Of-Gas Rescue",
             [
               `Fuel now at ${result.nextState.player.fuel}/${result.nextState.player.fuelMax}.`,
               `Cash now at $${result.nextState.player.cash}.`

@@ -42,7 +42,7 @@ function buildContractsForRequiredBabaSkills(): ContractInstance[] {
 }
 
 describe("Baba quick buy starter progression", () => {
-  it("quick-buy stays unblocked pre-storage and eventually completes the starter kit across main Baba skill types", () => {
+  it("quick-buy stays unblocked pre-storage and completes starter tools before OSHA can gate", () => {
     let state = createInitialGameState(bundle, 9701);
     state.player.cash = 10_000;
     state.player.tools = {};
@@ -61,7 +61,12 @@ describe("Baba quick buy starter progression", () => {
     }
 
     const starterProgress = getStarterKitProgress(state.player);
-    expect(starterProgress.allOwned).toBe(true);
+    expect(starterProgress.allOwned).toBe(false);
     expect(starterProgress.missingToolIds).toEqual([]);
+    expect(starterProgress.missingOshaCan).toBe(true);
+
+    state.player.oshaCanOwned = true;
+    const completedStarterKit = getStarterKitProgress(state.player);
+    expect(completedStarterKit.allOwned).toBe(true);
   });
 });

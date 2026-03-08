@@ -75,8 +75,8 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
     const snapshot = getTradeIndexSnapshot(game);
     const playerEntry = snapshot.entries.find((entry) => entry.isPlayer) ?? snapshot.entries[0] ?? null;
     return (
-      <section className="stack-block">
-        <article className="chrome-card inset-card trade-index-list">
+      <section className="stack-block competitor-news-surface">
+        <article className="chrome-card inset-card trade-index-list competitor-news-panel">
           <div className="section-label-row">
             <div>
               <p className="eyebrow">Trade Index</p>
@@ -91,7 +91,10 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
           </div>
           <div className="stack-list">
             {snapshot.entries.map((entry) => (
-              <article key={entry.actorId} className={entry.isPlayer ? "task-summary trade-index-row trade-index-you" : "task-summary trade-index-row"}>
+              <article
+                key={entry.actorId}
+                className={entry.isPlayer ? "task-summary trade-index-row trade-index-you competitor-news-row" : "task-summary trade-index-row competitor-news-row"}
+              >
                 <div className="section-label-row tight-row">
                   <span className="trade-index-rank">#{entry.rank}</span>
                   <strong>{entry.name}</strong>
@@ -107,7 +110,7 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
             ))}
           </div>
         </article>
-        <article className="chrome-card inset-card">
+        <article className="chrome-card inset-card competitor-news-panel">
           <div className="section-label-row">
             <div>
               <p className="eyebrow">Competitor News</p>
@@ -117,7 +120,7 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
           </div>
           <div className="stack-list">
             {bundle.bots.map((bot) => (
-              <article key={bot.id} className="task-summary">
+              <article key={bot.id} className="task-summary competitor-news-row">
                 <p className="eyebrow">{bot.name}</p>
                 <p>{obfuscateReadableText(game, bot.flavorLines.join(" "), `bot:${bot.id}:rumor`)}</p>
               </article>

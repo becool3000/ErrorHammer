@@ -6,7 +6,8 @@ import {
   MINIMUM_WAGE_PER_HOUR,
   createInitialWorkday,
   formatSupplyQuality,
-  getGasStationStopPlan,
+  getManualGasStationPlan,
+  getOutOfGasRescuePlan,
   getAvailableContractOffers,
   getContractAutoBidPreview,
   getContractEconomyPreview,
@@ -21,9 +22,12 @@ import {
   performTaskUnit,
   quickBuyMissingTools,
   returnToShopForTools,
-  runGasStationStop,
+  runDayLaborShift,
+  runManualGasStation,
+  runOutOfGasRescue,
   setActiveJobAssignee,
-  setSupplierCartQuantity
+  setSupplierCartQuantity,
+  prepareForNextDay
 } from "../src/core/playerFlow";
 import { clear as clearSave, hasIncompatibleLegacySave, load as loadSave, save as saveState } from "../src/core/save";
 import { createInitialGameState, endShift, repairTool, buyTool } from "../src/core/resolver";
@@ -371,47 +375,177 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(guidance).toContain("Anchor Set +2");
   });
 
-  it("EH-TW-062: refuel task can add fuel before route travel", () => {
-    const { bundle, state } = acceptJob(3301, "job-beta-contract");
-    let currentState = { ...state, player: { ...state.player, fuel: 0, cash: 0 } };
+  it("EH-TW-062: zero-fuel rescue succeeds with first-time OSHA can purchase", () => {
+    const { bundle, state } = fastForwardToTask(3301, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 0;
+    state.player.cash = 150;
+    state.player.oshaCanOwned = false;
 
-    expect(getCurrentTask(currentState)?.taskId).toBe("load_from_shop");
-    let guard = 0;
-    while (getCurrentTask(currentState)?.taskId !== "refuel_at_station") {
-      const step = performTaskUnit(currentState, bundle, "standard", true);
-      expect(step.notice).toBeFalsy();
-      currentState = step.nextState;
-      guard += 1;
-      if (guard > 10) {
-        throw new Error(`Could not reach refuel task. Current task: ${getCurrentTask(currentState)?.taskId ?? "none"}`);
-      }
-    }
+    const plan = getOutOfGasRescuePlan(state, bundle);
+    expect(plan).not.toBeNull();
+    expect(plan?.canCost).toBe(25);
+    expect(plan?.fuelCost).toBe(5);
+    expect(plan?.totalCost).toBe(30);
+    expect(plan?.requiredTicks).toBe(2);
 
-    const refueled = performTaskUnit(currentState, bundle, "careful");
-    expect(refueled.notice).toBeFalsy();
-    expect(refueled.payload?.taskId).toBe("refuel_at_station");
-    expect(refueled.nextState.player.fuel).toBeGreaterThan(0);
-    expect(refueled.nextState.player.cash).toBeLessThanOrEqual(0);
-    expect(getCurrentTask(refueled.nextState)?.taskId).toBe("travel_to_supplier");
+    const beforeTicks = state.workday.ticksSpent;
+    const beforeCash = state.player.cash;
+    const beforeAccountingXp = state.officeSkills.accountingXp;
+    const rescued = runOutOfGasRescue(state, bundle);
+
+    expect(rescued.notice).toContain("bought OSHA can");
+    expect(rescued.nextState.player.oshaCanOwned).toBe(true);
+    expect(rescued.nextState.player.fuel).toBe(1);
+    expect(rescued.nextState.player.cash).toBe(beforeCash - 30);
+    expect(rescued.nextState.workday.ticksSpent).toBe(beforeTicks + 2);
+    expect(rescued.nextState.officeSkills.accountingXp).toBe(beforeAccountingXp + 10);
   });
 
-  it("EH-TW-126: standard refuel action skips purchase and advances the task", () => {
-    const { bundle, state } = acceptJob(3302, "job-beta-contract");
-    let currentState = { ...state, player: { ...state.player, fuel: 2, cash: 200 } };
+  it("EH-TW-126: zero-fuel rescue charges fuel-only once OSHA can is already owned", () => {
+    const { bundle, state } = fastForwardToTask(3302, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 0;
+    state.player.cash = 120;
+    state.player.oshaCanOwned = true;
 
-    while (getCurrentTask(currentState)?.taskId !== "refuel_at_station") {
-      currentState = performTaskUnit(currentState, bundle, "standard", true).nextState;
-    }
+    const plan = getOutOfGasRescuePlan(state, bundle);
+    expect(plan).not.toBeNull();
+    expect(plan?.canCost).toBe(0);
+    expect(plan?.fuelCost).toBe(5);
+    expect(plan?.totalCost).toBe(5);
 
-    const beforeFuel = currentState.player.fuel;
-    const skipped = performTaskUnit(currentState, bundle, "standard");
-    expect(skipped.notice).toBeFalsy();
-    expect(skipped.payload?.taskId).toBe("refuel_at_station");
-    expect(skipped.nextState.player.fuel).toBe(beforeFuel);
-    expect(skipped.payload?.logLines.some((line) => /Skipped refuel/i.test(line))).toBe(true);
+    const beforeCash = state.player.cash;
+    const rescued = runOutOfGasRescue(state, bundle);
+    expect(rescued.notice).toContain("Walked to nearest gas station");
+    expect(rescued.notice).not.toContain("bought OSHA can");
+    expect(rescued.nextState.player.oshaCanOwned).toBe(true);
+    expect(rescued.nextState.player.fuel).toBe(1);
+    expect(rescued.nextState.player.cash).toBe(beforeCash - 5);
   });
 
-  it("EH-TW-127: full tank at acceptance skips the gas-station task", () => {
+  it("EH-TW-243: zero-fuel rescue blocks on low cash, then Day Labor enables rescue retry", () => {
+    const { bundle, state } = fastForwardToTask(3304, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 0;
+    state.player.cash = 0;
+    state.player.oshaCanOwned = false;
+
+    const blockedPlan = getOutOfGasRescuePlan(state, bundle);
+    expect(blockedPlan).not.toBeNull();
+    expect(blockedPlan?.cashShortfall).toBe(30);
+
+    const blocked = runOutOfGasRescue(state, bundle);
+    expect(blocked.notice).toContain("Work Day Laborer Shift");
+    expect(blocked.nextState.player.fuel).toBe(0);
+    expect(blocked.nextState.player.cash).toBe(0);
+
+    const dayLabor = runDayLaborShift(blocked.nextState, bundle);
+    expect(dayLabor.nextState.player.cash).toBeGreaterThanOrEqual(30);
+    const nextDay = prepareForNextDay(dayLabor.nextState);
+    const beforeCash = nextDay.player.cash;
+    const rescued = runOutOfGasRescue(nextDay, bundle);
+
+    expect(rescued.notice).toContain("bought OSHA can");
+    expect(rescued.nextState.player.fuel).toBe(1);
+    expect(rescued.nextState.player.cash).toBe(beforeCash - 30);
+    expect(rescued.nextState.player.oshaCanOwned).toBe(true);
+  });
+
+  it("EH-TW-257: manual gas station +1 run buys first OSHA can, adds fuel, and spends travel time", () => {
+    const { state } = fastForwardToTask(3310, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 2;
+    state.player.cash = 120;
+    state.player.oshaCanOwned = false;
+
+    const plan = getManualGasStationPlan(state, "single");
+    expect(plan).not.toBeNull();
+    expect(plan?.canCost).toBe(25);
+    expect(plan?.fuelCost).toBe(5);
+    expect(plan?.totalCost).toBe(30);
+    expect(plan?.requiredTicks).toBe(2);
+
+    const beforeTicks = state.workday.ticksSpent;
+    const beforeTaskTicks = state.activeJob?.actualTicksSpent ?? 0;
+    const beforeLocation = state.activeJob?.location;
+    const beforeCash = state.player.cash;
+
+    const fueled = runManualGasStation(state, "single");
+    expect(fueled.notice).toContain("bought OSHA can");
+    expect(fueled.nextState.player.oshaCanOwned).toBe(true);
+    expect(fueled.nextState.player.fuel).toBe(3);
+    expect(fueled.nextState.player.cash).toBe(beforeCash - 30);
+    expect(fueled.nextState.workday.ticksSpent).toBe(beforeTicks + 2);
+    expect(fueled.nextState.activeJob?.actualTicksSpent).toBe(beforeTaskTicks + 2);
+    expect(fueled.nextState.activeJob?.location).toBe(beforeLocation);
+  });
+
+  it("EH-TW-258: manual gas station charges fuel-only once OSHA can is owned", () => {
+    const { state } = fastForwardToTask(3311, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 2;
+    state.player.cash = 90;
+    state.player.oshaCanOwned = true;
+
+    const plan = getManualGasStationPlan(state, "single");
+    expect(plan).not.toBeNull();
+    expect(plan?.canCost).toBe(0);
+    expect(plan?.fuelCost).toBe(5);
+    expect(plan?.totalCost).toBe(5);
+
+    const beforeCash = state.player.cash;
+    const fueled = runManualGasStation(state, "single");
+    expect(fueled.notice).not.toContain("OSHA can");
+    expect(fueled.nextState.player.fuel).toBe(3);
+    expect(fueled.nextState.player.cash).toBe(beforeCash - 5);
+  });
+
+  it("EH-TW-259: manual fill run respects tank max and blocks when cash is short", () => {
+    const { state } = fastForwardToTask(3312, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 35;
+    state.player.cash = 20;
+    state.player.oshaCanOwned = true;
+
+    const blockedPlan = getManualGasStationPlan(state, "fill");
+    expect(blockedPlan).not.toBeNull();
+    expect(blockedPlan?.fuelAdded).toBe(5);
+    expect(blockedPlan?.totalCost).toBe(25);
+    expect(blockedPlan?.cashShortfall).toBe(5);
+
+    const blocked = runManualGasStation(state, "fill");
+    expect(blocked.notice).toContain("Need $5 more");
+    expect(blocked.nextState.player.fuel).toBe(35);
+
+    blocked.nextState.player.cash = 50;
+    const filled = runManualGasStation(blocked.nextState, "fill");
+    expect(filled.nextState.player.fuel).toBe(40);
+    expect(filled.nextState.player.cash).toBe(25);
+  });
+
+  it("EH-TW-260: manual station is unavailable at zero fuel while rescue remains available", () => {
+    const { bundle, state } = fastForwardToTask(3313, "job-beta-contract", "travel_to_supplier");
+    state.player.fuel = 0;
+    state.player.cash = 120;
+    state.player.oshaCanOwned = false;
+
+    expect(getManualGasStationPlan(state, "single")).toBeNull();
+    const manual = runManualGasStation(state, "single");
+    expect(manual.notice).toContain("Need at least 1 fuel");
+    expect(manual.nextState.player.fuel).toBe(0);
+
+    const rescuePlan = getOutOfGasRescuePlan(state, bundle);
+    expect(rescuePlan).not.toBeNull();
+  });
+
+  it("EH-TW-261: manual station run returns to the same active-job location after travel", () => {
+    const { state } = fastForwardToTask(3314, "job-beta-contract", "checkout_supplies");
+    state.player.fuel = 3;
+    state.player.cash = 120;
+    state.player.oshaCanOwned = true;
+    const beforeLocation = state.activeJob?.location;
+
+    const fueled = runManualGasStation(state, "single");
+    expect(beforeLocation).toBe("supplier");
+    expect(fueled.nextState.activeJob?.location).toBe(beforeLocation);
+  });
+
+  it("EH-TW-127: accepted jobs keep refuel task id for compatibility but never require refuel units", () => {
     const { bundle } = acceptJob(3303, "job-beta-contract");
     const state = createInitialGameState(bundle, 3303);
     unlockTradeResearch(state);
@@ -424,6 +558,7 @@ describe("TW-004 deterministic scenario suite", () => {
     const accepted = acceptContract(state, bundle, "job-beta-contract");
     const refuelTask = accepted.nextState.activeJob?.tasks.find((task) => task.taskId === "refuel_at_station");
     expect(refuelTask?.requiredUnits).toBe(0);
+    expect(getCurrentTask(accepted.nextState)?.taskId).not.toBe("refuel_at_station");
   });
 
   it("EH-TW-026: rush increases fast and rework frequency against standard across seeds", () => {
@@ -541,7 +676,7 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(nextDay.nextState.contractBoard).toEqual([]);
     expect(getSupplyQuantity(nextDay.nextState.activeJob?.siteSupplies ?? {}, "wire-spool", "medium")).toBe(1);
     expect(nextDay.nextState.activeJob?.location).toBe("shop");
-    expect(getCurrentTask(nextDay.nextState)?.taskId).toBe("refuel_at_station");
+    expect(getCurrentTask(nextDay.nextState)?.taskId).toBe("travel_to_job_site");
     expect(nextDay.nextState.day).toBe(2);
   });
 
@@ -566,7 +701,7 @@ describe("TW-004 deterministic scenario suite", () => {
     const checkoutSupplies = nextDay.nextState.activeJob?.tasks.find((task) => task.taskId === "checkout_supplies");
 
     expect(nextDay.nextState.activeJob?.location).toBe("shop");
-    expect(currentTask?.taskId).toBe("refuel_at_station");
+    expect(currentTask?.taskId).toBe("travel_to_supplier");
     expect((travelToSupplier?.requiredUnits ?? 0) - (travelToSupplier?.completedUnits ?? 0)).toBe(1);
     expect((checkoutSupplies?.requiredUnits ?? 0) - (checkoutSupplies?.completedUnits ?? 0)).toBe(1);
   });

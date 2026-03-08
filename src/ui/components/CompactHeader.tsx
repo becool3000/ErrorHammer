@@ -130,12 +130,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           <button className="ghost-button hud-reading-toggle" aria-expanded={readingInfoOpen} onClick={() => setReadingInfoOpen((open) => !open)}>
             Reading obfuscated due to low XP
           </button>
-          {readingInfoOpen ? (
-            <p className="muted-copy">
-              Reading Clarity {readingMeta.clarityPercent}%: some words are scrambled. Improve reading clarity by gaining Reading XP through contract actions,
-              task work, and tool/supply management. Every +25% clarity reduces obfuscation. Full clarity at 95%.
-            </p>
-          ) : null}
+          {readingInfoOpen ? <p className="muted-copy">Reading XP {game.officeSkills.readingXp} | Clarity {readingMeta.clarityPercent}%</p> : null}
         </div>
       ) : null}
       {isFatigued ? (

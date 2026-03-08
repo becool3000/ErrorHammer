@@ -5,13 +5,13 @@
 3. Expand management depth through Office systems without destabilizing core field gameplay.
 4. Preserve dark visual identity while keeping action-critical UI readable on small devices.
 
-## Current Verified Baseline (`main`, 2026-03-06)
+## Current Verified Baseline (`main`, 2026-03-07)
 1. Trade baseline remains expanded: 50 supported trade skills, 188 trade jobs, 10 bots, and compact rotating mobile contracts.
 2. Business progression is storage-first: `truck -> storage -> office -> yard` with cash-only facility unlocks.
 3. Economy remains monthly-lump (22-shift cycle) with unpaid carry, late fees, strike tracking, and tiered collapse behavior.
 4. Core Perks remain deterministic modifiers layered on trade-skill rolls.
 5. ReleaseOps baseline remains implemented with build IDs, changelog gates, platform manifests, and runtime build metadata surfaces.
-6. Planner reset governance remains active, and storage-first Company flow chain `PLN-024` is now the active implementation focus.
+6. Planner reset governance remains active, and out-of-gas rescue/starter-can chain `PLN-025` is now the active implementation focus.
 
 ## Planner Reset `PLN-019` (2026-03-06)
 ### Goal
@@ -31,9 +31,28 @@
 1. Live board contains active replacement chains (`PLN-020`, `PLN-022`, `PLN-023`) plus supersession references for replaced chain cards.
 2. Legacy `DONE` and parked unfinished cards are moved to a dated archive ledger.
 3. Every superseded legacy card has one explicit `legacy -> replacement` mapping row.
-4. `Vision.md`, `Decisions.md`, and `Tasks.md` consistently reference active chain IDs `PLN-019`, `PLN-020`, `PLN-022`, `PLN-023`, and `PLN-024`.
+4. `Vision.md`, `Decisions.md`, and `Tasks.md` consistently reference active chain IDs `PLN-019`, `PLN-020`, `PLN-022`, `PLN-023`, `PLN-024`, and `PLN-025`.
 
-## Planner Chain `PLN-024` (Storage-First Company Flow)
+## Planner Chain `PLN-025` (Out-Of-Gas Rescue + OSHA Can Starter-Kit Gate)
+### Goal
+1. Replace mandatory gas-station stop progression with deterministic zero-fuel rescue flow.
+2. Increase player/bot tank capacity to `40` while keeping start fuel at `8`.
+3. Require OSHA can ownership in the starter-kit gate before storage unlock.
+4. Enforce cash-only rescue behavior with day-labor guidance on shortfall.
+
+### Constraints
+1. Preserve deterministic progression and save/runtime compatibility (`refuel_at_station` id retained for compatibility only).
+2. Keep nearest-station handling flavor-only (no map or station entities in this scope).
+3. Keep quick-buy non-starter storage gate behavior unchanged.
+4. Keep bot parity deterministic with rescue/day-labor fallback behavior.
+
+### Acceptance Criteria
+1. No mandatory refuel stop units are required in accepted/rolled-over tasks; zero-fuel blocks use rescue flow instead.
+2. Rescue costs are deterministic: first rescue `$25` can + `$5` fuel, later rescues `$5` fuel only, with no on-account debt.
+3. Starter-kit completion and storage unlock require tools plus OSHA can.
+4. UI and deterministic tests reflect rescue action/copy/cost breakdown and day-labor fallback guidance.
+
+## Planner Chain `PLN-024` (Storage-First Company Flow, Superseded by `PLN-025`)
 ### Goal
 1. Shift facilities to cash-only progression with explicit `Truck -> Storage -> Office -> Yard` unlock order.
 2. Gate pre-storage play behind a strict 6-tool starter kit and truck-limited inventory model.
@@ -51,8 +70,8 @@
 4. Company UI surfaces show Storage-first facilities flow and `R&D` renders Company-only content.
 
 ## Next Focus
-1. Complete `BLD-024` + `TW-024` + `VF-024` + `DOC-024` for storage-first Company flow closeout.
-2. Keep `BLD-022` as next Builder pull after 024 chain verification closeout unless Planner explicitly reorders.
+1. Complete `BLD-025` + `TW-025` + `VF-025` + `DOC-025` for out-of-gas rescue and OSHA can starter-kit gate closeout.
+2. Keep `BLD-022` as next Builder pull after 025 chain verification closeout unless Planner explicitly reorders.
 3. Keep ReleaseOps continuation (`020` chain) queued and documented under current lane dependencies.
 4. Continue archiving closed/superseded history outside the live board to maintain clean lane execution.
 

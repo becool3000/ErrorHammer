@@ -62,7 +62,8 @@ export function createInitialGameState(
     staminaMax: 4,
     stamina: 4,
     fuel: 8,
-    fuelMax: 12,
+    fuelMax: 40,
+    oshaCanOwned: false,
     skills: createInitialSkills(),
     tools: {},
     crews: []

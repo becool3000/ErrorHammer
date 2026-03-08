@@ -216,12 +216,99 @@ describe("competitor parity engine", () => {
     expect((progressedDoWork?.completedUnits ?? 0) > beforeUnits || (simulated.career.activeJob?.actualTicksSpent ?? 0) > 0).toBe(true);
   });
 
+  it("runs proactive manual gas-station top-up when active job fuel is low", () => {
+    const bundle = makeScenarioBundle();
+    const world = createInitialGameState(bundle, 1105);
+    const profile = bundle.bots[0]!;
+    let career = world.botCareers[0]!;
+    career.actor.cash = 300;
+    career.actor.fuel = 2;
+    career.actor.oshaCanOwned = true;
+    career.actor.tools.hammer = { toolId: "hammer", durability: 6 };
+    career.tradeProgress.unlocked.carpenter = true;
+    career.tradeProgress.unlockedDay.carpenter = world.day;
+    career.contractBoard = [
+      {
+        contractId: "bot-alpha-contract",
+        jobId: "job-alpha",
+        districtId: "residential",
+        payoutMult: 1,
+        expiresDay: world.day
+      }
+    ];
+
+    const asState = careerToGameState(career, world);
+    const accepted = acceptContract(asState, bundle, "bot-alpha-contract");
+    career = stateToCareer(accepted.nextState);
+
+    const simulated = simulateBotCareerDay(career, profile, world, bundle, {
+      completedDay: world.day,
+      sharedEventIds: world.activeEventIds,
+      daySeed: 1004
+    });
+
+    expect(simulated.dayLog.some((entry) => /Manual gas station run/i.test(entry.message))).toBe(true);
+  });
+
+  it("keeps zero-fuel bot recovery on rescue/day-labor path (no manual station at 0 fuel)", () => {
+    const bundle = makeScenarioBundle();
+    const world = createInitialGameState(bundle, 1106);
+    const profile = bundle.bots[0]!;
+    let career = world.botCareers[0]!;
+    career.actor.cash = 0;
+    career.actor.fuel = 1;
+    career.actor.oshaCanOwned = false;
+    career.actor.tools.hammer = { toolId: "hammer", durability: 6 };
+    career.tradeProgress.unlocked.carpenter = true;
+    career.tradeProgress.unlockedDay.carpenter = world.day;
+    career.contractBoard = [
+      {
+        contractId: "bot-alpha-contract",
+        jobId: "job-alpha",
+        districtId: "residential",
+        payoutMult: 1,
+        expiresDay: world.day
+      }
+    ];
+
+    const asState = careerToGameState(career, world);
+    const accepted = acceptContract(asState, bundle, "bot-alpha-contract");
+    if (!accepted.nextState.activeJob) {
+      throw new Error("Expected bot active job for zero-fuel fallback test.");
+    }
+    const forcedZeroFuel = accepted.nextState;
+    forcedZeroFuel.player.fuel = 0;
+    forcedZeroFuel.player.cash = 0;
+    forcedZeroFuel.activeJob = {
+      ...forcedZeroFuel.activeJob,
+      location: "shop",
+      tasks: forcedZeroFuel.activeJob.tasks.map((task) =>
+        task.taskId === "load_from_shop" || task.taskId === "refuel_at_station"
+          ? { ...task, completedUnits: task.requiredUnits || 1 }
+          : task.taskId === "travel_to_supplier"
+            ? { ...task, requiredUnits: 1, completedUnits: 0 }
+            : task
+      )
+    };
+    career = stateToCareer(forcedZeroFuel);
+
+    const simulated = simulateBotCareerDay(career, profile, world, bundle, {
+      completedDay: world.day,
+      sharedEventIds: world.activeEventIds,
+      daySeed: 1005
+    });
+
+    expect(simulated.dayLog.some((entry) => /day-labor shift/i.test(entry.message))).toBe(true);
+    expect(simulated.dayLog.some((entry) => /Manual gas station run/i.test(entry.message))).toBe(false);
+  });
+
   it("applies deterministic facility, research, and perk progression policies", () => {
     const bundle = makeScenarioBundle();
     const world = createInitialGameState(bundle, 1104);
     const profile = bundle.bots[0]!;
     const career = world.botCareers[0]!;
     career.actor.cash = 8000;
+    career.actor.oshaCanOwned = true;
     career.perks.corePerkPoints = 2;
 
     const simulated = simulateBotCareerDay(career, profile, world, bundle, {

@@ -34,6 +34,92 @@ function installLocalStorage() {
   return store;
 }
 
+function installMatchMediaStub(matches: boolean) {
+  const originalMatchMedia = window.matchMedia;
+  const mediaQueryList = {
+    matches,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  } as unknown as MediaQueryList;
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockReturnValue(mediaQueryList)
+  });
+  return () => {
+    if (originalMatchMedia) {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        writable: true,
+        value: originalMatchMedia
+      });
+      return;
+    }
+    Reflect.deleteProperty(window, "matchMedia");
+  };
+}
+
+function installImmediateAnimationFrame() {
+  const originalRequestAnimationFrame = window.requestAnimationFrame;
+  const originalCancelAnimationFrame = window.cancelAnimationFrame;
+  const pendingFrames = new Map<number, ReturnType<typeof setTimeout>>();
+  let frameHandle = 0;
+  Object.defineProperty(window, "requestAnimationFrame", {
+    configurable: true,
+    writable: true,
+    value: ((callback: FrameRequestCallback) => {
+      frameHandle += 1;
+      const handle = frameHandle;
+      const timeoutId = setTimeout(() => {
+        pendingFrames.delete(handle);
+        callback(16);
+      }, 0);
+      pendingFrames.set(handle, timeoutId);
+      return handle;
+    }) as typeof window.requestAnimationFrame
+  });
+  Object.defineProperty(window, "cancelAnimationFrame", {
+    configurable: true,
+    writable: true,
+    value: ((handle: number) => {
+      const timeoutId = pendingFrames.get(handle);
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+        pendingFrames.delete(handle);
+      }
+    }) as typeof window.cancelAnimationFrame
+  });
+  return () => {
+    for (const timeoutId of pendingFrames.values()) {
+      clearTimeout(timeoutId);
+    }
+    pendingFrames.clear();
+    if (originalRequestAnimationFrame) {
+      Object.defineProperty(window, "requestAnimationFrame", {
+        configurable: true,
+        writable: true,
+        value: originalRequestAnimationFrame
+      });
+    } else {
+      Reflect.deleteProperty(window, "requestAnimationFrame");
+    }
+    if (originalCancelAnimationFrame) {
+      Object.defineProperty(window, "cancelAnimationFrame", {
+        configurable: true,
+        writable: true,
+        value: originalCancelAnimationFrame
+      });
+      return;
+    }
+    Reflect.deleteProperty(window, "cancelAnimationFrame");
+  };
+}
+
 function resetUi() {
   useUiStore.setState({
     screen: "title",
@@ -282,6 +368,7 @@ describe("compact shell ui", () => {
     const appRoot = document.querySelector(".app-root");
     expect(appRoot?.getAttribute("data-text-scale")).toBe("default");
     expect(appRoot?.getAttribute("data-color-mode")).toBe("neon");
+    expect(appRoot?.getAttribute("data-fx-mode")).toBe("full");
   });
 
   it("EH-TW-064: selecting text size updates the app scale attribute", () => {
@@ -315,6 +402,91 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(document.querySelector(".app-root")?.getAttribute("data-text-scale")).toBe("xlarge");
+  });
+
+  it("EH-TW-276: selecting FX intensity updates the root fx-mode attribute", () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: "Margo" } });
+    fireEvent.change(screen.getByLabelText(/Company Name/i), { target: { value: "Margo Metalworks" } });
+    fireEvent.click(screen.getByRole("button", { name: "New Game" }));
+    fireEvent.click(screen.getByRole("button", { name: /Settings/i }));
+
+    fireEvent.click(screen.getByRole("tab", { name: "Reduced FX" }));
+    expect(document.querySelector(".app-root")?.getAttribute("data-fx-mode")).toBe("reduced");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Full FX" }));
+    expect(document.querySelector(".app-root")?.getAttribute("data-fx-mode")).toBe("full");
+  });
+
+  it("EH-TW-277: full FX mode updates parallax css variables when the shell scrolls", () => {
+    const restoreMatchMedia = installMatchMediaStub(false);
+    const restoreAnimationFrame = installImmediateAnimationFrame();
+    const game = createInitialGameState(bundle, 9460);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: null, uiFxMode: "full" });
+
+    try {
+      vi.useFakeTimers();
+      render(<App />);
+      act(() => {
+        useUiStore.getState().setUiFxMode("full");
+        vi.runOnlyPendingTimers();
+      });
+
+      const appRoot = document.querySelector(".app-root") as HTMLElement | null;
+      const appShell = document.querySelector(".app-shell") as HTMLElement | null;
+      expect(appRoot).toBeTruthy();
+      expect(appShell).toBeTruthy();
+
+      Object.defineProperty(window, "scrollY", { configurable: true, writable: true, value: 160 });
+      window.dispatchEvent(new Event("scroll"));
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+
+      const rootParallax = appRoot?.style.getPropertyValue("--parallax-y");
+      const shellParallax = appShell?.style.getPropertyValue("--parallax-y");
+      expect(rootParallax && rootParallax !== "0.00px").toBe(true);
+      expect(shellParallax && shellParallax !== "0.00px").toBe(true);
+    } finally {
+      restoreAnimationFrame();
+      restoreMatchMedia();
+    }
+  });
+
+  it("EH-TW-278: reduced FX mode keeps parallax css variables at zero", () => {
+    const restoreMatchMedia = installMatchMediaStub(false);
+    const restoreAnimationFrame = installImmediateAnimationFrame();
+    const game = createInitialGameState(bundle, 9461);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: null, uiFxMode: "reduced" });
+
+    try {
+      vi.useFakeTimers();
+      render(<App />);
+      act(() => {
+        useUiStore.getState().setUiFxMode("reduced");
+        vi.runOnlyPendingTimers();
+      });
+
+      const appRoot = document.querySelector(".app-root") as HTMLElement | null;
+      const appShell = document.querySelector(".app-shell") as HTMLElement | null;
+      expect(appRoot).toBeTruthy();
+      expect(appShell).toBeTruthy();
+
+      Object.defineProperty(window, "scrollY", { configurable: true, writable: true, value: 220 });
+      window.dispatchEvent(new Event("scroll"));
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+
+      expect(appRoot?.style.getPropertyValue("--parallax-y")).toBe("0.00px");
+      expect(appRoot?.style.getPropertyValue("--parallax-y-strong")).toBe("0.00px");
+      expect(appShell?.style.getPropertyValue("--parallax-y")).toBe("0.00px");
+      expect(appShell?.style.getPropertyValue("--parallax-y-strong")).toBe("0.00px");
+    } finally {
+      restoreAnimationFrame();
+      restoreMatchMedia();
+    }
   });
 
   it("EH-TW-066: gameplay flow remains functional after changing text scale", () => {
@@ -1110,7 +1282,7 @@ describe("compact shell ui", () => {
     const playerHud = screen.getByRole("list", { name: /Player HUD/i });
     expect(screen.queryByRole("list", { name: /Current status/i })).toBeNull();
     expect(playerHud.textContent ?? "").toMatch(/Hours\s*8\.0\/8\.0/i);
-    expect(playerHud.textContent ?? "").toMatch(/Fuel\s*8\/12/i);
+    expect(playerHud.textContent ?? "").toMatch(/Fuel\s*8\/40/i);
     expect(playerHud.textContent ?? "").toMatch(/Fatigue\s*0/i);
     expect(playerHud.textContent ?? "").toMatch(/Cash\s*\$300/i);
     expect(playerHud.textContent ?? "").not.toMatch(/Overtime Limit/i);
@@ -1118,17 +1290,18 @@ describe("compact shell ui", () => {
     expect(screen.getAllByRole("button", { name: /^End Day$/i }).length).toBe(1);
   });
 
-  it("EH-TW-243: work HUD shows reading clarity hint below 95% and hides it at full clarity", () => {
+  it("EH-TW-243: work HUD keeps reading obfuscation button and toggles compact XP + clarity details", () => {
     const game = createInitialGameState(bundle, 6069);
     game.officeSkills.readingXp = 0;
     useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
     render(<App />);
 
-    expect(screen.getByRole("button", { name: /Reading Obfuscated due to low XP/i })).toBeTruthy();
-    expect(screen.queryByText(/Reading Clarity 40%: some words are scrambled/i)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Reading Obfuscated due to low XP/i }));
-    expect(screen.getByText(/Reading Clarity 40%: some words are scrambled/i)).toBeTruthy();
+    const readingToggle = screen.getByRole("button", { name: /low XP/i });
+    expect(readingToggle).toBeTruthy();
+    expect(screen.queryByText(/XP 0 \| .*40%/i)).toBeNull();
+    fireEvent.click(readingToggle);
+    expect(screen.getByText(/XP 0 \| .*40%/i)).toBeTruthy();
 
     act(() => {
       const current = useUiStore.getState().game;
@@ -1146,8 +1319,8 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.queryByRole("button", { name: /Reading Obfuscated due to low XP/i })).toBeNull();
-    expect(screen.queryByText(/Reading Clarity \d+%: some words are scrambled/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /low XP/i })).toBeNull();
+    expect(screen.queryByText(/XP \d+ \| .*\d+%/i)).toBeNull();
   });
 
   it("EH-TW-244: competitor info body text obfuscates at low reading clarity and clears at high clarity", () => {
@@ -1313,7 +1486,7 @@ describe("compact shell ui", () => {
     expect(useUiStore.getState().activeResultsScreen).toBeNull();
   });
 
-  it("EH-TW-120: standard action resolves after 6s and locks controls while timer is active", () => {
+  it("EH-TW-120: standard action resolves after 3s and locks controls while timer is active", () => {
     vi.useFakeTimers();
     const game = buildAcceptableGame(8066);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
@@ -1325,14 +1498,14 @@ describe("compact shell ui", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
 
     expect(screen.getByRole("progressbar", { name: /Resolving/i })).toBeTruthy();
-    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(6_000);
+    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(3_000);
     expect((screen.getByRole("button", { name: /^Standard$/i }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: /Scroll task actions left/i }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: /Scroll task actions right/i }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getAllByRole("button", { name: /^End Day$/i })[0] as HTMLButtonElement).disabled).toBe(true);
 
     act(() => {
-      vi.advanceTimersByTime(5_999);
+      vi.advanceTimersByTime(2_999);
     });
     expect(useUiStore.getState().lastAction?.title).toBe("Contract Accepted");
     expect(useUiStore.getState().timedTaskAction).toBeTruthy();
@@ -1361,10 +1534,10 @@ describe("compact shell ui", () => {
     moveAcceptedJobToDoWorkState();
 
     fireEvent.click(screen.getByRole("button", { name: /^Standard$/i }));
-    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(5_100);
+    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(2_550);
 
     act(() => {
-      vi.advanceTimersByTime(5_099);
+      vi.advanceTimersByTime(2_549);
     });
     expect(useUiStore.getState().timedTaskAction).toBeTruthy();
 
@@ -1374,7 +1547,7 @@ describe("compact shell ui", () => {
     expect(useUiStore.getState().timedTaskAction).toBeNull();
   });
 
-  it("EH-TW-121: standard overtime action resolves only after 12s", () => {
+  it("EH-TW-121: standard overtime action resolves only after 6s", () => {
     vi.useFakeTimers();
     const game = buildAcceptableGame(8067);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
@@ -1385,10 +1558,10 @@ describe("compact shell ui", () => {
 
     const standardOtButton = screen.getByRole("button", { name: /Standard \+ OT/i });
     fireEvent.click(standardOtButton);
-    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(12_000);
+    expect(useUiStore.getState().timedTaskAction?.durationMs).toBe(6_000);
 
     act(() => {
-      vi.advanceTimersByTime(11_999);
+      vi.advanceTimersByTime(5_999);
     });
     expect(useUiStore.getState().timedTaskAction).toBeTruthy();
     expect(useUiStore.getState().lastAction?.title).toBe("Contract Accepted");
@@ -1420,7 +1593,7 @@ describe("compact shell ui", () => {
     expect(useUiStore.getState().notice).toMatch(/Action locked/i);
 
     act(() => {
-      vi.advanceTimersByTime(6_000);
+      vi.advanceTimersByTime(3_000);
     });
     expect(useUiStore.getState().timedTaskAction).toBeNull();
     expect(useUiStore.getState().lastAction?.title).toBe("Task Result");
@@ -1483,6 +1656,7 @@ describe("compact shell ui", () => {
 
     render(<App />);
     acceptCurrentContract();
+    expect(screen.queryByRole("button", { name: /Walk To Nearest Gas Station/i })).toBeNull();
 
     act(() => {
       const current = useUiStore.getState().game!;
@@ -1530,7 +1704,7 @@ describe("compact shell ui", () => {
     expect(screen.queryByRole("button", { name: /^Contract Board$/i })).toBeNull();
   });
 
-  it("EH-TW-062: low fuel warning surfaces a gas-station run that recovers a stranded route", () => {
+  it("EH-TW-062: zero-fuel blocker surfaces out-of-gas rescue with OSHA can cost breakdown", () => {
     const game = buildAcceptableGame(6067);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
@@ -1546,17 +1720,19 @@ describe("compact shell ui", () => {
           player: {
             ...current.player,
             fuel: 0,
-            cash: 0
+            cash: 100,
+            oshaCanOwned: false
           },
           activeJob: current.activeJob
             ? {
                 ...current.activeJob,
-                location: "supplier",
+                location: "shop",
                 actualTicksSpent: 0,
                 tasks: current.activeJob.tasks.map((task) =>
-                  task.taskId === "load_from_shop" ||
-                  task.taskId === "refuel_at_station" || task.taskId === "travel_to_supplier" || task.taskId === "checkout_supplies"
+                  task.taskId === "load_from_shop" || task.taskId === "refuel_at_station"
                     ? { ...task, completedUnits: task.requiredUnits || 1 }
+                    : task.taskId === "travel_to_supplier"
+                      ? { ...task, requiredUnits: 1, completedUnits: 0 }
                     : task
                 )
               }
@@ -1565,17 +1741,77 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.getByText(/low fuel warning|fuel warning/i)).toBeTruthy();
-    expect(screen.getByText(/truck fuel is too low/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Gas Station Run/i }));
+    expect(screen.getByText(/Out Of Gas/i)).toBeTruthy();
+    expect(screen.getByText(/Fuel refill 1 gal: \$5/i)).toBeTruthy();
+    expect(screen.getByText(/OSHA can: \$25 \(first rescue\)/i)).toBeTruthy();
+    expect(screen.getByText(/Total rescue cost \$30/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Gas Station/i }));
+    expect(screen.getByText(/Need at least 1 fuel to drive to the nearest gas station/i)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Travel To Gas Station \(\+1 Gal\)/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Travel To Gas Station \(Fill Tank\)/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Walk To Nearest Gas Station/i }));
 
-    expect(useUiStore.getState().game?.player.fuel).toBeGreaterThan(0);
-    expect(useUiStore.getState().game?.player.cash).toBeLessThan(0);
-    expect(screen.getByText(/Gas Station Run added/i)).toBeTruthy();
+    expect(useUiStore.getState().game?.player.fuel).toBe(1);
+    expect(useUiStore.getState().game?.player.cash).toBe(70);
+    expect(useUiStore.getState().game?.player.oshaCanOwned).toBe(true);
+    expect(screen.getByText(/bought OSHA can/i)).toBeTruthy();
+  });
+
+  it("EH-TW-262: Work tab shows manual travel-to-station controls with deterministic cost breakdown", () => {
+    const game = buildAcceptableGame(6069);
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+    acceptCurrentContract();
+
+    act(() => {
+      const current = useUiStore.getState().game!;
+      useUiStore.setState({
+        activeTab: "work",
+        game: {
+          ...current,
+          player: {
+            ...current.player,
+            fuel: 2,
+            cash: 200,
+            oshaCanOwned: false
+          },
+          activeJob: current.activeJob
+            ? {
+                ...current.activeJob,
+                location: "job-site"
+              }
+            : null
+        }
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Gas Station/i }));
+    expect(screen.getByText(/Travel time/i)).toBeTruthy();
+    expect(screen.getByText(/OSHA can: \$25 \(first purchase\)/i)).toBeTruthy();
+    expect(screen.getByText(/\+1 gallon total \$30/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /Travel To Gas Station \(\+1 Gal\)/i }));
+
+    expect(useUiStore.getState().game?.player.fuel).toBe(3);
+    expect(useUiStore.getState().game?.player.cash).toBe(170);
+    expect(useUiStore.getState().game?.player.oshaCanOwned).toBe(true);
+    expect(screen.getByRole("heading", { name: /Travel To Gas Station/i })).toBeTruthy();
+  });
+
+  it("EH-TW-263: no-active-job Work view still exposes manual gas station travel controls", () => {
+    const game = buildAcceptableGame(6070);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: null });
+
+    render(<App />);
+
+    expect(screen.getByText(/No active job/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Gas Station/i }));
+    expect(screen.getByRole("button", { name: /Travel To Gas Station \(\+1 Gal\)/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Travel To Gas Station \(Fill Tank\)/i })).toBeTruthy();
   });
 
   it("EH-TW-063: Contracts tab keeps Day Laborer available while a field job is active", () => {
-    vi.useFakeTimers();
     const game = buildAcceptableGame(6068);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
@@ -1593,12 +1829,16 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Field board is locked/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Work Day Laborer Shift/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Work Day Laborer Shift/i }));
-    expect(screen.getByRole("dialog", { name: /Day labor go to work prompt/i })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Go to Work/i }));
-    expect(screen.getByRole("progressbar", { name: /Day Labor shift prep/i })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: /Day Labor Digging Mini-Game/i })).toBeTruthy();
 
     act(() => {
-      vi.advanceTimersByTime(12_000);
+      useUiStore.getState().submitDayLaborMinigameResult({
+        success: true,
+        score: 82,
+        excavationAccuracy: 0.91,
+        backfillAccuracy: 0.9,
+        timeUsedMs: 67_500
+      });
     });
 
     const after = useUiStore.getState().game!;
@@ -1806,14 +2046,17 @@ describe("compact shell ui", () => {
 
     const beforeCash = useUiStore.getState().game?.player.cash ?? 0;
     fireEvent.click(screen.getByRole("button", { name: /Work Day Laborer Shift/i }));
-    expect(screen.getByRole("dialog", { name: /Day labor go to work prompt/i })).toBeTruthy();
-    expect(screen.getByText(/A truck pulls up with room in the back for one more hombre/i)).toBeTruthy();
-    expect(screen.getByText(/Órale, Holmes\. You ready for work, ese\?/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Go to Work/i }));
-    expect(useUiStore.getState().dayLaborCelebrationActive).toBe(false);
+    expect(screen.getByRole("dialog", { name: /Day Labor Digging Mini-Game/i })).toBeTruthy();
+    expect(screen.queryByRole("progressbar", { name: /Day Labor shift prep/i })).toBeNull();
 
     act(() => {
-      vi.advanceTimersByTime(12_000);
+      useUiStore.getState().submitDayLaborMinigameResult({
+        success: true,
+        score: 88,
+        excavationAccuracy: 0.93,
+        backfillAccuracy: 0.89,
+        timeUsedMs: 61_000
+      });
     });
 
     const cashAfterFirstShift = useUiStore.getState().game?.player.cash ?? 0;
@@ -1832,6 +2075,7 @@ describe("compact shell ui", () => {
 
     expect(useUiStore.getState().game?.player.cash).toBe(cashAfterFirstShift);
     expect(useUiStore.getState().notice).toMatch(/Celebration cooldown active/i);
+    expect(screen.queryByRole("dialog", { name: /Day Labor Digging Mini-Game/i })).toBeNull();
 
     act(() => {
       vi.advanceTimersByTime(5_000);
@@ -1843,7 +2087,6 @@ describe("compact shell ui", () => {
       .find((entry) => entry.className.includes("day-labor-end-day-button"));
     expect(endDayFallbackButtonAfterFx?.className).toContain("day-labor-end-day-button");
   });
-
   it("EH-TW-231: day labor prep timer scales with carpenter skill rank", () => {
     vi.useFakeTimers();
     const game = buildAcceptableGame(7095);
@@ -1854,20 +2097,29 @@ describe("compact shell ui", () => {
 
     const beforeCash = useUiStore.getState().game?.player.cash ?? 0;
     fireEvent.click(screen.getByRole("button", { name: /Work Day Laborer Shift/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Go to Work/i }));
-    expect(screen.getByRole("progressbar", { name: /Day Labor shift prep/i })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: /Day Labor Digging Mini-Game/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Go to Work/i })).toBeNull();
+    expect(screen.queryByRole("progressbar", { name: /Day Labor shift prep/i })).toBeNull();
 
     act(() => {
-      vi.advanceTimersByTime(10_199);
+      vi.advanceTimersByTime(15_000);
     });
     expect(useUiStore.getState().game?.player.cash).toBe(beforeCash);
 
     act(() => {
-      vi.advanceTimersByTime(1);
+      useUiStore.getState().submitDayLaborMinigameResult({
+        success: false,
+        score: 11,
+        excavationAccuracy: 0.38,
+        backfillAccuracy: 0.21,
+        timeUsedMs: 90_000,
+        failureReason: "Time expired before target fill was reached."
+      });
     });
-    expect(useUiStore.getState().game?.player.cash).toBeGreaterThan(beforeCash);
+    expect(useUiStore.getState().game?.player.cash).toBe(beforeCash);
+    expect(useUiStore.getState().dayLaborCelebrationActive).toBe(false);
+    expect(screen.getByText(/shift failed/i)).toBeTruthy();
   });
-
   it("EH-TW-229: fallback shift switches to End Day button when no regular shift hours remain", () => {
     const game = buildAcceptableGame(7094);
     game.workday.ticksSpent = game.workday.availableTicks;
@@ -1907,7 +2159,7 @@ describe("compact shell ui", () => {
                     return { ...task, requiredUnits: Math.max(1, task.requiredUnits), completedUnits: Math.max(1, task.requiredUnits) };
                   }
                   if (task.taskId === "refuel_at_station") {
-                    return { ...task, requiredUnits: 1, completedUnits: 0 };
+                    return { ...task, requiredUnits: 0, completedUnits: 0 };
                   }
                   if (task.taskId === "travel_to_supplier") {
                     return { ...task, requiredUnits: 1, completedUnits: 0 };
@@ -1915,12 +2167,16 @@ describe("compact shell ui", () => {
                   return task;
                 })
               }
-            : null
+            : null,
+          player: {
+            ...current.player,
+            fuel: 0
+          }
         }
       });
     });
 
-    expect(screen.getByText(/Next step: Refuel at Gas Station\./i)).toBeTruthy();
+    expect(screen.getByText(/Next step: Walk to the nearest gas station for rescue fuel/i)).toBeTruthy();
 
     act(() => {
       const current = useUiStore.getState().game!;
@@ -2176,9 +2432,10 @@ describe("compact shell ui", () => {
 
     render(<App />);
     acceptCurrentContract();
-    const warningAction = screen.getByRole("button", { name: /^(Rush|Skip Refuel)$/i });
-    const infoAction = screen.getByRole("button", { name: /^(Standard|Buy 1 Fuel)$/i });
-    const successAction = screen.getByRole("button", { name: /^(Careful|Fill Tank)$/i });
+    moveAcceptedJobToDoWorkState();
+    const warningAction = screen.getByRole("button", { name: /^Rush(?: \+ OT)?$/i });
+    const infoAction = screen.getByRole("button", { name: /^Standard(?: \+ OT)?$/i });
+    const successAction = screen.getByRole("button", { name: /^Careful(?: \+ OT)?$/i });
 
     expect(warningAction.className).toContain("tone-warning");
     expect(infoAction.className).toContain("tone-info");
@@ -2230,8 +2487,12 @@ describe("compact shell ui", () => {
     resolveTimedAction(/^Standard$/i, 6_000);
 
     expect(screen.getByRole("dialog", { name: /Results Screen/i })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: /Rebar Bob Encounter/i })).toBeTruthy();
     expect(screen.getAllByText(/beanpole arms|panty waist/i).length).toBeGreaterThan(0);
     expect((screen.getAllByRole("button", { name: /^End Day$/i })[0] as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: /Dismiss Rebar Bob encounter/i }));
+    expect(screen.queryByRole("dialog", { name: /Rebar Bob Encounter/i })).toBeNull();
 
     act(() => {
       vi.advanceTimersByTime(5_000);
@@ -2372,4 +2633,3 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Net Actual/i)).toBeTruthy();
   });
 });
-

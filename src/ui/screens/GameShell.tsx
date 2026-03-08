@@ -4,6 +4,7 @@ import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
 import { Modal } from "../components/Modal";
+import { DayLaborDiggingMinigame } from "../../features/dayLaborDig/DayLaborDiggingMinigame";
 import { CompanyTab } from "./CompanyTab";
 import { OfficeTab } from "./OfficeTab";
 import { SettingsTab } from "./SettingsTab";
@@ -18,6 +19,10 @@ interface EndDayTransitionState {
 const END_DAY_TRANSITION_MS = 1_000;
 const END_DAY_TRANSITION_MIDPOINT_MS = END_DAY_TRANSITION_MS / 2;
 const PHONE_SHEET_BREAKPOINT_PX = 759;
+const PARALLAX_LIGHT_FACTOR = 0.22;
+const PARALLAX_STRONG_FACTOR = 0.38;
+const PARALLAX_LIGHT_MAX_PX = 32;
+const PARALLAX_STRONG_MAX_PX = 54;
 const RESULTS_SECTIONS: ResultsSection[] = ["Money", "Stats", "Inventory/Tools", "Operations/Office", "Progress/Other"];
 
 const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
@@ -43,10 +48,13 @@ export function GameShell() {
   const [isPhoneViewport, setIsPhoneViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= PHONE_SHEET_BREAKPOINT_PX : true
   );
+  const appShellRef = useRef<HTMLElement | null>(null);
+  const parallaxRafRef = useRef<number | null>(null);
   const midpointTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const game = useUiStore((state) => state.game);
+  const uiFxMode = useUiStore((state) => state.uiFxMode);
   const activeTab = useUiStore((state) => state.activeTab);
   const officeSection = useUiStore((state) => state.officeSection);
   const activeModal = useUiStore((state) => state.activeModal);
@@ -61,6 +69,8 @@ export function GameShell() {
   const progressQueue = useUiStore((state) => state.progressQueue);
   const dismissProgressPopup = useUiStore((state) => state.dismissProgressPopup);
   const activeResultsScreen = useUiStore((state) => state.activeResultsScreen);
+  const activeEncounterPopup = useUiStore((state) => state.activeEncounterPopup);
+  const dismissEncounterPopup = useUiStore((state) => state.dismissEncounterPopup);
   const dismissResultsScreen = useUiStore((state) => state.dismissResultsScreen);
   const goToTab = useUiStore((state) => state.goToTab);
   const endShift = useUiStore((state) => state.endShift);
@@ -72,6 +82,10 @@ export function GameShell() {
   const completeTutorial = useUiStore((state) => state.completeTutorial);
   const syncTutorialProgress = useUiStore((state) => state.syncTutorialProgress);
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
+  const activeDayLaborMinigame = useUiStore((state) => state.activeDayLaborMinigame);
+  const restartDayLaborMinigame = useUiStore((state) => state.restartDayLaborMinigame);
+  const submitDayLaborMinigameResult = useUiStore((state) => state.submitDayLaborMinigameResult);
+  const forfeitDayLaborMinigame = useUiStore((state) => state.forfeitDayLaborMinigame);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
   const showRoutineModalAsSheet = isPhoneViewport && isRoutineModalId(activeModal);
@@ -79,8 +93,9 @@ export function GameShell() {
   const endDayProgress = endDayTransition ? clamp01((transitionNowMs - endDayTransition.startedAtMs) / endDayTransition.durationMs) : 0;
   const endDayBlackoutOpacity = endDayProgress <= 0.5 ? endDayProgress * 2 : (1 - endDayProgress) * 2;
   const endDayPieAngle = Math.round(endDayProgress * 360);
-  const suppressLowerTierUi = Boolean(endDayTransition || activeResultsScreen);
+  const suppressLowerTierUi = Boolean(endDayTransition || activeResultsScreen || activeDayLaborMinigame);
   const suppressNoticeBanner = suppressLowerTierUi || (activeTab === "work" && notice.startsWith("Add the needed items to the supplier cart before checkout"));
+  const hasActiveGame = Boolean(game);
 
   useEffect(() => {
     return () => {
@@ -117,6 +132,79 @@ export function GameShell() {
       }
     };
   }, [endDayTransition?.startedAtMs]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const root = document.querySelector<HTMLElement>(".app-root");
+    const shell = appShellRef.current;
+    const mediaQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+
+    const setParallaxOffsets = (lightOffsetPx: number, strongOffsetPx: number) => {
+      const lightValue = `${lightOffsetPx.toFixed(2)}px`;
+      const strongValue = `${strongOffsetPx.toFixed(2)}px`;
+      root?.style.setProperty("--parallax-y", lightValue);
+      root?.style.setProperty("--parallax-y-strong", strongValue);
+      shell?.style.setProperty("--parallax-y", lightValue);
+      shell?.style.setProperty("--parallax-y-strong", strongValue);
+    };
+
+    if (!hasActiveGame || !shell) {
+      setParallaxOffsets(0, 0);
+      return;
+    }
+
+    const isReducedMotion = () => uiFxMode === "reduced" || Boolean(mediaQuery?.matches);
+
+    const updateParallax = () => {
+      parallaxRafRef.current = null;
+      if (isReducedMotion()) {
+        setParallaxOffsets(0, 0);
+        return;
+      }
+      const scrollY = Math.max(0, window.scrollY || window.pageYOffset || 0);
+      const lightOffsetPx = Math.min(PARALLAX_LIGHT_MAX_PX, scrollY * PARALLAX_LIGHT_FACTOR);
+      const strongOffsetPx = Math.min(PARALLAX_STRONG_MAX_PX, scrollY * PARALLAX_STRONG_FACTOR);
+      setParallaxOffsets(lightOffsetPx, strongOffsetPx);
+    };
+
+    const queueParallaxUpdate = () => {
+      if (parallaxRafRef.current !== null) {
+        return;
+      }
+      parallaxRafRef.current = scheduleAnimationFrame(() => updateParallax());
+    };
+
+    const handleMotionChange = () => queueParallaxUpdate();
+    queueParallaxUpdate();
+    window.addEventListener("scroll", queueParallaxUpdate, { passive: true });
+    window.addEventListener("resize", queueParallaxUpdate);
+    if (mediaQuery) {
+      if ("addEventListener" in mediaQuery) {
+        mediaQuery.addEventListener("change", handleMotionChange);
+      } else {
+        mediaQuery.addListener(handleMotionChange);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("scroll", queueParallaxUpdate);
+      window.removeEventListener("resize", queueParallaxUpdate);
+      if (mediaQuery) {
+        if ("removeEventListener" in mediaQuery) {
+          mediaQuery.removeEventListener("change", handleMotionChange);
+        } else {
+          mediaQuery.removeListener(handleMotionChange);
+        }
+      }
+      if (parallaxRafRef.current !== null) {
+        cancelScheduledAnimationFrame(parallaxRafRef.current);
+        parallaxRafRef.current = null;
+      }
+      setParallaxOffsets(0, 0);
+    };
+  }, [hasActiveGame, uiFxMode]);
 
   useEffect(() => {
     syncTutorialProgress();
@@ -160,7 +248,7 @@ export function GameShell() {
   }
 
   return (
-    <main className="screen-shell app-shell">
+    <main className="screen-shell app-shell" ref={appShellRef}>
       {normalizedActiveTab === "work" ? <CompactHeader game={game} activeTab={normalizedActiveTab} /> : null}
       {tutorialInProgress ? (
         <TutorialCoachCard
@@ -206,18 +294,20 @@ export function GameShell() {
         {normalizedActiveTab === "work" ? <WorkTab /> : null}
         {normalizedActiveTab === "office" ? <OfficeTab /> : null}
       </section>
-      <BottomNav
-        activeTab={normalizedActiveTab}
-        onChange={goToTab}
-        onEndDay={handleEndDayTransition}
-        onOpenSettings={() => openModal("settings")}
-        endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(activeResultsScreen)}
-      />
+      {!activeDayLaborMinigame ? (
+        <BottomNav
+          activeTab={normalizedActiveTab}
+          onChange={goToTab}
+          onEndDay={handleEndDayTransition}
+          onOpenSettings={() => openModal("settings")}
+          endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(activeResultsScreen)}
+        />
+      ) : null}
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
         <WorkTab sheetOnly />
       </BottomSheet>
       {showRoutineModalAsSheet ? (
-        <BottomSheet open={true} title={getRoutineSurfaceTitle(activeModal)} onClose={closeModal}>
+        <BottomSheet open={true} title={getRoutineSurfaceTitle(activeModal)} onClose={closeModal} shellClassName={getRoutineSurfaceShellClass(activeModal)}>
           {renderRoutineSurfaceBody(activeModal)}
         </BottomSheet>
       ) : null}
@@ -229,10 +319,10 @@ export function GameShell() {
           <Modal open={activeModal === "inventory"} title="Inventory" onClose={closeModal}>
             <WorkTab modalView="inventory" />
           </Modal>
-          <Modal open={activeModal === "store"} title="Tools & Supplies" onClose={closeModal}>
+          <Modal open={activeModal === "store"} title="Tools & Supplies" onClose={closeModal} shellClassName="store-supplies-modal">
             <StoreTab />
           </Modal>
-          <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal}>
+          <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal} shellClassName="skills-modal">
             <WorkTab modalView="skills" />
           </Modal>
           <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
@@ -247,7 +337,7 @@ export function GameShell() {
           <Modal open={activeModal === "crews"} title={bundle.strings.companyCrewButton} onClose={closeModal}>
             <CompanyTab modalView="crews" />
           </Modal>
-          <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal}>
+          <Modal open={activeModal === "news"} title={bundle.strings.companyNewsButton} onClose={closeModal} shellClassName="competitor-news-modal">
             <CompanyTab modalView="news" />
           </Modal>
           <Modal open={activeModal === "settings"} title="Settings" onClose={closeModal}>
@@ -255,8 +345,20 @@ export function GameShell() {
           </Modal>
         </>
       ) : null}
+      {activeEncounterPopup ? (
+        <RebarBobEncounterPopup speaker={activeEncounterPopup.speaker} line={activeEncounterPopup.line} onClose={() => dismissEncounterPopup()} />
+      ) : null}
       {jobCompletionFx ? <JobCompletionFxOverlay outcome={jobCompletionFx.outcome} net={jobCompletionFx.net} /> : null}
       {endDayTransition ? <EndDayTransitionOverlay blackoutOpacity={endDayBlackoutOpacity} pieAngle={endDayPieAngle} /> : null}
+      {activeDayLaborMinigame ? (
+        <DayLaborDiggingMinigame
+          sessionId={activeDayLaborMinigame.sessionId}
+          config={activeDayLaborMinigame.config}
+          onRestart={() => restartDayLaborMinigame()}
+          onSubmit={(result) => submitDayLaborMinigameResult(result)}
+          onForfeit={() => forfeitDayLaborMinigame()}
+        />
+      ) : null}
       {activeResultsScreen && !endDayTransition ? (
         <ResultsScreenOverlay onContinue={() => dismissResultsScreen()} rows={activeResultsScreen.rows} detailLines={activeResultsScreen.detailLines} title={activeResultsScreen.title} />
       ) : null}
@@ -465,6 +567,26 @@ function JobCompletionFxOverlay({
   );
 }
 
+function RebarBobEncounterPopup({ speaker, line, onClose }: { speaker: string; line: string; onClose: () => void }) {
+  return (
+    <section className="rebar-bob-encounter-popup" role="dialog" aria-modal="false" aria-label="Rebar Bob Encounter">
+      <div className="rebar-bob-encounter-stage" aria-hidden="true">
+        <div className="rebar-bob-encounter-vignette" />
+      </div>
+      <article className="rebar-bob-encounter-card chrome-card">
+        <header className="rebar-bob-encounter-header">
+          <p className="eyebrow rebar-bob-encounter-eyebrow">Encounter</p>
+          <button className="icon-button rebar-bob-encounter-close" onClick={onClose} aria-label="Dismiss Rebar Bob encounter">
+            Close
+          </button>
+        </header>
+        <strong>{speaker}</strong>
+        <p className="rebar-bob-encounter-line">{line}</p>
+      </article>
+    </section>
+  );
+}
+
 function ResultsScreenOverlay({
   title,
   rows,
@@ -564,6 +686,21 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function scheduleAnimationFrame(callback: () => void): number {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    return window.requestAnimationFrame(() => callback());
+  }
+  return window.setTimeout(() => callback(), 16);
+}
+
+function cancelScheduledAnimationFrame(handle: number) {
+  if (typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
+    window.cancelAnimationFrame(handle);
+    return;
+  }
+  clearTimeout(handle);
+}
+
 function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
   if (modalId === "job-details") {
     return "Job Details";
@@ -593,6 +730,19 @@ function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
     return bundle.strings.companyNewsButton;
   }
   return "Settings";
+}
+
+function getRoutineSurfaceShellClass(modalId: Exclude<ActiveModalId, null>): string | undefined {
+  if (modalId === "news") {
+    return "competitor-news-modal";
+  }
+  if (modalId === "store") {
+    return "store-supplies-modal";
+  }
+  if (modalId === "skills") {
+    return "skills-modal";
+  }
+  return undefined;
 }
 
 function renderRoutineSurfaceBody(modalId: Exclude<ActiveModalId, null>) {

@@ -18,6 +18,33 @@ export interface ReadingObfuscationMeta {
   fullyClear: boolean;
 }
 
+const DIFFICULT_WORDS = new Set([
+  "obfuscated",
+  "obfuscation",
+  "clarity",
+  "accounting",
+  "durability",
+  "maintenance",
+  "composite",
+  "questionable",
+  "weatherproof",
+  "alignment",
+  "operator",
+  "contractor",
+  "materials",
+  "management",
+  "estimate",
+  "celebration",
+  "threshold",
+  "objective",
+  "accuracy",
+  "reputation"
+]);
+
+const DIFFICULT_SUFFIX_PATTERN = /(tion|sion|ment|ture|ology|ality|acious|ative|ively|ically|istics|ometer|graphy|phobia|ization)$/;
+const MODERATE_SUFFIX_PATTERN = /(ing|able|ible|ency|ancy|ence|ance|ivity|rity|ation|ition|ism|ship|scope|grade)$/;
+const COMPLEX_CLUSTER_PATTERN = /(ght|chr|sch|str|scr|thr|ph|ct|pt|qu)/;
+
 export function getReadingClarity(state: GameState): number {
   return clamp(0.4 + state.officeSkills.readingXp / 400, 0.4, 1);
 }
@@ -43,7 +70,7 @@ export function getReadingObfuscationMeta(state: GameState): ReadingObfuscationM
       clarity,
       clarityPercent: Math.round(clarity * 100),
       bandLabel: "75-94%",
-      scrambleChance: 0.1,
+      scrambleChance: 0.2,
       fullyClear: false
     };
   }
@@ -52,7 +79,7 @@ export function getReadingObfuscationMeta(state: GameState): ReadingObfuscationM
       clarity,
       clarityPercent: Math.round(clarity * 100),
       bandLabel: "50-74%",
-      scrambleChance: 0.2,
+      scrambleChance: 0.4,
       fullyClear: false
     };
   }
@@ -61,7 +88,7 @@ export function getReadingObfuscationMeta(state: GameState): ReadingObfuscationM
       clarity,
       clarityPercent: Math.round(clarity * 100),
       bandLabel: "25-49%",
-      scrambleChance: 0.32,
+      scrambleChance: 0.6,
       fullyClear: false
     };
   }
@@ -69,13 +96,17 @@ export function getReadingObfuscationMeta(state: GameState): ReadingObfuscationM
     clarity,
     clarityPercent: Math.round(clarity * 100),
     bandLabel: "0-24%",
-    scrambleChance: 0.45,
+    scrambleChance: 0.78,
     fullyClear: false
   };
 }
 
 export function obfuscateReadableText(state: GameState, text: string, seedKey = ""): string {
   const readingMeta = getReadingObfuscationMeta(state);
+  return obfuscateReadableTextByMeta(text, seedKey, readingMeta);
+}
+
+export function obfuscateReadableTextByMeta(text: string, seedKey: string, readingMeta: ReadingObfuscationMeta): string {
   if (readingMeta.fullyClear) {
     return text;
   }
@@ -115,11 +146,16 @@ export function formatCashByAccountingClarity(state: GameState, value: number, s
 }
 
 function maybeScrambleWord(word: string, key: string, chance: number): string {
-  const bare = word.replace(/[^A-Za-z]/g, "");
-  if (bare.length < 5) {
+  if (chance <= 0) {
     return word;
   }
-  const roll = (stableHash(key) % 1000) / 1000;
+
+  const bare = word.replace(/[^A-Za-z]/g, "");
+  if (bare.length < 4 || !isDifficultWord(bare)) {
+    return word;
+  }
+
+  const roll = (stableHash(`${key}:difficulty-roll`) % 1000) / 1000;
   if (roll >= chance) {
     return word;
   }
@@ -129,15 +165,59 @@ function maybeScrambleWord(word: string, key: string, chance: number): string {
     .map((char, index) => ({ char, index }))
     .filter((entry) => /[A-Za-z]/.test(entry.char))
     .map((entry) => entry.index);
-  if (letterIndices.length < 4) {
+  if (letterIndices.length <= 3) {
     return word;
   }
-  const left = letterIndices[1]!;
-  const right = letterIndices[letterIndices.length - 2]!;
-  const temp = chars[left];
-  chars[left] = chars[right]!;
-  chars[right] = temp!;
+
+  const original = chars.join("");
+  const interiorIndices = letterIndices.slice(1, -1);
+  if (interiorIndices.length <= 1) {
+    return word;
+  }
+  const shuffledInterior = [...interiorIndices]
+    .map((index) => ({
+      index,
+      sortKey: stableHash(`${key}:mix:${index}`)
+    }))
+    .sort((left, right) => left.sortKey - right.sortKey)
+    .map((entry) => chars[entry.index]!);
+
+  interiorIndices.forEach((targetIndex, index) => {
+    chars[targetIndex] = shuffledInterior[index]!;
+  });
+
+  if (chars.join("") === original) {
+    const rotatedInterior = [...interiorIndices]
+      .slice(1)
+      .concat(interiorIndices[0]!)
+      .map((index) => chars[index]!);
+    interiorIndices.forEach((targetIndex, index) => {
+      chars[targetIndex] = rotatedInterior[index]!;
+    });
+  }
+
   return chars.join("");
+}
+
+function isDifficultWord(rawWord: string): boolean {
+  const normalized = rawWord.toLowerCase();
+  if (DIFFICULT_WORDS.has(normalized)) {
+    return true;
+  }
+  if (normalized.length >= 10) {
+    return true;
+  }
+  if (normalized.length >= 8 && DIFFICULT_SUFFIX_PATTERN.test(normalized)) {
+    return true;
+  }
+  if (normalized.length >= 7 && MODERATE_SUFFIX_PATTERN.test(normalized)) {
+    return true;
+  }
+  if (normalized.length >= 7 && COMPLEX_CLUSTER_PATTERN.test(normalized)) {
+    return true;
+  }
+  const vowelGroups = (normalized.match(/[aeiouy]+/g) ?? []).length;
+  return normalized.length >= 8 && vowelGroups >= 3;
 }
 
 function stableHash(value: string): number {

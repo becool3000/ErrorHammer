@@ -7,7 +7,8 @@ import {
   getActiveJobSpendPreview,
   getCurrentTask,
   getCurrentTaskGuidance,
-  getGasStationStopPlan,
+  getManualGasStationPlan,
+  getOutOfGasRescuePlan,
   getLevelProgress,
   getOperatorLevel,
   getSkillDisplayRows,
@@ -28,6 +29,7 @@ interface WorkTabProps {
 }
 
 export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
+  const [gasStationOpen, setGasStationOpen] = useState(false);
   const [jobSpendOpen, setJobSpendOpen] = useState(false);
   const [cutLossesOpen, setCutLossesOpen] = useState(false);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
@@ -40,7 +42,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const notice = useUiStore((state) => state.notice);
   const performTask = useUiStore((state) => state.performTaskUnit);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
-  const runGasStationStop = useUiStore((state) => state.runGasStationStop);
+  const runManualGasStation = useUiStore((state) => state.runManualGasStation);
+  const runOutOfGasRescue = useUiStore((state) => state.runOutOfGasRescue);
   const returnToShopForTools = useUiStore((state) => state.returnToShopForTools);
   const runRecoveryAction = useUiStore((state) => state.runRecoveryAction);
   const resumeDeferredJob = useUiStore((state) => state.resumeDeferredJob);
@@ -138,7 +141,9 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
         cartByQuality: Record<SupplyQuality, number>;
       } => row !== null
     );
-  const gasStationPlan = getGasStationStopPlan(game, bundle);
+  const outOfGasRescuePlan = getOutOfGasRescuePlan(game, bundle);
+  const manualGasSinglePlan = getManualGasStationPlan(game, "single");
+  const manualGasFillPlan = getManualGasStationPlan(game, "fill");
   const supplierCartNotice =
     notice.startsWith("Add the needed items to the supplier cart before checkout") ||
     notice.startsWith("Allocate the needed items by quality before checkout")
@@ -218,6 +223,56 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   function cancelRecoveryAction() {
     setPendingRecoveryAction(null);
     setPendingDeferredAbandonId(null);
+  }
+
+  function renderManualGasStationBlock() {
+    const singleBlocked =
+      !manualGasSinglePlan || manualGasSinglePlan.fuelAdded <= 0 || manualGasSinglePlan.cashShortfall > 0 || manualGasSinglePlan.timeBlocked;
+    const fillBlocked =
+      !manualGasFillPlan || manualGasFillPlan.fuelAdded <= 0 || manualGasFillPlan.cashShortfall > 0 || manualGasFillPlan.timeBlocked;
+    const statusLine = !manualGasSinglePlan
+      ? "Need at least 1 fuel to drive to the nearest gas station. If your active task is fuel-blocked, use rescue first."
+      : manualGasSinglePlan.fuelAdded <= 0
+        ? "Tank already full."
+        : manualGasSinglePlan.cashShortfall > 0
+          ? `Need $${manualGasSinglePlan.cashShortfall} more for a gas station run.`
+          : manualGasSinglePlan.timeBlocked
+            ? "No time is left for a gas station run."
+            : "Round-trip run to nearest gas station and return.";
+
+    return (
+      <div className="detail-block task-collapsible-section">
+        <button className="ghost-button task-collapsible-toggle" onClick={() => setGasStationOpen((open) => !open)} aria-expanded={gasStationOpen}>
+          <strong>Gas Station</strong>
+          <span className="task-collapsible-meta">
+            Fuel {game.player.fuel}/{game.player.fuelMax}
+          </span>
+        </button>
+        {gasStationOpen ? (
+          <div className="collapsible-panel open task-collapsible-content">
+            <p>{statusLine}</p>
+            {manualGasSinglePlan && manualGasFillPlan ? (
+              <>
+                <div className="material-need-meta">
+                  <span>Travel time {formatHours(manualGasSinglePlan.requiredTicks)}</span>
+                  <span>OSHA can: {manualGasSinglePlan.canCost > 0 ? `$${manualGasSinglePlan.canCost} (first purchase)` : "Already owned"}</span>
+                  <span>+1 gallon total ${manualGasSinglePlan.totalCost}</span>
+                  <span>Fill tank total ${manualGasFillPlan.totalCost}</span>
+                </div>
+                <div className="task-inline-actions">
+                  <button className="ghost-button secondary-action-button" onClick={() => runManualGasStation("single")} disabled={singleBlocked}>
+                    Travel To Gas Station (+1 Gal)
+                  </button>
+                  <button className="ghost-button secondary-action-button" onClick={() => runManualGasStation("fill")} disabled={fillBlocked}>
+                    Travel To Gas Station (Fill Tank)
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   if (sheetOnly) {
@@ -329,8 +384,8 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     const operatorLevel = getOperatorLevel(game.player);
     const archetype = getPerkArchetypeSnapshot(game);
     return (
-      <section className="stack-block">
-        <article className="chrome-card inset-card">
+      <section className="stack-block skills-surface">
+        <article className="chrome-card inset-card skills-panel">
           <p className="eyebrow">Skill Ledger</p>
           <div className="section-label-row tight-row">
             <strong>Owner/Operator Lv {operatorLevel.level}</strong>
@@ -338,7 +393,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           <div className="stack-list skill-ledger-list">
             {skillRows.map((skill) => (
-              <article key={skill.key} className="task-summary">
+              <article key={skill.key} className="task-summary skills-row">
                 <div className="section-label-row tight-row">
                   <strong>{skill.label}</strong>
                   <span>Lv {skill.level}</span>
@@ -354,7 +409,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             ))}
           </div>
         </article>
-        <article className="chrome-card inset-card">
+        <article className="chrome-card inset-card skills-panel">
           <div className="section-label-row">
             <div>
               <p className="eyebrow">Core Perks</p>
@@ -374,7 +429,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             {CORE_PERK_IDS.map((perkId) => {
               const level = game.perks.corePerks[perkId];
               return (
-                <article key={perkId} className="task-summary">
+                <article key={perkId} className="task-summary skills-row">
                   <div className="section-label-row tight-row">
                     <strong>{formatPerkLabel(perkId)}</strong>
                     <span>Lv {level}</span>
@@ -391,7 +446,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             })}
           </div>
         </article>
-        <article className="chrome-card inset-card">
+        <article className="chrome-card inset-card skills-panel">
           <p className="eyebrow">Shift Context</p>
           <p className="muted-copy">Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>
           <div className="metric-grid two-up">
@@ -454,6 +509,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </button>
           </div>
         </article>
+        {renderManualGasStationBlock()}
         {deferredJobs.length > 0 ? (
           <article className="chrome-card inset-card deferred-jobs-card">
             <div className="section-label-row">
@@ -580,23 +636,33 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </div>
           </div>
         ) : null}
-        {gasStationPlan && currentTask?.taskId !== "refuel_at_station" ? (
-          <div className={gasStationPlan.stranded ? "task-inline-notice fuel-warning-block fuel-warning-critical" : "task-inline-notice fuel-warning-block"}>
+        {renderManualGasStationBlock()}
+        {outOfGasRescuePlan ? (
+          <div
+            className={
+              outOfGasRescuePlan.cashShortfall > 0
+                ? "task-inline-notice fuel-warning-block fuel-warning-critical"
+                : "task-inline-notice fuel-warning-block"
+            }
+          >
             <div className="section-label-row tight-row">
-              <strong>{gasStationPlan.stranded ? "Low Fuel Warning" : "Fuel Warning"}</strong>
+              <strong>Out Of Gas</strong>
               <span className="chip">
                 Fuel {game.player.fuel}/{game.player.fuelMax}
               </span>
             </div>
-            <p>{gasStationPlan.warning}</p>
+            <p>{outOfGasRescuePlan.warning}</p>
             <div className="material-need-meta">
-              <span>Gas Station Run adds {gasStationPlan.suggestedFuel} fuel</span>
-              <span>{gasStationPlan.onAccount ? `Charges $${gasStationPlan.totalCost} on account` : `Costs $${gasStationPlan.totalCost}`}</span>
-              <span>Time {formatHours(gasStationPlan.requiredTicks)}</span>
+              <span>Fuel refill {outOfGasRescuePlan.fuelAdded} gal: ${outOfGasRescuePlan.fuelCost}</span>
+              <span>
+                OSHA can: {outOfGasRescuePlan.canCost > 0 ? `$${outOfGasRescuePlan.canCost} (first rescue)` : "Already owned"}
+              </span>
+              <span>Total rescue cost ${outOfGasRescuePlan.totalCost}</span>
+              <span>Time {formatHours(outOfGasRescuePlan.requiredTicks)}</span>
             </div>
             <div className="task-inline-actions">
-              <button className="ghost-button tone-warning secondary-action-button" onClick={() => runGasStationStop()}>
-                Gas Station Run
+              <button className="ghost-button tone-warning secondary-action-button" onClick={() => runOutOfGasRescue()}>
+                Walk To Nearest Gas Station
               </button>
             </div>
           </div>
@@ -686,7 +752,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
         ) : null}
         {activeJob ? (
-          <div className="detail-block task-collapsible-section recovery-actions-block">
+          <div className="detail-block task-collapsible-section">
             <button className="ghost-button task-collapsible-toggle" onClick={() => setCutLossesOpen((open) => !open)} aria-expanded={cutLossesOpen}>
               <strong>Cut Losses</strong>
             </button>

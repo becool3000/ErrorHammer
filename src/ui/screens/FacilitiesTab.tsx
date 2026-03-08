@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FACILITY_ACTION_COSTS } from "../../core/operations";
-import { getStarterKitProgress, STARTER_TOOL_IDS } from "../../core/playerFlow";
+import { getStarterKitProgress, STARTER_OSHA_CAN_ID, STARTER_OSHA_CAN_LABEL, STARTER_TOOL_IDS } from "../../core/playerFlow";
 import { bundle, useUiStore } from "../state";
 
 interface FacilityActionRow {
@@ -32,6 +32,14 @@ export function FacilitiesTab() {
     owned: Boolean(game.player.tools[toolId]),
     label: bundle.tools.find((tool) => tool.id === toolId)?.name ?? toolId
   }));
+  const starterKitRows = [
+    ...starterToolRows,
+    {
+      toolId: STARTER_OSHA_CAN_ID,
+      owned: !starterKit.missingOshaCan,
+      label: STARTER_OSHA_CAN_LABEL
+    }
+  ];
   const facilityTierLabel =
     operations.businessTier === "yard"
       ? "Yard"
@@ -135,7 +143,7 @@ export function FacilitiesTab() {
           <div>
             <p className="eyebrow">Starter Kit</p>
             <h3>
-              {starterKit.owned}/{starterKit.total} tools owned
+              {starterKit.owned}/{starterKit.total} items owned
             </h3>
           </div>
           <span className="chip">{starterKit.allOwned ? "Ready" : "Incomplete"}</span>
@@ -162,7 +170,7 @@ export function FacilitiesTab() {
             </button>
           </div>
           <div ref={starterKitTrackRef} className="chip-grid starter-kit-carousel-track" onScroll={syncStarterKitScrollState}>
-            {starterToolRows.map((tool) => (
+            {starterKitRows.map((tool) => (
               <span key={tool.toolId} className={tool.owned ? "chip tone-success" : "chip muted"}>
                 {tool.owned ? "Owned" : "Missing"} {tool.label}
               </span>

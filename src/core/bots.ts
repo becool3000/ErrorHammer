@@ -12,6 +12,7 @@ import {
   getAvailableContractOffers,
   getContractEconomyPreview,
   getCurrentTask,
+  getOutOfGasRescuePlan,
   getQuickBuyPlan,
   getSkillRank,
   openStorage,
@@ -19,6 +20,9 @@ import {
   prepareForNextDay,
   quickBuyMissingTools,
   returnToShopForTools,
+  runDayLaborShift,
+  runManualGasStation,
+  runOutOfGasRescue,
   runRecoveryAction,
   spendPerkPoint,
   startResearch,
@@ -86,7 +90,8 @@ export function createInitialBotCareer(profile: BotProfile, bundle: ContentBundl
       staminaMax: 4,
       stamina: 4,
       fuel: 8,
-      fuelMax: 12,
+      fuelMax: 40,
+      oshaCanOwned: false,
       skills: createInitialSkills(),
       tools: {},
       crews: []
@@ -298,6 +303,11 @@ function runContractLoop(state: GameState, bundle: ContentBundle, profile: BotPr
   while (nextState.activeJob && guard < 220) {
     guard += 1;
     const beforeDigest = digestState(nextState);
+    const fueled = attemptProactiveFuelTopUp(nextState);
+    if (digestState(fueled) !== beforeDigest) {
+      nextState = fueled;
+      continue;
+    }
     const action = performTaskUnit(nextState, bundle, getBotPreferredStance(profile), true);
     if (action.digest !== beforeDigest) {
       nextState = action.nextState;
@@ -316,9 +326,42 @@ function runContractLoop(state: GameState, bundle: ContentBundle, profile: BotPr
   return nextState;
 }
 
+function attemptProactiveFuelTopUp(state: GameState): GameState {
+  if (!state.activeJob) {
+    return state;
+  }
+  if (state.player.fuel <= 0 || state.player.fuel > 3) {
+    return state;
+  }
+
+  const fillRun = runManualGasStation(state, "fill");
+  if (fillRun.nextState !== state) {
+    return fillRun.nextState;
+  }
+
+  const singleRun = runManualGasStation(state, "single");
+  if (singleRun.nextState !== state) {
+    return singleRun.nextState;
+  }
+
+  return state;
+}
+
 function handleBlockedTask(state: GameState, bundle: ContentBundle): GameState {
   if (!state.activeJob) {
     return state;
+  }
+
+  const rescuePlan = getOutOfGasRescuePlan(state, bundle);
+  if (rescuePlan) {
+    const rescued = runOutOfGasRescue(state, bundle);
+    if (rescued.nextState !== state) {
+      return rescued.nextState;
+    }
+    const labor = runDayLaborShift(state, bundle);
+    if (labor.nextState !== state) {
+      return labor.nextState;
+    }
   }
 
   const currentTask = getCurrentTask(state);
@@ -643,4 +686,3 @@ function cloneSupplyInventory(
     ])
   );
 }
-
