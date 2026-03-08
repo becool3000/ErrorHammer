@@ -1,4 +1,5 @@
-import { bundle, useUiStore } from "../state";
+import { useState } from "react";
+import { bundle, TutorialMode, useUiStore } from "../state";
 import { releaseInfo } from "../releaseInfo";
 
 interface TitleProps {
@@ -14,8 +15,15 @@ export function Title({ title, subtitle }: TitleProps) {
   const companyName = useUiStore((state) => state.titleCompanyName);
   const setPlayerName = useUiStore((state) => state.setTitlePlayerName);
   const setCompanyName = useUiStore((state) => state.setTitleCompanyName);
+  const startTutorial = useUiStore((state) => state.startTutorial);
+  const [tutorialPickerOpen, setTutorialPickerOpen] = useState(false);
 
   const ready = Boolean(playerName.trim() && companyName.trim());
+
+  function launchTutorial(mode: TutorialMode) {
+    startTutorial(mode);
+    setTutorialPickerOpen(false);
+  }
 
   return (
     <main className="title-shell">
@@ -58,7 +66,24 @@ export function Title({ title, subtitle }: TitleProps) {
           <button className="ghost-button" onClick={() => continueGame()}>
             Continue
           </button>
+          <button className="ghost-button" onClick={() => setTutorialPickerOpen((open) => !open)} aria-expanded={tutorialPickerOpen}>
+            Tutorial
+          </button>
         </div>
+        {tutorialPickerOpen ? (
+          <section className="title-tutorial-picker">
+            <p className="eyebrow">Tutorial Mode</p>
+            <p className="muted-copy">Choose a fresh guided run or play the tutorial on your current save.</p>
+            <div className="title-tutorial-picker-actions">
+              <button className="primary-button" onClick={() => launchTutorial("fresh-guided")}>
+                Fresh guided run
+              </button>
+              <button className="ghost-button" onClick={() => launchTutorial("current-save")}>
+                Use current save
+              </button>
+            </div>
+          </section>
+        ) : null}
         <div className="title-grid" aria-hidden="true">
           <span />
           <span />

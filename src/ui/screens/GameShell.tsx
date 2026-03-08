@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActiveModalId, bundle, ResultsRow, ResultsSection, useUiStore } from "../state";
+import { ActiveModalId, bundle, ResultsRow, ResultsSection, TutorialStepId, useUiStore } from "../state";
 import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
@@ -7,6 +7,7 @@ import { Modal } from "../components/Modal";
 import { CompanyTab } from "./CompanyTab";
 import { OfficeTab } from "./OfficeTab";
 import { SettingsTab } from "./SettingsTab";
+import { StoreTab } from "./StoreTab";
 import { WorkTab } from "./WorkTab";
 
 interface EndDayTransitionState {
@@ -22,6 +23,7 @@ const RESULTS_SECTIONS: ResultsSection[] = ["Money", "Stats", "Inventory/Tools",
 const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
   "job-details",
   "inventory",
+  "store",
   "skills",
   "field-log",
   "active-events",
@@ -46,8 +48,11 @@ export function GameShell() {
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const game = useUiStore((state) => state.game);
   const activeTab = useUiStore((state) => state.activeTab);
+  const officeSection = useUiStore((state) => state.officeSection);
   const activeModal = useUiStore((state) => state.activeModal);
   const activeSheet = useUiStore((state) => state.activeSheet);
+  const selectedContractId = useUiStore((state) => state.selectedContractId);
+  const lastAction = useUiStore((state) => state.lastAction);
   const closeModal = useUiStore((state) => state.closeModal);
   const closeSheet = useUiStore((state) => state.closeSheet);
   const notice = useUiStore((state) => state.notice);
@@ -61,6 +66,11 @@ export function GameShell() {
   const endShift = useUiStore((state) => state.endShift);
   const openModal = useUiStore((state) => state.openModal);
   const returnToTitle = useUiStore((state) => state.returnToTitle);
+  const tutorialInProgress = useUiStore((state) => state.tutorialInProgress);
+  const tutorialStepId = useUiStore((state) => state.tutorialStepId);
+  const skipTutorial = useUiStore((state) => state.skipTutorial);
+  const completeTutorial = useUiStore((state) => state.completeTutorial);
+  const syncTutorialProgress = useUiStore((state) => state.syncTutorialProgress);
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
@@ -108,6 +118,10 @@ export function GameShell() {
     };
   }, [endDayTransition?.startedAtMs]);
 
+  useEffect(() => {
+    syncTutorialProgress();
+  }, [syncTutorialProgress, tutorialInProgress, tutorialStepId, activeTab, officeSection, selectedContractId, lastAction?.title, activeResultsScreen, game?.day]);
+
   function handleEndDayTransition() {
     if (timedTaskAction || endDayTransition || activeResultsScreen) {
       return;
@@ -148,6 +162,14 @@ export function GameShell() {
   return (
     <main className="screen-shell app-shell">
       {normalizedActiveTab === "work" ? <CompactHeader game={game} activeTab={normalizedActiveTab} /> : null}
+      {tutorialInProgress ? (
+        <TutorialCoachCard
+          stepId={tutorialStepId}
+          dayLaborCelebrationActive={dayLaborCelebrationActive}
+          onSkip={() => skipTutorial()}
+          onComplete={() => completeTutorial()}
+        />
+      ) : null}
       {activeProgressPopup && !suppressLowerTierUi ? (
         <section
           className={`progress-popup progress-popup-${activeProgressPopup.severity}`}
@@ -207,6 +229,9 @@ export function GameShell() {
           <Modal open={activeModal === "inventory"} title="Inventory" onClose={closeModal}>
             <WorkTab modalView="inventory" />
           </Modal>
+          <Modal open={activeModal === "store"} title="Tools & Supplies" onClose={closeModal}>
+            <StoreTab />
+          </Modal>
           <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal}>
             <WorkTab modalView="skills" />
           </Modal>
@@ -237,6 +262,129 @@ export function GameShell() {
       ) : null}
     </main>
   );
+}
+
+function TutorialCoachCard({
+  stepId,
+  dayLaborCelebrationActive,
+  onSkip,
+  onComplete
+}: {
+  stepId: TutorialStepId;
+  dayLaborCelebrationActive: boolean;
+  onSkip: () => void;
+  onComplete: () => void;
+}) {
+  const content = getTutorialCoachContent(stepId, dayLaborCelebrationActive);
+  const isComplete = stepId === "done";
+
+  return (
+    <section className="tutorial-coach-card chrome-card" role="status" aria-live="polite" aria-label="Tutorial coach">
+      <div className="section-label-row tight-row">
+        <div>
+          <p className="eyebrow">Tutorial Coach</p>
+          <h3>{content.title}</h3>
+        </div>
+        <span className={`chip ${isComplete ? "tone-success" : "tone-info"}`}>{content.progress}</span>
+      </div>
+      <p className="muted-copy">{content.instruction}</p>
+      {content.waitingCopy ? <p className="muted-copy">{content.waitingCopy}</p> : null}
+      <div className="action-row">
+        {isComplete ? (
+          <button className="primary-button" onClick={onComplete}>
+            Finish Tutorial
+          </button>
+        ) : null}
+        <button className="ghost-button" onClick={onSkip}>
+          Skip Tutorial
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function getTutorialCoachContent(stepId: TutorialStepId, dayLaborCelebrationActive: boolean): {
+  title: string;
+  instruction: string;
+  progress: string;
+  waitingCopy?: string;
+} {
+  if (stepId === "open-contracts") {
+    return {
+      title: "Open Company Contracts",
+      instruction: "Tap Company, then open Contracts.",
+      progress: "1/11"
+    };
+  }
+  if (stepId === "select-day-labor") {
+    return {
+      title: "Select Day Labor",
+      instruction: "Pick the Day Labor contract so you can run a safe first shift.",
+      progress: "2/11"
+    };
+  }
+  if (stepId === "complete-day-labor") {
+    return {
+      title: "Run Day Labor",
+      instruction: "Accept Day Labor and complete the action until the results panel appears.",
+      progress: "3/11",
+      waitingCopy: dayLaborCelebrationActive ? "Day Labor celebration cooldown is active. Wait a few seconds, then try again." : undefined
+    };
+  }
+  if (stepId === "continue-day-labor-results") {
+    return {
+      title: "Continue Day Labor Results",
+      instruction: "Press Continue on the Day Labor results panel.",
+      progress: "4/11"
+    };
+  }
+  if (stepId === "end-day") {
+    return {
+      title: "End The Day",
+      instruction: "Press End Day once to roll into the next day.",
+      progress: "5/11"
+    };
+  }
+  if (stepId === "select-baba-g") {
+    return {
+      title: "Select A Baba G Job",
+      instruction: "Back on Contracts, select the Baba G spotlight card.",
+      progress: "6/11"
+    };
+  }
+  if (stepId === "accept-baba-g") {
+    return {
+      title: "Accept Baba G Job",
+      instruction: "Accept the selected Baba G contract and wait for the acceptance results panel.",
+      progress: "7/11"
+    };
+  }
+  if (stepId === "continue-baba-accept-results") {
+    return {
+      title: "Continue Acceptance Results",
+      instruction: "Press Continue to enter the Baba G job flow.",
+      progress: "8/11"
+    };
+  }
+  if (stepId === "complete-baba-task") {
+    return {
+      title: "Run One Baba G Task",
+      instruction: "On Work, run one action on the Baba G job until a Task Result panel appears.",
+      progress: "9/11"
+    };
+  }
+  if (stepId === "continue-baba-task-results") {
+    return {
+      title: "Continue Task Results",
+      instruction: "Press Continue on the task results panel.",
+      progress: "10/11"
+    };
+  }
+  return {
+    title: "Tutorial Complete",
+    instruction: "You finished the Day Labor and Baba G walkthrough. You can replay this anytime from Settings.",
+    progress: "11/11"
+  };
 }
 
 function EndDayTransitionOverlay({ blackoutOpacity, pieAngle }: { blackoutOpacity: number; pieAngle: number }) {
@@ -423,6 +571,9 @@ function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
   if (modalId === "inventory") {
     return "Inventory";
   }
+  if (modalId === "store") {
+    return "Tools & Supplies";
+  }
   if (modalId === "skills") {
     return "Skills";
   }
@@ -450,6 +601,9 @@ function renderRoutineSurfaceBody(modalId: Exclude<ActiveModalId, null>) {
   }
   if (modalId === "inventory") {
     return <WorkTab modalView="inventory" />;
+  }
+  if (modalId === "store") {
+    return <StoreTab />;
   }
   if (modalId === "skills") {
     return <WorkTab modalView="skills" />;

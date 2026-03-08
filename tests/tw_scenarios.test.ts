@@ -36,9 +36,12 @@ function unlockTradeResearch(state: GameState) {
   unlockAllCoreTradeTracks(state);
 }
 
-function acceptJob(seed: number, contractId: string) {
+function acceptJob(seed: number, contractId: string, options?: { storageOwned?: boolean }) {
   const bundle = makeScenarioBundle();
   let state = createInitialGameState(bundle, seed);
+  if (typeof options?.storageOwned === "boolean") {
+    state.operations.facilities.storageOwned = options.storageOwned;
+  }
   unlockTradeResearch(state);
   state.activeEventIds = [];
   state.contractBoard = [
@@ -56,6 +59,13 @@ function acceptJob(seed: number, contractId: string) {
     throw new Error(accepted.notice ?? `Could not accept ${contractId}`);
   }
   return { bundle, state: accepted.nextState, acceptedPayout: bidPreview?.acceptedPayout ?? 0 };
+}
+
+function getResolvedContractOutcome(state: GameState, contractId: string | null): GameState["contractFiles"][number]["outcome"] | null {
+  if (!contractId) {
+    return null;
+  }
+  return state.activeJob?.outcome ?? state.contractFiles.find((entry) => entry.contractId === contractId)?.outcome ?? null;
 }
 
 function seedMediumSupplierCart(state: ReturnType<typeof acceptJob>["state"], bundle: ReturnType<typeof acceptJob>["bundle"]) {
@@ -76,13 +86,16 @@ function seedMediumSupplierCart(state: ReturnType<typeof acceptJob>["state"], bu
 function fastForwardToTask(seed: number, contractId: string, targetTaskId: string) {
   const setup = acceptJob(seed, contractId);
   let state = setup.state;
+  for (const skillId of Object.keys(state.player.skills) as Array<keyof typeof state.player.skills>) {
+    state.player.skills[skillId] = Math.max(100, state.player.skills[skillId]);
+  }
   let guard = 0;
   while (getCurrentTask(state)?.taskId !== targetTaskId) {
     if (getCurrentTask(state)?.taskId === "checkout_supplies" && targetTaskId !== "checkout_supplies") {
       seedMediumSupplierCart(state, setup.bundle);
     }
     guard += 1;
-    if (guard > 200) {
+    if (guard > 600) {
       throw new Error(`Could not reach task ${targetTaskId} for seed ${seed}. Current task: ${getCurrentTask(state)?.taskId ?? "none"}`);
     }
     const result = performTaskUnit(state, setup.bundle, "standard", true);
@@ -92,11 +105,12 @@ function fastForwardToTask(seed: number, contractId: string, targetTaskId: strin
 }
 
 function finishCurrentTaskUntilOutcome(state: ReturnType<typeof acceptJob>["state"], bundle: ReturnType<typeof acceptJob>["bundle"], stance: "rush" | "standard" | "careful") {
+  const contractId = state.activeJob?.contractId ?? null;
   let currentState = state;
   let lastResult = performTaskUnit(currentState, bundle, stance, true);
   let guard = 0;
 
-  while (!lastResult.nextState.activeJob?.outcome) {
+  while (!getResolvedContractOutcome(lastResult.nextState, contractId)) {
     currentState = lastResult.nextState;
     guard += 1;
     if (guard > 120) {
@@ -586,7 +600,7 @@ describe("TW-004 deterministic scenario suite", () => {
     success.state.activeJob!.reworkCount = 0;
     success.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
     const successRun = finishCurrentTaskUntilOutcome(success.state, success.bundle, "careful");
-    expect(successRun.nextState.activeJob?.outcome).toBe("success");
+    expect(getResolvedContractOutcome(successRun.nextState, success.state.activeJob?.contractId ?? null)).toBe("success");
 
     const neutral = fastForwardToTask(1502, "job-alpha-contract", "collect_payment");
     neutral.state.workday = createInitialWorkday(neutral.state.day, 0);
@@ -594,7 +608,7 @@ describe("TW-004 deterministic scenario suite", () => {
     neutral.state.activeJob!.qualityPoints = -4;
     neutral.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
     const neutralRun = finishCurrentTaskUntilOutcome(neutral.state, neutral.bundle, "standard");
-    expect(neutralRun.nextState.activeJob?.outcome).toBe("neutral");
+    expect(getResolvedContractOutcome(neutralRun.nextState, neutral.state.activeJob?.contractId ?? null)).toBe("neutral");
 
     const fail = fastForwardToTask(1500, "job-alpha-contract", "collect_payment");
     fail.state.workday = createInitialWorkday(fail.state.day, 0);
@@ -603,11 +617,11 @@ describe("TW-004 deterministic scenario suite", () => {
     fail.state.activeJob!.reworkCount = 10;
     fail.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.95;
     const failRun = finishCurrentTaskUntilOutcome(fail.state, fail.bundle, "rush");
-    expect(failRun.nextState.activeJob?.outcome).toBe("fail");
+    expect(getResolvedContractOutcome(failRun.nextState, fail.state.activeJob?.contractId ?? null)).toBe("fail");
   });
 
   it("EH-TW-128: return-to-shop allows a final standard action with 0.5h left", () => {
-    const { bundle, state } = acceptJob(3304, "job-beta-contract");
+    const { bundle, state } = acceptJob(3304, "job-beta-contract", { storageOwned: true });
     const activeJob = state.activeJob!;
     activeJob.location = "job-site";
     activeJob.tasks = activeJob.tasks.map((task) => {
@@ -644,6 +658,40 @@ describe("TW-004 deterministic scenario suite", () => {
     }
   });
 
+  it("EH-TW-241: truck-only jobs close after collect payment without return/store tasks", () => {
+    const { bundle, state } = acceptJob(3305, "job-beta-contract");
+    const acceptedTasks = state.activeJob?.tasks ?? [];
+    expect(acceptedTasks.some((task) => task.taskId === "return_to_shop")).toBe(false);
+    expect(acceptedTasks.some((task) => task.taskId === "store_leftovers")).toBe(false);
+    for (const skillId of Object.keys(state.player.skills) as Array<keyof typeof state.player.skills>) {
+      state.player.skills[skillId] = Math.max(100, state.player.skills[skillId]);
+    }
+
+    let current = state;
+    let guard = 0;
+    while (getCurrentTask(current)?.taskId !== "collect_payment") {
+      if (getCurrentTask(current)?.taskId === "checkout_supplies") {
+        seedMediumSupplierCart(current, bundle);
+      }
+      guard += 1;
+      if (guard > 600) {
+        throw new Error(`Could not reach collect_payment for seed 3305. Current task: ${getCurrentTask(current)?.taskId ?? "none"}`);
+      }
+      current = performTaskUnit(current, bundle, "standard", true).nextState;
+    }
+
+    for (let i = 0; i < 12; i += 1) {
+      const step = performTaskUnit(current, bundle, "careful", true);
+      current = step.nextState;
+      if (!current.activeJob) {
+        break;
+      }
+    }
+
+    expect(current.activeJob).toBeNull();
+    expect(getCurrentTask(current)).toBeNull();
+  });
+
   it("EH-TW-074: quality at -1 does not auto-trigger neutral when risk checks pass", () => {
     const almostNeutral = fastForwardToTask(1501, "job-alpha-contract", "collect_payment");
     almostNeutral.state.workday = createInitialWorkday(almostNeutral.state.day, 0);
@@ -653,7 +701,7 @@ describe("TW-004 deterministic scenario suite", () => {
     almostNeutral.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
 
     const result = finishCurrentTaskUntilOutcome(almostNeutral.state, almostNeutral.bundle, "careful");
-    expect(result.nextState.activeJob?.outcome).toBe("success");
+    expect(getResolvedContractOutcome(result.nextState, almostNeutral.state.activeJob?.contractId ?? null)).toBe("success");
   });
 
   it("EH-TW-075: quality at -4 triggers neutral even when fail risk is zero", () => {
@@ -664,7 +712,7 @@ describe("TW-004 deterministic scenario suite", () => {
     neutralThreshold.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
 
     const result = finishCurrentTaskUntilOutcome(neutralThreshold.state, neutralThreshold.bundle, "standard");
-    expect(result.nextState.activeJob?.outcome).toBe("neutral");
+    expect(getResolvedContractOutcome(result.nextState, neutralThreshold.state.activeJob?.contractId ?? null)).toBe("neutral");
   });
 
   it("EH-TW-076: rework-heavy settlements follow the softened fail-pressure coefficient", () => {
@@ -684,7 +732,7 @@ describe("TW-004 deterministic scenario suite", () => {
     setup.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.3;
 
     const result = finishCurrentTaskUntilOutcome(setup.state, setup.bundle, "standard");
-    expect(result.nextState.activeJob?.outcome).toBe("success");
+    expect(getResolvedContractOutcome(result.nextState, setup.state.activeJob?.contractId ?? null)).toBe("success");
   });
 
   it("EH-TW-077: settlement preview exposes payout snapshot and risk band for active jobs", () => {
@@ -774,7 +822,7 @@ describe("TW-004 deterministic scenario suite", () => {
     bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
 
     const lowPartsSettlement = performTaskUnit(collectState, bundle, "standard", true);
-    expect(lowPartsSettlement.nextState.activeJob?.partsQualityModifier).toBe(-2);
+    expect(lowPartsSettlement.payload?.logLines.some((line) => line.includes("(-2 quality)"))).toBe(true);
   });
 
   it("EH-TW-034: skill XP grows from task use and can increase derived rank", () => {
@@ -855,7 +903,7 @@ describe("TW-004 deterministic scenario suite", () => {
     }
   });
 
-  it("EH-TW-037: background bot simulation is deterministic and advances bot skills", () => {
+  it("EH-TW-037: background competitor parity simulation is deterministic and keeps snapshots synced", () => {
     const bundle = makeScenarioBundle();
     const state = createInitialGameState(bundle, 1901);
     const first = endShift(state, bundle);
@@ -863,7 +911,12 @@ describe("TW-004 deterministic scenario suite", () => {
 
     expect(first.digest).toBe(second.digest);
     expect(first.dayLog).toEqual(second.dayLog);
-    expect(first.nextState.bots[0]!.skills.electrician).toBeGreaterThanOrEqual(state.bots[0]!.skills.electrician);
+    expect(first.nextState.botCareers.length).toBe(first.nextState.bots.length);
+    expect(first.nextState.bots[0]!.cash).toBe(first.nextState.botCareers[0]!.actor.cash);
+    const contractStartLines = first.dayLog.filter(
+      (entry) => entry.actorId === first.nextState.bots[0]!.actorId && (/^Accepted\s+/i.test(entry.message) || /day-labor shift/i.test(entry.message))
+    );
+    expect(contractStartLines.length).toBeLessThanOrEqual(1);
   });
 
   it("EH-TW-038: shop tool buy, repair, and fuel purchase keep active-job progress intact", () => {

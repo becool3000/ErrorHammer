@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GameState } from "../../core/types";
 import { getSelfEsteemStatusWord, getSelfEsteemTooltip, ticksToHours } from "../../core/playerFlow";
 import { getPerkArchetypeSnapshot } from "../../core/perks";
+import { getReadingObfuscationMeta } from "../readability";
 import { bundle, GameTabId, useUiStore } from "../state";
 
 interface CompactHeaderProps {
@@ -11,14 +12,17 @@ interface CompactHeaderProps {
 
 export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const openModal = useUiStore((state) => state.openModal);
+  const setStoreSection = useUiStore((state) => state.setStoreSection);
   const previousCashRef = useRef<number | null>(null);
   const [cashRaised, setCashRaised] = useState(false);
+  const [readingInfoOpen, setReadingInfoOpen] = useState(false);
   const remainingHours = ticksToHours(Math.max(0, game.workday.availableTicks - game.workday.ticksSpent));
   const totalHours = ticksToHours(game.workday.availableTicks);
   const baseHours = ticksToHours(game.workday.ticksPerDay);
   const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
   const showOperatorHud = activeTab === "work";
   const archetype = getPerkArchetypeSnapshot(game);
+  const readingMeta = getReadingObfuscationMeta(game);
   const selfEsteemStatus = getSelfEsteemStatusWord(game.selfEsteem.currentSelfEsteem);
   const selfEsteemToneClass = getSelfEsteemToneClass(selfEsteemStatus);
 
@@ -35,6 +39,12 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
     return undefined;
   }, [game.player.cash]);
 
+  useEffect(() => {
+    if (readingMeta.fullyClear || !showOperatorHud) {
+      setReadingInfoOpen(false);
+    }
+  }, [readingMeta.fullyClear, showOperatorHud]);
+
   return (
     <header className="compact-header chrome-card">
       <div className="header-top-row">
@@ -43,6 +53,14 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
             <div className="header-operator-copy">
               <h3>{game.player.name}</h3>
               <p className="muted-copy">{game.player.companyName}</p>
+              <div className="header-company-glance-mobile" role="list" aria-label="Company summary">
+                <span role="listitem" className="header-company-metric">
+                  Level {game.player.companyLevel}
+                </span>
+                <span role="listitem" className="header-company-metric">
+                  Reputation {game.player.reputation}
+                </span>
+              </div>
             </div>
           ) : null}
           <div className="header-day-copy">
@@ -53,7 +71,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           </div>
         </div>
         <div className="header-top-actions">
-          <div className="header-company-glance" role="list" aria-label="Company summary">
+          <div className="header-company-glance header-company-glance-desktop" role="list" aria-label="Company summary">
             <span role="listitem" className="header-company-metric">
               Level {game.player.companyLevel}
             </span>
@@ -63,11 +81,17 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           </div>
           {showOperatorHud ? (
             <div className="header-action-row">
-              <button className="hud-link-button" onClick={() => openModal("inventory")}>
-                Inventory
-              </button>
               <button className="hud-link-button" onClick={() => openModal("skills")}>
                 Skills
+              </button>
+              <button
+                className="hud-link-button"
+                onClick={() => {
+                  setStoreSection("tools");
+                  openModal("store");
+                }}
+              >
+                Inventory
               </button>
             </div>
           ) : null}
@@ -101,6 +125,19 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           </strong>
         </span>
       </div>
+      {showOperatorHud && !readingMeta.fullyClear ? (
+        <div className="header-reading-disclosure">
+          <button className="ghost-button hud-reading-toggle" aria-expanded={readingInfoOpen} onClick={() => setReadingInfoOpen((open) => !open)}>
+            Reading obfuscated due to low XP
+          </button>
+          {readingInfoOpen ? (
+            <p className="muted-copy">
+              Reading Clarity {readingMeta.clarityPercent}%: some words are scrambled. Improve reading clarity by gaining Reading XP through contract actions,
+              task work, and tool/supply management. Every +25% clarity reduces obfuscation. Full clarity at 95%.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {isFatigued ? (
         <p className="muted-copy">Fatigue from overtime shortens this shift to {totalHours.toFixed(1)} of {baseHours.toFixed(1)} hours.</p>
       ) : null}

@@ -57,6 +57,19 @@ import {
 export type ScreenId = "title" | "game";
 export type GameTabId = "work" | "office" | "contracts" | "store" | "company";
 export type OfficeSectionId = "contracts" | "facilities" | "accounting";
+export type TutorialMode = "fresh-guided" | "current-save";
+export type TutorialStepId =
+  | "open-contracts"
+  | "select-day-labor"
+  | "complete-day-labor"
+  | "continue-day-labor-results"
+  | "end-day"
+  | "select-baba-g"
+  | "accept-baba-g"
+  | "continue-baba-accept-results"
+  | "complete-baba-task"
+  | "continue-baba-task-results"
+  | "done";
 export type OfficeCategoryId = "operations" | "finance";
 export interface OfficeCategorySectionsState {
   operations: "contracts" | "facilities";
@@ -68,6 +81,7 @@ export type ActiveModalId =
   | null
   | "job-details"
   | "inventory"
+  | "store"
   | "skills"
   | "field-log"
   | "active-events"
@@ -84,6 +98,7 @@ const JOB_COMPLETION_FX_MS = 1_600;
 let dayLaborCelebrationTimer: ReturnType<typeof setTimeout> | null = null;
 let timedTaskActionTimer: ReturnType<typeof setTimeout> | null = null;
 let jobCompletionFxTimer: ReturnType<typeof setTimeout> | null = null;
+const TUTORIAL_GUIDED_SEED = 424242;
 
 export interface ActionSummary {
   title: string;
@@ -184,6 +199,26 @@ function isUiColorMode(value: unknown): value is UiColorMode {
   return value === "classic" || value === "neon";
 }
 
+function isTutorialMode(value: unknown): value is TutorialMode {
+  return value === "fresh-guided" || value === "current-save";
+}
+
+function isTutorialStepId(value: unknown): value is TutorialStepId {
+  return (
+    value === "open-contracts" ||
+    value === "select-day-labor" ||
+    value === "complete-day-labor" ||
+    value === "continue-day-labor-results" ||
+    value === "end-day" ||
+    value === "select-baba-g" ||
+    value === "accept-baba-g" ||
+    value === "continue-baba-accept-results" ||
+    value === "complete-baba-task" ||
+    value === "continue-baba-task-results" ||
+    value === "done"
+  );
+}
+
 function isContractFilterId(value: unknown): value is ContractFilterId {
   return value === "profitable" || value === "low-risk" || value === "near-route" || value === "no-new-tools";
 }
@@ -201,26 +236,79 @@ interface UiPrefsPayload {
   uiColorMode: UiColorMode;
   contractFilters: ContractFilterId[];
   uiFxMode: UiFxMode;
+  tutorialCompleted: boolean;
+  tutorialInProgress: boolean;
+  tutorialStepId: TutorialStepId;
+  tutorialMode: TutorialMode | null;
+  tutorialStartDay: number | null;
 }
 
 function loadUiPreferences(): UiPrefsPayload {
   if (typeof localStorage === "undefined") {
-    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
+    return {
+      uiTextScale: "default",
+      uiColorMode: "neon",
+      contractFilters: [],
+      uiFxMode: "full",
+      tutorialCompleted: false,
+      tutorialInProgress: false,
+      tutorialStepId: "open-contracts",
+      tutorialMode: null,
+      tutorialStartDay: null
+    };
   }
   const raw = localStorage.getItem(UI_PREFS_KEY);
   if (!raw) {
-    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
+    return {
+      uiTextScale: "default",
+      uiColorMode: "neon",
+      contractFilters: [],
+      uiFxMode: "full",
+      tutorialCompleted: false,
+      tutorialInProgress: false,
+      tutorialStepId: "open-contracts",
+      tutorialMode: null,
+      tutorialStartDay: null
+    };
   }
   try {
-    const parsed = JSON.parse(raw) as { uiTextScale?: unknown; uiColorMode?: unknown; contractFilters?: unknown; uiFxMode?: unknown };
+    const parsed = JSON.parse(raw) as {
+      uiTextScale?: unknown;
+      uiColorMode?: unknown;
+      contractFilters?: unknown;
+      uiFxMode?: unknown;
+      tutorialCompleted?: unknown;
+      tutorialInProgress?: unknown;
+      tutorialStepId?: unknown;
+      tutorialMode?: unknown;
+      tutorialStartDay?: unknown;
+    };
     return {
       uiTextScale: isUiTextScale(parsed.uiTextScale) ? parsed.uiTextScale : "default",
       uiColorMode: isUiColorMode(parsed.uiColorMode) ? parsed.uiColorMode : "neon",
       contractFilters: normalizeContractFilters(parsed.contractFilters),
-      uiFxMode: parsed.uiFxMode === "reduced" ? "reduced" : "full"
+      uiFxMode: parsed.uiFxMode === "reduced" ? "reduced" : "full",
+      tutorialCompleted: parsed.tutorialCompleted === true,
+      tutorialInProgress: parsed.tutorialInProgress === true,
+      tutorialStepId: isTutorialStepId(parsed.tutorialStepId) ? parsed.tutorialStepId : "open-contracts",
+      tutorialMode: isTutorialMode(parsed.tutorialMode) ? parsed.tutorialMode : null,
+      tutorialStartDay:
+        typeof parsed.tutorialStartDay === "number" && Number.isFinite(parsed.tutorialStartDay) && parsed.tutorialStartDay >= 1
+          ? Math.floor(parsed.tutorialStartDay)
+          : null
     };
   } catch {
-    return { uiTextScale: "default", uiColorMode: "neon", contractFilters: [], uiFxMode: "full" };
+    return {
+      uiTextScale: "default",
+      uiColorMode: "neon",
+      contractFilters: [],
+      uiFxMode: "full",
+      tutorialCompleted: false,
+      tutorialInProgress: false,
+      tutorialStepId: "open-contracts",
+      tutorialMode: null,
+      tutorialStartDay: null
+    };
   }
 }
 
@@ -254,6 +342,11 @@ interface UiState {
   uiColorMode: UiColorMode;
   uiFxMode: UiFxMode;
   contractFilters: ContractFilterId[];
+  tutorialCompleted: boolean;
+  tutorialInProgress: boolean;
+  tutorialStepId: TutorialStepId;
+  tutorialMode: TutorialMode | null;
+  tutorialStartDay: number | null;
   dayLaborCelebrationActive: boolean;
   activeJobProfitRecap: JobProfitRecap | null;
   activeProgressPopup: ProgressPopup | null;
@@ -273,6 +366,11 @@ interface UiState {
   dismissEncounterPopup: () => void;
   setTitlePlayerName: (name: string) => void;
   setTitleCompanyName: (name: string) => void;
+  startTutorial: (mode: TutorialMode) => void;
+  resumeTutorial: () => void;
+  skipTutorial: () => void;
+  syncTutorialProgress: () => void;
+  completeTutorial: () => void;
   newGame: (playerName?: string, companyName?: string, seed?: number) => void;
   continueGame: () => void;
   returnToTitle: () => void;
@@ -312,8 +410,37 @@ interface UiState {
   emptyDumpster: () => void;
 }
 
+function persistUiPrefsFromState(
+  state: Pick<
+    UiState,
+    | "uiTextScale"
+    | "uiColorMode"
+    | "contractFilters"
+    | "uiFxMode"
+    | "tutorialCompleted"
+    | "tutorialInProgress"
+    | "tutorialStepId"
+    | "tutorialMode"
+    | "tutorialStartDay"
+  >
+) {
+  saveUiPreferences({
+    uiTextScale: state.uiTextScale,
+    uiColorMode: state.uiColorMode,
+    contractFilters: state.contractFilters,
+    uiFxMode: state.uiFxMode,
+    tutorialCompleted: state.tutorialCompleted,
+    tutorialInProgress: state.tutorialInProgress,
+    tutorialStepId: state.tutorialStepId,
+    tutorialMode: state.tutorialMode,
+    tutorialStartDay: state.tutorialStartDay
+  });
+}
+
 const bundle = loadContentBundle();
 const TOOL_NAME_BY_ID = new Map(bundle.tools.map((tool) => [tool.id, tool.name]));
+const JOB_BY_ID = new Map([...bundle.jobs, ...bundle.babaJobs].map((job) => [job.id, job]));
+const JOB_NAME_BY_ID = new Map([...bundle.jobs, ...bundle.babaJobs].map((job) => [job.id, job.name]));
 const RESULTS_SECTION_ORDER: ResultsSection[] = ["Money", "Stats", "Inventory/Tools", "Operations/Office", "Progress/Other"];
 
 function toSummary(title: string, lines: string[], digest: string): ActionSummary {
@@ -322,6 +449,30 @@ function toSummary(title: string, lines: string[], digest: string): ActionSummar
     lines,
     digest
   };
+}
+
+function formatAcceptedContractLine(jobId: string): string {
+  const jobName = JOB_NAME_BY_ID.get(jobId) ?? "the selected job";
+  return `Accepted ${jobName}.`;
+}
+
+function isBabaJobId(jobId: string | null | undefined): boolean {
+  if (!jobId) {
+    return false;
+  }
+  return Boolean(JOB_BY_ID.get(jobId)?.tags.includes("baba-g"));
+}
+
+function isSelectedContractBaba(game: GameState, contractId: string | null): boolean {
+  if (!contractId) {
+    return false;
+  }
+  const offer = getAvailableContractOffers(game, bundle).find((entry) => entry.contract.contractId === contractId);
+  if (offer) {
+    return offer.job.tags.includes("baba-g");
+  }
+  const contract = game.contractBoard.find((entry) => entry.contractId === contractId);
+  return isBabaJobId(contract?.jobId);
 }
 
 function formatSignedNumber(value: number): string {
@@ -476,7 +627,7 @@ function buildResultsRows(previous: GameState, next: GameState): ResultsRow[] {
   pushNumericRow(
     rows,
     "Money",
-    "Locked Payout",
+    "Agreed Payout",
     previous.activeJob?.lockedPayout ?? 0,
     next.activeJob?.lockedPayout ?? 0,
     {
@@ -572,6 +723,9 @@ function buildResultsRows(previous: GameState, next: GameState): ResultsRow[] {
     polarity: "higher-better"
   });
   pushNumericRow(rows, "Progress/Other", "Perk Points", previous.perks.corePerkPoints, next.perks.corePerkPoints, {
+    polarity: "higher-better"
+  });
+  pushNumericRow(rows, "Progress/Other", "Reading XP", previous.officeSkills.readingXp, next.officeSkills.readingXp, {
     polarity: "higher-better"
   });
   pushNumericRow(rows, "Progress/Other", "Accounting XP", previous.officeSkills.accountingXp, next.officeSkills.accountingXp, {
@@ -843,6 +997,11 @@ export const useUiStore = create<UiState>((set, get) => ({
   uiColorMode: loadUiPreferences().uiColorMode,
   uiFxMode: loadUiPreferences().uiFxMode,
   contractFilters: loadUiPreferences().contractFilters,
+  tutorialCompleted: loadUiPreferences().tutorialCompleted,
+  tutorialInProgress: loadUiPreferences().tutorialInProgress,
+  tutorialStepId: loadUiPreferences().tutorialStepId,
+  tutorialMode: loadUiPreferences().tutorialMode,
+  tutorialStartDay: loadUiPreferences().tutorialStartDay,
   dayLaborCelebrationActive: false,
   activeJobProfitRecap: null,
   activeProgressPopup: null,
@@ -851,57 +1010,42 @@ export const useUiStore = create<UiState>((set, get) => ({
   titleCompanyName: "",
   hydrateUiPrefs: () => {
     const prefs = loadUiPreferences();
-    set({ uiTextScale: prefs.uiTextScale, uiColorMode: prefs.uiColorMode, uiFxMode: prefs.uiFxMode, contractFilters: prefs.contractFilters });
+    set({
+      uiTextScale: prefs.uiTextScale,
+      uiColorMode: prefs.uiColorMode,
+      uiFxMode: prefs.uiFxMode,
+      contractFilters: prefs.contractFilters,
+      tutorialCompleted: prefs.tutorialCompleted,
+      tutorialInProgress: prefs.tutorialInProgress,
+      tutorialStepId: prefs.tutorialStepId,
+      tutorialMode: prefs.tutorialMode,
+      tutorialStartDay: prefs.tutorialStartDay
+    });
   },
   setUiTextScale: (scale) => {
     const current = get();
-    saveUiPreferences({
-      uiTextScale: scale,
-      uiColorMode: current.uiColorMode,
-      contractFilters: current.contractFilters,
-      uiFxMode: current.uiFxMode
-    });
+    persistUiPrefsFromState({ ...current, uiTextScale: scale });
     set({ uiTextScale: scale });
   },
   setUiColorMode: (mode) => {
     const current = get();
-    saveUiPreferences({
-      uiTextScale: current.uiTextScale,
-      uiColorMode: mode,
-      contractFilters: current.contractFilters,
-      uiFxMode: current.uiFxMode
-    });
+    persistUiPrefsFromState({ ...current, uiColorMode: mode });
     set({ uiColorMode: mode });
   },
   setUiFxMode: (mode) => {
     const current = get();
-    saveUiPreferences({
-      uiTextScale: current.uiTextScale,
-      uiColorMode: current.uiColorMode,
-      contractFilters: current.contractFilters,
-      uiFxMode: mode
-    });
+    persistUiPrefsFromState({ ...current, uiFxMode: mode });
     set({ uiFxMode: mode });
   },
   setContractFilter: (filterId, enabled) => {
     const current = get();
     const nextFilters = enabled ? [...new Set([...current.contractFilters, filterId])] : current.contractFilters.filter((entry) => entry !== filterId);
-    saveUiPreferences({
-      uiTextScale: current.uiTextScale,
-      uiColorMode: current.uiColorMode,
-      contractFilters: nextFilters,
-      uiFxMode: current.uiFxMode
-    });
+    persistUiPrefsFromState({ ...current, contractFilters: nextFilters });
     set({ contractFilters: nextFilters });
   },
   clearContractFilters: () => {
     const current = get();
-    saveUiPreferences({
-      uiTextScale: current.uiTextScale,
-      uiColorMode: current.uiColorMode,
-      contractFilters: [],
-      uiFxMode: current.uiFxMode
-    });
+    persistUiPrefsFromState({ ...current, contractFilters: [] });
     set({ contractFilters: [] });
   },
   dismissJobProfitRecap: () => {
@@ -1066,6 +1210,38 @@ export const useUiStore = create<UiState>((set, get) => ({
         ...state.game,
         player: { ...state.game.player, skills: { ...state.game.player.skills }, tools: { ...state.game.player.tools }, crews: [...state.game.player.crews] },
         bots: [...state.game.bots],
+        botCareers: state.game.botCareers.map((career) => ({
+          ...career,
+          actor: { ...career.actor, skills: { ...career.actor.skills }, tools: { ...career.actor.tools }, crews: [...career.actor.crews] },
+          activeJob: career.activeJob ? { ...career.activeJob, tasks: [...career.activeJob.tasks] } : null,
+          contractBoard: [...career.contractBoard],
+          log: [...career.log],
+          shopSupplies: { ...career.shopSupplies },
+          truckSupplies: { ...career.truckSupplies },
+          workday: { ...career.workday, fatigue: { ...career.workday.fatigue } },
+          research: {
+            ...career.research,
+            unlockedCategories: { ...career.research.unlockedCategories },
+            unlockedSkills: { ...career.research.unlockedSkills },
+            activeProject: career.research.activeProject ? { ...career.research.activeProject } : null,
+            completedProjectIds: [...career.research.completedProjectIds]
+          },
+          tradeProgress: {
+            unlocked: { ...career.tradeProgress.unlocked },
+            unlockedDay: { ...career.tradeProgress.unlockedDay }
+          },
+          officeSkills: { ...career.officeSkills },
+          yard: { ...career.yard },
+          operations: { ...career.operations, monthlyDueByCategory: { ...career.operations.monthlyDueByCategory }, facilities: { ...career.operations.facilities } },
+          perks: {
+            ...career.perks,
+            corePerks: { ...career.perks.corePerks },
+            unlockedPerkTrees: { ...career.perks.unlockedPerkTrees }
+          },
+          selfEsteem: { ...career.selfEsteem },
+          deferredJobs: career.deferredJobs.map((entry) => ({ ...entry, activeJob: { ...entry.activeJob, tasks: [...entry.activeJob.tasks] } })),
+          contractFiles: [...career.contractFiles]
+        })),
         contractBoard: [...state.game.contractBoard],
         activeEventIds: [...state.game.activeEventIds],
         log: [...state.game.log],
@@ -1115,6 +1291,137 @@ export const useUiStore = create<UiState>((set, get) => ({
     })),
   setTitlePlayerName: (name) => set({ titlePlayerName: name }),
   setTitleCompanyName: (name) => set({ titleCompanyName: name }),
+  startTutorial: (mode) => {
+    if (mode === "fresh-guided") {
+      const current = get();
+      const sourcePlayerName = current.game?.player.name ?? current.titlePlayerName;
+      const sourceCompanyName = current.game?.player.companyName ?? current.titleCompanyName;
+      const resolvedPlayerName = sourcePlayerName.trim() || bundle.strings.defaultPlayerName || "You";
+      const resolvedCompanyName = sourceCompanyName.trim() || bundle.strings.defaultCompanyName || "Field Ops";
+      get().newGame(resolvedPlayerName, resolvedCompanyName, TUTORIAL_GUIDED_SEED);
+      const started = get();
+      const startDay = started.game?.day ?? 1;
+      set({
+        tutorialInProgress: true,
+        tutorialStepId: "open-contracts",
+        tutorialMode: mode,
+        tutorialStartDay: startDay,
+        activeModal: null,
+        activeSheet: null,
+        notice: ""
+      });
+      persistUiPrefsFromState(get());
+      return;
+    }
+
+    if (!get().game) {
+      get().continueGame();
+    }
+    const loaded = get();
+    if (!loaded.game) {
+      return;
+    }
+    set({
+      screen: "game",
+      tutorialInProgress: true,
+      tutorialStepId: "open-contracts",
+      tutorialMode: mode,
+      tutorialStartDay: loaded.game.day,
+      activeModal: null,
+      activeSheet: null
+    });
+    persistUiPrefsFromState(get());
+  },
+  resumeTutorial: () => {
+    const current = get();
+    if (current.tutorialStepId === "done") {
+      set({ tutorialCompleted: true, tutorialInProgress: false });
+      persistUiPrefsFromState(get());
+      return;
+    }
+    if (!current.game) {
+      get().continueGame();
+    }
+    const loaded = get();
+    if (!loaded.game) {
+      return;
+    }
+    set({
+      screen: "game",
+      tutorialInProgress: true,
+      tutorialMode: loaded.tutorialMode ?? "current-save",
+      tutorialStartDay: loaded.tutorialStartDay ?? loaded.game.day,
+      activeModal: null,
+      activeSheet: null
+    });
+    persistUiPrefsFromState(get());
+  },
+  skipTutorial: () => {
+    set({ tutorialInProgress: false, activeModal: null, activeSheet: null });
+    persistUiPrefsFromState(get());
+  },
+  syncTutorialProgress: () => {
+    const state = get();
+    if (!state.tutorialInProgress || !state.game) {
+      return;
+    }
+    let nextStep = state.tutorialStepId;
+    if (state.tutorialStepId === "open-contracts") {
+      if (state.activeTab === "office" && state.officeSection === "contracts") {
+        nextStep = "select-day-labor";
+      }
+    } else if (state.tutorialStepId === "select-day-labor") {
+      if (state.selectedContractId === DAY_LABOR_CONTRACT_ID) {
+        nextStep = "complete-day-labor";
+      }
+    } else if (state.tutorialStepId === "complete-day-labor") {
+      const hasDayLaborResults = Boolean(state.activeResultsScreen && state.lastAction?.title === "Day Laborer");
+      if (hasDayLaborResults) {
+        nextStep = "continue-day-labor-results";
+      }
+    } else if (state.tutorialStepId === "continue-day-labor-results") {
+      if (!state.activeResultsScreen) {
+        nextStep = "end-day";
+      }
+    } else if (state.tutorialStepId === "end-day") {
+      const startDay = state.tutorialStartDay ?? state.game.day;
+      if (state.game.day >= startDay + 1) {
+        nextStep = "select-baba-g";
+      }
+    } else if (state.tutorialStepId === "select-baba-g") {
+      if (isSelectedContractBaba(state.game, state.selectedContractId)) {
+        nextStep = "accept-baba-g";
+      }
+    } else if (state.tutorialStepId === "accept-baba-g") {
+      const babaAcceptedWithResults = Boolean(state.activeResultsScreen && state.lastAction?.title === "Contract Accepted");
+      if (babaAcceptedWithResults) {
+        nextStep = "continue-baba-accept-results";
+      }
+    } else if (state.tutorialStepId === "continue-baba-accept-results") {
+      if (!state.activeResultsScreen) {
+        nextStep = "complete-baba-task";
+      }
+    } else if (state.tutorialStepId === "complete-baba-task") {
+      const babaTaskResultOpen = Boolean(state.activeResultsScreen && state.lastAction?.title === "Task Result");
+      if (babaTaskResultOpen) {
+        nextStep = "continue-baba-task-results";
+      }
+    } else if (state.tutorialStepId === "continue-baba-task-results") {
+      if (!state.activeResultsScreen) {
+        nextStep = "done";
+      }
+    }
+
+    if (nextStep === state.tutorialStepId) {
+      return;
+    }
+    set({ tutorialStepId: nextStep });
+    persistUiPrefsFromState(get());
+  },
+  completeTutorial: () => {
+    set({ tutorialCompleted: true, tutorialInProgress: false, tutorialStepId: "done" });
+    persistUiPrefsFromState(get());
+  },
 
   acceptContract: (contractId) => {
     const current = get().game;
@@ -1132,10 +1439,10 @@ export const useUiStore = create<UiState>((set, get) => ({
     const result = acceptContractFlow(current, bundle, contractId);
     const startedDayLaborCelebration = contractId === DAY_LABOR_CONTRACT_ID && result.nextState !== current;
     const nextActionSummary =
-      contractId === DAY_LABOR_CONTRACT_ID
-        ? toSummary("Day Laborer", [result.notice ?? "Worked a day-labor shift."], result.digest)
-        : result.payload
-          ? toSummary("Contract Accepted", [`Accepted ${result.payload.jobId} for the field loop.`], result.digest)
+        contractId === DAY_LABOR_CONTRACT_ID
+          ? toSummary("Day Laborer", [result.notice ?? "Worked a day-labor shift."], result.digest)
+          : result.payload
+          ? toSummary("Contract Accepted", [formatAcceptedContractLine(result.payload.jobId)], result.digest)
           : get().lastAction;
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary?.title ?? "Action Result",

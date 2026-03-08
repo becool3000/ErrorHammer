@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FACILITY_ACTION_COSTS } from "../../core/operations";
 import { getStarterKitProgress, STARTER_TOOL_IDS } from "../../core/playerFlow";
 import { bundle, useUiStore } from "../state";
@@ -11,20 +11,15 @@ interface FacilityActionRow {
 }
 
 export function FacilitiesTab() {
-  const [otherOptionsOpen, setOtherOptionsOpen] = useState(false);
+  const starterKitTrackRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollStarterKitLeft, setCanScrollStarterKitLeft] = useState(false);
+  const [canScrollStarterKitRight, setCanScrollStarterKitRight] = useState(false);
   const game = useUiStore((state) => state.game);
   const openStorage = useUiStore((state) => state.openStorage);
   const upgradeBusinessTier = useUiStore((state) => state.upgradeBusinessTier);
   const enableDumpsterService = useUiStore((state) => state.enableDumpsterService);
   const closeOfficeManually = useUiStore((state) => state.closeOfficeManually);
   const closeYardManually = useUiStore((state) => state.closeYardManually);
-
-  const dueRows = useMemo(() => {
-    if (!game) {
-      return [];
-    }
-    return Object.entries(game.operations.monthlyDueByCategory).sort(([left], [right]) => left.localeCompare(right));
-  }, [game]);
 
   if (!game) {
     return null;
@@ -39,12 +34,12 @@ export function FacilitiesTab() {
   }));
   const facilityTierLabel =
     operations.businessTier === "yard"
-      ? "Yard Tier"
+      ? "Yard"
       : operations.businessTier === "office"
-        ? "Office Tier"
+        ? "Office"
         : operations.facilities.storageOwned
-          ? "Storage Tier"
-          : "Truck Life";
+          ? "Storage"
+          : "Truck";
   const openStorageCost = formatCostLabel(FACILITY_ACTION_COSTS.openStorage);
   const openOfficeCost = formatCostLabel(FACILITY_ACTION_COSTS.openOffice);
   const openYardCost = formatCostLabel(FACILITY_ACTION_COSTS.openYard);
@@ -94,45 +89,44 @@ export function FacilitiesTab() {
       onClick: () => closeOfficeManually()
     }
   ];
-  const availableActionsCount = actions.filter((action) => !action.disabled).length;
-  const otherOptionsToggleLabel = otherOptionsOpen
-    ? "Hide Other Options"
-    : availableActionsCount > 0
-      ? `Other Options (${availableActionsCount})`
-      : "Other Options";
+  useEffect(() => {
+    syncStarterKitScrollState();
+  }, [starterKit.total, starterKit.owned]);
+
+  useEffect(() => {
+    const onResize = () => syncStarterKitScrollState();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  function syncStarterKitScrollState() {
+    const track = starterKitTrackRef.current;
+    if (!track) {
+      setCanScrollStarterKitLeft(false);
+      setCanScrollStarterKitRight(false);
+      return;
+    }
+    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+    setCanScrollStarterKitLeft(track.scrollLeft > 4);
+    setCanScrollStarterKitRight(track.scrollLeft < maxScrollLeft - 4);
+  }
+
+  function nudgeStarterKit(direction: "left" | "right") {
+    const track = starterKitTrackRef.current;
+    if (!track) {
+      return;
+    }
+    const delta = Math.max(180, Math.floor(track.clientWidth * 0.72)) * (direction === "left" ? -1 : 1);
+    track.scrollBy({ left: delta, behavior: "smooth" });
+    window.setTimeout(() => syncStarterKitScrollState(), 200);
+  }
 
   return (
     <section className="tab-panel facilities-tab">
       <article className="hero-card chrome-card">
         <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Facilities</p>
-            <h2>{facilityTierLabel}</h2>
-          </div>
+          <h2>{facilityTierLabel}</h2>
           <span className="chip">Cash ${game.player.cash}</span>
-        </div>
-        <div className="chip-grid">
-          <span className="chip">Cycle Day {operations.billingCycleDay}/22</span>
-          <span className="chip">Strikes {operations.missedBillStrikes}/2</span>
-          <span className="chip">Unpaid ${operations.unpaidBalance}</span>
-        </div>
-      </article>
-
-      <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Monthly Due Preview</p>
-            <h3>Current Fixed Costs</h3>
-          </div>
-        </div>
-        <div className="stack-list">
-          {dueRows.length === 0 ? <p className="muted-copy">No monthly due components yet. Unlock facilities to expand operations.</p> : null}
-          {dueRows.map(([key, value]) => (
-            <div key={key} className="section-label-row tight-row">
-              <span>{key.replace(/_/g, " ")}</span>
-              <strong>${value}</strong>
-            </div>
-          ))}
         </div>
       </article>
 
@@ -146,42 +140,48 @@ export function FacilitiesTab() {
           </div>
           <span className="chip">{starterKit.allOwned ? "Ready" : "Incomplete"}</span>
         </div>
-        <div className="chip-grid">
-          {starterToolRows.map((tool) => (
-            <span key={tool.toolId} className={tool.owned ? "chip tone-success" : "chip muted"}>
-              {tool.owned ? "Owned" : "Missing"} {tool.label}
-            </span>
-          ))}
+        <div className="starter-kit-carousel-shell">
+          <div className="starter-kit-carousel-nav">
+            <button
+              type="button"
+              className="icon-button carousel-arrow"
+              aria-label="Scroll starter kit left"
+              disabled={!canScrollStarterKitLeft}
+              onClick={() => nudgeStarterKit("left")}
+            >
+              {"<"}
+            </button>
+            <button
+              type="button"
+              className="icon-button carousel-arrow"
+              aria-label="Scroll starter kit right"
+              disabled={!canScrollStarterKitRight}
+              onClick={() => nudgeStarterKit("right")}
+            >
+              {">"}
+            </button>
+          </div>
+          <div ref={starterKitTrackRef} className="chip-grid starter-kit-carousel-track" onScroll={syncStarterKitScrollState}>
+            {starterToolRows.map((tool) => (
+              <span key={tool.toolId} className={tool.owned ? "chip tone-success" : "chip muted"}>
+                {tool.owned ? "Owned" : "Missing"} {tool.label}
+              </span>
+            ))}
+          </div>
         </div>
       </article>
 
       <article className="chrome-card inset-card">
         <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Other Options</p>
-            <h3>Facility Actions</h3>
-          </div>
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() => setOtherOptionsOpen((open) => !open)}
-            aria-expanded={otherOptionsOpen}
-            aria-controls="facility-other-options"
-          >
-            {otherOptionsToggleLabel}
-          </button>
+          <h3>Facility Unlock</h3>
         </div>
-        {otherOptionsOpen ? (
-          <div id="facility-other-options" className="stack-list facilities-other-options">
-            {actions.map((action) => (
-              <button key={action.id} className="ghost-button secondary-action-button" onClick={action.onClick} disabled={action.disabled}>
-                {action.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="muted-copy">Expand to manage storage, office, yard, and dumpster actions.</p>
-        )}
+        <div className="stack-list facilities-other-options">
+          {actions.map((action) => (
+            <button key={action.id} className="ghost-button secondary-action-button" onClick={action.onClick} disabled={action.disabled}>
+              {action.label}
+            </button>
+          ))}
+        </div>
       </article>
     </section>
   );

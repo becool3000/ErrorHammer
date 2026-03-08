@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { SegmentedControl } from "../components/SegmentedControl";
 import { releaseInfo } from "../releaseInfo";
-import { UiFxMode, UiTextScale, useUiStore } from "../state";
+import { TutorialMode, UiFxMode, UiTextScale, useUiStore } from "../state";
 
 const textScaleOptions: Array<{ id: UiTextScale; label: string }> = [
   { id: "xsmall", label: "XS" },
@@ -19,7 +20,18 @@ export function SettingsTab() {
   const setUiTextScale = useUiStore((state) => state.setUiTextScale);
   const uiFxMode = useUiStore((state) => state.uiFxMode);
   const setUiFxMode = useUiStore((state) => state.setUiFxMode);
+  const tutorialCompleted = useUiStore((state) => state.tutorialCompleted);
+  const tutorialInProgress = useUiStore((state) => state.tutorialInProgress);
+  const startTutorial = useUiStore((state) => state.startTutorial);
+  const resumeTutorial = useUiStore((state) => state.resumeTutorial);
+  const [modePickerOpen, setModePickerOpen] = useState(false);
   const builtAtLabel = releaseInfo.builtAtUtc ? new Date(releaseInfo.builtAtUtc).toUTCString() : "Local build";
+  const tutorialButtonLabel = tutorialInProgress ? "Resume Tutorial" : tutorialCompleted ? "Replay Tutorial" : "Tutorial";
+
+  function launchTutorial(mode: TutorialMode) {
+    startTutorial(mode);
+    setModePickerOpen(false);
+  }
 
   return (
     <section className="stack-block">
@@ -43,6 +55,36 @@ export function SettingsTab() {
             <span>Commit {releaseInfo.gitCommit}</span>
           </div>
           <p className="muted-copy">Built {builtAtLabel}</p>
+        </div>
+        <div className="text-size-control">
+          <p className="eyebrow">Tutorial</p>
+          <div className="action-row">
+            <button
+              className="ghost-button"
+              onClick={() => {
+                if (tutorialInProgress) {
+                  resumeTutorial();
+                  return;
+                }
+                setModePickerOpen((open) => !open);
+              }}
+            >
+              {tutorialButtonLabel}
+            </button>
+          </div>
+          {modePickerOpen ? (
+            <div className="settings-tutorial-picker stack-list">
+              <p className="muted-copy">Pick how you want to run onboarding.</p>
+              <div className="action-row">
+                <button className="primary-button" onClick={() => launchTutorial("fresh-guided")}>
+                  Fresh guided run
+                </button>
+                <button className="ghost-button" onClick={() => launchTutorial("current-save")}>
+                  Use current save
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </article>
     </section>

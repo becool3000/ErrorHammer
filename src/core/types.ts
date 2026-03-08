@@ -641,12 +641,32 @@ export interface TaskUnitResult {
   digest: string;
 }
 
+export interface BotCareerState {
+  actor: ActorState;
+  activeJob: ActiveJobState | null;
+  contractBoard: ContractInstance[];
+  log: DayLog[];
+  shopSupplies: SupplyInventory;
+  truckSupplies: SupplyInventory;
+  workday: WorkdayState;
+  research: ResearchState;
+  tradeProgress: TradeProgressState;
+  officeSkills: OfficeSkillsState;
+  yard: YardState;
+  operations: OperationsState;
+  perks: PerksState;
+  selfEsteem: SelfEsteemState;
+  deferredJobs: DeferredJobState[];
+  contractFiles: ContractFileSnapshot[];
+}
+
 export interface GameState {
   saveVersion: number;
   day: number;
   seed: number;
   player: ActorState;
   bots: ActorState[];
+  botCareers: BotCareerState[];
   contractBoard: ContractInstance[];
   activeEventIds: string[];
   log: DayLog[];

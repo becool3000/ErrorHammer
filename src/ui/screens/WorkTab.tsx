@@ -8,6 +8,7 @@ import {
   getCurrentTask,
   getCurrentTaskGuidance,
   getGasStationStopPlan,
+  getLevelProgress,
   getOperatorLevel,
   getSkillDisplayRows,
   getSupplyQuantity,
@@ -16,7 +17,8 @@ import {
   hasUsableTools
 } from "../../core/playerFlow";
 import { CORE_PERK_IDS, formatArchetypeLabel, formatPerkLabel, getPerkArchetypeSnapshot } from "../../core/perks";
-import { ActiveTaskState, DeferredJobState, JobProfitRecap, RecoveryActionId, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
+import { mapSkillToCoreTrack } from "../../core/tradeProgress";
+import { ActiveTaskState, DeferredJobState, GameState, RecoveryActionId, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
 import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
@@ -46,8 +48,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const openModal = useUiStore((state) => state.openModal);
   const goToTab = useUiStore((state) => state.goToTab);
   const setCartQuantity = useUiStore((state) => state.setCartQuantity);
-  const activeJobProfitRecap = useUiStore((state) => state.activeJobProfitRecap);
-  const dismissJobProfitRecap = useUiStore((state) => state.dismissJobProfitRecap);
   const [timerNowMs, setTimerNowMs] = useState(() => Date.now());
   if (!game) {
     return null;
@@ -325,7 +325,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   }
 
   if (modalView === "skills") {
-    const skillRows = getSkillDisplayRows(game.player);
+    const skillRows = getVisibleSkillRows(game);
     const operatorLevel = getOperatorLevel(game.player);
     const archetype = getPerkArchetypeSnapshot(game);
     return (
@@ -338,9 +338,9 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
           <div className="stack-list skill-ledger-list">
             {skillRows.map((skill) => (
-              <article key={skill.skillId} className="task-summary">
+              <article key={skill.key} className="task-summary">
                 <div className="section-label-row tight-row">
-                  <strong>{formatSkillLabel(skill.skillId)}</strong>
+                  <strong>{skill.label}</strong>
                   <span>Lv {skill.level}</span>
                 </div>
                 <div className="progress-track" aria-hidden="true">
@@ -433,7 +433,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (modalView === "active-events") {
     return (
       <section className="stack-block">
-        <EventCueCard eventCueRows={eventCueRows} />
+        <EventCueCard game={game} eventCueRows={eventCueRows} />
       </section>
     );
   }
@@ -495,9 +495,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               })}
             </div>
           </article>
-        ) : null}
-        {activeJobProfitRecap ? (
-          <JobProfitRecapCard recap={activeJobProfitRecap} onDismiss={dismissJobProfitRecap} />
         ) : null}
         {(pendingRecoveryAction || pendingDeferredAbandonId) && (
           <RecoveryConfirmModal
@@ -714,7 +711,6 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             ) : null}
           </div>
         ) : null}
-        {activeJobProfitRecap ? <JobProfitRecapCard recap={activeJobProfitRecap} onDismiss={dismissJobProfitRecap} /> : null}
       </article>
 
       {(pendingRecoveryAction || pendingDeferredAbandonId) && (
@@ -730,9 +726,56 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   );
 }
 
+interface VisibleSkillRow {
+  key: string;
+  label: string;
+  level: number;
+  xp: number;
+  current: number;
+  needed: number | null;
+  progress: number;
+}
+
+function getVisibleSkillRows(game: GameState): VisibleSkillRow[] {
+  const officeSkillRows: VisibleSkillRow[] = [
+    createOfficeSkillRow("reading", "Reading", game.officeSkills.readingXp),
+    createOfficeSkillRow("accounting", "Accounting", game.officeSkills.accountingXp)
+  ];
+  const unlockedTradeSkillRows: VisibleSkillRow[] = getSkillDisplayRows(game.player)
+    .filter((skill) => {
+      const coreTrack = mapSkillToCoreTrack(skill.skillId);
+      return coreTrack ? game.tradeProgress.unlocked[coreTrack] : false;
+    })
+    .map((skill) => ({
+      key: `trade:${skill.skillId}`,
+      label: formatSkillLabel(skill.skillId),
+      level: skill.level,
+      xp: skill.xp,
+      current: skill.current,
+      needed: skill.needed,
+      progress: skill.progress
+    }));
+  return [...officeSkillRows, ...unlockedTradeSkillRows];
+}
+
+function createOfficeSkillRow(skillId: "reading" | "accounting", label: string, xp: number): VisibleSkillRow {
+  const progress = getLevelProgress(Math.max(0, xp));
+  return {
+    key: `office:${skillId}`,
+    label,
+    level: progress.level,
+    xp: Math.max(0, Math.round(xp)),
+    current: progress.current,
+    needed: progress.needed,
+    progress: progress.progress
+  };
+}
+
 function EventCueCard({
+  game,
   eventCueRows
 }: {
+  game: GameState;
   eventCueRows: Array<{ event: (typeof bundle.events)[number]; cues: string[] }>;
 }) {
   return (
@@ -752,7 +795,7 @@ function EventCueCard({
               <strong>{event.flavor.headline}</strong>
               <span>{event.name}</span>
             </div>
-            <p className="muted-copy">{event.flavor.impact_line}</p>
+            <p className="muted-copy">{obfuscateReadableText(game, event.flavor.impact_line, `event:${event.id}:impact`)}</p>
             <div className="chip-grid">
               {cues.map((cue) => (
                 <span key={`${event.id}-${cue}`} className="chip large-chip">
@@ -945,22 +988,6 @@ function formatSignedMoney(value: number): string {
   return rounded >= 0 ? `+$${rounded}` : `-$${Math.abs(rounded)}`;
 }
 
-function formatActualCostDriverLabel(driver: "materials" | "fuel" | "trash" | "other" | "none"): string {
-  if (driver === "materials") {
-    return "Materials";
-  }
-  if (driver === "fuel") {
-    return "Fuel";
-  }
-  if (driver === "trash") {
-    return "Trash";
-  }
-  if (driver === "other") {
-    return "Other";
-  }
-  return "None";
-}
-
 function sortDeferredByUrgency(currentDay: number, left: DeferredJobState, right: DeferredJobState): number {
   const leftDaysLeft = 7 - Math.max(0, currentDay - left.deferredAtDay);
   const rightDaysLeft = 7 - Math.max(0, currentDay - right.deferredAtDay);
@@ -1015,43 +1042,3 @@ function RecoveryConfirmModal({
     </div>
   );
 }
-
-function JobProfitRecapCard({
-  recap,
-  onDismiss
-}: {
-  recap: JobProfitRecap;
-  onDismiss: () => void;
-}) {
-  const deltaClass = recap.deltaNet >= 0 ? "tone-success" : "tone-danger";
-  const netClass = recap.actual.net >= 0 ? "tone-success" : "tone-danger";
-  return (
-    <article className="chrome-card inset-card recap-card">
-      <div className="section-label-row">
-        <div>
-          <p className="eyebrow">Profit Recap</p>
-          <strong>{recap.jobName}</strong>
-        </div>
-        <button className="ghost-button" onClick={onDismiss}>
-          Clear
-        </button>
-      </div>
-      <div className="material-need-meta">
-        <span>Before {formatSignedMoney(recap.estimate.projectedNetOnSuccess)}</span>
-        <span className={netClass}>After {formatSignedMoney(recap.actual.net)}</span>
-        <span className={deltaClass}>Delta {formatSignedMoney(recap.deltaNet)}</span>
-      </div>
-      <div className="material-need-meta">
-        <span>Payout ${recap.actual.payout}</span>
-        <span>Costs ${recap.actual.totalCost}</span>
-        <span>Driver {formatActualCostDriverLabel(recap.actual.biggestCostDriver)}</span>
-      </div>
-      <div className="material-need-meta">
-        <span>Hours Est {recap.estimatedHoursAtAccept.toFixed(1)}h</span>
-        <span>Actual {recap.actualHoursAtClose.toFixed(1)}h</span>
-      </div>
-      <p className="muted-copy">{recap.summaryLine}</p>
-    </article>
-  );
-}
-

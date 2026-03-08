@@ -10,6 +10,9 @@ import {
   getAvailableContractOffers,
   getContractEstimateSnapshot,
   getCurrentTask,
+  getCurrentTaskGuidance,
+  getQuickBuyPlan,
+  isStarterToolId,
   performTaskUnit as performTaskUnitFlow
 } from "../src/core/playerFlow";
 import { SAVE_VERSION } from "../src/core/save";
@@ -58,6 +61,11 @@ function resetUi() {
     uiColorMode: "neon",
     uiFxMode: "full",
     contractFilters: [],
+    tutorialCompleted: false,
+    tutorialInProgress: false,
+    tutorialStepId: "open-contracts",
+    tutorialMode: null,
+    tutorialStartDay: null,
     dayLaborCelebrationActive: false,
     activeJobProfitRecap: null,
     activeProgressPopup: null,
@@ -347,13 +355,14 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("heading", { name: /Cashflow Ledger/i })).toBeTruthy();
   });
 
-  it("EH-TW-202: new game contracts begin with Day Labor + Baba and no unlocked trade offers", () => {
+  it("EH-TW-202: new game contracts begin with Baba G spotlight and no unlocked trade offers", () => {
     const game = createInitialGameState(bundle, 9402);
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: null });
 
     render(<App />);
-    expect(screen.getAllByRole("button", { name: /Day Labor/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /Baba G/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: /Baba G Spotlight/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Select Baba G Job/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Work Day Laborer Shift/i })).toBeNull();
     expect(screen.getByText(/No Trade Contracts Unlocked/i)).toBeTruthy();
   });
 
@@ -370,7 +379,7 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("button", { name: /Empty Dumpster/i })).toBeTruthy();
   });
 
-  it("EH-TW-233: facilities removes next-step/policy cards and keeps all actions in collapsed options", () => {
+  it("EH-TW-233: facilities removes next-step/policy cards and keeps Facility Unlock actions always expanded", () => {
     const game = createInitialGameState(bundle, 9405);
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "facilities", selectedContractId: null });
 
@@ -378,12 +387,9 @@ describe("compact shell ui", () => {
 
     expect(screen.queryByText(/Next Step/i)).toBeNull();
     expect(screen.queryByRole("heading", { name: /Billing and Downgrade Rules/i })).toBeNull();
-    expect(screen.getByRole("button", { name: /Other Options/i })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Open Storage/i })).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: /Other Options/i }));
+    expect(screen.getByRole("heading", { name: /Facility Unlock/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Open Storage/i })).toBeTruthy();
-    expect(screen.getByText(/Close Office/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Close Office/i })).toBeTruthy();
   });
 
   it("EH-TW-204: accounting clarity unlocks deeper finance lines and low clarity masks numbers", () => {
@@ -395,7 +401,7 @@ describe("compact shell ui", () => {
 
     expect(screen.getAllByText(/\$\?\?/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Accountant Salary/i)).toBeNull();
-    expect(screen.getByText(/Improve Accounting clarity to reveal deeper cost lines/i)).toBeTruthy();
+    expect(screen.getByText(/more Accounting XP and Clarity you gain, the more of this ledger you will understand/i)).toBeTruthy();
 
     act(() => {
       const current = useUiStore.getState().game;
@@ -448,6 +454,174 @@ describe("compact shell ui", () => {
 
     expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/No active job/i)).toBeTruthy();
+  });
+
+  it("EH-TW-249: title tutorial launcher offers both modes and starts fresh guided run", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Tutorial" }));
+    expect(screen.getByRole("button", { name: "Fresh guided run" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Use current save" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fresh guided run" }));
+
+    expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
+    expect(screen.getByText(/Tutorial Coach/i)).toBeTruthy();
+    const tutorialState = useUiStore.getState();
+    expect(tutorialState.tutorialInProgress).toBe(true);
+    expect(tutorialState.tutorialMode).toBe("fresh-guided");
+    expect(tutorialState.tutorialStepId).toBe("open-contracts");
+    expect(tutorialState.tutorialStartDay).toBe(1);
+  });
+
+  it("EH-TW-250: title tutorial current-save mode uses existing continue-missing notice path", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Tutorial" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use current save" }));
+
+    expect(screen.getByText(bundle.strings.continueMissing)).toBeTruthy();
+    expect(useUiStore.getState().screen).toBe("title");
+  });
+
+  it("EH-TW-251: settings tutorial section can launch current-save tutorial and activate coach", () => {
+    const game = createInitialGameState(bundle, 9446);
+    useUiStore.setState({ screen: "game", game, activeModal: "settings", activeTab: "work", selectedContractId: null });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Tutorial" }));
+    expect(screen.getByRole("button", { name: "Fresh guided run" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Use current save" }));
+
+    expect(useUiStore.getState().tutorialInProgress).toBe(true);
+    expect(useUiStore.getState().tutorialMode).toBe("current-save");
+    expect(screen.getByText(/Tutorial Coach/i)).toBeTruthy();
+  });
+
+  it("EH-TW-252: tutorial progression advances through day labor then Baba G walkthrough and marks completion", () => {
+    const game = createInitialGameState(bundle, 9447);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: null });
+
+    render(<App />);
+
+    act(() => {
+      useUiStore.getState().startTutorial("current-save");
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("open-contracts");
+
+    act(() => {
+      useUiStore.setState({ activeTab: "office", officeSection: "contracts" });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("select-day-labor");
+
+    act(() => {
+      useUiStore.setState({ selectedContractId: DAY_LABOR_CONTRACT_ID });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("complete-day-labor");
+
+    act(() => {
+      useUiStore.setState({
+        lastAction: { title: "Day Laborer", lines: ["Worked a shift."], digest: "tut-day-labor" },
+        activeResultsScreen: { title: "Day Laborer", digest: "tut-day-labor", rows: [], detailLines: [], openedAtMs: Date.now() }
+      });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("continue-day-labor-results");
+
+    act(() => {
+      useUiStore.setState({ activeResultsScreen: null });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("end-day");
+
+    act(() => {
+      const current = useUiStore.getState().game;
+      if (!current) {
+        throw new Error("Expected game state for tutorial day progression.");
+      }
+      useUiStore.setState({ game: { ...current, day: current.day + 1 } });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("select-baba-g");
+
+    let babaContractId = "";
+    act(() => {
+      const current = useUiStore.getState().game;
+      if (!current) {
+        throw new Error("Expected game state for Baba G selection step.");
+      }
+      const babaOffer = getAvailableContractOffers(current, bundle).find(
+        (offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && offer.job.tags.includes("baba-g")
+      );
+      if (!babaOffer) {
+        throw new Error("Expected a Baba G offer for tutorial progression.");
+      }
+      babaContractId = babaOffer.contract.contractId;
+      useUiStore.setState({ activeTab: "office", officeSection: "contracts", selectedContractId: babaContractId });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("accept-baba-g");
+
+    act(() => {
+      useUiStore.setState({
+        lastAction: { title: "Contract Accepted", lines: ["Accepted Baba G job."], digest: "tut-baba-accept" },
+        activeResultsScreen: { title: "Contract Accepted", digest: "tut-baba-accept", rows: [], detailLines: [], openedAtMs: Date.now() }
+      });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("continue-baba-accept-results");
+
+    act(() => {
+      useUiStore.setState({ activeResultsScreen: null });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("complete-baba-task");
+
+    act(() => {
+      useUiStore.setState({
+        lastAction: { title: "Task Result", lines: ["Completed one Baba task."], digest: "tut-baba-task" },
+        activeResultsScreen: { title: "Task Result", digest: "tut-baba-task", rows: [], detailLines: [], openedAtMs: Date.now() }
+      });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("continue-baba-task-results");
+
+    act(() => {
+      useUiStore.setState({ activeResultsScreen: null });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("done");
+
+    fireEvent.click(screen.getByRole("button", { name: "Finish Tutorial" }));
+    expect(useUiStore.getState().tutorialCompleted).toBe(true);
+    expect(useUiStore.getState().tutorialInProgress).toBe(false);
+  });
+
+  it("EH-TW-253: skipping tutorial preserves step and resume restores progress", () => {
+    const game = createInitialGameState(bundle, 9448);
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: null });
+
+    render(<App />);
+
+    act(() => {
+      useUiStore.getState().startTutorial("current-save");
+      useUiStore.setState({ activeTab: "office", officeSection: "contracts" });
+      useUiStore.getState().syncTutorialProgress();
+    });
+    expect(useUiStore.getState().tutorialStepId).toBe("select-day-labor");
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip Tutorial" }));
+    expect(useUiStore.getState().tutorialInProgress).toBe(false);
+    expect(useUiStore.getState().tutorialStepId).toBe("select-day-labor");
+
+    act(() => {
+      useUiStore.getState().resumeTutorial();
+    });
+    expect(useUiStore.getState().tutorialInProgress).toBe(true);
+    expect(useUiStore.getState().tutorialStepId).toBe("select-day-labor");
   });
 
   it("EH-TW-070: Work tab no longer shows day labor action when there is no active job", () => {
@@ -543,25 +717,32 @@ describe("compact shell ui", () => {
     }
   });
 
-  it("EH-TW-054: operator card exposes inventory and skills modals", () => {
+  it("EH-TW-054: operator card shows reading/accounting first and hides locked trade skills", () => {
     const game = createInitialGameState(bundle, 4041);
     useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Inventory$/i }));
-    expect(screen.getByRole("dialog", { name: /Inventory/i })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Close Inventory/i }));
-
     fireEvent.click(screen.getByRole("button", { name: /^Skills$/i }));
     expect(screen.getByRole("dialog", { name: /Skills/i })).toBeTruthy();
     expect(screen.getByText(/Skill Ledger/i)).toBeTruthy();
     expect(screen.getAllByText(/Avg XP \d+/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Electrician/i)).toBeTruthy();
-    expect(screen.getByText(/HVAC Technician/i)).toBeTruthy();
-    expect(screen.getByText(/Solar Panel Installer/i)).toBeTruthy();
-    expect(screen.getByText(/Concrete Finisher/i)).toBeTruthy();
-    expect(screen.getAllByText(/Lv 1/i).length).toBeGreaterThan(0);
+    const readingSkill = screen.getByText(/^Reading$/i);
+    const accountingSkill = screen.getByText(/^Accounting$/i);
+    expect(Boolean(readingSkill.compareDocumentPosition(accountingSkill) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(screen.queryByText(/^Electrician$/i)).toBeNull();
+    expect(screen.queryByText(/^HVAC Technician$/i)).toBeNull();
+    expect(screen.getAllByText(/^Lv 0$/i).length).toBeGreaterThanOrEqual(2);
+    fireEvent.click(screen.getByRole("button", { name: /Close Skills/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inventory$/i }));
+    expect(screen.getByRole("dialog", { name: /Tools & Supplies/i })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Tools" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Truck Tools/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Supplies" }));
+    expect(screen.getByRole("tab", { name: "Supplies" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Truck Supplies" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Storage Supplies" })).toBeTruthy();
   });
 
   it("EH-TW-055: XP gains are shown in Task Result while level-up popups still surface", () => {
@@ -665,8 +846,10 @@ describe("compact shell ui", () => {
     expect(useUiStore.getState().activeProgressPopup?.id ?? null).not.toBe(firstPopupId);
   });
 
-  it("EH-TW-030 and EH-TW-031: store sections switch and off-shop state disables actions", () => {
+  it("EH-TW-030 and EH-TW-031: store sections switch and truck-only mode keeps bench actions available off-shop", () => {
     const game = buildAcceptableGame(5050);
+    game.operations.facilities.storageOwned = false;
+    delete game.player.tools.hammer;
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
 
     render(<App />);
@@ -682,15 +865,15 @@ describe("compact shell ui", () => {
       });
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /^Company$/i }));
-    fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
-
-    expect(screen.getByText(/tool bench/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole("tab", { name: "Tools" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Work$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Inventory$/i }));
+    expect(screen.getByRole("dialog", { name: /Tools & Supplies/i })).toBeTruthy();
+    expect(screen.queryByText(/return to storage before using the tool bench/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^Truck Tools/i }));
-    expect((screen.getAllByRole("button", { name: /^Repair$/i })[0] as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(screen.getByRole("tab", { name: "Stock" }));
-    expect(screen.getByText(/Storage Stock/i)).toBeTruthy();
+    expect((screen.getAllByRole("button", { name: /^Buy$/i })[0] as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("tab", { name: "Supplies" }));
+    expect(screen.getByRole("heading", { name: "Truck Supplies" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Storage Supplies" })).toBeTruthy();
   });
 
   it("EH-TW-039: quick buy button appears when tools are missing", () => {
@@ -746,7 +929,48 @@ describe("compact shell ui", () => {
     expect(quickBuy.disabled).toBe(false);
   });
 
-  it("EH-TW-032 and EH-TW-033: company detail modals and bottom nav preserve gameplay state", () => {
+  it("EH-TW-242: quick buy explains storage unlock when missing non-starter tools in truck-only mode", () => {
+    const game = buildAcceptableGame(9092);
+    game.operations.facilities.storageOwned = false;
+    const offerWithLockedQuickBuyTool = getAvailableContractOffers(game, bundle).find((offer) => {
+      if (offer.contract.contractId === DAY_LABOR_CONTRACT_ID || offer.job.tags.includes("baba-g")) {
+        return false;
+      }
+      return Boolean(offer.job.requiredTools.some((toolId) => !isStarterToolId(toolId)));
+    });
+    if (!offerWithLockedQuickBuyTool) {
+      throw new Error("Expected at least one non-day-labor offer that requires a non-starter tool.");
+    }
+    const missingToolId = offerWithLockedQuickBuyTool.job.requiredTools.find((toolId) => !isStarterToolId(toolId));
+    if (!missingToolId) {
+      throw new Error("Expected non-starter required tool for quick-buy storage lock test.");
+    }
+    delete game.player.tools[missingToolId];
+
+    const quickBuyContract = {
+      contractId: "ui-quick-buy-storage-lock-contract",
+      jobId: offerWithLockedQuickBuyTool.job.id,
+      districtId: offerWithLockedQuickBuyTool.job.districtId,
+      payoutMult: 1,
+      expiresDay: 1
+    };
+    game.contractBoard = [quickBuyContract];
+    useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: quickBuyContract.contractId });
+
+    render(<App />);
+
+    const plan = getQuickBuyPlan(game, bundle, quickBuyContract.contractId);
+    expect(plan?.starterGateBlocked).toBe(true);
+    const blockedToolName = plan?.missingTools.find((line) => !isStarterToolId(line.toolId))?.toolName ?? "";
+    expect(blockedToolName.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Unlock storage first/i)).toBeTruthy();
+    expect(screen.getByText(new RegExp(`Missing ${blockedToolName}`, "i"))).toBeTruthy();
+    expect(screen.getByText(/need[s]? storage unlocked before quick buy because non-starter tools need storage space/i)).toBeTruthy();
+    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i });
+    expect(quickBuy.disabled).toBe(true);
+  });
+
+  it("EH-TW-032 and EH-TW-033: contracts view removes company action panel while bottom nav preserves gameplay state", () => {
     const game = createInitialGameState(bundle, 6060);
     useUiStore.setState({
       screen: "game",
@@ -758,13 +982,9 @@ describe("compact shell ui", () => {
 
     render(<App />);
 
-    expect(screen.getByRole("button", { name: /District Access/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Crew: Coming Soon/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Competitor News/i })).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("button", { name: /District Access/i }));
-    expect(screen.getByRole("dialog", { name: /District Access/i })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Close District Access/i }));
+    expect(screen.queryByRole("button", { name: /District Access/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Crew: Coming Soon/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Competitor News/i })).toBeNull();
     fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
     expect(screen.getByRole("button", { name: /^Company$/i, pressed: true })).toBeTruthy();
     expect(useUiStore.getState().game?.seed).toBe(6060);
@@ -783,9 +1003,12 @@ describe("compact shell ui", () => {
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Crew: Coming Soon/i }));
+    act(() => {
+      useUiStore.getState().openModal("crews");
+    });
     expect(screen.getByRole("dialog", { name: /Crew Status/i })).toBeTruthy();
-    expect(screen.getByText(/temporarily disabled/i)).toBeTruthy();
+    expect(screen.getByText(/Crew: Coming Soon/i)).toBeTruthy();
+    expect(screen.getByText(/Frozen/i)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Hire Crew$/i })).toBeNull();
   });
 
@@ -893,6 +1116,91 @@ describe("compact shell ui", () => {
     expect(playerHud.textContent ?? "").not.toMatch(/Overtime Limit/i);
     expect(playerHud.textContent ?? "").not.toMatch(/Rep/i);
     expect(screen.getAllByRole("button", { name: /^End Day$/i }).length).toBe(1);
+  });
+
+  it("EH-TW-243: work HUD shows reading clarity hint below 95% and hides it at full clarity", () => {
+    const game = createInitialGameState(bundle, 6069);
+    game.officeSkills.readingXp = 0;
+    useUiStore.setState({ screen: "game", game, activeTab: "work", selectedContractId: game.contractBoard[0]?.contractId ?? null });
+
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: /Reading Obfuscated due to low XP/i })).toBeTruthy();
+    expect(screen.queryByText(/Reading Clarity 40%: some words are scrambled/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Reading Obfuscated due to low XP/i }));
+    expect(screen.getByText(/Reading Clarity 40%: some words are scrambled/i)).toBeTruthy();
+
+    act(() => {
+      const current = useUiStore.getState().game;
+      if (!current) {
+        throw new Error("Expected game state to be available.");
+      }
+      useUiStore.setState({
+        game: {
+          ...current,
+          officeSkills: {
+            ...current.officeSkills,
+            readingXp: 220
+          }
+        }
+      });
+    });
+
+    expect(screen.queryByRole("button", { name: /Reading Obfuscated due to low XP/i })).toBeNull();
+    expect(screen.queryByText(/Reading Clarity \d+%: some words are scrambled/i)).toBeNull();
+  });
+
+  it("EH-TW-244: competitor info body text obfuscates at low reading clarity and clears at high clarity", () => {
+    const game = createInitialGameState(bundle, 6070);
+    game.officeSkills.readingXp = 0;
+    useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: null });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Competitor Info/i }));
+
+    const rumorLine =
+      "Doug tracks every invoice in a weatherproof notebook. Doug says the real job is fixing yesterday's shortcuts. Doug arrives with coffee, tape, and a questionable plan.";
+    expect(screen.queryByText(rumorLine)).toBeNull();
+
+    act(() => {
+      const current = useUiStore.getState().game;
+      if (!current) {
+        throw new Error("Expected game state to be available.");
+      }
+      useUiStore.setState({
+        game: {
+          ...current,
+          officeSkills: {
+            ...current.officeSkills,
+            readingXp: 220
+          }
+        }
+      });
+    });
+
+    expect(screen.getByText(rumorLine)).toBeTruthy();
+  });
+
+  it("EH-TW-245: task guidance remains readable at low reading clarity", () => {
+    const game = buildAcceptableGame(6071);
+    const offer = getAvailableContractOffers(game, bundle).find(
+      (entry) => entry.contract.contractId !== DAY_LABOR_CONTRACT_ID && !entry.job.tags.includes("baba-g") && entry.job.materialNeeds.length > 0
+    );
+    if (!offer) {
+      throw new Error("Expected a non-day-labor contract with material needs.");
+    }
+    const accepted = acceptContractFlow(game, bundle, offer.contract.contractId).nextState;
+    accepted.officeSkills.readingXp = 0;
+    const expectedGuidance = getCurrentTaskGuidance(accepted, bundle);
+    if (!expectedGuidance) {
+      throw new Error("Expected task guidance for accepted active job.");
+    }
+
+    useUiStore.setState({ screen: "game", game: accepted, activeTab: "work", selectedContractId: null });
+
+    render(<App />);
+
+    expect(screen.getByText(expectedGuidance)).toBeTruthy();
   });
 
   it("EH-TW-052: supplier cart guidance appears inline in the current-task card", () => {
@@ -1420,7 +1728,7 @@ describe("compact shell ui", () => {
     expect(screen.getByText(/Current Job:/i)).toBeTruthy();
   });
 
-  it("EH-TW-228: non-day-labor completion shows recap and keeps completion popup until closed", () => {
+  it("EH-TW-228: non-day-labor completion keeps completion popup until closed", () => {
     vi.useFakeTimers();
     const game = buildAcceptableGame(7093);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });

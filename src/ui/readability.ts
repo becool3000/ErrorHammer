@@ -10,6 +10,14 @@ interface TextFormatOptions {
   critical?: boolean;
 }
 
+export interface ReadingObfuscationMeta {
+  clarity: number;
+  clarityPercent: number;
+  bandLabel: "0-24%" | "25-49%" | "50-74%" | "75-94%" | "95-100%";
+  scrambleChance: number;
+  fullyClear: boolean;
+}
+
 export function getReadingClarity(state: GameState): number {
   return clamp(0.4 + state.officeSkills.readingXp / 400, 0.4, 1);
 }
@@ -19,15 +27,61 @@ export function getAccountingClarity(state: GameState): number {
   return clamp(0.4 + state.officeSkills.accountingXp / 400 + accountantBonus, 0.4, 1);
 }
 
-export function obfuscateReadableText(state: GameState, text: string, seedKey = ""): string {
+export function getReadingObfuscationMeta(state: GameState): ReadingObfuscationMeta {
   const clarity = getReadingClarity(state);
   if (clarity >= 0.95) {
+    return {
+      clarity,
+      clarityPercent: Math.round(clarity * 100),
+      bandLabel: "95-100%",
+      scrambleChance: 0,
+      fullyClear: true
+    };
+  }
+  if (clarity >= 0.75) {
+    return {
+      clarity,
+      clarityPercent: Math.round(clarity * 100),
+      bandLabel: "75-94%",
+      scrambleChance: 0.1,
+      fullyClear: false
+    };
+  }
+  if (clarity >= 0.5) {
+    return {
+      clarity,
+      clarityPercent: Math.round(clarity * 100),
+      bandLabel: "50-74%",
+      scrambleChance: 0.2,
+      fullyClear: false
+    };
+  }
+  if (clarity >= 0.25) {
+    return {
+      clarity,
+      clarityPercent: Math.round(clarity * 100),
+      bandLabel: "25-49%",
+      scrambleChance: 0.32,
+      fullyClear: false
+    };
+  }
+  return {
+    clarity,
+    clarityPercent: Math.round(clarity * 100),
+    bandLabel: "0-24%",
+    scrambleChance: 0.45,
+    fullyClear: false
+  };
+}
+
+export function obfuscateReadableText(state: GameState, text: string, seedKey = ""): string {
+  const readingMeta = getReadingObfuscationMeta(state);
+  if (readingMeta.fullyClear) {
     return text;
   }
-  const scrambleChance = clarity < 0.6 ? 0.42 : clarity < 0.8 ? 0.22 : 0.12;
   return text
     .split(" ")
-    .map((word, index) => maybeScrambleWord(word, `${seedKey}:${index}`, scrambleChance))
+    .map((word, index) => maybeScrambleWord(word, `${seedKey}:${index}`, readingMeta.scrambleChance))
     .join(" ");
 }
 

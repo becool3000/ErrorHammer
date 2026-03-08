@@ -39,6 +39,8 @@ describe("results screen state builder", () => {
     next.operations.facilities.officeOwned = true;
     next.player.tools.hammer = { toolId: "hammer", durability: 25 };
     next.player.cash -= 40;
+    next.officeSkills.readingXp += 2;
+    next.officeSkills.accountingXp += 3;
 
     const result = buildResultsScreenState(previous, next, "Office Upgrade", "digest-ops", [
       "Opened storage.",
@@ -51,6 +53,8 @@ describe("results screen state builder", () => {
     expect(rows.some((row) => row.label === "Storage" && row.after === "Yes")).toBe(true);
     expect(rows.some((row) => row.label === "Office" && row.after === "Yes")).toBe(true);
     expect(rows.some((row) => row.label.includes("Hammer Durability"))).toBe(true);
+    expect(rows.some((row) => row.label === "Reading XP" && row.before === "0" && row.after === "2")).toBe(true);
+    expect(rows.some((row) => row.label === "Accounting XP" && row.before === "0" && row.after === "3")).toBe(true);
     expect(result!.detailLines).toEqual(["Opened storage.", "Office unlocked."]);
   });
 });

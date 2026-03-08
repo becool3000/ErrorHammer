@@ -1,9 +1,50 @@
+import { generateContractBoard } from "./economy";
+import { applyEndDayOperations, createInitialOfficeSkillsState, createInitialOperationsState, createInitialYardState } from "./operations";
+import {
+  acceptContract,
+  createInitialSelfEsteemState,
+  createInitialShopSupplies,
+  createInitialSkills,
+  createInitialWorkday,
+  DAY_LABOR_CONTRACT_ID,
+  digestState,
+  enableDumpsterService,
+  getAvailableContractOffers,
+  getContractEconomyPreview,
+  getCurrentTask,
+  getQuickBuyPlan,
+  getSkillRank,
+  openStorage,
+  performTaskUnit,
+  prepareForNextDay,
+  quickBuyMissingTools,
+  returnToShopForTools,
+  runRecoveryAction,
+  spendPerkPoint,
+  startResearch,
+  upgradeBusinessTier
+} from "./playerFlow";
+import { CORE_PERK_IDS, createInitialPerksState } from "./perks";
+import { getResearchProjectsWithStatus, createResearchStateLocked } from "./research";
 import { createRng, hashSeed } from "./rng";
-import { getTaskSkillMapping, getSkillRank, hasUsableTools } from "./playerFlow";
-import { getRiskValue, isForcedNeutral } from "./economy";
-import { ActorState, BotProfile, ContentBundle, ContractInstance, EventDef, Intent, TaskStance } from "./types";
+import { createTradeProgressState } from "./tradeProgress";
+import {
+  ActiveJobState,
+  ActorState,
+  BotCareerState,
+  BotProfile,
+  ContentBundle,
+  ContractFileSnapshot,
+  ContractInstance,
+  CorePerkId,
+  DayLog,
+  DeferredJobState,
+  GameState,
+  Intent,
+  TaskStance
+} from "./types";
 
-interface ScoredContract {
+interface ScoredOffer {
   contractId: string;
   score: number;
 }
@@ -15,89 +56,149 @@ export interface EvaluateBotPlanOptions {
 export interface EvaluatedBotPlan {
   assignments: Intent["assignments"];
   totalScore: number;
+  selectedContractId: string | null;
+  usedDayLaborFallback: boolean;
+}
+
+export interface SimulateBotCareerDayOptions {
+  completedDay: number;
+  sharedEventIds: string[];
+  daySeed?: number;
+}
+
+export interface SimulateBotCareerDayResult {
+  career: BotCareerState;
+  snapshot: ActorState;
+  dayLog: DayLog[];
+  plan: EvaluatedBotPlan | null;
+}
+
+export function createInitialBotCareer(profile: BotProfile, bundle: ContentBundle): BotCareerState {
+  return {
+    actor: {
+      actorId: profile.id,
+      name: profile.name,
+      companyName: profile.name,
+      cash: 300,
+      reputation: 0,
+      companyLevel: 1,
+      districtUnlocks: unlockDistricts(bundle, 1),
+      staminaMax: 4,
+      stamina: 4,
+      fuel: 8,
+      fuelMax: 12,
+      skills: createInitialSkills(),
+      tools: {},
+      crews: []
+    },
+    activeJob: null,
+    contractBoard: [],
+    log: [],
+    shopSupplies: createInitialShopSupplies(),
+    truckSupplies: {},
+    workday: createInitialWorkday(1, 0),
+    research: createResearchStateLocked(),
+    tradeProgress: createTradeProgressState(true),
+    officeSkills: createInitialOfficeSkillsState(),
+    yard: createInitialYardState(),
+    operations: createInitialOperationsState(),
+    perks: createInitialPerksState(),
+    selfEsteem: createInitialSelfEsteemState(),
+    deferredJobs: [],
+    contractFiles: []
+  };
+}
+
+export function syncBotSnapshotsFromCareers(careers: BotCareerState[]): ActorState[] {
+  return careers.map((career) => cloneActor(career.actor));
 }
 
 export function evaluateBotPlan(
-  actor: ActorState,
+  career: BotCareerState,
   profile: BotProfile,
-  contracts: ContractInstance[],
+  worldState: GameState,
   bundle: ContentBundle,
-  day: number,
   daySeed: number,
   options: EvaluateBotPlanOptions = {}
 ): EvaluatedBotPlan {
   const tieNoise = options.tieNoise ?? true;
-  const jobsById = new Map(bundle.jobs.map((job) => [job.id, job]));
-  const rng = tieNoise ? createRng(hashSeed(daySeed, "bot", actor.actorId, day)) : null;
+  const state = toCareerGameState(career, worldState, worldState.day);
+  const offers = getAvailableContractOffers(state, bundle);
+  const dayLaborOffer = offers.find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID) ?? null;
+  const rng = tieNoise ? createRng(hashSeed(daySeed, "bot-plan", career.actor.actorId, worldState.day)) : null;
 
-  const scored: ScoredContract[] = contracts
-    .map((contract) => {
-      const job = jobsById.get(contract.jobId);
-      if (!job) {
+  const scoredOffers: ScoredOffer[] = offers
+    .filter((offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID)
+    .map((offer) => {
+      if (!isOfferViable(state, bundle, offer.contract.contractId)) {
         return null;
       }
-      if (!hasUsableTools(actor, job.requiredTools)) {
-        return null;
-      }
-
-      const mapping = getTaskSkillMapping(job, "do_work");
-      const primaryRank = getSkillRank(actor, mapping.primary);
-      const secondaryRank = mapping.secondary ? getSkillRank(actor, mapping.secondary) : primaryRank;
-      const averageRank = Math.floor((primaryRank + secondaryRank) / 2);
-      const expectedPayout = job.basePayout * contract.payoutMult;
-      let score =
-        expectedPayout * profile.weights.wCash +
-        job.repGainSuccess * 35 * profile.weights.wRep -
-        job.risk * 100 * profile.weights.wRiskAvoid +
-        averageRank * 15;
-
+      const economy = getContractEconomyPreview(state, bundle, offer.contract.contractId);
+      const projectedNet = economy?.projectedNetOnSuccess ?? offer.job.basePayout;
+      const riskPenalty = offer.job.risk * 180 * profile.weights.wRiskAvoid;
+      const repValue = offer.job.repGainSuccess * 35 * profile.weights.wRep;
+      const skillValue = getSkillRank(state.player, offer.job.primarySkill) * 12;
+      const quickPlan = getQuickBuyPlan(state, bundle, offer.contract.contractId);
+      const buyPenalty = (quickPlan?.totalCost ?? 0) * profile.weights.wToolBuy * 0.65;
+      const timePenalty = (quickPlan?.requiredTicks ?? 0) * 3;
+      let score = projectedNet * profile.weights.wCash + repValue + skillValue - riskPenalty - buyPenalty - timePenalty;
       if (rng) {
         score += rng.next() * 0.01;
       }
-
       return {
-        contractId: contract.contractId,
+        contractId: offer.contract.contractId,
         score
       };
     })
-    .filter((item): item is ScoredContract => Boolean(item))
-    .sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+    .filter((entry): entry is ScoredOffer => Boolean(entry))
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
       }
-      return a.contractId.localeCompare(b.contractId);
+      return left.contractId.localeCompare(right.contractId);
     });
 
-  const assignments: Intent["assignments"] = [];
-  let totalScore = 0;
-
-  for (const candidate of scored) {
-    assignments.push({
-      assignee: "self",
-      contractId: candidate.contractId
-    });
-    totalScore += candidate.score;
+  const selectedTrade = scoredOffers[0] ?? null;
+  if (selectedTrade) {
+    return {
+      assignments: [{ assignee: "self", contractId: selectedTrade.contractId }],
+      totalScore: selectedTrade.score,
+      selectedContractId: selectedTrade.contractId,
+      usedDayLaborFallback: false
+    };
   }
 
+  const canFallbackToDayLabor =
+    Boolean(dayLaborOffer) && Math.max(0, state.workday.availableTicks - state.workday.ticksSpent) > 0;
+  if (!canFallbackToDayLabor || !dayLaborOffer) {
+    return {
+      assignments: [],
+      totalScore: 0,
+      selectedContractId: null,
+      usedDayLaborFallback: false
+    };
+  }
+
+  const dayLaborScore = dayLaborOffer.job.basePayout * profile.weights.wCash;
   return {
-    assignments,
-    totalScore
+    assignments: [{ assignee: "self", contractId: dayLaborOffer.contract.contractId }],
+    totalScore: dayLaborScore,
+    selectedContractId: dayLaborOffer.contract.contractId,
+    usedDayLaborFallback: true
   };
 }
 
 export function generateBotIntent(
-  actor: ActorState,
+  career: BotCareerState,
   profile: BotProfile,
-  contracts: ContractInstance[],
+  worldState: GameState,
   bundle: ContentBundle,
-  day: number,
   daySeed: number
 ): Intent {
-  const plan = evaluateBotPlan(actor, profile, contracts, bundle, day, daySeed, { tieNoise: true });
-
+  const plan = evaluateBotPlan(career, profile, worldState, bundle, daySeed, { tieNoise: true });
   return {
-    actorId: actor.actorId,
-    day,
+    actorId: career.actor.actorId,
+    day: worldState.day,
     assignments: plan.assignments
   };
 }
@@ -112,89 +213,394 @@ export function getBotPreferredStance(profile: BotProfile): TaskStance {
   return "standard";
 }
 
-export function simulateBotDay(
-  bot: ActorState,
+export function simulateBotCareerDay(
+  career: BotCareerState,
   profile: BotProfile,
-  contracts: ContractInstance[],
+  worldState: GameState,
   bundle: ContentBundle,
-  events: EventDef[],
-  day: number,
-  daySeed: number
-): { bot: ActorState; logLines: string[] } {
-  const nextBot = cloneActor(bot);
-  const jobsById = new Map(bundle.jobs.map((job) => [job.id, job]));
-  const contractsById = new Map(contracts.map((contract) => [contract.contractId, contract]));
-  const intent = generateBotIntent(nextBot, profile, contracts, bundle, day, daySeed);
-  const stance = getBotPreferredStance(profile);
-  const rng = createRng(hashSeed(daySeed, "bot-sim", bot.actorId, day));
-  const logLines: string[] = [];
+  options: SimulateBotCareerDayOptions
+): SimulateBotCareerDayResult {
+  const daySeed = options.daySeed ?? hashSeed(worldState.seed, "bot-career-day", options.completedDay, career.actor.actorId);
+  const originalLogLength = career.log.length;
 
-  for (const assignment of intent.assignments) {
-    const contract = contractsById.get(assignment.contractId);
-    const job = contract ? jobsById.get(contract.jobId) : null;
-    if (!contract || !job) {
-      continue;
-    }
-    if (!hasUsableTools(nextBot, job.requiredTools)) {
-      continue;
-    }
-    const mapping = getTaskSkillMapping(job, "do_work");
-    const primaryRank = getSkillRank(nextBot, mapping.primary);
-    const secondaryRank = mapping.secondary ? getSkillRank(nextBot, mapping.secondary) : primaryRank;
-    const averageRank = Math.floor((primaryRank + secondaryRank) / 2);
-    const qualityRoll =
-      rng.nextInt(100) + averageRank * 8 + (stance === "careful" ? 15 : stance === "rush" ? -15 : 0) - (1 + job.tier) * 12;
-    const qualityPoints = qualityRoll >= 90 ? 2 : qualityRoll >= 55 ? 1 : qualityRoll >= 25 ? -1 : -2;
-    const adjustedRisk = clamp(
-      getRiskValue(job, events) + (stance === "rush" ? 0.08 : stance === "careful" ? -0.05 : 0) - averageRank * 0.03,
-      0,
-      0.9
-    );
+  let state = toCareerGameState(career, worldState, options.completedDay);
+  state = prepareForNextDay(state);
+  const operations = applyEndDayOperations(state);
+  if (operations.dayLog.length > 0) {
+    state.log = [...state.log, ...operations.dayLog.map((entry) => ({ ...entry }))].slice(-300);
+  }
+  state.activeEventIds = [...options.sharedEventIds];
 
-    let outcome: "success" | "neutral" | "fail" = "success";
-    if (isForcedNeutral(job, events)) {
-      outcome = "neutral";
-    } else if (rng.bool(adjustedRisk)) {
-      outcome = "fail";
-    } else if (qualityPoints < 0) {
-      outcome = "neutral";
-    }
+  let plan: EvaluatedBotPlan | null = null;
+  const alreadyWorkingContract = Boolean(state.activeJob);
 
-    const payout = Math.round(job.basePayout * contract.payoutMult);
-    let cashDelta = 0;
-    let repDelta = 0;
-    if (outcome === "success") {
-      cashDelta = payout;
-      repDelta = job.repGainSuccess + clamp(Math.floor(qualityPoints / 3), -3, 3);
-    } else if (outcome === "neutral") {
-      cashDelta = Math.round(payout * 0.5);
-      repDelta = clamp(Math.floor(qualityPoints / 3), -3, 3);
-    } else {
-      cashDelta = 0;
-      repDelta = -Math.abs(job.repLossFail);
-    }
-
-    nextBot.cash += cashDelta;
-    nextBot.reputation = Math.max(0, nextBot.reputation + repDelta);
-    nextBot.skills[mapping.primary] += 10 + (qualityPoints >= 2 ? 6 : qualityPoints >= 1 ? 3 : 1);
-    if (mapping.secondary) {
-      nextBot.skills[mapping.secondary] += 5;
-    }
-    for (const toolId of job.requiredTools) {
-      const tool = nextBot.tools[toolId];
-      if (!tool) {
-        continue;
+  if (alreadyWorkingContract) {
+    state = runContractLoop(state, bundle, profile);
+  } else {
+    state = refreshCareerBoard(state, bundle, career.actor.actorId);
+    plan = evaluateBotPlan(fromCareerGameState(state), profile, state, bundle, daySeed, { tieNoise: true });
+    const selectedContractId = plan.selectedContractId;
+    if (selectedContractId) {
+      const accepted = tryAcceptContract(state, bundle, selectedContractId);
+      state = accepted.nextState;
+      if (accepted.accepted && state.activeJob) {
+        state = runContractLoop(state, bundle, profile);
       }
-      tool.durability = Math.max(0, tool.durability - Math.max(1, job.durabilityCost));
     }
+  }
 
-    logLines.push(`${nextBot.name} logged a ${outcome} on ${job.name}.`);
+  state = applyProgressionPolicies(state, bundle, profile);
+
+  const nextCareer = fromCareerGameState(state);
+  const nextSnapshot = cloneActor(nextCareer.actor);
+  const dayLog = nextCareer.log.slice(originalLogLength);
+
+  return {
+    career: nextCareer,
+    snapshot: nextSnapshot,
+    dayLog,
+    plan
+  };
+}
+
+function tryAcceptContract(
+  state: GameState,
+  bundle: ContentBundle,
+  contractId: string
+): { nextState: GameState; accepted: boolean } {
+  let nextState = state;
+  if (contractId !== DAY_LABOR_CONTRACT_ID) {
+    const quickPlan = getQuickBuyPlan(nextState, bundle, contractId);
+    if (quickPlan?.missingTools.length) {
+      const quick = quickBuyMissingTools(nextState, bundle, contractId);
+      if (quick.nextState === nextState) {
+        return { nextState, accepted: false };
+      }
+      nextState = quick.nextState;
+    }
+  }
+
+  const accepted = acceptContract(nextState, bundle, contractId);
+  if (accepted.nextState === nextState) {
+    return { nextState, accepted: false };
   }
 
   return {
-    bot: nextBot,
-    logLines
+    nextState: accepted.nextState,
+    accepted: true
   };
+}
+
+function runContractLoop(state: GameState, bundle: ContentBundle, profile: BotProfile): GameState {
+  let nextState = state;
+  let guard = 0;
+
+  while (nextState.activeJob && guard < 220) {
+    guard += 1;
+    const beforeDigest = digestState(nextState);
+    const action = performTaskUnit(nextState, bundle, getBotPreferredStance(profile), true);
+    if (action.digest !== beforeDigest) {
+      nextState = action.nextState;
+      continue;
+    }
+
+    const recovered = handleBlockedTask(nextState, bundle);
+    if (digestState(recovered) !== beforeDigest) {
+      nextState = recovered;
+      continue;
+    }
+
+    break;
+  }
+
+  return nextState;
+}
+
+function handleBlockedTask(state: GameState, bundle: ContentBundle): GameState {
+  if (!state.activeJob) {
+    return state;
+  }
+
+  const currentTask = getCurrentTask(state);
+  if (state.activeJob.location === "job-site") {
+    const reroute = returnToShopForTools(state, bundle);
+    if (reroute.nextState !== state) {
+      return reroute.nextState;
+    }
+  }
+
+  if (state.activeJob.location === "shop") {
+    const quick = quickBuyMissingTools(state, bundle, state.activeJob.contractId);
+    if (quick.nextState !== state) {
+      return quick.nextState;
+    }
+  }
+
+  if (currentTask?.taskId === "do_work") {
+    const recover = runRecoveryAction(state, bundle, "finish_cheap");
+    if (recover.nextState !== state) {
+      return recover.nextState;
+    }
+  }
+
+  return state;
+}
+
+function isOfferViable(state: GameState, bundle: ContentBundle, contractId: string): boolean {
+  if (contractId === DAY_LABOR_CONTRACT_ID) {
+    return Math.max(0, state.workday.availableTicks - state.workday.ticksSpent) > 0;
+  }
+  const quickPlan = getQuickBuyPlan(state, bundle, contractId);
+  if (!quickPlan) {
+    return false;
+  }
+  if (!quickPlan.allowed || quickPlan.starterGateBlocked) {
+    return false;
+  }
+  if (!quickPlan.enoughCash || !quickPlan.enoughTime) {
+    return false;
+  }
+  return true;
+}
+
+function applyProgressionPolicies(state: GameState, bundle: ContentBundle, profile: BotProfile): GameState {
+  let nextState = state;
+  nextState = applyFacilityPolicy(nextState, bundle);
+  nextState = applyResearchPolicy(nextState);
+  nextState = applyPerkPolicy(nextState, profile);
+  return nextState;
+}
+
+function applyFacilityPolicy(state: GameState, bundle: ContentBundle): GameState {
+  let nextState = state;
+
+  if (!nextState.operations.facilities.storageOwned) {
+    const opened = openStorage(nextState, bundle);
+    nextState = opened.nextState;
+  }
+  if (nextState.operations.facilities.storageOwned && !nextState.operations.facilities.officeOwned) {
+    const opened = upgradeBusinessTier(nextState, "office");
+    nextState = opened.nextState;
+  }
+  if (nextState.operations.facilities.officeOwned && !nextState.operations.facilities.yardOwned) {
+    const opened = upgradeBusinessTier(nextState, "yard");
+    nextState = opened.nextState;
+  }
+  if (nextState.operations.facilities.yardOwned && !nextState.operations.facilities.dumpsterEnabled) {
+    const enabled = enableDumpsterService(nextState);
+    nextState = enabled.nextState;
+  }
+
+  return nextState;
+}
+
+function applyResearchPolicy(state: GameState): GameState {
+  if (state.research.activeProject) {
+    return state;
+  }
+
+  const available = getResearchProjectsWithStatus(state)
+    .filter((project) => project.status === "available")
+    .sort((left, right) => left.projectId.localeCompare(right.projectId));
+  const nextProject = available[0];
+  if (!nextProject) {
+    return state;
+  }
+
+  return startResearch(state, nextProject.projectId).nextState;
+}
+
+function applyPerkPolicy(state: GameState, profile: BotProfile): GameState {
+  const priority = getPerkPriorityOrder(profile);
+  let nextState = state;
+  let safety = 24;
+
+  while (nextState.perks.corePerkPoints > 0 && safety > 0) {
+    let spent = false;
+    for (const perkId of priority) {
+      const attempt = spendPerkPoint(nextState, perkId);
+      if (attempt.nextState !== nextState) {
+        nextState = attempt.nextState;
+        spent = true;
+        break;
+      }
+    }
+    if (!spent) {
+      break;
+    }
+    safety -= 1;
+  }
+
+  return nextState;
+}
+
+function getPerkPriorityOrder(profile: BotProfile): CorePerkId[] {
+  const weights = profile.weights;
+  const safetyDominant = weights.wRiskAvoid >= Math.max(weights.wCash, weights.wRep, weights.wToolBuy);
+  const cashDominant = !safetyDominant && weights.wCash >= weights.wRep;
+
+  if (safetyDominant) {
+    return [
+      "safety_awareness",
+      "physical_endurance",
+      "problem_solving",
+      "precision",
+      "tool_mastery",
+      "project_management",
+      "estimating",
+      "negotiation",
+      "diagnostics",
+      "blueprint_reading"
+    ];
+  }
+
+  if (cashDominant) {
+    return [
+      "estimating",
+      "negotiation",
+      "project_management",
+      "tool_mastery",
+      "precision",
+      "diagnostics",
+      "problem_solving",
+      "blueprint_reading",
+      "physical_endurance",
+      "safety_awareness"
+    ];
+  }
+
+  return [
+    "precision",
+    "blueprint_reading",
+    "tool_mastery",
+    "project_management",
+    "diagnostics",
+    "safety_awareness",
+    "physical_endurance",
+    "estimating",
+    "negotiation",
+    "problem_solving"
+  ];
+}
+
+function refreshCareerBoard(state: GameState, bundle: ContentBundle, actorId: string): GameState {
+  if (state.activeJob) {
+    return {
+      ...state,
+      contractBoard: []
+    };
+  }
+
+  return {
+    ...state,
+    contractBoard: generateContractBoard(bundle, state.day, hashSeed(state.seed, "bot-board", state.day, actorId), {
+      districtIds: state.player.districtUnlocks,
+      maxTier: state.player.companyLevel + 1
+    })
+  };
+}
+
+function toCareerGameState(career: BotCareerState, worldState: GameState, day: number): GameState {
+  return {
+    saveVersion: worldState.saveVersion,
+    day,
+    seed: hashSeed(worldState.seed, "bot-career-seed", career.actor.actorId),
+    player: cloneActor(career.actor),
+    bots: [],
+    botCareers: [],
+    contractBoard: career.contractBoard.map((entry) => ({ ...entry })),
+    activeEventIds: [...worldState.activeEventIds],
+    log: career.log.map((entry) => ({ ...entry })),
+    activeJob: cloneActiveJob(career.activeJob),
+    shopSupplies: cloneSupplyInventory(career.shopSupplies),
+    truckSupplies: cloneSupplyInventory(career.truckSupplies),
+    workday: {
+      ...career.workday,
+      fatigue: { ...career.workday.fatigue }
+    },
+    research: {
+      ...career.research,
+      unlockedCategories: { ...career.research.unlockedCategories },
+      unlockedSkills: { ...career.research.unlockedSkills },
+      activeProject: career.research.activeProject ? { ...career.research.activeProject } : null,
+      completedProjectIds: [...career.research.completedProjectIds]
+    },
+    tradeProgress: {
+      unlocked: { ...career.tradeProgress.unlocked },
+      unlockedDay: { ...career.tradeProgress.unlockedDay }
+    },
+    officeSkills: { ...career.officeSkills },
+    yard: { ...career.yard },
+    operations: {
+      ...career.operations,
+      monthlyDueByCategory: { ...career.operations.monthlyDueByCategory },
+      facilities: { ...career.operations.facilities }
+    },
+    perks: {
+      ...career.perks,
+      corePerks: { ...career.perks.corePerks },
+      unlockedPerkTrees: { ...career.perks.unlockedPerkTrees }
+    },
+    selfEsteem: { ...career.selfEsteem },
+    deferredJobs: career.deferredJobs.map((entry) => ({
+      deferredJobId: entry.deferredJobId,
+      deferredAtDay: entry.deferredAtDay,
+      activeJob: cloneActiveJob(entry.activeJob)!
+    })),
+    contractFiles: career.contractFiles.map((entry) => ({ ...entry }))
+  };
+}
+
+function fromCareerGameState(state: GameState): BotCareerState {
+  return {
+    actor: cloneActor(state.player),
+    activeJob: cloneActiveJob(state.activeJob),
+    contractBoard: state.contractBoard.map((entry) => ({ ...entry })),
+    log: state.log.map((entry) => ({ ...entry })),
+    shopSupplies: cloneSupplyInventory(state.shopSupplies),
+    truckSupplies: cloneSupplyInventory(state.truckSupplies),
+    workday: {
+      ...state.workday,
+      fatigue: { ...state.workday.fatigue }
+    },
+    research: {
+      ...state.research,
+      unlockedCategories: { ...state.research.unlockedCategories },
+      unlockedSkills: { ...state.research.unlockedSkills },
+      activeProject: state.research.activeProject ? { ...state.research.activeProject } : null,
+      completedProjectIds: [...state.research.completedProjectIds]
+    },
+    tradeProgress: {
+      unlocked: { ...state.tradeProgress.unlocked },
+      unlockedDay: { ...state.tradeProgress.unlockedDay }
+    },
+    officeSkills: { ...state.officeSkills },
+    yard: { ...state.yard },
+    operations: {
+      ...state.operations,
+      monthlyDueByCategory: { ...state.operations.monthlyDueByCategory },
+      facilities: { ...state.operations.facilities }
+    },
+    perks: {
+      ...state.perks,
+      corePerks: { ...state.perks.corePerks },
+      unlockedPerkTrees: { ...state.perks.unlockedPerkTrees }
+    },
+    selfEsteem: { ...state.selfEsteem },
+    deferredJobs: state.deferredJobs.map((entry) => ({
+      deferredJobId: entry.deferredJobId,
+      deferredAtDay: entry.deferredAtDay,
+      activeJob: cloneActiveJob(entry.activeJob)!
+    })),
+    contractFiles: state.contractFiles.map((entry) => ({ ...entry }))
+  };
+}
+
+function unlockDistricts(bundle: ContentBundle, companyLevel: number): string[] {
+  return [...bundle.districts]
+    .sort((left, right) => left.tier - right.tier || left.id.localeCompare(right.id))
+    .filter((district) => district.tier <= companyLevel + 1)
+    .map((district) => district.id);
 }
 
 function cloneActor(actor: ActorState): ActorState {
@@ -209,12 +615,32 @@ function cloneActor(actor: ActorState): ActorState {
   };
 }
 
-function clamp(value: number, min: number, max: number): number {
-  if (value < min) {
-    return min;
+function cloneActiveJob(activeJob: ActiveJobState | null): ActiveJobState | null {
+  if (!activeJob) {
+    return null;
   }
-  if (value > max) {
-    return max;
-  }
-  return value;
+  return {
+    ...activeJob,
+    estimateAtAccept: { ...activeJob.estimateAtAccept },
+    reservedMaterials: cloneSupplyInventory(activeJob.reservedMaterials),
+    siteSupplies: cloneSupplyInventory(activeJob.siteSupplies),
+    supplierCart: cloneSupplyInventory(activeJob.supplierCart),
+    tasks: activeJob.tasks.map((task) => ({ ...task }))
+  };
 }
+
+function cloneSupplyInventory(
+  inventory: Record<string, { low?: number; medium?: number; high?: number }> | undefined
+): Record<string, { low?: number; medium?: number; high?: number }> {
+  return Object.fromEntries(
+    Object.entries(inventory ?? {}).map(([supplyId, stack]) => [
+      supplyId,
+      {
+        low: stack.low ?? 0,
+        medium: stack.medium ?? 0,
+        high: stack.high ?? 0
+      }
+    ])
+  );
+}
+

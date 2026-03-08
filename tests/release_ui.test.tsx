@@ -39,6 +39,11 @@ describe("release metadata ui", () => {
       selectedContractId: null,
       notice: "",
       activeResultsScreen: null,
+      tutorialCompleted: false,
+      tutorialInProgress: false,
+      tutorialStepId: "open-contracts",
+      tutorialMode: null,
+      tutorialStartDay: null,
       titlePlayerName: "",
       titleCompanyName: ""
     });

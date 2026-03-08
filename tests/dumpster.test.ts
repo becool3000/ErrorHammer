@@ -14,6 +14,7 @@ const bundle = loadContentBundle();
 
 function makeAcceptedTradeState(seed: number) {
   const state = createInitialGameState(bundle, seed);
+  state.operations.facilities.storageOwned = true;
   for (const track of CORE_TRADE_SKILLS) {
     state.tradeProgress.unlocked[track] = true;
   }

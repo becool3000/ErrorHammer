@@ -1,3 +1,5 @@
+import { getTradeIndexSnapshot } from "../../core/tradeIndex";
+import { formatNumberByAccountingClarity, obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
 interface CompanyTabProps {
@@ -23,7 +25,7 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
               <article key={districtId} className="chrome-card inset-card">
                 <p className="eyebrow">District</p>
                 <h3>{district?.name ?? districtId}</h3>
-                <p>{district?.flavor.description ?? districtId}</p>
+                <p>{obfuscateReadableText(game, district?.flavor.description ?? districtId, `district:${districtId}:description`)}</p>
               </article>
             );
           })}
@@ -43,7 +45,13 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
             </div>
             <span className="chip">Frozen</span>
           </div>
-          <p className="muted-copy">Crew hiring and assignment are temporarily disabled while the system is being refactored.</p>
+          <p className="muted-copy">
+            {obfuscateReadableText(
+              game,
+              "Crew hiring and assignment are temporarily disabled while the system is being refactored.",
+              "company:crew-status:copy"
+            )}
+          </p>
         </article>
         <article className="chrome-card inset-card">
           <p className="eyebrow">Roster Archive</p>
@@ -64,14 +72,58 @@ export function CompanyTab({ modalView, showOverview = true }: CompanyTabProps) 
   }
 
   if (modalView === "news") {
+    const snapshot = getTradeIndexSnapshot(game);
+    const playerEntry = snapshot.entries.find((entry) => entry.isPlayer) ?? snapshot.entries[0] ?? null;
     return (
       <section className="stack-block">
-        {bundle.bots.map((bot) => (
-          <article key={bot.id} className="chrome-card inset-card">
-            <p className="eyebrow">{bot.name}</p>
-            <p>{bot.flavorLines.join(" ")}</p>
-          </article>
-        ))}
+        <article className="chrome-card inset-card trade-index-list">
+          <div className="section-label-row">
+            <div>
+              <p className="eyebrow">Trade Index</p>
+              <h3>Crew Rankings</h3>
+            </div>
+            <span className="chip tone-energy">
+              Your Rank #{snapshot.playerRank} / {snapshot.totalActors}
+            </span>
+          </div>
+          <div className="chip-grid">
+            <span className="chip tone-info">Composite {playerEntry ? playerEntry.compositeScore.toFixed(1) : "0.0"}</span>
+          </div>
+          <div className="stack-list">
+            {snapshot.entries.map((entry) => (
+              <article key={entry.actorId} className={entry.isPlayer ? "task-summary trade-index-row trade-index-you" : "task-summary trade-index-row"}>
+                <div className="section-label-row tight-row">
+                  <span className="trade-index-rank">#{entry.rank}</span>
+                  <strong>{entry.name}</strong>
+                  {entry.isPlayer ? <span className="chip tone-energy">You</span> : null}
+                </div>
+                <p className="muted-copy">{entry.companyName}</p>
+                <div className="material-need-meta">
+                  <span>Cash {formatNumberByAccountingClarity(game, entry.metrics.cash, { currency: true })}</span>
+                  <span>Rep {entry.metrics.reputation}</span>
+                  <span>Lv {entry.metrics.operatorLevel}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </article>
+        <article className="chrome-card inset-card">
+          <div className="section-label-row">
+            <div>
+              <p className="eyebrow">Competitor News</p>
+              <h3>Rumor Feed</h3>
+            </div>
+            <span className="chip">{bundle.bots.length} updates</span>
+          </div>
+          <div className="stack-list">
+            {bundle.bots.map((bot) => (
+              <article key={bot.id} className="task-summary">
+                <p className="eyebrow">{bot.name}</p>
+                <p>{obfuscateReadableText(game, bot.flavorLines.join(" "), `bot:${bot.id}:rumor`)}</p>
+              </article>
+            ))}
+          </div>
+        </article>
       </section>
     );
   }

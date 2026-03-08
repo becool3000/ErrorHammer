@@ -3,6 +3,7 @@ import {
   ActiveJobState,
   ActiveTaskState,
   ActorState,
+  BotCareerState,
   BusinessTier,
   ContractActualSnapshot,
   ContractFileSnapshot,
@@ -432,7 +433,7 @@ export function getSupplyInventoryUnits(inventory: SupplyInventory): number {
 }
 
 export function createInitialSkills(): Record<SkillId, number> {
-  return Object.fromEntries(SKILL_IDS.map((skillId) => [skillId, 100])) as Record<SkillId, number>;
+  return Object.fromEntries(SKILL_IDS.map((skillId) => [skillId, 0])) as Record<SkillId, number>;
 }
 
 export function createBotSkills(starterSkillIds: SkillId[]): Record<SkillId, number> {
@@ -721,7 +722,7 @@ export function getContractEconomyPreview(state: GameState, bundle: ContentBundl
   const materialRouting = getJobMaterialRoutingPlan(picked.job, state.shopSupplies, state.truckSupplies);
   const needsSupplier = materialRouting.needsSupplier;
   const materialsCost = estimateMaterialPurchaseCost(state, bundle, picked.job, events);
-  const fuelCost = estimateContractRouteFuelCost(district, needsSupplier);
+  const fuelCost = estimateContractRouteFuelCost(district, needsSupplier, state.operations.facilities.storageOwned);
   const trashCost = estimateTrashHandlingCost(state, picked.job);
   const estimatedTotalCost = materialsCost + fuelCost + trashCost;
 
@@ -1148,7 +1149,14 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
   const needsSupplier = materialRouting.needsSupplier;
   const requiresShopLoad = materialRouting.requiresShopLoad;
   const requiresRefuel = state.player.fuel < state.player.fuelMax;
-  const tasks = createTaskTemplate(picked.job, district, needsSupplier, requiresShopLoad, requiresRefuel);
+  const tasks = createTaskTemplate(
+    picked.job,
+    district,
+    needsSupplier,
+    requiresShopLoad,
+    requiresRefuel,
+    state.operations.facilities.storageOwned
+  );
   const estimateAtAccept =
     getContractEstimateSnapshot(state, bundle, contractId) ?? {
       grossPayout: lockedPayout,
@@ -1439,10 +1447,120 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
       tasks: (activeJob.tasks ?? []).map((task) => ({ ...task }))
     };
   };
+  const normalizeActorState = (actor: Partial<ActorState> | null | undefined, fallbackId: string): ActorState => ({
+    ...(actor as ActorState),
+    actorId: actor?.actorId ?? fallbackId,
+    name: actor?.name ?? fallbackId,
+    companyName: actor?.companyName ?? actor?.name ?? fallbackId,
+    cash: Math.max(0, Math.floor(actor?.cash ?? 0)),
+    reputation: Math.max(0, Math.floor(actor?.reputation ?? 0)),
+    companyLevel: Math.max(1, Math.floor(actor?.companyLevel ?? 1)),
+    districtUnlocks: Array.isArray(actor?.districtUnlocks) ? [...actor!.districtUnlocks] : [],
+    staminaMax: Math.max(1, Math.floor(actor?.staminaMax ?? 4)),
+    stamina: Math.max(0, Math.floor(actor?.stamina ?? actor?.staminaMax ?? 4)),
+    fuel: Math.max(0, Math.floor(actor?.fuel ?? 0)),
+    fuelMax: Math.max(1, Math.floor(actor?.fuelMax ?? 12)),
+    skills: { ...createEmptySkills(), ...(actor?.skills ?? {}) },
+    tools: Object.fromEntries(
+      Object.entries(actor?.tools ?? {}).map(([toolId, tool]) => [
+        toolId,
+        {
+          toolId: tool?.toolId ?? toolId,
+          durability: Math.max(0, Math.floor(tool?.durability ?? 0))
+        }
+      ])
+    ),
+    crews: (actor?.crews ?? []).map((crew) => ({
+      ...crew,
+      stamina: crew.stamina ?? crew.staminaMax
+    }))
+  });
+  const normalizeBotCareerState = (career: Partial<BotCareerState> | null | undefined, index: number): BotCareerState | null => {
+    if (!career?.actor) {
+      return null;
+    }
+    const actor = normalizeActorState(career.actor, `bot-${index + 1}`);
+    const normalizedActiveJob = normalizeActiveJobState(career.activeJob);
+    return {
+      actor,
+      activeJob: normalizedActiveJob,
+      contractBoard: Array.isArray(career.contractBoard) ? career.contractBoard.map((entry) => ({ ...entry })) : [],
+      log: Array.isArray(career.log) ? career.log.map((entry) => ({ ...entry })) : [],
+      shopSupplies: normalizeSupplyInventory(career.shopSupplies),
+      truckSupplies: normalizeSupplyInventory(career.truckSupplies),
+      workday: {
+        ...(career.workday ?? createInitialWorkday(state.day ?? 1, 0)),
+        fatigue: { ...(career.workday?.fatigue ?? { debt: 0 }) }
+      },
+      research: normalizeResearchState(career.research, legacyDefaults),
+      tradeProgress: normalizeTradeProgressState(career.tradeProgress, {
+        legacyUnlockedByDefault: legacyDefaults,
+        legacyUnlockedSkills: career.research?.unlockedSkills
+      }),
+      officeSkills: normalizeOfficeSkillsState(career.officeSkills, legacyDefaults),
+      yard: normalizeYardState(career.yard, legacyDefaults),
+      operations: normalizeOperationsState(career.operations, state.day ?? 1, legacyDefaults),
+      perks: normalizePerksState(career.perks, legacyDefaults),
+      selfEsteem: normalizeSelfEsteemState(career.selfEsteem),
+      deferredJobs: Array.isArray(career.deferredJobs)
+        ? career.deferredJobs
+            .map((entry) => {
+              if (!entry?.activeJob) {
+                return null;
+              }
+              const normalizedDeferredActiveJob = normalizeActiveJobState(entry.activeJob);
+              if (!normalizedDeferredActiveJob) {
+                return null;
+              }
+              return {
+                deferredJobId: entry.deferredJobId ?? `${normalizedDeferredActiveJob.contractId}:legacy`,
+                deferredAtDay: Math.max(1, entry.deferredAtDay ?? normalizedDeferredActiveJob.acceptedDay ?? (state.day ?? 1)),
+                activeJob: normalizedDeferredActiveJob
+              };
+            })
+            .filter((entry): entry is DeferredJobState => Boolean(entry))
+        : [],
+      contractFiles: Array.isArray(career.contractFiles)
+        ? career.contractFiles
+            .map((entry) => normalizeContractFile(entry))
+            .filter((entry): entry is ContractFileSnapshot => Boolean(entry))
+        : []
+    };
+  };
+  const normalizedBotCareers = Array.isArray(state.botCareers)
+    ? state.botCareers.map((career, index) => normalizeBotCareerState(career, index)).filter((career): career is BotCareerState => Boolean(career))
+    : [];
+  const normalizedBots =
+    Array.isArray(state.bots) && state.bots.length > 0
+      ? state.bots.map((bot, index) => normalizeActorState(bot, `bot-${index + 1}`))
+      : normalizedBotCareers.map((career) => normalizeActorState(career.actor, career.actor.actorId));
+  const hydratedBotCareers =
+    normalizedBotCareers.length > 0
+      ? normalizedBotCareers
+      : normalizedBots.map((bot) => ({
+          actor: normalizeActorState(bot, bot.actorId),
+          activeJob: null,
+          contractBoard: [],
+          log: [],
+          shopSupplies: createInitialShopSupplies(),
+          truckSupplies: {},
+          workday: createInitialWorkday(state.day ?? 1, 0),
+          research: createResearchStateLocked(),
+          tradeProgress: createTradeProgressState(true),
+          officeSkills: createInitialOfficeSkillsState(),
+          yard: createInitialYardState(),
+          operations: createInitialOperationsState(),
+          perks: createInitialPerksState(),
+          selfEsteem: createInitialSelfEsteemState(),
+          deferredJobs: [],
+          contractFiles: []
+        }));
 
   const normalizedState: GameState = {
     ...(state as GameState),
     player: normalizedPlayer,
+    bots: normalizedBots,
+    botCareers: hydratedBotCareers,
     shopSupplies: normalizeSupplyInventory(state.shopSupplies),
     truckSupplies: normalizeSupplyInventory(state.truckSupplies),
     activeJob: normalizeActiveJobState(state.activeJob),
@@ -1533,7 +1651,7 @@ function getMinimumContractPayout(state: GameState, bundle: ContentBundle, job: 
   const needsSupplier = materialRouting.needsSupplier;
   const requiresShopLoad = materialRouting.requiresShopLoad;
   const requiresRefuel = state.player.fuel < state.player.fuelMax;
-  const tasks = createTaskTemplate(job, district, needsSupplier, requiresShopLoad, requiresRefuel);
+  const tasks = createTaskTemplate(job, district, needsSupplier, requiresShopLoad, requiresRefuel, state.operations.facilities.storageOwned);
   const plannedTicks = tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0);
   const plannedHours = ticksToHours(plannedTicks);
   const hourlyRate = job.tags.includes("baba-g") ? MIN_BABA_CONTRACT_RATE_PER_HOUR : MIN_CONTRACT_RATE_PER_HOUR;
@@ -2172,7 +2290,8 @@ export function performTaskUnit(
           }
         }
         const pendingTrash = Math.max(0, Math.floor(job.trashUnits ?? 0));
-        if (pendingTrash > 0 && !nextState.operations.facilities.dumpsterEnabled) {
+        const canRouteTrashToDumpster = nextState.operations.facilities.storageOwned && nextState.operations.facilities.dumpsterEnabled;
+        if (pendingTrash > 0 && !canRouteTrashToDumpster) {
           const premiumHaul = getPremiumHaulCost(pendingTrash);
           nextState.player.cash -= premiumHaul;
           nextState.activeJob!.trashUnitsPending = 0;
@@ -2196,6 +2315,10 @@ export function performTaskUnit(
           estimatedHoursAtAccept: ticksToHours(activeJobSnapshot.plannedTicks),
           estimatedNetAtAccept: activeJobSnapshot.estimateAtAccept.projectedNetOnSuccess
         });
+        if (!nextState.operations.facilities.storageOwned) {
+          nextState.activeJob = null;
+          logLines.push("Truck-only closeout: kept leftovers on the truck and closed the job folder.");
+        }
       }
       break;
     case "return_to_shop":
@@ -2770,9 +2893,10 @@ function createTaskTemplate(
   district: DistrictDef,
   needsSupplier: boolean,
   requiresShopLoad: boolean,
-  requiresRefuel: boolean
+  requiresRefuel: boolean,
+  storageOwned: boolean
 ): ActiveTaskState[] {
-  return [
+  const tasks: ActiveTaskState[] = [
     createTask("load_from_shop", 2, requiresShopLoad ? 1 : 0, true),
     createTask("refuel_at_station", 1, requiresRefuel ? 1 : 0, false),
     createTask("travel_to_supplier", SHOP_SUPPLIER_TICKS, needsSupplier ? 1 : 0, false),
@@ -2780,10 +2904,12 @@ function createTaskTemplate(
     createTask("travel_to_job_site", 1, 1, false),
     createTask("pickup_site_supplies", 2, 0, true),
     createTask("do_work", 2, job.workUnits, true),
-    createTask("collect_payment", 2, 1, true),
-    createTask("return_to_shop", district.travel.shopToSiteTicks, 1, false),
-    createTask("store_leftovers", 2, 1, true)
+    createTask("collect_payment", 2, 1, true)
   ];
+  if (storageOwned) {
+    tasks.push(createTask("return_to_shop", district.travel.shopToSiteTicks, 1, false), createTask("store_leftovers", 2, 1, true));
+  }
+  return tasks;
 }
 
 function createTask(taskId: TaskId, baseTicks: number, requiredUnits: number, qualityBearing: boolean): ActiveTaskState {
@@ -3305,9 +3431,10 @@ function getMinimumFuelNeededAfterRefuel(activeJob: ActiveJobState, district: Di
   return 0;
 }
 
-function estimateContractRouteFuelCost(district: DistrictDef, needsSupplier: boolean): number {
+function estimateContractRouteFuelCost(district: DistrictDef, needsSupplier: boolean, storageOwned: boolean): number {
   const routeFuelUnits =
-    (needsSupplier ? SHOP_SUPPLIER_FUEL + district.travel.supplierToSiteFuel : district.travel.shopToSiteFuel) + district.travel.shopToSiteFuel;
+    (needsSupplier ? SHOP_SUPPLIER_FUEL + district.travel.supplierToSiteFuel : district.travel.shopToSiteFuel) +
+    (storageOwned ? district.travel.shopToSiteFuel : 0);
   return routeFuelUnits * FUEL_PRICE;
 }
 
@@ -3814,6 +3941,7 @@ function cloneState(state: GameState): GameState {
     ...state,
     player: cloneActor(state.player),
     bots: state.bots.map((bot) => cloneActor(bot)),
+    botCareers: state.botCareers.map((career) => cloneBotCareer(career)),
     contractBoard: state.contractBoard.map((contract) => ({ ...contract })),
     activeEventIds: [...state.activeEventIds],
     log: state.log.map((entry) => ({ ...entry })),
@@ -3848,6 +3976,45 @@ function cloneState(state: GameState): GameState {
       ...state.workday,
       fatigue: { ...state.workday.fatigue }
     }
+  };
+}
+
+function cloneBotCareer(career: BotCareerState): BotCareerState {
+  return {
+    actor: cloneActor(career.actor),
+    activeJob: cloneActiveJob(career.activeJob),
+    contractBoard: career.contractBoard.map((contract) => ({ ...contract })),
+    log: career.log.map((entry) => ({ ...entry })),
+    shopSupplies: cloneSupplyInventory(career.shopSupplies),
+    truckSupplies: cloneSupplyInventory(career.truckSupplies),
+    workday: {
+      ...career.workday,
+      fatigue: { ...career.workday.fatigue }
+    },
+    research: cloneResearchState(career.research),
+    tradeProgress: {
+      unlocked: { ...career.tradeProgress.unlocked },
+      unlockedDay: { ...career.tradeProgress.unlockedDay }
+    },
+    officeSkills: { ...career.officeSkills },
+    yard: { ...career.yard },
+    operations: {
+      ...career.operations,
+      monthlyDueByCategory: { ...career.operations.monthlyDueByCategory },
+      facilities: { ...career.operations.facilities }
+    },
+    perks: {
+      ...career.perks,
+      corePerks: { ...career.perks.corePerks },
+      unlockedPerkTrees: { ...career.perks.unlockedPerkTrees }
+    },
+    selfEsteem: { ...career.selfEsteem },
+    deferredJobs: career.deferredJobs.map((entry) => ({
+      deferredJobId: entry.deferredJobId,
+      deferredAtDay: entry.deferredAtDay,
+      activeJob: cloneActiveJob(entry.activeJob)!
+    })),
+    contractFiles: career.contractFiles.map((entry) => ({ ...entry }))
   };
 }
 
@@ -4128,7 +4295,7 @@ export function getQuickBuyPlan(
   const starterGateBlocked = starterGateActive && missingTools.some((entry) => !isStarterToolId(entry.toolId));
   const totalCost = missingTools.reduce((sum, entry) => sum + entry.price, 0);
   const requiredTicks = missingTools.length * 2;
-  const allowed = !state.activeJob || state.activeJob.location === "shop";
+  const allowed = !state.activeJob || state.activeJob.location === "shop" || !state.operations.facilities.storageOwned;
   const enoughCash = state.player.cash >= totalCost;
   const enoughTime = requiredTicks === 0 ? true : canSpendTicks(state.workday, requiredTicks, true);
   return {
@@ -4156,10 +4323,16 @@ export function quickBuyMissingTools(
     return { nextState: state, payload: plan, notice: "Tools already stocked.", digest: digestState(state) };
   }
   if (plan.starterGateBlocked) {
+    const blockedToolNames = plan.missingTools.filter((entry) => !isStarterToolId(entry.toolId)).map((entry) => entry.toolName);
+    const blockedToolLabel = formatQuickBuyToolList(blockedToolNames);
+    const storageNotice =
+      blockedToolNames.length <= 1
+        ? `${blockedToolLabel} needs storage unlocked before quick buy because non-starter tools need storage space.`
+        : `${blockedToolLabel} need storage unlocked before quick buy because non-starter tools need storage space.`;
     return {
       nextState: state,
       payload: plan,
-      notice: "Open storage before quick buying non-starter tools.",
+      notice: storageNotice,
       digest: digestState(state)
     };
   }
@@ -4205,4 +4378,17 @@ export function quickBuyMissingTools(
     notice,
     digest: digestState(nextState)
   };
+}
+
+function formatQuickBuyToolList(toolNames: string[]): string {
+  if (toolNames.length === 0) {
+    return "This tool";
+  }
+  if (toolNames.length === 1) {
+    return toolNames[0]!;
+  }
+  if (toolNames.length === 2) {
+    return `${toolNames[0]} and ${toolNames[1]}`;
+  }
+  return `${toolNames.slice(0, -1).join(", ")}, and ${toolNames[toolNames.length - 1]}`;
 }

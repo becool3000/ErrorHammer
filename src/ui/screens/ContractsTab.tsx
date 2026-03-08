@@ -18,6 +18,7 @@ import {
   getContractAutoBidPreview,
   getContractQuotedPayout,
   shouldIgnoreLikelyLossWarning,
+  isStarterToolId,
   getSkillRank,
   getSupplyUnitPrice,
   getSettlementPreview
@@ -74,12 +75,11 @@ export function ContractsTab() {
   const babaOffer = allOffers.find((offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && offer.job.tags.includes("baba-g")) ?? null;
   const activeGroup = unlockedGroups.find((group) => group.id === activeGroupId) ?? unlockedGroups[0] ?? null;
   const groupOffers = activeGroup ? tradeOffers.filter((offer) => activeGroup.skills.includes(offer.job.primarySkill)) : [];
-  const contracts = allOffers.map((offer) => offer.contract);
   const bestPickContractId = getBestPickContractId(tradeOffers, economyPreviewByContractId, game);
   const effectiveSelected =
     allOffers.find((offer) => offer.contract.contractId === selectedContractId)?.contract.contractId ??
-    dayLaborOffer?.contract.contractId ??
     babaOffer?.contract.contractId ??
+    dayLaborOffer?.contract.contractId ??
     groupOffers[0]?.contract.contractId ??
     tradeOffers[0]?.contract.contractId ??
     null;
@@ -103,6 +103,9 @@ export function ContractsTab() {
     !quickBuyPlan?.starterGateBlocked &&
     quickBuyPlan?.enoughCash &&
     quickBuyPlan?.enoughTime;
+  const storageLockedQuickBuyTools = quickBuyPlan?.starterGateBlocked
+    ? quickBuyPlan.missingTools.filter((line) => !isStarterToolId(line.toolId)).map((line) => line.toolName)
+    : [];
   const archetype = getPerkArchetypeSnapshot(game);
 
   return (
@@ -195,13 +198,14 @@ export function ContractsTab() {
           <p className="eyebrow">Quick Tool Buy</p>
           <p className="muted-copy">Missing {quickBuyPlan.missingTools.map((line) => line.toolName).join(", ")}</p>
           <p className="muted-copy">{bundle.strings.quickBuyDescription}</p>
+          {storageLockedQuickBuyTools.length > 0 ? <p className="muted-copy tone-warning">{buildQuickBuyStorageLockCopy(storageLockedQuickBuyTools)}</p> : null}
           <div className="chip-grid">
             <span className="chip">{formatHours(quickBuyPlan.requiredTicks)}</span>
             <span className="chip">${quickBuyPlan.totalCost}</span>
             {!quickBuyPlan.enoughCash ? <span className="chip muted">Need more cash</span> : null}
             {!quickBuyPlan.enoughTime ? <span className="chip muted">Need more hours</span> : null}
             {!quickBuyPlan.allowed ? <span className="chip muted">Must be at storage</span> : null}
-            {quickBuyPlan.starterGateBlocked ? <span className="chip muted">Open storage first</span> : null}
+            {quickBuyPlan.starterGateBlocked ? <span className="chip muted">Unlock storage first</span> : null}
           </div>
           <div className="action-row quick-buy-actions">
             <button
@@ -214,43 +218,41 @@ export function ContractsTab() {
           </div>
         </article>
       ) : null}
-      <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <div>
-            <p className="eyebrow">Pinned Offers</p>
-            <h2>Always Available</h2>
+      {babaOffer ? (
+        <article className="chrome-card inset-card">
+          <div className="section-label-row">
+            <div>
+              <p className="eyebrow">Baba G</p>
+              <h2>Baba G Spotlight</h2>
+            </div>
+            <span className="chip">Always Available</span>
           </div>
-          <span className="chip">{contracts.length} offers</span>
-        </div>
-        <div className="trade-pinned-grid">
-          {dayLaborOffer ? (
-            <button
-              className={effectiveSelected === dayLaborOffer.contract.contractId ? "trade-offer-chip active" : "trade-offer-chip"}
-              onClick={() => selectContract(dayLaborOffer.contract.contractId)}
-            >
-              <strong>Day Labor</strong>
-              <span>${getOfferPayout(game, dayLaborOffer)}</span>
-              <small>Fallback</small>
-              {isLikelyLossOffer(economyPreviewByContractId.get(dayLaborOffer.contract.contractId) ?? null) ? (
-                <small className="tone-danger trade-offer-loss-flag">Likely Loss</small>
-              ) : null}
-            </button>
+          <p className="muted-copy">
+            {obfuscateReadableText(
+              game,
+              "Rotating high-risk contract that unlocks more trade tracks as you complete Baba G jobs.",
+              "contracts:baba-spotlight:copy"
+            )}
+          </p>
+          <div className="metric-grid two-up">
+            <span>Payout ${getOfferPayout(game, babaOffer)}</span>
+            <span>Risk {Math.round(babaOffer.job.risk * 100)}%</span>
+            <span>Skill {formatSkillLabel(babaOffer.job.primarySkill)}</span>
+            <span>Tier {babaOffer.job.tier}</span>
+          </div>
+          {isLikelyLossOffer(economyPreviewByContractId.get(babaOffer.contract.contractId) ?? null) ? (
+            <p className="muted-copy tone-danger">Likely Loss warning on current Baba G rotation.</p>
           ) : null}
-          {babaOffer ? (
+          <div className="action-row">
             <button
-              className={effectiveSelected === babaOffer.contract.contractId ? "trade-offer-chip active" : "trade-offer-chip"}
+              className={effectiveSelected === babaOffer.contract.contractId ? "primary-button wide-button" : "ghost-button secondary-action-button wide-button"}
               onClick={() => selectContract(babaOffer.contract.contractId)}
             >
-              <strong>Baba G</strong>
-              <span>${getOfferPayout(game, babaOffer)}</span>
-              <small>{Math.round(babaOffer.job.risk * 100)}% risk</small>
-              {isLikelyLossOffer(economyPreviewByContractId.get(babaOffer.contract.contractId) ?? null) ? (
-                <small className="tone-danger trade-offer-loss-flag">Likely Loss</small>
-              ) : null}
+              Select Baba G Job
             </button>
-          ) : null}
-        </div>
-      </article>
+          </div>
+        </article>
+      ) : null}
     </section>
   );
 }
@@ -383,7 +385,11 @@ function ContractDetails({
           Auto-Bid ${autoBidPreview.acceptedPayout} (Estimating Lv {autoBidPreview.estimatingLevel})
         </p>
       ) : null}
-      {archetypeTags.length > 0 ? <p className="muted-copy">Style Fit: {getStyleFitHint(job.primarySkill, archetypeTags)}</p> : null}
+      {archetypeTags.length > 0 ? (
+        <p className="muted-copy">
+          {obfuscateReadableText(game, `Style Fit: ${getStyleFitHint(job.primarySkill, archetypeTags)}`, `${job.id}:style-fit`)}
+        </p>
+      ) : null}
       {likelyLoss && economyPreview ? (
         <p className="muted-copy tone-danger contract-loss-warning">
           Likely Loss: Net on success {formatSignedMoney(economyPreview.projectedNetOnSuccess)}. Why: {likelyLossWhy}
@@ -434,7 +440,9 @@ function ContractDetails({
                   Est Net {formatSignedMoney(economyPreview.projectedNetOnSuccess)}
                 </span>
               </div>
-              <p className="muted-copy">Estimate uses medium material pricing, route fuel, and trash handling.</p>
+              <p className="muted-copy">
+                {obfuscateReadableText(game, "Estimate uses medium material pricing, route fuel, and trash handling.", `${job.id}:estimate-note`)}
+              </p>
             </div>
           ) : null}
         </div>
@@ -476,9 +484,13 @@ function ContractDetails({
         <div className="detail-block">
           <strong>Materials</strong>
           <p className="muted-copy">
-            {isDayLabor
-              ? "No supplies needed. This fallback uses regular shift hours only and converts those hours into cash."
-              : "No supplies needed for this contract."}
+            {obfuscateReadableText(
+              game,
+              isDayLabor
+                ? "No supplies needed. This fallback uses regular shift hours only and converts those hours into cash."
+                : "No supplies needed for this contract.",
+              `${job.id}:materials-summary`
+            )}
           </p>
         </div>
       )}
@@ -772,4 +784,23 @@ function getStyleFitHint(skillId: SkillId, archetypeTags: string[]): string {
     (topTag === "Diagnostics Crew" && diagnosticsSkills.includes(skillId)) ||
     (topTag === "Field Closer" && closerSkills.includes(skillId));
   return fit ? `${topTag} bonus alignment` : `${topTag} neutral alignment`;
+}
+
+function buildQuickBuyStorageLockCopy(toolNames: string[]): string {
+  const toolsLabel = formatQuickBuyToolNames(toolNames);
+  const verb = toolNames.length === 1 ? "needs" : "need";
+  return `${toolsLabel} ${verb} storage unlocked before quick buy because non-starter tools need storage space.`;
+}
+
+function formatQuickBuyToolNames(toolNames: string[]): string {
+  if (toolNames.length === 0) {
+    return "This tool";
+  }
+  if (toolNames.length === 1) {
+    return toolNames[0]!;
+  }
+  if (toolNames.length === 2) {
+    return `${toolNames[0]} and ${toolNames[1]}`;
+  }
+  return `${toolNames.slice(0, -1).join(", ")}, and ${toolNames[toolNames.length - 1]}`;
 }

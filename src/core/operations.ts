@@ -95,8 +95,8 @@ export const FACILITY_ACTION_COSTS = {
 
 export function createInitialOfficeSkillsState(): OfficeSkillsState {
   return {
-    readingXp: 60,
-    accountingXp: 50,
+    readingXp: 0,
+    accountingXp: 0,
     readingXpToday: 0,
     accountingXpToday: 0
   };

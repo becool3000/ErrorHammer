@@ -6,11 +6,10 @@ import {
   getRiskValue,
   isForcedNeutral
 } from "./economy";
-import { evaluateBotPlan, simulateBotDay } from "./bots";
+import { createInitialBotCareer, simulateBotCareerDay, syncBotSnapshotsFromCareers } from "./bots";
 import { createRng, hashSeed } from "./rng";
 import { SAVE_VERSION } from "./save";
 import {
-  createBotSkills,
   createInitialShopSupplies,
   createInitialSkills,
   createInitialWorkday,
@@ -27,6 +26,7 @@ import {
   ActorState,
   AssignmentIntent,
   BotProfile,
+  BotCareerState,
   ContractInstance,
   ContentBundle,
   DayLog,
@@ -35,10 +35,7 @@ import {
   Intent,
   JobDef,
   Resolution,
-  ResolverResult,
-  SkillId,
-  ToolDef,
-  TRADE_SKILLS
+  ResolverResult
 } from "./types";
 
 interface ValidAssignment {
@@ -71,7 +68,8 @@ export function createInitialGameState(
     crews: []
   };
 
-  const bots = bundle.bots.map((profile, index) => createBotActor(profile, bundle, seed, index));
+  const botCareers = bundle.bots.map((profile) => createInitialBotCareer(profile, bundle));
+  const bots = syncBotSnapshotsFromCareers(botCareers);
   const activeEventIds = pickEventIds(bundle, 1, seed);
   const contractBoard = generateContractBoard(bundle, 1, hashSeed(seed, 1), {
     districtIds: player.districtUnlocks,
@@ -84,6 +82,7 @@ export function createInitialGameState(
     seed,
     player,
     bots,
+    botCareers,
     contractBoard,
     activeEventIds,
     log: [],
@@ -370,6 +369,68 @@ export function resolveDay(
     seed: state.seed,
     player: resetPlayer,
     bots: purchasePhase.bots,
+    botCareers: state.botCareers.map((career) => {
+      const actor = purchasePhase.bots.find((bot) => bot.actorId === career.actor.actorId);
+      return {
+        ...career,
+        actor: actor ? cloneActor(actor) : cloneActor(career.actor),
+        activeJob: career.activeJob
+          ? {
+              ...career.activeJob,
+              estimateAtAccept: { ...career.activeJob.estimateAtAccept },
+              reservedMaterials: cloneSupplyInventory(career.activeJob.reservedMaterials),
+              siteSupplies: cloneSupplyInventory(career.activeJob.siteSupplies),
+              supplierCart: cloneSupplyInventory(career.activeJob.supplierCart),
+              tasks: career.activeJob.tasks.map((task) => ({ ...task }))
+            }
+          : null,
+        contractBoard: career.contractBoard.map((contract) => ({ ...contract })),
+        log: career.log.map((entry) => ({ ...entry })),
+        shopSupplies: cloneSupplyInventory(career.shopSupplies),
+        truckSupplies: cloneSupplyInventory(career.truckSupplies),
+        workday: {
+          ...career.workday,
+          fatigue: { ...career.workday.fatigue }
+        },
+        research: {
+          ...career.research,
+          unlockedCategories: { ...career.research.unlockedCategories },
+          unlockedSkills: { ...career.research.unlockedSkills },
+          activeProject: career.research.activeProject ? { ...career.research.activeProject } : null,
+          completedProjectIds: [...career.research.completedProjectIds]
+        },
+        tradeProgress: {
+          unlocked: { ...career.tradeProgress.unlocked },
+          unlockedDay: { ...career.tradeProgress.unlockedDay }
+        },
+        officeSkills: { ...career.officeSkills },
+        yard: { ...career.yard },
+        operations: {
+          ...career.operations,
+          monthlyDueByCategory: { ...career.operations.monthlyDueByCategory },
+          facilities: { ...career.operations.facilities }
+        },
+        perks: {
+          ...career.perks,
+          corePerks: { ...career.perks.corePerks },
+          unlockedPerkTrees: { ...career.perks.unlockedPerkTrees }
+        },
+        selfEsteem: { ...career.selfEsteem },
+        deferredJobs: career.deferredJobs.map((entry) => ({
+          deferredJobId: entry.deferredJobId,
+          deferredAtDay: entry.deferredAtDay,
+          activeJob: {
+            ...entry.activeJob,
+            estimateAtAccept: { ...entry.activeJob.estimateAtAccept },
+            reservedMaterials: cloneSupplyInventory(entry.activeJob.reservedMaterials),
+            siteSupplies: cloneSupplyInventory(entry.activeJob.siteSupplies),
+            supplierCart: cloneSupplyInventory(entry.activeJob.supplierCart),
+            tasks: entry.activeJob.tasks.map((task) => ({ ...task }))
+          }
+        })),
+        contractFiles: career.contractFiles.map((entry) => ({ ...entry }))
+      };
+    }),
     contractBoard: nextBoard,
     activeEventIds: nextEventIds,
     log: [...state.log, ...dayLog].slice(-300),
@@ -412,7 +473,8 @@ export function resolveDay(
         supplierCart: cloneSupplyInventory(entry.activeJob.supplierCart),
         tasks: entry.activeJob.tasks.map((task) => ({ ...task }))
       }
-    }))
+    })),
+    contractFiles: state.contractFiles.map((entry) => ({ ...entry }))
   };
 
   return {
@@ -427,56 +489,11 @@ export function endShift(state: GameState, bundle: ContentBundle): ResolverResul
   const nextState = prepareForNextDay(state);
   const operationsResult = applyEndDayOperations(nextState);
   nextState.activeEventIds = pickEventIds(bundle, nextState.day, nextState.seed);
-  const pricingEvents = nextState.activeEventIds
-    .map((id) => bundle.events.find((event) => event.id === id))
-    .filter((event): event is EventDef => Boolean(event));
-
   const dayLog: DayLog[] = [...operationsResult.dayLog];
-  const profileById = new Map(bundle.bots.map((bot) => [bot.id, bot]));
-  const updatedBots: ActorState[] = [];
-
-  for (const bot of nextState.bots) {
-    const profile = profileById.get(bot.actorId);
-    if (!profile) {
-      updatedBots.push(bot);
-      continue;
-    }
-
-    const botBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, "bot-board", nextState.day, bot.actorId), {
-      districtIds: bot.districtUnlocks,
-      maxTier: bot.companyLevel + 1
-    });
-    const sim = simulateBotDay(
-      bot,
-      profile,
-      botBoard,
-      bundle,
-      pricingEvents,
-      nextState.day,
-      hashSeed(nextState.seed, "bot-sim", nextState.day, bot.actorId)
-    );
-    applyProgression(sim.bot, bundle);
-    const purchasePhase = applyBotPurchasesForNextDay(
-      [sim.bot],
-      [profile],
-      bundle,
-      botBoard,
-      pricingEvents,
-      hashSeed(nextState.seed, "bot-buy", nextState.day, bot.actorId)
-    );
-    updatedBots.push(purchasePhase.bots[0] ?? sim.bot);
-
-    for (const line of sim.logLines) {
-      dayLog.push({
-        day: state.day,
-        actorId: bot.actorId,
-        message: line
-      });
-    }
-    dayLog.push(...purchasePhase.purchaseLogs.map((entry) => ({ ...entry, day: state.day })));
-  }
-
-  nextState.bots = updatedBots;
+  const competitorSimulation = simulateCompetitorCareers(nextState, bundle, state.day);
+  nextState.botCareers = competitorSimulation.careers;
+  nextState.bots = competitorSimulation.snapshots;
+  dayLog.push(...competitorSimulation.dayLog);
   applyStagnationRecovery(nextState, bundle, dayLog, state.day);
   nextState.contractBoard = nextState.activeJob
     ? []
@@ -492,6 +509,41 @@ export function endShift(state: GameState, bundle: ContentBundle): ResolverResul
     dayLog,
     digest: digestState(nextState)
   };
+}
+
+function simulateCompetitorCareers(
+  nextState: GameState,
+  bundle: ContentBundle,
+  completedDay: number
+): { careers: BotCareerState[]; snapshots: ActorState[]; dayLog: DayLog[] } {
+  const careersById = new Map(nextState.botCareers.map((career) => [career.actor.actorId, career]));
+  const snapshotsById = new Map(nextState.bots.map((bot) => [bot.actorId, bot]));
+  const careers: BotCareerState[] = [];
+  const dayLog: DayLog[] = [];
+
+  for (const profile of bundle.bots) {
+    const existingCareer = careersById.get(profile.id);
+    const baseCareer = existingCareer
+      ? existingCareer
+      : (() => {
+          const seeded = createInitialBotCareer(profile, bundle);
+          const existingSnapshot = snapshotsById.get(profile.id);
+          if (existingSnapshot) {
+            seeded.actor = cloneActor(existingSnapshot);
+          }
+          return seeded;
+        })();
+    const simulation = simulateBotCareerDay(baseCareer, profile, nextState, bundle, {
+      completedDay,
+      sharedEventIds: nextState.activeEventIds,
+      daySeed: hashSeed(nextState.seed, "bot-career-day", nextState.day, profile.id)
+    });
+    careers.push(simulation.career);
+    dayLog.push(...simulation.dayLog.map((entry) => ({ ...entry })));
+  }
+
+  const snapshots = syncBotSnapshotsFromCareers(careers);
+  return { careers, snapshots, dayLog };
 }
 
 function applyStagnationRecovery(nextState: GameState, bundle: ContentBundle, dayLog: DayLog[], completedDay: number): void {
@@ -535,7 +587,7 @@ function applyStagnationRecovery(nextState: GameState, bundle: ContentBundle, da
 }
 
 export function buyTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
-  if (state.activeJob && state.activeJob.location !== "shop") {
+  if (state.activeJob && state.activeJob.location !== "shop" && state.operations.facilities.storageOwned) {
     return state;
   }
   const tool = bundle.tools.find((item) => item.id === toolId);
@@ -578,7 +630,7 @@ export function buyTool(state: GameState, bundle: ContentBundle, toolId: string)
 }
 
 export function repairTool(state: GameState, bundle: ContentBundle, toolId: string): GameState {
-  if (state.activeJob && state.activeJob.location !== "shop") {
+  if (state.activeJob && state.activeJob.location !== "shop" && state.operations.facilities.storageOwned) {
     return state;
   }
   const toolDef = bundle.tools.find((tool) => tool.id === toolId);
@@ -630,90 +682,9 @@ export function applyBotPurchasesForNextDay(
   pricingEvents: EventDef[],
   nextDaySeed: number
 ): { bots: ActorState[]; purchaseLogs: DayLog[] } {
-  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
-  const sortedTools = [...bundle.tools].sort((a, b) => a.id.localeCompare(b.id));
-  const nextDay = nextBoard[0]?.expiresDay ?? 0;
-  const logDay = nextDay > 0 ? nextDay - 1 : 0;
-
-  const updatedBots: ActorState[] = [];
-  const purchaseLogs: DayLog[] = [];
-
-  for (const bot of bots) {
-    const profile = profileById.get(bot.actorId) ?? profiles[0];
-    const nextBot = cloneActor(bot);
-    if (!profile) {
-      updatedBots.push(nextBot);
-      continue;
-    }
-
-    const baselinePlan = evaluateBotPlan(nextBot, profile, nextBoard, bundle, nextDay, nextDaySeed, {
-      tieNoise: false
-    });
-
-    const candidates: Array<{ tool: ToolDef; price: number; weightedGain: number }> = [];
-    for (const tool of sortedTools) {
-      const existing = nextBot.tools[tool.id];
-      if (existing && existing.durability > 0) {
-        continue;
-      }
-
-      const price = applyToolPriceModifiers(tool.price, pricingEvents);
-      if (nextBot.cash < price) {
-        continue;
-      }
-
-      const simulated = cloneActor(nextBot);
-      simulated.tools[tool.id] = {
-        toolId: tool.id,
-        durability: tool.maxDurability
-      };
-
-      const candidatePlan = evaluateBotPlan(simulated, profile, nextBoard, bundle, nextDay, nextDaySeed, {
-        tieNoise: false
-      });
-      const scoreGain = candidatePlan.totalScore - baselinePlan.totalScore;
-      const weightedGain = scoreGain * profile.weights.wToolBuy;
-      if (weightedGain < 20) {
-        continue;
-      }
-
-      candidates.push({
-        tool,
-        price,
-        weightedGain
-      });
-    }
-
-    candidates.sort((a, b) => {
-      if (b.weightedGain !== a.weightedGain) {
-        return b.weightedGain - a.weightedGain;
-      }
-      if (a.price !== b.price) {
-        return a.price - b.price;
-      }
-      return a.tool.id.localeCompare(b.tool.id);
-    });
-
-    const choice = candidates[0];
-    if (choice) {
-      nextBot.cash -= choice.price;
-      nextBot.tools[choice.tool.id] = {
-        toolId: choice.tool.id,
-        durability: choice.tool.maxDurability
-      };
-      purchaseLogs.push({
-        day: logDay,
-        actorId: nextBot.actorId,
-        message: `${nextBot.name} bought ${choice.tool.name} for $${choice.price}.`
-      });
-    }
-
-    updatedBots.push(nextBot);
-  }
-
   return {
-    bots: updatedBots,
-    purchaseLogs
+    bots: bots.map((bot) => cloneActor(bot)),
+    purchaseLogs: []
   };
 }
 
@@ -731,66 +702,6 @@ function cloneSupplyInventory(inventory: Record<string, { low?: number; medium?:
       }
     ])
   );
-}
-
-function createBotActor(profile: BotProfile, bundle: ContentBundle, seed: number, index: number): ActorState {
-  const toolRng = createRng(hashSeed(seed, "botStart", profile.id));
-  const starterTools = pickStarterTools(bundle.tools, toolRng.nextInt(bundle.tools.length));
-
-  const tools = starterTools.reduce<Record<string, { toolId: string; durability: number }>>((acc, tool) => {
-    acc[tool.id] = {
-      toolId: tool.id,
-      durability: tool.maxDurability
-    };
-    return acc;
-  }, {});
-
-  const bot: ActorState = {
-    actorId: profile.id,
-    name: profile.name,
-    companyName: profile.name,
-    cash: 320 + index * 40,
-    reputation: 4 + index * 3,
-    companyLevel: 1,
-    districtUnlocks: unlockDistricts(bundle, 1),
-    staminaMax: 4,
-    stamina: 4,
-    fuel: 8,
-    fuelMax: 12,
-    skills: createBotSkills(getStarterSkillIds(starterTools)),
-    tools,
-    crews: []
-  };
-
-  applyProgression(bot, bundle);
-  return bot;
-}
-
-function pickStarterTools(tools: ToolDef[], randomIndex: number): ToolDef[] {
-  const hammer = tools.find((tool) => tool.id === "hammer") ?? tools[0];
-  const alt = tools[randomIndex] ?? hammer;
-  if (!hammer) {
-    return [];
-  }
-  if (!alt || alt.id === hammer.id) {
-    return [hammer];
-  }
-  return [hammer, alt];
-}
-
-function getStarterSkillIds(tools: ToolDef[]): SkillId[] {
-  const skillIds: SkillId[] = [];
-  const validSkills = new Set<SkillId>([...TRADE_SKILLS]);
-
-  for (const tool of tools) {
-    for (const tag of tool.tags) {
-      if (validSkills.has(tag as SkillId) && !skillIds.includes(tag as SkillId)) {
-        skillIds.push(tag as SkillId);
-      }
-    }
-  }
-
-  return skillIds;
 }
 
 function hydrateActorMap(state: GameState): Map<string, ActorState> {

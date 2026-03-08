@@ -6,7 +6,7 @@ import { SegmentedControl } from "../components/SegmentedControl";
 
 const storeSections: Array<{ id: StoreSectionId; label: string }> = [
   { id: "tools", label: "Tools" },
-  { id: "stock", label: "Stock" }
+  { id: "stock", label: "Supplies" }
 ];
 
 export function StoreTab() {
@@ -23,7 +23,9 @@ export function StoreTab() {
     return null;
   }
 
+  const truckOnlyMode = !game.operations.facilities.storageOwned;
   const atStorage = !game.activeJob || game.activeJob.location === "shop";
+  const canUseToolBench = atStorage || truckOnlyMode;
   const starterGateActive = shouldEnforceStarterToolGate(bundle) && !game.operations.facilities.storageOwned;
   const truckTools = bundle.tools.filter((tool) => isStarterToolId(tool.id));
   const storageTools = bundle.tools.filter((tool) => !isStarterToolId(tool.id));
@@ -32,18 +34,15 @@ export function StoreTab() {
 
   return (
     <section className="tab-panel store-tab">
-      {!atStorage ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
+      {!canUseToolBench ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
       {starterGateActive ? (
         <p className="notice-banner">Truck-only mode: buy all starter tools, then open storage to unlock full tool access.</p>
       ) : null}
       <article className="chrome-card inset-card">
-        <div className="section-label-row">
-          <div>
-            <h2>Storage</h2>
-          </div>
+        <div className="section-label-row store-tab-header">
           <span className="chip">Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true })}</span>
         </div>
-        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Storage sections" />
+        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Store sections" />
       </article>
 
       {storeSection === "tools" ? (
@@ -88,11 +87,11 @@ export function StoreTab() {
                         {expanded ? <p className="muted-copy">{obfuscateReadableText(game, tool.flavor.description, `tool:${tool.id}:desc`)}</p> : null}
                         <div className="action-row">
                           {owned ? (
-                            <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!atStorage || owned.durability >= tool.maxDurability}>
+                            <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!canUseToolBench || owned.durability >= tool.maxDurability}>
                               Repair
                             </button>
                           ) : (
-                            <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!atStorage}>
+                            <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!canUseToolBench}>
                               Buy
                             </button>
                           )}
@@ -147,11 +146,11 @@ export function StoreTab() {
                         {expanded ? <p className="muted-copy">{obfuscateReadableText(game, tool.flavor.description, `tool:${tool.id}:desc`)}</p> : null}
                         <div className="action-row">
                           {owned ? (
-                            <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!atStorage || owned.durability >= tool.maxDurability || blockedByStarterGate}>
+                            <button className="ghost-button" onClick={() => repairTool(tool.id)} disabled={!canUseToolBench || owned.durability >= tool.maxDurability || blockedByStarterGate}>
                               Repair
                             </button>
                           ) : (
-                            <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!atStorage || blockedByStarterGate}>
+                            <button className="primary-button" onClick={() => buyTool(tool.id)} disabled={!canUseToolBench || blockedByStarterGate}>
                               Buy
                             </button>
                           )}
@@ -170,24 +169,44 @@ export function StoreTab() {
       ) : null}
 
       {storeSection === "stock" ? (
-        <article className="hero-card chrome-card">
-          <p className="eyebrow">Storage Stock</p>
-          <h3>Storage Supplies</h3>
-          <div className="chip-grid">
-            {Object.entries(game.shopSupplies)
-              .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))
-              .map(([supplyId, stack]) => (
-                <span key={supplyId} className="chip large-chip">
-                  {supplyId} {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
-                    .map((quality) => `${formatSupplyQuality(quality)} x${stack?.[quality]}`)
-                    .join(", ")}
-                </span>
-              ))}
-          </div>
-          {Object.entries(game.shopSupplies).every(([, stack]) => SUPPLY_QUALITIES.every((quality) => (stack?.[quality] ?? 0) <= 0)) ? (
-            <p className="muted-copy">No stock on hand.</p>
-          ) : null}
-        </article>
+        <section className="stack-list">
+          <article className="hero-card chrome-card">
+            <h3>Truck Supplies</h3>
+            <div className="chip-grid">
+              {Object.entries(game.truckSupplies)
+                .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([supplyId, stack]) => (
+                  <span key={`truck-${supplyId}`} className="chip large-chip">
+                    {supplyId} {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
+                      .map((quality) => `${formatSupplyQuality(quality)} x${stack?.[quality]}`)
+                      .join(", ")}
+                  </span>
+                ))}
+            </div>
+            {Object.entries(game.truckSupplies).every(([, stack]) => SUPPLY_QUALITIES.every((quality) => (stack?.[quality] ?? 0) <= 0)) ? (
+              <p className="muted-copy">No truck supplies on hand.</p>
+            ) : null}
+          </article>
+          <article className="hero-card chrome-card">
+            <h3>Storage Supplies</h3>
+            <div className="chip-grid">
+              {Object.entries(game.shopSupplies)
+                .filter(([, stack]) => SUPPLY_QUALITIES.some((quality) => (stack?.[quality] ?? 0) > 0))
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([supplyId, stack]) => (
+                  <span key={`storage-${supplyId}`} className="chip large-chip">
+                    {supplyId} {SUPPLY_QUALITIES.filter((quality) => (stack?.[quality] ?? 0) > 0)
+                      .map((quality) => `${formatSupplyQuality(quality)} x${stack?.[quality]}`)
+                      .join(", ")}
+                  </span>
+                ))}
+            </div>
+            {Object.entries(game.shopSupplies).every(([, stack]) => SUPPLY_QUALITIES.every((quality) => (stack?.[quality] ?? 0) <= 0)) ? (
+              <p className="muted-copy">No storage supplies on hand.</p>
+            ) : null}
+          </article>
+        </section>
       ) : null}
     </section>
   );

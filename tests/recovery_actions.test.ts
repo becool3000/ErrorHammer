@@ -69,9 +69,22 @@ describe("recovery actions", () => {
     expect(armed.nextState.activeJob?.recoveryMode).toBe("finish_cheap");
     expect(getCurrentTask(armed.nextState)?.taskId).toBe("collect_payment");
 
-    const settled = performTaskUnit(armed.nextState, bundle, "standard", false);
-    expect(settled.nextState.activeJob?.outcome).toBe("neutral");
-    const actual = getContractActualSnapshot(settled.nextState, contractId);
+    let settledState = armed.nextState;
+    let settled = performTaskUnit(settledState, bundle, "standard", true);
+    let actual = getContractActualSnapshot(settled.nextState, contractId);
+    let guard = 0;
+    while (!actual) {
+      settledState = settled.nextState;
+      settled = performTaskUnit(settledState, bundle, "standard", true);
+      actual = getContractActualSnapshot(settled.nextState, contractId);
+      guard += 1;
+      if (guard > 120) {
+        throw new Error("Could not settle finish cheap recovery flow within 120 attempts.");
+      }
+    }
+    const contractFile = settled.nextState.contractFiles.find((entry) => entry.contractId === contractId);
+
+    expect(contractFile?.outcome).toBe("neutral");
     expect(actual?.payout).toBe(Math.round(lockedPayout * 0.7));
     expect(settled.nextState.player.reputation).toBe(Math.max(0, beforeRep - 1));
     expect(settled.nextState.log.some((entry) => entry.message.includes("Finish Cheap"))).toBe(true);

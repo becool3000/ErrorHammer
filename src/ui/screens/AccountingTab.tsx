@@ -31,12 +31,11 @@ export function AccountingTab() {
       <article className="hero-card chrome-card">
         <div className="section-label-row">
           <div>
-            <p className="eyebrow">Accounting</p>
             <h2>Cashflow Ledger</h2>
           </div>
           <span className={`chip ${netClass}`}>Net {formatNumberByAccountingClarity(game, snapshot.netFromLogs, { currency: true, signed: true })}</span>
         </div>
-        <p className="muted-copy">Tracks income and costs with bill categories, late fees, and service expenses.</p>
+        <p className="muted-copy">The more Accounting XP and Clarity you gain, the more of this ledger you will understand.</p>
         <div className="metric-grid two-up">
           <span>Accounting XP {Math.round(game.officeSkills.accountingXp)}</span>
           <span>Clarity {(accountingClarity * 100).toFixed(0)}%</span>
@@ -103,7 +102,6 @@ export function AccountingTab() {
             </>
           ) : null}
         </div>
-        {!showDetailedFinance ? <p className="muted-copy">Improve Accounting clarity to reveal deeper cost lines.</p> : null}
       </article>
 
       <article className="chrome-card inset-card">
