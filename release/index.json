@@ -1,8 +1,18 @@
 {
   "latestByPlatform": {
-    "itch": "v0.1.2+itch.20260306.01"
+    "itch": "v0.1.3+itch.20260308.01"
   },
   "releases": [
+    {
+      "releaseId": "v0.1.3+itch.20260308.01",
+      "platform": "itch",
+      "version": "0.1.3",
+      "buildId": "itch.20260308.01",
+      "releaseLabel": "v0.1.3+itch.20260308.01",
+      "builtAtUtc": "2026-03-08T01:32:30.448Z",
+      "notesPath": "release/platforms/itch/releases/v0.1.3+itch.20260308.01/CHANGELOG.md",
+      "manifestPath": "release/platforms/itch/releases/v0.1.3+itch.20260308.01/release.json"
+    },
     {
       "releaseId": "v0.1.2+itch.20260306.01",
       "platform": "itch",

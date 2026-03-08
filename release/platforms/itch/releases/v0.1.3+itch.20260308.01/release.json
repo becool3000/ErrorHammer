@@ -1,0 +1,19 @@
+{
+  "releaseId": "v0.1.3+itch.20260308.01",
+  "platform": "itch",
+  "version": "0.1.3",
+  "buildId": "itch.20260308.01",
+  "releaseLabel": "v0.1.3+itch.20260308.01",
+  "tag": "itch/v0.1.3+itch.20260308.01",
+  "gitCommit": "e5913f4",
+  "artifactName": "error-hammer-v0.1.3+itch.20260308.01-itch.zip",
+  "artifactSha256": "793620eb944b320e4461be164ed4f61f721d8a8814c5a373121b5cf984ff5aca",
+  "artifactBytes": 3712821,
+  "builtAtUtc": "2026-03-08T01:32:30.448Z",
+  "notesPath": "release/platforms/itch/releases/v0.1.3+itch.20260308.01/CHANGELOG.md",
+  "highlights": [
+    "Added end-to-end Tutorial onboarding with launchers in Title and Settings, plus skip/resume/replay support.",
+    "Refactored competitor bots to run on player-equivalent rules (offers, quick buy, acceptance, task actions, recovery, facilities, research, perks, and rollover effects).",
+    "Fixed competitor simulation divergence between background paths by routing day simulation through one parity engine."
+  ]
+}
