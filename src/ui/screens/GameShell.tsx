@@ -4,6 +4,7 @@ import { BottomNav } from "../components/BottomNav";
 import { BottomSheet } from "../components/BottomSheet";
 import { CompactHeader } from "../components/CompactHeader";
 import { Modal } from "../components/Modal";
+import rebarBobSprite from "../assets/encounters/rebarbob2026.png";
 import { DayLaborDiggingMinigame } from "../../features/dayLaborDig/DayLaborDiggingMinigame";
 import { CompanyTab } from "./CompanyTab";
 import { OfficeTab } from "./OfficeTab";
@@ -571,6 +572,7 @@ function RebarBobEncounterPopup({ speaker, line, onClose }: { speaker: string; l
   return (
     <section className="rebar-bob-encounter-popup" role="dialog" aria-modal="false" aria-label="Rebar Bob Encounter">
       <div className="rebar-bob-encounter-stage" aria-hidden="true">
+        <img className="rebar-bob-encounter-sprite" src={rebarBobSprite} alt="" />
         <div className="rebar-bob-encounter-vignette" />
       </div>
       <article className="rebar-bob-encounter-card chrome-card">

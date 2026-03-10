@@ -2488,6 +2488,7 @@ describe("compact shell ui", () => {
 
     expect(screen.getByRole("dialog", { name: /Results Screen/i })).toBeTruthy();
     expect(screen.getByRole("dialog", { name: /Rebar Bob Encounter/i })).toBeTruthy();
+    expect(document.querySelector(".rebar-bob-encounter-sprite")).toBeTruthy();
     expect(screen.getAllByText(/beanpole arms|panty waist/i).length).toBeGreaterThan(0);
     expect((screen.getAllByRole("button", { name: /^End Day$/i })[0] as HTMLButtonElement).disabled).toBe(true);
 
