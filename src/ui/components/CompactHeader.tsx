@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GameState } from "../../core/types";
-import { getSelfEsteemStatusWord, getSelfEsteemTooltip, ticksToHours } from "../../core/playerFlow";
-import { getPerkArchetypeSnapshot } from "../../core/perks";
+import { getOperatorLevel, getSelfEsteemStatusWord, getSelfEsteemTooltip, ticksToHours } from "../../core/playerFlow";
 import { getReadingObfuscationMeta } from "../readability";
 import { bundle, GameTabId, useUiStore } from "../state";
 
@@ -21,7 +20,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
   const baseHours = ticksToHours(game.workday.ticksPerDay);
   const isFatigued = game.workday.fatigue.debt > 0 || game.workday.availableTicks < game.workday.ticksPerDay;
   const showOperatorHud = activeTab === "work";
-  const archetype = getPerkArchetypeSnapshot(game);
+  const operatorLevel = getOperatorLevel(game.player);
   const readingMeta = getReadingObfuscationMeta(game);
   const selfEsteemStatus = getSelfEsteemStatusWord(game.selfEsteem.currentSelfEsteem);
   const selfEsteemToneClass = getSelfEsteemToneClass(selfEsteemStatus);
@@ -52,6 +51,7 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           {showOperatorHud ? (
             <div className="header-operator-copy">
               <h3>{game.player.name}</h3>
+              <p className="muted-copy">Player Level {operatorLevel.level}</p>
               <p className="muted-copy">{game.player.companyName}</p>
               <div className="header-company-glance-mobile" role="list" aria-label="Company summary">
                 <span role="listitem" className="header-company-metric">
@@ -66,7 +66,6 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           <div className="header-day-copy">
             <h1 className="header-day-title">Day {game.day}</h1>
             <span className="header-subtitle">{game.workday.weekday} shift</span>
-            {showOperatorHud && archetype.primary ? <span className="chip tone-energy">Style {archetype.tags[0] ?? "Core"}</span> : null}
             {showOperatorHud && game.selfEsteem.hasGrizzled ? <span className="chip tone-warning">Grizzled</span> : null}
           </div>
         </div>
@@ -81,19 +80,33 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
           </div>
           {showOperatorHud ? (
             <div className="header-action-row">
-              <button className="hud-link-button" onClick={() => openModal("skills")}>
+              <button className="hud-link-button" data-testid="open-skills-button" onClick={() => openModal("skills")}>
                 Skills
+              </button>
+              <button className="hud-link-button" data-testid="open-perks-button" onClick={() => openModal("perks")}>
+                Perks
               </button>
               <button
                 className="hud-link-button"
-                aria-label="Inventory"
-                data-testid="open-inventory-button"
+                aria-label="Tools"
+                data-testid="open-tools-button"
                 onClick={() => {
                   setStoreSection("tools");
                   openModal("store");
                 }}
               >
-                Inventory
+                Tools
+              </button>
+              <button
+                className="hud-link-button"
+                aria-label="Materials"
+                data-testid="open-materials-button"
+                onClick={() => {
+                  setStoreSection("stock");
+                  openModal("store");
+                }}
+              >
+                Materials
               </button>
             </div>
           ) : null}

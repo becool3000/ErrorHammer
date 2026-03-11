@@ -590,7 +590,8 @@ function toCareerGameState(career: BotCareerState, worldState: GameState, day: n
       deferredAtDay: entry.deferredAtDay,
       activeJob: cloneActiveJob(entry.activeJob)!
     })),
-    contractFiles: career.contractFiles.map((entry) => ({ ...entry }))
+    contractFiles: career.contractFiles.map((entry) => ({ ...entry })),
+    dayLaborHiddenUntilEndDay: worldState.dayLaborHiddenUntilEndDay
   };
 }
 

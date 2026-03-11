@@ -36,6 +36,7 @@ const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
   "inventory",
   "store",
   "skills",
+  "perks",
   "field-log",
   "active-events",
   "districts",
@@ -94,6 +95,7 @@ export function GameShell() {
   const forfeitDayLaborMinigame = useUiStore((state) => state.forfeitDayLaborMinigame);
   const timedTaskAction = useUiStore((state) => state.timedTaskAction);
   const jobCompletionFx = useUiStore((state) => state.jobCompletionFx);
+  const resultsScreenBlocksGameplay = Boolean(activeResultsScreen?.blocksGameplay ?? activeResultsScreen);
   const showRoutineModalAsSheet = isPhoneViewport && isRoutineModalId(activeModal);
   const normalizedActiveTab = activeTab === "contracts" || activeTab === "store" || activeTab === "company" ? "office" : activeTab;
   const endDayProgress = endDayTransition ? clamp01((transitionNowMs - endDayTransition.startedAtMs) / endDayTransition.durationMs) : 0;
@@ -218,7 +220,7 @@ export function GameShell() {
   }, [syncTutorialProgress, tutorialInProgress, tutorialStepId, activeTab, officeSection, selectedContractId, lastAction?.title, activeResultsScreen, game?.day]);
 
   function handleEndDayTransition() {
-    if (timedTaskAction || endDayTransition || activeResultsScreen) {
+    if (timedTaskAction || endDayTransition || resultsScreenBlocksGameplay) {
       return;
     }
     clearEndDayTransitionTimers(midpointTimerRef, completionTimerRef, transitionTickRef);
@@ -307,7 +309,7 @@ export function GameShell() {
           onChange={goToTab}
           onEndDay={handleEndDayTransition}
           onOpenSettings={() => openModal("settings")}
-          endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || Boolean(activeResultsScreen)}
+          endDayDisabled={Boolean(timedTaskAction) || Boolean(endDayTransition) || resultsScreenBlocksGameplay}
         />
       ) : null}
       <BottomSheet open={activeSheet === "supplies"} title={bundle.strings.supplierTitle || "Supplies"} onClose={closeSheet}>
@@ -331,6 +333,9 @@ export function GameShell() {
           </Modal>
           <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal} shellClassName="skills-modal">
             <WorkTab modalView="skills" />
+          </Modal>
+          <Modal open={activeModal === "perks"} title="Perks" onClose={closeModal} shellClassName="skills-modal">
+            <WorkTab modalView="perks" />
           </Modal>
           <Modal open={activeModal === "field-log"} title="Field Log" onClose={closeModal}>
             <WorkTab modalView="field-log" />
@@ -367,7 +372,13 @@ export function GameShell() {
         />
       ) : null}
       {activeResultsScreen && !endDayTransition ? (
-        <ResultsScreenOverlay onContinue={() => dismissResultsScreen()} rows={activeResultsScreen.rows} detailLines={activeResultsScreen.detailLines} title={activeResultsScreen.title} />
+        <ResultsScreenOverlay
+          onContinue={() => dismissResultsScreen()}
+          rows={activeResultsScreen.rows}
+          detailLines={activeResultsScreen.detailLines}
+          title={activeResultsScreen.title}
+          blocking={activeResultsScreen.blocksGameplay}
+        />
       ) : null}
     </main>
   );
@@ -599,12 +610,14 @@ function ResultsScreenOverlay({
   title,
   rows,
   detailLines,
-  onContinue
+  onContinue,
+  blocking
 }: {
   title: string;
   rows: ResultsRow[];
   detailLines: string[];
   onContinue: () => void;
+  blocking: boolean;
 }) {
   const groupedRows = RESULTS_SECTIONS.map((section) => ({
     section,
@@ -612,7 +625,12 @@ function ResultsScreenOverlay({
   })).filter((group) => group.rows.length > 0);
 
   return (
-    <section className="results-screen-overlay" role="dialog" aria-modal="true" aria-label="Results Screen">
+    <section
+      className={blocking ? "results-screen-overlay" : "results-screen-overlay results-screen-overlay-nonblocking"}
+      role="dialog"
+      aria-modal={blocking ? "true" : "false"}
+      aria-label="Results Screen"
+    >
       <article className="results-screen-card chrome-card">
         <div className="section-label-row tight-row">
           <div>
@@ -722,6 +740,9 @@ function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
   if (modalId === "skills") {
     return "Skills";
   }
+  if (modalId === "perks") {
+    return "Perks";
+  }
   if (modalId === "field-log") {
     return "Field Log";
   }
@@ -747,7 +768,7 @@ function getRoutineSurfaceShellClass(modalId: Exclude<ActiveModalId, null>): str
   if (modalId === "store") {
     return "store-supplies-modal";
   }
-  if (modalId === "skills") {
+  if (modalId === "skills" || modalId === "perks") {
     return "skills-modal";
   }
   return undefined;
@@ -765,6 +786,9 @@ function renderRoutineSurfaceBody(modalId: Exclude<ActiveModalId, null>) {
   }
   if (modalId === "skills") {
     return <WorkTab modalView="skills" />;
+  }
+  if (modalId === "perks") {
+    return <WorkTab modalView="perks" />;
   }
   if (modalId === "field-log") {
     return <WorkTab modalView="field-log" />;

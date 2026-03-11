@@ -9,8 +9,6 @@ script = ""
 name = "Run"
 icon = "run"
 command = '''
-Set-Location -LiteralPath 'C:\ErrorHammer'
 npm.cmd install
-npm.cmd run content:compile
 npm.cmd run dev
 '''

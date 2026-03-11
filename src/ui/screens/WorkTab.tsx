@@ -17,14 +17,14 @@ import {
   getVisibleTaskActions,
   hasUsableTools
 } from "../../core/playerFlow";
-import { CORE_PERK_IDS, formatArchetypeLabel, formatPerkLabel, getPerkArchetypeSnapshot } from "../../core/perks";
+import { CORE_PERK_IDS, formatArchetypeLabel, formatPerkLabel, getPerkArchetypeSnapshot, getPerkBoostDetails } from "../../core/perks";
 import { mapSkillToCoreTrack } from "../../core/tradeProgress";
-import { ActiveTaskState, DeferredJobState, GameState, RecoveryActionId, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
+import { ActiveTaskState, CorePerkId, DeferredJobState, GameState, RecoveryActionId, SupplyInventory, SupplyQuality, TaskStance } from "../../core/types";
 import { obfuscateReadableText } from "../readability";
 import { bundle, useUiStore } from "../state";
 
 interface WorkTabProps {
-  modalView?: "job-details" | "inventory" | "skills" | "field-log" | "active-events";
+  modalView?: "job-details" | "inventory" | "skills" | "perks" | "field-log" | "active-events";
   sheetOnly?: boolean;
 }
 
@@ -34,6 +34,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   const [cutLossesOpen, setCutLossesOpen] = useState(false);
   const [canScrollActionsLeft, setCanScrollActionsLeft] = useState(false);
   const [canScrollActionsRight, setCanScrollActionsRight] = useState(false);
+  const [expandedPerkId, setExpandedPerkId] = useState<CorePerkId | null>(null);
   const [pendingRecoveryAction, setPendingRecoveryAction] = useState<RecoveryActionId | null>(null);
   const [pendingDeferredAbandonId, setPendingDeferredAbandonId] = useState<string | null>(null);
   const actionTrackRef = useRef<HTMLDivElement | null>(null);
@@ -386,73 +387,93 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
     );
   }
 
-  if (modalView === "skills") {
+  if (modalView === "skills" || modalView === "perks") {
     const skillRows = getVisibleSkillRows(game);
     const operatorLevel = getOperatorLevel(game.player);
     const archetype = getPerkArchetypeSnapshot(game);
+    const showSkills = modalView === "skills";
+    const showPerks = modalView === "perks";
     return (
       <section className="stack-block skills-surface">
-        <article className="chrome-card inset-card skills-panel">
-          <p className="eyebrow">Skill Ledger</p>
-          <div className="section-label-row tight-row">
-            <strong>Owner/Operator Lv {operatorLevel.level}</strong>
-            <span className="chip">Avg XP {Math.floor(operatorLevel.avgXp)}</span>
-          </div>
-          <div className="stack-list skill-ledger-list">
-            {skillRows.map((skill) => (
-              <article key={skill.key} className="task-summary skills-row">
-                <div className="section-label-row tight-row">
-                  <strong>{skill.label}</strong>
-                  <span>Lv {skill.level}</span>
-                </div>
-                <div className="progress-track" aria-hidden="true">
-                  <span style={{ width: `${Math.round(skill.progress * 100)}%` }} />
-                </div>
-                <div className="material-need-meta">
-                  <span>{skill.xp} XP</span>
-                  <span>{skill.needed === null ? "Maxed" : `${Math.round(skill.current)} / ${skill.needed} to next`}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </article>
-        <article className="chrome-card inset-card skills-panel">
-          <div className="section-label-row">
-            <div>
-              <p className="eyebrow">Core Perks</p>
-              <h3>Perk Points {game.perks.corePerkPoints}</h3>
+        {showSkills ? (
+          <article className="chrome-card inset-card skills-panel">
+            <p className="eyebrow">Skill Ledger</p>
+            <div className="section-label-row tight-row">
+              <strong>Owner/Operator Lv {operatorLevel.level}</strong>
+              <span className="chip">Total XP {Math.floor(operatorLevel.totalXp)}</span>
             </div>
-            <span className="chip">Perk XP {game.perks.corePerkXp}/40</span>
-          </div>
-          {archetype.primary ? (
-            <div className="chip-grid">
-              <span className="chip tone-energy">Style {formatArchetypeLabel(archetype.primary)}</span>
-              {archetype.secondary ? <span className="chip">Alt {formatArchetypeLabel(archetype.secondary)}</span> : null}
-            </div>
-          ) : (
-            <p className="muted-copy">Spend perk points to define your company style.</p>
-          )}
-          <div className="stack-list skill-ledger-list">
-            {CORE_PERK_IDS.map((perkId) => {
-              const level = game.perks.corePerks[perkId];
-              return (
-                <article key={perkId} className="task-summary skills-row">
+            <div className="stack-list skill-ledger-list">
+              {skillRows.map((skill) => (
+                <article key={skill.key} className="task-summary skills-row">
                   <div className="section-label-row tight-row">
-                    <strong>{formatPerkLabel(perkId)}</strong>
-                    <span>Lv {level}</span>
+                    <strong>{skill.label}</strong>
+                    <span>Lv {skill.level}</span>
                   </div>
-                  <button
-                    className={game.perks.corePerkPoints > 0 ? "ghost-button" : "ghost-button muted"}
-                    disabled={game.perks.corePerkPoints <= 0}
-                    onClick={() => spendPerkPoint(perkId)}
-                  >
-                    Spend Point
-                  </button>
+                  <div className="progress-track" aria-hidden="true">
+                    <span style={{ width: `${Math.round(skill.progress * 100)}%` }} />
+                  </div>
+                  <div className="material-need-meta">
+                    <span>{skill.xp} XP</span>
+                    <span>{skill.needed === null ? "Maxed" : `${Math.round(skill.current)} / ${skill.needed} to next`}</span>
+                  </div>
                 </article>
-              );
-            })}
-          </div>
-        </article>
+              ))}
+            </div>
+          </article>
+        ) : null}
+        {showPerks ? (
+          <article className="chrome-card inset-card skills-panel">
+            <div className="section-label-row">
+              <div>
+                <p className="eyebrow">Core Perks</p>
+                <h3>Perk Points {game.perks.corePerkPoints}</h3>
+              </div>
+              <span className="chip">Perk XP {game.perks.corePerkXp}/40</span>
+            </div>
+            {archetype.primary ? (
+              <div className="chip-grid">
+                <span className="chip tone-energy">Style {formatArchetypeLabel(archetype.primary)}</span>
+                {archetype.secondary ? <span className="chip">Alt {formatArchetypeLabel(archetype.secondary)}</span> : null}
+              </div>
+            ) : (
+              <p className="muted-copy">Spend perk points to define your company style.</p>
+            )}
+            <div className="stack-list skill-ledger-list">
+              {CORE_PERK_IDS.map((perkId) => {
+                const level = game.perks.corePerks[perkId];
+                const details = getPerkBoostDetails(perkId, level);
+                const detailsOpen = expandedPerkId === perkId;
+                return (
+                  <article key={perkId} className="task-summary skills-row">
+                    <div className="section-label-row tight-row">
+                      <strong>{formatPerkLabel(perkId)}</strong>
+                      <span>Lv {level}</span>
+                    </div>
+                    <div className="action-row">
+                      <button className="ghost-button secondary-action-button" onClick={() => setExpandedPerkId(detailsOpen ? null : perkId)}>
+                        {detailsOpen ? "Hide" : "Explain"}
+                      </button>
+                      <button
+                        className={game.perks.corePerkPoints > 0 ? "ghost-button" : "ghost-button muted"}
+                        disabled={game.perks.corePerkPoints <= 0}
+                        onClick={() => spendPerkPoint(perkId)}
+                      >
+                        Spend Point
+                      </button>
+                    </div>
+                    {detailsOpen ? (
+                      <div className="detail-block">
+                        <p className="muted-copy">{details.overview}</p>
+                        <p className="muted-copy">{details.current}</p>
+                        <p className="muted-copy">{details.cap}</p>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          </article>
+        ) : null}
         <article className="chrome-card inset-card skills-panel">
           <p className="eyebrow">Shift Context</p>
           <p className="muted-copy">Events: {activeEvents.map((event) => event.name).join(", ") || "None"}</p>
@@ -508,7 +529,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           <h2>No active job</h2>
           <p>Pick a contract from the board to get the shift moving.</p>
           <div className="action-row">
-            <button className="primary-button" onClick={() => goToTab("contracts")}>
+            <button className="primary-button" aria-label="Open Contract Board" onClick={() => goToTab("contracts")}>
               Open Contract Board
             </button>
             <button className="ghost-button" onClick={() => openModal("field-log")}>

@@ -106,7 +106,8 @@ export function createInitialGameState(
       hasGrizzled: false
     },
     deferredJobs: [],
-    contractFiles: []
+    contractFiles: [],
+    dayLaborHiddenUntilEndDay: false
   };
 }
 
@@ -475,7 +476,8 @@ export function resolveDay(
         tasks: entry.activeJob.tasks.map((task) => ({ ...task }))
       }
     })),
-    contractFiles: state.contractFiles.map((entry) => ({ ...entry }))
+    contractFiles: state.contractFiles.map((entry) => ({ ...entry })),
+    dayLaborHiddenUntilEndDay: state.dayLaborHiddenUntilEndDay
   };
 
   return {

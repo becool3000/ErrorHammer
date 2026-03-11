@@ -111,7 +111,7 @@ export function ContractsTab() {
         <article className="hero-card chrome-card">
           <p className="eyebrow">Contract Board</p>
           <h2>Field board is locked</h2>
-          <p>Finish the current field job to refresh normal contracts. Day Laborer stays available as a fallback cash shift.</p>
+          <p>Finish the current field job and end day to refresh contract offers.</p>
           <div className="chip-grid">
             <span className="chip">{game.activeJob.jobId}</span>
             <span className="chip">Payout ${game.activeJob.lockedPayout}</span>
@@ -186,9 +186,13 @@ export function ContractsTab() {
       {!game.activeJob && tradeOffers.length === 0 ? (
         <article className="chrome-card inset-card">
           <div className="section-label-row">
-            <strong>No Trade Contracts Unlocked</strong>
+            <strong>{game.dayLaborHiddenUntilEndDay ? "Board Refresh Pending" : "No Trade Contracts Unlocked"}</strong>
           </div>
-          <p className="muted-copy">Complete Baba G jobs to unlock core trade tracks.</p>
+          <p className="muted-copy">
+            {game.dayLaborHiddenUntilEndDay
+              ? "End day to refresh the board and bring Day Labor back."
+              : "Complete Baba G jobs to unlock core trade tracks."}
+          </p>
         </article>
       ) : null}
       {quickBuyPlan && quickBuyPlan.missingTools.length > 0 ? (
@@ -348,7 +352,8 @@ function ContractDetails({
       ) : null}
       {!isDayLabor && !job.tags.includes("baba-g") && autoBidPreview ? (
         <p className="muted-copy">
-          Auto-Bid ${autoBidPreview.acceptedPayout} (Estimating Lv {autoBidPreview.estimatingLevel})
+          Auto-Bid ${autoBidPreview.acceptedPayout} (Estimating Lv {autoBidPreview.estimatingLevel}, Negotiation Lv{" "}
+          {autoBidPreview.negotiationLevel})
         </p>
       ) : null}
       {archetypeTags.length > 0 ? (
@@ -563,7 +568,11 @@ function buildSettlementPreview(game: Parameters<typeof getSettlementPreview>[0]
         trashUnitsPending: 0,
         siteSupplies: {},
         supplierCart: {},
-        tasks: []
+        tasks: [],
+        hasTriggeredAddOn: false,
+        pendingAddOnBonus: 0,
+        pendingAddOnLabel: null,
+        pendingAddOnUnits: 0
       }
     },
     bundle

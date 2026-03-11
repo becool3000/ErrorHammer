@@ -511,6 +511,10 @@ export interface ActiveJobState {
   siteSupplies: SupplyInventory;
   supplierCart: SupplyInventory;
   tasks: ActiveTaskState[];
+  hasTriggeredAddOn: boolean;
+  pendingAddOnBonus: number;
+  pendingAddOnLabel: string | null;
+  pendingAddOnUnits: number;
   outcome?: Outcome;
 }
 
@@ -716,6 +720,7 @@ export interface GameState {
   selfEsteem: SelfEsteemState;
   deferredJobs: DeferredJobState[];
   contractFiles: ContractFileSnapshot[];
+  dayLaborHiddenUntilEndDay: boolean;
 }
 
 export interface ContentBundle {

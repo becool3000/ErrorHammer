@@ -70,6 +70,12 @@ export interface TaskPerkModifiers {
   blueprintFirstTaskBonus: number;
 }
 
+export interface PerkBoostDetails {
+  overview: string;
+  current: string;
+  cap: string;
+}
+
 export function createInitialPerksState(): PerksState {
   return {
     corePerks: createPerkLevelMap(0),
@@ -179,6 +185,101 @@ export function getTaskPerkModifiers(state: GameState, job: JobDef, taskId: Task
     overtimeFatigueReduction,
     blueprintFirstTaskBonus
   };
+}
+
+function formatPct(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+export function getPerkBoostDetails(perkId: CorePerkId, level: number): PerkBoostDetails {
+  const normalizedLevel = Math.max(0, Math.floor(level));
+  switch (perkId) {
+    case "precision": {
+      const skillBonus = Math.min(2, normalizedLevel);
+      const qualityBonus = normalizedLevel * 3;
+      return {
+        overview: "Boosts do-work performance on precision trades.",
+        current: `Current: +${skillBonus} skill bonus and +${qualityBonus} quality on precision trades.`,
+        cap: "Cap: skill bonus tops at +2; quality bonus scales per level."
+      };
+    }
+    case "blueprint_reading": {
+      return {
+        overview: "Boosts first quality-bearing action on each task sequence.",
+        current: `Current: +${normalizedLevel} first-task skill bonus.`,
+        cap: "Cap: no hard cap; bonus equals level and applies only on first unit."
+      };
+    }
+    case "safety_awareness": {
+      const safetyReduction = Math.min(1, normalizedLevel);
+      return {
+        overview: "Reduces effective task difficulty in field actions.",
+        current: `Current: -${safetyReduction} effective difficulty.`,
+        cap: "Cap: maximum difficulty reduction is -1."
+      };
+    }
+    case "physical_endurance": {
+      const fatigueReduction = Math.min(2, normalizedLevel);
+      return {
+        overview: "Reduces overtime fatigue debt from actions.",
+        current: `Current: -${fatigueReduction} overtime fatigue debt per action.`,
+        cap: "Cap: fatigue reduction tops at 2."
+      };
+    }
+    case "problem_solving": {
+      return {
+        overview: "Gives one do-work botch/rework recovery token each job.",
+        current: normalizedLevel > 0 ? "Current: reroll token active for each accepted job." : "Current: no reroll token yet.",
+        cap: "Cap: always one token per job when level is at least 1."
+      };
+    }
+    case "estimating": {
+      const discount = Math.min(0.2, normalizedLevel * 0.03);
+      const quoteBoost = Math.min(0.2, normalizedLevel * 0.02);
+      const bandPct = Math.max(0.06, 0.3 - normalizedLevel * 0.03);
+      return {
+        overview: "Boosts contract pricing accuracy and supply purchasing efficiency.",
+        current: `Current: ${formatPct(quoteBoost)} quote boost, supplier discount ${formatPct(discount)}, bid band ±${Math.round(
+          bandPct * 100
+        )}%.`,
+        cap: "Cap: quote boost 20%, supplier discount 20%, bid band floor ±6%."
+      };
+    }
+    case "tool_mastery": {
+      const skillBonus = Math.min(2, Math.floor((normalizedLevel + 1) / 2));
+      return {
+        overview: "Improves general task execution across all trades.",
+        current: `Current: +${skillBonus} task skill bonus.`,
+        cap: "Cap: skill bonus tops at +2."
+      };
+    }
+    case "project_management": {
+      const skillBonus = Math.min(2, Math.floor((normalizedLevel + 1) / 2));
+      return {
+        overview: "Boosts do-work execution consistency.",
+        current: `Current: +${skillBonus} do-work skill bonus.`,
+        cap: "Cap: do-work skill bonus tops at +2."
+      };
+    }
+    case "diagnostics": {
+      const skillBonus = Math.min(2, normalizedLevel);
+      const qualityBonus = normalizedLevel * 2;
+      return {
+        overview: "Boosts do-work quality and execution on diagnostic trades.",
+        current: `Current: +${skillBonus} skill bonus and +${qualityBonus} quality on diagnostic trades.`,
+        cap: "Cap: skill bonus tops at +2; quality bonus scales per level."
+      };
+    }
+    case "negotiation": {
+      const payoutMultiplier = 1 + Math.min(0.12, normalizedLevel * 0.02);
+      const quoteBoost = Math.min(0.12, normalizedLevel * 0.015);
+      return {
+        overview: "Improves payout outcomes and client closeout reliability.",
+        current: `Current: payout x${payoutMultiplier.toFixed(2)}, quote boost ${formatPct(quoteBoost)}, collect-payment fail floor active at Lv 1+.`,
+        cap: "Cap: payout boost 12%, quote boost 12%; enables tip/add-on closeout bonuses."
+      };
+    }
+  }
 }
 
 export function formatPerkLabel(perkId: CorePerkId): string {

@@ -195,7 +195,7 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(supplierCheckout?.requiredUnits).toBe(0);
   });
 
-  it("EH-TW-063: Day Laborer is always offered and pays minimum wage without replacing the active field job", () => {
+  it("EH-TW-063: Day Labor hides after non-day-labor acceptance and returns after end day", () => {
     const initial = createInitialGameState(makeScenarioBundle(), 5601);
     unlockTradeResearch(initial);
     const dayLaborOffer = getAvailableContractOffers(initial, makeScenarioBundle()).find(
@@ -207,17 +207,15 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(dayLaborOffer?.job.flavor.client_quote).toContain(`${(initialDayLaborTicks * 0.5).toFixed(1)} hours`);
 
     const accepted = acceptJob(5602, "job-alpha-contract");
-    const beforeActiveJobId = accepted.state.activeJob?.contractId;
-    const beforeRemainingTicks = Math.max(0, accepted.state.workday.availableTicks - accepted.state.workday.ticksSpent);
-    const beforeCash = accepted.state.player.cash;
+    expect(accepted.state.dayLaborHiddenUntilEndDay).toBe(true);
+    expect(getAvailableContractOffers(accepted.state, accepted.bundle).some((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID)).toBe(false);
 
-    const laborShift = acceptContract(accepted.state, accepted.bundle, DAY_LABOR_CONTRACT_ID);
+    const blockedDayLabor = acceptContract(accepted.state, accepted.bundle, DAY_LABOR_CONTRACT_ID);
+    expect(blockedDayLabor.notice).toContain("unavailable until end day");
 
-    expect(laborShift.nextState.activeJob?.contractId).toBe(beforeActiveJobId);
-    expect(laborShift.nextState.player.cash).toBe(beforeCash + Math.round((beforeRemainingTicks * 0.5) * MINIMUM_WAGE_PER_HOUR));
-    expect(Math.max(0, laborShift.nextState.workday.availableTicks - laborShift.nextState.workday.ticksSpent)).toBe(0);
-    expect(getRemainingShiftTicks(laborShift.nextState.workday)).toBe(4);
-    expect(laborShift.notice).toContain("Day Laborer paid");
+    const nextDay = endShift(accepted.state, accepted.bundle).nextState;
+    expect(nextDay.dayLaborHiddenUntilEndDay).toBe(false);
+    expect(getAvailableContractOffers(nextDay, accepted.bundle).some((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID)).toBe(true);
   });
 
   it("EH-TW-064: Day Laborer uses only regular shift hours when fatigue compresses the workday", () => {
@@ -422,7 +420,7 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(rescued.nextState.player.cash).toBe(beforeCash - 5);
   });
 
-  it("EH-TW-243: zero-fuel rescue blocks on low cash, then Day Labor enables rescue retry", () => {
+  it("EH-TW-243: zero-fuel rescue blocks on low cash, then end-day board refresh enables Day Labor rescue retry", () => {
     const { bundle, state } = fastForwardToTask(3304, "job-beta-contract", "travel_to_supplier");
     state.player.fuel = 0;
     state.player.cash = 0;
@@ -433,11 +431,15 @@ describe("TW-004 deterministic scenario suite", () => {
     expect(blockedPlan?.cashShortfall).toBe(30);
 
     const blocked = runOutOfGasRescue(state, bundle);
-    expect(blocked.notice).toContain("Work Day Laborer Shift");
+    expect(blocked.notice).toContain("unavailable until end day");
     expect(blocked.nextState.player.fuel).toBe(0);
     expect(blocked.nextState.player.cash).toBe(0);
 
-    const dayLabor = runDayLaborShift(blocked.nextState, bundle);
+    const sameDayLabor = runDayLaborShift(blocked.nextState, bundle);
+    expect(sameDayLabor.notice).toContain("unavailable until end day");
+
+    const refreshedBoardState = prepareForNextDay(blocked.nextState);
+    const dayLabor = runDayLaborShift(refreshedBoardState, bundle);
     expect(dayLabor.nextState.player.cash).toBeGreaterThanOrEqual(30);
     const nextDay = prepareForNextDay(dayLabor.nextState);
     const beforeCash = nextDay.player.cash;
@@ -753,6 +755,114 @@ describe("TW-004 deterministic scenario suite", () => {
     fail.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.95;
     const failRun = finishCurrentTaskUntilOutcome(fail.state, fail.bundle, "rush");
     expect(getResolvedContractOutcome(failRun.nextState, fail.state.activeJob?.contractId ?? null)).toBe("fail");
+  });
+
+  it("EH-TW-268: settlement fail floor blocks failure at skill rank 2 or negotiation level 1", () => {
+    const skillFloor = fastForwardToTask(1510, "job-alpha-contract", "collect_payment");
+    const skillFloorJob = skillFloor.bundle.jobs.find((job) => job.id === "job-alpha");
+    if (!skillFloorJob) {
+      throw new Error("Expected job-alpha for fail-floor test.");
+    }
+    skillFloor.state.activeEventIds = [];
+    skillFloor.state.activeJob!.qualityPoints = 6;
+    skillFloor.state.activeJob!.reworkCount = 10;
+    skillFloor.state.perks.corePerks.negotiation = 0;
+    skillFloor.state.player.skills[skillFloorJob.primarySkill] = 260;
+    skillFloorJob.risk = 0.95;
+    expect(getSkillRank(skillFloor.state.player, skillFloorJob.primarySkill)).toBeGreaterThanOrEqual(2);
+    const skillFloorRun = finishCurrentTaskUntilOutcome(skillFloor.state, skillFloor.bundle, "rush");
+    expect(getResolvedContractOutcome(skillFloorRun.nextState, skillFloor.state.activeJob?.contractId ?? null)).not.toBe("fail");
+
+    const negotiationFloor = fastForwardToTask(1511, "job-alpha-contract", "collect_payment");
+    const negotiationFloorJob = negotiationFloor.bundle.jobs.find((job) => job.id === "job-alpha");
+    if (!negotiationFloorJob) {
+      throw new Error("Expected job-alpha for negotiation fail-floor test.");
+    }
+    negotiationFloor.state.activeEventIds = [];
+    negotiationFloor.state.activeJob!.qualityPoints = 6;
+    negotiationFloor.state.activeJob!.reworkCount = 10;
+    negotiationFloor.state.perks.corePerks.negotiation = 1;
+    negotiationFloor.state.player.skills[negotiationFloorJob.primarySkill] = 100;
+    negotiationFloorJob.risk = 0.95;
+    const negotiationFloorRun = finishCurrentTaskUntilOutcome(negotiationFloor.state, negotiationFloor.bundle, "rush");
+    expect(getResolvedContractOutcome(negotiationFloorRun.nextState, negotiationFloor.state.activeJob?.contractId ?? null)).not.toBe("fail");
+
+    const control = fastForwardToTask(1500, "job-alpha-contract", "collect_payment");
+    control.state.activeEventIds = [];
+    control.state.activeJob!.qualityPoints = 0;
+    control.state.activeJob!.reworkCount = 10;
+    control.state.perks.corePerks.negotiation = 0;
+    control.state.player.skills.carpenter = 100;
+    control.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0.95;
+    const controlRun = finishCurrentTaskUntilOutcome(control.state, control.bundle, "rush");
+    expect(getResolvedContractOutcome(controlRun.nextState, control.state.activeJob?.contractId ?? null)).toBe("fail");
+  });
+
+  it("EH-TW-269: negotiation add-on injects extra work once and pays scope bonus at settlement", () => {
+    let trigger:
+      | {
+          bundle: ReturnType<typeof fastForwardToTask>["bundle"];
+          contractId: string;
+          stateAfterAddOn: ReturnType<typeof performTaskUnit>["nextState"];
+          result: ReturnType<typeof performTaskUnit>;
+        }
+      | null = null;
+
+    for (let seed = 4600; seed < 4760; seed += 1) {
+      const setup = fastForwardToTask(seed, "job-alpha-contract", "collect_payment");
+      setup.state.activeEventIds = [];
+      setup.state.perks.corePerks.negotiation = 6;
+      setup.state.perks.corePerks.estimating = 8;
+      setup.state.activeJob!.qualityPoints = 6;
+      setup.state.activeJob!.reworkCount = 0;
+      setup.bundle.jobs.find((job) => job.id === "job-alpha")!.risk = 0;
+
+      const result = performTaskUnit(setup.state, setup.bundle, "standard", true);
+      if (result.payload?.logLines.some((line) => line.includes("Change order approved"))) {
+        trigger = {
+          bundle: setup.bundle,
+          contractId: setup.state.activeJob?.contractId ?? "unknown",
+          stateAfterAddOn: result.nextState,
+          result
+        };
+        break;
+      }
+    }
+
+    expect(trigger).not.toBeNull();
+    if (!trigger) {
+      return;
+    }
+
+    expect(trigger.stateAfterAddOn.activeJob?.hasTriggeredAddOn).toBe(true);
+    expect(trigger.stateAfterAddOn.activeJob?.pendingAddOnBonus ?? 0).toBeGreaterThanOrEqual(200);
+    expect(getCurrentTask(trigger.stateAfterAddOn)?.taskId).toBe("do_work");
+
+    let settledState = {
+      ...trigger.stateAfterAddOn,
+      workday: createInitialWorkday(trigger.stateAfterAddOn.day, 0)
+    };
+    let settledResult = trigger.result;
+    let guard = 0;
+    while (!getResolvedContractOutcome(settledState, trigger.contractId)) {
+      settledResult = performTaskUnit(settledState, trigger.bundle, "careful", true);
+      settledState = settledResult.nextState;
+      guard += 1;
+      if (guard > 600) {
+        throw new Error(`Add-on settlement did not close. Current task: ${getCurrentTask(settledState)?.taskId ?? "none"}`);
+      }
+    }
+    const outcome = getResolvedContractOutcome(settledState, trigger.contractId);
+    expect(outcome === "success" || outcome === "neutral").toBe(true);
+    expect(settledResult.payload?.logLines.some((line) => line.includes("paid out: +$"))).toBe(true);
+    const tipLine = settledResult.payload?.logLines.find((line) => line.includes("Client tip for extra effort"));
+    if (tipLine) {
+      expect(tipLine).toMatch(/\+\$[0-9]+/);
+    }
+    const changeOrderCount = settledState.log.filter(
+      (entry) => entry.contractId === trigger.contractId && entry.message.includes("Change order approved")
+    ).length;
+    expect(changeOrderCount).toBe(1);
   });
 
   it("EH-TW-128: return-to-shop allows a final standard action with 0.5h left", () => {

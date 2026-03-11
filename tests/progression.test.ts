@@ -23,7 +23,7 @@ describe("progression helpers", () => {
     });
   });
 
-  it("EH-TW-059: operator level derives from average raw XP instead of the highest skill", () => {
+  it("EH-TW-059: operator level derives from total raw XP across all skills", () => {
     const actor = createInitialGameState(loadContentBundle(), 5150).player;
     for (const skillId of Object.keys(actor.skills) as Array<keyof typeof actor.skills>) {
       actor.skills[skillId] = 0;
@@ -35,10 +35,11 @@ describe("progression helpers", () => {
     actor.skills.electrician = 100;
 
     const operator = getOperatorLevel(actor);
+    const totalXp = Object.values(actor.skills).reduce((sum, xp) => sum + xp, 0);
 
-    expect(operator.avgXp).toBeGreaterThan(70);
-    expect(operator.avgXp).toBeLessThan(100);
-    expect(operator.level).toBe(0);
+    expect(operator.totalXp).toBe(totalXp);
+    expect(operator.totalXp).toBe(4150);
+    expect(operator.level).toBe(getLevelForXp(totalXp));
   });
 
   it("EH-TW-060: progression popup helpers emit skill and operator level popups", () => {

@@ -89,6 +89,7 @@ export type ActiveModalId =
   | "inventory"
   | "store"
   | "skills"
+  | "perks"
   | "field-log"
   | "active-events"
   | "districts"
@@ -130,6 +131,7 @@ export interface ResultsScreenState {
   rows: ResultsRow[];
   detailLines: string[];
   openedAtMs: number;
+  blocksGameplay: boolean;
 }
 
 export type ProgressPopupKind = "xp" | "skill-level" | "operator-level";
@@ -802,7 +804,10 @@ export function buildResultsScreenState(
   next: GameState,
   title: string,
   digest: string,
-  detailLines: string[]
+  detailLines: string[],
+  options?: {
+    blocksGameplay?: boolean;
+  }
 ): ResultsScreenState | null {
   if (previous === next) {
     return null;
@@ -817,7 +822,8 @@ export function buildResultsScreenState(
     digest,
     rows,
     detailLines: details,
-    openedAtMs: Date.now()
+    openedAtMs: Date.now(),
+    blocksGameplay: options?.blocksGameplay ?? true
   };
 }
 
@@ -830,6 +836,7 @@ function buildActionResults(
     summaryLines?: string[];
     notice?: string;
     extraLines?: string[];
+    blocksGameplay?: boolean;
   }
 ): ResultsScreenState | null {
   return buildResultsScreenState(
@@ -837,7 +844,10 @@ function buildActionResults(
     next,
     options.title,
     options.digest,
-    mergeDetailLines(options.summaryLines, options.extraLines, options.notice ? [options.notice] : undefined)
+    mergeDetailLines(options.summaryLines, options.extraLines, options.notice ? [options.notice] : undefined),
+    {
+      blocksGameplay: options.blocksGameplay
+    }
   );
 }
 
@@ -960,8 +970,15 @@ function clearEncounterPopupTimer() {
   // Encounter popup is manual-dismiss only.
 }
 
+function doesResultsScreenBlockGameplay(activeResultsScreen: ResultsScreenState | null): boolean {
+  if (!activeResultsScreen) {
+    return false;
+  }
+  return activeResultsScreen.blocksGameplay ?? true;
+}
+
 function isGameplayMutationBlocked(state: Pick<UiState, "timedTaskAction" | "activeResultsScreen" | "activeDayLaborMinigame">): boolean {
-  return Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame);
+  return Boolean(state.timedTaskAction || doesResultsScreenBlockGameplay(state.activeResultsScreen) || state.activeDayLaborMinigame);
 }
 
 function formatTimedActionLabel(game: GameState, taskId: TaskId): string {
@@ -1083,7 +1100,9 @@ export const useUiStore = create<UiState>((set, get) => ({
     clearJobCompletionFxTimer();
     set((state) => ({
       jobCompletionFx: null,
-      gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame)
+      gameplayMutationLocked: Boolean(
+        state.timedTaskAction || doesResultsScreenBlockGameplay(state.activeResultsScreen) || state.activeDayLaborMinigame
+      )
     }));
   },
   dismissResultsScreen: () => {
@@ -1711,13 +1730,15 @@ export const useUiStore = create<UiState>((set, get) => ({
       const result = performTaskUnitFlow(latestGame, bundle, pending.stance, pending.allowOvertime);
       const progressUpdates = buildProgressPopups(latestGame, result.nextState, result.payload);
       const taskResultSummary = result.payload ? toSummary("Task Result", buildTaskResultLines(result.payload), result.payload.digest) : null;
+      const hasEncounter = Boolean(result.payload?.encounter);
       const encounterPopup = result.payload?.encounter ? createEncounterPopupState(result.payload.encounter, result.digest) : null;
       const resultsScreen = taskResultSummary
         ? buildActionResults(latestGame, result.nextState, {
             title: taskResultSummary.title,
             digest: taskResultSummary.digest,
             summaryLines: taskResultSummary.lines,
-            notice: result.notice
+            notice: result.notice,
+            blocksGameplay: !hasEncounter
           })
         : null;
       const shouldShowCompletionFx =
@@ -1742,7 +1763,9 @@ export const useUiStore = create<UiState>((set, get) => ({
           jobCompletionFxTimer = null;
           useUiStore.setState((state) => ({
             jobCompletionFx: null,
-            gameplayMutationLocked: Boolean(state.timedTaskAction || state.activeResultsScreen || state.activeDayLaborMinigame)
+            gameplayMutationLocked: Boolean(
+              state.timedTaskAction || doesResultsScreenBlockGameplay(state.activeResultsScreen) || state.activeDayLaborMinigame
+            )
           }));
         }, completionFxState.durationMs);
       }
@@ -1759,7 +1782,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         activeTaskResultPopup: null,
         activeResultsScreen: resultsScreen,
         jobCompletionFx: completionFxState ?? latest.jobCompletionFx,
-        gameplayMutationLocked: Boolean(resultsScreen),
+        gameplayMutationLocked: Boolean(resultsScreen?.blocksGameplay),
         ...enqueueProgressPopups(latest, progressUpdates)
       });
     }, durationMs);

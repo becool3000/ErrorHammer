@@ -63,7 +63,8 @@ function careerToGameState(career: BotCareerState, world: GameState): GameState 
     },
     selfEsteem: { ...career.selfEsteem },
     deferredJobs: career.deferredJobs.map((entry) => ({ ...entry })),
-    contractFiles: career.contractFiles.map((entry) => ({ ...entry }))
+    contractFiles: career.contractFiles.map((entry) => ({ ...entry })),
+    dayLaborHiddenUntilEndDay: world.dayLaborHiddenUntilEndDay
   };
 }
 

@@ -68,6 +68,27 @@ describe("auto bid", () => {
     expect(highDriftTotal / samples).toBeLessThan(lowDriftTotal / samples);
   });
 
+  it("higher negotiation level raises non-Baba base quote", () => {
+    const lowState = buildBidState(8215);
+    const contractId = getAvailableContractOffers(lowState, bundle).find(
+      (offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && !offer.job.tags.includes("baba-g")
+    )?.contract.contractId;
+    if (!contractId) {
+      throw new Error("Expected a non-Baba contract offer.");
+    }
+
+    const highState = buildBidState(8215);
+    lowState.perks.corePerks.negotiation = 0;
+    highState.perks.corePerks.negotiation = 6;
+
+    const low = getContractAutoBidPreview(lowState, bundle, contractId);
+    const high = getContractAutoBidPreview(highState, bundle, contractId);
+    expect(low).toBeTruthy();
+    expect(high).toBeTruthy();
+    expect(high?.baseQuote ?? 0).toBeGreaterThan(low?.baseQuote ?? 0);
+    expect(high?.negotiationLevel).toBe(6);
+  });
+
   it("Baba contracts bypass auto-bid randomness and keep fixed quote path", () => {
     const state = buildBidState(8220);
     const baba = getAvailableContractOffers(state, bundle).find((offer) => offer.job.tags.includes("baba-g"));

@@ -20,3 +20,18 @@ Original prompt: show reading and accounting skills first, make sure all skill s
   - `npm.cmd test -- tests/ui_shell.test.tsx tests/release_ui.test.tsx` passed.
   - `npm.cmd test` full suite passed (39 files, 252 tests).
   - `npm.cmd run build` passed.
+- BLD-022 in progress: implemented encounter-specific non-blocking Results Screen mode by adding `blocksGameplay` to `ResultsScreenState` and wiring lock checks/end-day gating to respect that flag.
+- Encounter task results now set `blocksGameplay=false` when `payload.encounter` is present; non-encounter results remain blocking.
+- GameShell now allows End Day transition while a non-blocking results screen is active and renders non-blocking results with `aria-modal=false` + dedicated CSS layout (`results-screen-overlay-nonblocking`).
+- Updated UI coverage:
+  - EH-TW-126 now asserts Rebar Bob popup persists until manual dismiss and does not lock End Day.
+  - EH-TW-127 still asserts task detail lines include Rebar Bob encounter copy.
+  - EH-TW-125 now suppresses encounter via day marker to keep timed-lock assertion deterministic.
+- Targeted verification (2026-03-10):
+  - `npm.cmd run typecheck` PASS
+  - `npm.cmd test -- tests/encounters.test.ts` PASS (4/4)
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-123` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-125` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-126` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-127` PASS
+- TODO next: run full gate sequence under `VF-022` once BLD-022 board status is closed to DONE.

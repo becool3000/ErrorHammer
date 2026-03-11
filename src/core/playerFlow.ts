@@ -173,6 +173,8 @@ export interface ContractAutoBidPreview {
   autoBid: number;
   acceptedPayout: number;
   estimatingLevel: number;
+  negotiationLevel: number;
+  quoteBoostPct: number;
   bidAccuracyBandPct: number;
   bidNoise: number;
   isBaba: boolean;
@@ -608,17 +610,16 @@ export function getLevelProgress(xp: number): { level: number; current: number; 
 }
 
 export function getOperatorLevel(actor: ActorState): {
-  avgXp: number;
+  totalXp: number;
   level: number;
   current: number;
   needed: number | null;
   progress: number;
 } {
   const totalXp = SKILL_IDS.reduce((sum, skillId) => sum + (actor.skills?.[skillId] ?? 0), 0);
-  const avgXp = totalXp / SKILL_IDS.length;
-  const progress = getLevelProgress(avgXp);
+  const progress = getLevelProgress(totalXp);
   return {
-    avgXp,
+    totalXp,
     ...progress
   };
 }
@@ -794,23 +795,29 @@ export function getContractAutoBidPreview(state: GameState, bundle: ContentBundl
   const events = getActiveEvents(bundle, state.activeEventIds);
   const quotedBase = getQuotedPayoutForOffer(state, bundle, picked, events);
   const isBaba = picked.job.tags.includes("baba-g");
+  const estimatingLevel = Math.max(0, state.perks.corePerks.estimating ?? 0);
+  const negotiationLevel = Math.max(0, state.perks.corePerks.negotiation ?? 0);
   if (isBaba || contractId === DAY_LABOR_CONTRACT_ID) {
     return {
       baseQuote: quotedBase,
       autoBid: quotedBase,
       acceptedPayout: quotedBase,
-      estimatingLevel: state.perks.corePerks.estimating ?? 0,
+      estimatingLevel,
+      negotiationLevel,
+      quoteBoostPct: 0,
       bidAccuracyBandPct: 0,
       bidNoise: 0,
       isBaba
     };
   }
 
-  const estimatingLevel = Math.max(0, state.perks.corePerks.estimating ?? 0);
   const track = mapSkillToCoreTrack(picked.job.primarySkill);
   const coreTrackRank = track ? getCoreTrackRank(state.player, track) : 0;
-  const quoteBoostPct =
-    Math.min(0.2, coreTrackRank * 0.02) + Math.min(0.15, estimatingLevel * 0.015) + Math.min(0.12, state.player.reputation / 600);
+  const trackBoost = Math.min(0.2, coreTrackRank * 0.02);
+  const estimatingBoost = Math.min(0.2, estimatingLevel * 0.02);
+  const negotiationBoost = Math.min(0.12, negotiationLevel * 0.015);
+  const repBoost = Math.min(0.12, state.player.reputation / 600);
+  const quoteBoostPct = trackBoost + estimatingBoost + negotiationBoost + repBoost;
   const baseQuote = Math.max(0, Math.round(quotedBase * (1 + quoteBoostPct)));
   const bidAccuracyBandPct = clamp(0.30 - estimatingLevel * 0.03, 0.06, 0.30);
   const rng = createRng(hashSeed(state.seed, state.day, contractId, "auto-bid", estimatingLevel));
@@ -823,6 +830,8 @@ export function getContractAutoBidPreview(state: GameState, bundle: ContentBundl
     autoBid,
     acceptedPayout: Math.max(autoBid, minimumPayout),
     estimatingLevel,
+    negotiationLevel,
+    quoteBoostPct,
     bidAccuracyBandPct,
     bidNoise,
     isBaba: false
@@ -1042,7 +1051,12 @@ export function getAvailableContractOffers(state: GameState, bundle: ContentBund
   });
   const rotatingBabaOffer = getRotatingBabaOffer(state, bundle);
   const unlockedFallbackOffer = !state.activeJob && standardOffers.length === 0 ? getUnlockedFallbackTradeOffer(state, bundle) : null;
-  return [getDayLaborOffer(state, bundle), ...(rotatingBabaOffer ? [rotatingBabaOffer] : []), ...standardOffers, ...(unlockedFallbackOffer ? [unlockedFallbackOffer] : [])];
+  return [
+    ...(state.dayLaborHiddenUntilEndDay ? [] : [getDayLaborOffer(state, bundle)]),
+    ...(rotatingBabaOffer ? [rotatingBabaOffer] : []),
+    ...standardOffers,
+    ...(unlockedFallbackOffer ? [unlockedFallbackOffer] : [])
+  ];
 }
 
 export function getFilteredContractOffers(state: GameState, bundle: ContentBundle, filters: ContractFilterId[]): ContractOffer[] {
@@ -1139,6 +1153,9 @@ export function setSupplierCartQuantity(
 
 export function acceptContract(state: GameState, bundle: ContentBundle, contractId: string): StateTransitionResult<ActiveJobState | undefined> {
   if (contractId === DAY_LABOR_CONTRACT_ID) {
+    if (state.dayLaborHiddenUntilEndDay) {
+      return { nextState: state, notice: "Day Labor is unavailable until end day.", digest: digestState(state) };
+    }
     return runDayLaborShift(state, bundle);
   }
 
@@ -1228,9 +1245,14 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
     trashUnitsPending: 0,
     siteSupplies: {},
     supplierCart: {},
+    hasTriggeredAddOn: false,
+    pendingAddOnBonus: 0,
+    pendingAddOnLabel: null,
+    pendingAddOnUnits: 0,
     tasks
   };
   resetJobRerollTokens(nextState);
+  nextState.dayLaborHiddenUntilEndDay = true;
   const plannedHoursAtAccept = ticksToHours(tasks.reduce((sum, task) => sum + task.requiredUnits * task.baseTicks, 0));
   const contractFile: ContractFileSnapshot = {
     contractId: picked.contract.contractId,
@@ -1261,7 +1283,7 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
       day: nextState.day,
       actorId: nextState.player.actorId,
       contractId,
-      message: `Auto-bid submitted: $${contractFile.autoBid} (Estimating Lv ${contractFile.estimatingLevelAtBid}, band ±${Math.round(
+      message: `Auto-bid submitted: $${contractFile.autoBid} (Estimating Lv ${contractFile.estimatingLevelAtBid}, Negotiation Lv ${bidPreview?.negotiationLevel ?? Math.max(0, state.perks.corePerks.negotiation ?? 0)}, band ±${Math.round(
         contractFile.bidAccuracyBandPct * 100
       )}%).`
     });
@@ -1330,6 +1352,9 @@ function settleDayLaborShift(
     detailLines?: string[];
   }
 ): StateTransitionResult {
+  if (state.dayLaborHiddenUntilEndDay) {
+    return { nextState: state, notice: "Day Labor is unavailable until end day.", digest: digestState(state) };
+  }
   const offer = getDayLaborOffer(state, bundle);
   const requiredTicks = getRemainingDayLaborTicks(state.workday);
   if (requiredTicks <= 0) {
@@ -1529,6 +1554,10 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
       trashUnitsPending: Math.max(0, Math.floor(activeJob.trashUnitsPending ?? 0)),
       siteSupplies: normalizeSupplyInventory(activeJob.siteSupplies),
       supplierCart: normalizeSupplyInventory(activeJob.supplierCart),
+      hasTriggeredAddOn: Boolean(activeJob.hasTriggeredAddOn ?? false),
+      pendingAddOnBonus: Math.max(0, Math.floor(activeJob.pendingAddOnBonus ?? 0)),
+      pendingAddOnLabel: activeJob.pendingAddOnLabel ?? null,
+      pendingAddOnUnits: Math.max(0, Math.floor(activeJob.pendingAddOnUnits ?? 0)),
       tasks: (activeJob.tasks ?? []).map((task) =>
         task.taskId === "refuel_at_station"
           ? {
@@ -1694,7 +1723,11 @@ export function normalizeGameState(state: Partial<GameState>): GameState {
       ? state.contractFiles
           .map((entry) => normalizeContractFile(entry))
           .filter((entry): entry is ContractFileSnapshot => Boolean(entry))
-      : []
+      : [],
+    dayLaborHiddenUntilEndDay: Boolean(
+      state.dayLaborHiddenUntilEndDay ??
+        (state.activeJob?.contractId ? state.activeJob.contractId !== DAY_LABOR_CONTRACT_ID : false)
+    )
   };
   if (normalizedState.activeJob) {
     repairActiveJobRouting(normalizedState.activeJob);
@@ -2077,6 +2110,12 @@ export function runManualGasStation(state: GameState, mode: ManualGasStationMode
   return executeManualGasStationRun(state, plan);
 }
 
+function getDayLaborCashRecoveryHint(state: GameState): string {
+  return state.dayLaborHiddenUntilEndDay
+    ? "Day Labor is unavailable until end day. End day to refresh the board, then retry."
+    : "Work Day Laborer Shift in Contracts to earn gas money.";
+}
+
 export function getOutOfGasRescuePlan(state: GameState, bundle: ContentBundle): OutOfGasRescuePlan | null {
   const activeJob = state.activeJob;
   if (!activeJob || state.player.fuel !== 0) {
@@ -2101,7 +2140,7 @@ export function getOutOfGasRescuePlan(state: GameState, bundle: ContentBundle): 
   const nextDriveLabel = TASK_LABELS[currentTask.taskId].toLowerCase();
   const warning =
     cashShortfall > 0
-      ? `Truck is out of fuel for ${nextDriveLabel}. Need $${cashShortfall} more and work a Day Labor shift first.`
+      ? `Truck is out of fuel for ${nextDriveLabel}. Need $${cashShortfall} more. ${getDayLaborCashRecoveryHint(state)}`
       : `Truck is out of fuel for ${nextDriveLabel}. Walk to the nearest gas station for an emergency can refill.`;
 
   return {
@@ -2140,7 +2179,7 @@ function buildManualGasStationPlan(
   if (fuelAdded <= 0) {
     warning = "Tank already full.";
   } else if (cashShortfall > 0) {
-    warning = `Need $${cashShortfall} more for a gas station run. Work a Day Labor shift first.`;
+    warning = `Need $${cashShortfall} more for a gas station run. ${getDayLaborCashRecoveryHint(state)}`;
   } else if (timeBlocked) {
     warning = "No time is left for a gas station run.";
   }
@@ -2167,7 +2206,7 @@ function executeManualGasStationRun(state: GameState, plan: ManualGasStationPlan
     return {
       nextState: state,
       payload: plan,
-      notice: `Need $${plan.cashShortfall} more. Work Day Laborer Shift in Contracts to earn gas money.`,
+      notice: `Need $${plan.cashShortfall} more. ${getDayLaborCashRecoveryHint(state)}`,
       digest: digestState(state)
     };
   }
@@ -2237,7 +2276,7 @@ export function runOutOfGasRescue(state: GameState, bundle: ContentBundle): Stat
     return {
       nextState: state,
       payload: plan,
-      notice: `Need $${plan.cashShortfall} more. Work Day Laborer Shift in Contracts to earn gas money.`,
+      notice: `Need $${plan.cashShortfall} more. ${getDayLaborCashRecoveryHint(state)}`,
       digest: digestState(state)
     };
   }
@@ -2506,6 +2545,10 @@ export function performTaskUnit(
       break;
     case "collect_payment":
       if (timing.timeOutcome !== "rework") {
+        if (maybeInjectSettlementAddOn(nextState, job, logLines)) {
+          unitsCompleted = 0;
+          break;
+        }
         const outcome = settleActiveJob(nextState, bundle, job);
         if (job.tags.includes("baba-g") && (outcome.outcome === "success" || outcome.outcome === "neutral")) {
           const coreTrack = mapSkillToCoreTrack(job.primarySkill);
@@ -2888,6 +2931,7 @@ export function resumeDeferredJob(state: GameState, deferredJobId: string): Stat
 export function prepareForNextDay(state: GameState): GameState {
   const nextState = cloneState(state);
   applyDailySelfEsteemUpdate(nextState);
+  nextState.dayLaborHiddenUntilEndDay = false;
   nextState.day += 1;
   resetOfficeSkillDailyCaps(nextState);
   const recovery = getRecoveryForWeekday(getWeekday(nextState.day));
@@ -3256,6 +3300,77 @@ function reserveMaterials(truckSupplies: SupplyInventory, materialNeeds: JobDef[
   return reserved;
 }
 
+interface SettlementAddOnPackage {
+  label: string;
+  bonusCash: number;
+  extraWorkUnits: number;
+}
+
+function chooseSettlementAddOnPackage(negotiationLevel: number, estimatingLevel: number, rng: ReturnType<typeof createRng>): SettlementAddOnPackage {
+  const quickHaulOut: SettlementAddOnPackage = { label: "Quick Haul-Out", bonusCash: 200, extraWorkUnits: 1 };
+  const fixtureSwap: SettlementAddOnPackage = { label: "Fixture Swap", bonusCash: 300, extraWorkUnits: 1 };
+  const scopeExtension: SettlementAddOnPackage = { label: "Scope Extension", bonusCash: 400, extraWorkUnits: 2 };
+  const score = negotiationLevel + estimatingLevel;
+  if (score <= 2) {
+    return quickHaulOut;
+  }
+  if (score <= 5) {
+    return [quickHaulOut, fixtureSwap][rng.nextInt(2)] ?? quickHaulOut;
+  }
+  return [quickHaulOut, fixtureSwap, scopeExtension][rng.nextInt(3)] ?? scopeExtension;
+}
+
+function maybeInjectSettlementAddOn(state: GameState, job: JobDef, logLines: string[]): boolean {
+  const activeJob = state.activeJob;
+  if (!activeJob || job.tags.includes("baba-g") || activeJob.contractId === DAY_LABOR_CONTRACT_ID || activeJob.hasTriggeredAddOn) {
+    return false;
+  }
+
+  const negotiationLevel = Math.max(0, state.perks.corePerks.negotiation ?? 0);
+  const estimatingLevel = Math.max(0, state.perks.corePerks.estimating ?? 0);
+  if (negotiationLevel < 1) {
+    return false;
+  }
+
+  const doWorkTask = activeJob.tasks.find((task) => task.taskId === "do_work");
+  const collectTask = activeJob.tasks.find((task) => task.taskId === "collect_payment");
+  if (!doWorkTask || !collectTask) {
+    return false;
+  }
+
+  const addOnChance = clamp(0.1 + negotiationLevel * 0.07 + estimatingLevel * 0.03, 0.1, 0.55);
+  const rng = createRng(
+    hashSeed(state.seed, state.day, activeJob.contractId, "collect-payment-add-on", negotiationLevel, estimatingLevel, activeJob.actualTicksSpent)
+  );
+  if (!rng.bool(addOnChance)) {
+    return false;
+  }
+
+  const addOnPackage = chooseSettlementAddOnPackage(negotiationLevel, estimatingLevel, rng);
+  doWorkTask.requiredUnits += addOnPackage.extraWorkUnits;
+  activeJob.plannedTicks += doWorkTask.baseTicks * addOnPackage.extraWorkUnits;
+  collectTask.completedUnits = Math.max(0, collectTask.completedUnits - 1);
+  activeJob.hasTriggeredAddOn = true;
+  activeJob.pendingAddOnBonus = addOnPackage.bonusCash;
+  activeJob.pendingAddOnLabel = addOnPackage.label;
+  activeJob.pendingAddOnUnits = addOnPackage.extraWorkUnits;
+  logLines.push(
+    `Change order approved: ${addOnPackage.label} (+${addOnPackage.extraWorkUnits} work unit${addOnPackage.extraWorkUnits === 1 ? "" : "s"}) for +$${addOnPackage.bonusCash}.`
+  );
+  logLines.push("Payment is on hold until the added scope is finished.");
+  return true;
+}
+
+function getNegotiationTipRange(negotiationLevel: number): { min: number; max: number } {
+  if (negotiationLevel >= 6) {
+    return { min: 100, max: 200 };
+  }
+  if (negotiationLevel >= 3) {
+    return { min: 50, max: 125 };
+  }
+  return { min: 25, max: 75 };
+}
+
 function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): { outcome: Outcome; cashDelta: number; logLines: string[] } {
   const activeJob = state.activeJob!;
   if (activeJob.recoveryMode === "finish_cheap") {
@@ -3304,6 +3419,7 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
   let repDelta = 0;
   let flavorLine = job.flavor.neutral_line;
   let payoutBonusLine: string | null = null;
+  const settlementBonusLines: string[] = [];
   if (outcome === "success") {
     const payoutBonus = getSettlementPayoutBonus(activeJob, effectiveQualityPoints);
     cashDelta = Math.max(0, Math.round(activeJob.lockedPayout * (1 + payoutBonus.totalPct) * perkModifiers.payoutMultiplier));
@@ -3321,6 +3437,33 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
     repDelta = -Math.abs(job.repLossFail);
     flavorLine = job.flavor.fail_line;
   }
+
+  const negotiationLevel = Math.max(0, state.perks.corePerks.negotiation ?? 0);
+  const estimatingLevel = Math.max(0, state.perks.corePerks.estimating ?? 0);
+  if (outcome !== "fail" && activeJob.pendingAddOnBonus > 0) {
+    const addOnBonus = Math.max(0, Math.floor(activeJob.pendingAddOnBonus));
+    cashDelta += addOnBonus;
+    settlementBonusLines.push(`${activeJob.pendingAddOnLabel ?? "Scope Add-On"} paid out: +$${addOnBonus}.`);
+  }
+  if (outcome !== "fail" && negotiationLevel >= 1) {
+    const tipChance = clamp(
+      0.05 + negotiationLevel * 0.04 + estimatingLevel * 0.01 + (activeJob.pendingAddOnBonus > 0 ? 0.1 : 0),
+      0.05,
+      0.45
+    );
+    const tipRng = createRng(
+      hashSeed(state.seed, state.day, activeJob.contractId, "collect-payment-tip", negotiationLevel, estimatingLevel, activeJob.actualTicksSpent)
+    );
+    if (tipRng.bool(tipChance)) {
+      const tipRange = getNegotiationTipRange(negotiationLevel);
+      const tipBonus = tipRange.min + tipRng.nextInt(tipRange.max - tipRange.min + 1);
+      cashDelta += tipBonus;
+      settlementBonusLines.push(`Client tip for extra effort: +$${tipBonus}.`);
+    }
+  }
+  activeJob.pendingAddOnBonus = 0;
+  activeJob.pendingAddOnLabel = null;
+  activeJob.pendingAddOnUnits = 0;
 
   const reputationBefore = state.player.reputation;
   let requestedRepDelta = repDelta + qualityRepMod + scheduleRepMod;
@@ -3350,6 +3493,7 @@ function settleActiveJob(state: GameState, bundle: ContentBundle, job: JobDef): 
       outcome === "neutral"
         ? `Job completed at low quality. Client approved half pay: cash +${cashDelta}, rep ${appliedRepDelta}.`
         : `Collected ${outcome} payment: cash ${cashDelta >= 0 ? "+" : ""}${cashDelta}, rep ${appliedRepDelta}.`,
+      ...settlementBonusLines,
       ...(payoutBonusLine ? [payoutBonusLine] : [])
     ]
   };
@@ -3559,7 +3703,7 @@ function getLoadFromShopGuidance(state: GameState, bundle: ContentBundle, job: J
 function getBlockedTaskGuidance(taskId: TaskId, blockedReason: string, activeJob: ActiveJobState): string {
   const normalizedReason = blockedReason.toLowerCase();
   if (normalizedReason.includes("fuel")) {
-    return "Next step: Walk to the nearest gas station for rescue fuel (or run Day Labor for gas money).";
+    return "Next step: Walk to the nearest gas station for rescue fuel. If cash is short, use Day Labor after board refresh.";
   }
   if (normalizedReason.includes("missing usable tools")) {
     return "Next step: Return to Storage for tool repair or replacement.";
@@ -3593,6 +3737,11 @@ function getSettlementFailChance(
   effectiveQualityPoints: number,
   day: number
 ): number {
+  const primarySkillRank = getSkillRank(state.player, job.primarySkill);
+  const negotiationLevel = Math.max(0, state.perks.corePerks.negotiation ?? 0);
+  if (primarySkillRank >= 2 || negotiationLevel >= 1) {
+    return 0;
+  }
   const onboardingFailBuffer = day <= 5 ? 0.1 : 0;
   const selfEsteemRiskDelta = getSelfEsteemBandEffects(state).settlementFailChance;
   return clamp(
