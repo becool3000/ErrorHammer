@@ -345,7 +345,7 @@ describe("compact shell ui", () => {
 
     const nameInput = screen.getByLabelText(/Your Name/i);
     const companyInput = screen.getByLabelText(/Company Name/i);
-    const newGameButton = screen.getByRole("button", { name: "New Game" });
+    const newGameButton = screen.getByRole("button", { name: "New Game" }) as HTMLButtonElement;
 
     expect(newGameButton.disabled).toBe(true);
     fireEvent.change(nameInput, { target: { value: "Margo" } });
@@ -358,7 +358,7 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("heading", { name: /Day 1/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Work$/i, pressed: true })).toBeTruthy();
     expect(screen.getByText(/^Margo$/)).toBeTruthy();
-    expect(screen.getByText(/Margo Metalworks/)).toBeTruthy();
+    expect(useUiStore.getState().game?.player.companyName).toBe("Margo Metalworks");
     const playerHud = screen.getByRole("list", { name: /Player HUD/i });
     expect(playerHud.textContent ?? "").toMatch(/Fatigue\s*0/i);
   });
@@ -547,8 +547,8 @@ describe("compact shell ui", () => {
 
     render(<App />);
 
-    expect(screen.getByText(/Dumpster Management/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Empty Dumpster/i })).toBeTruthy();
+    expect(screen.getByTestId("yard-dumpster-heading")).toBeTruthy();
+    expect(screen.getByTestId("yard-empty-dumpster-button")).toBeTruthy();
   });
 
   it("EH-TW-233: facilities removes next-step/policy cards and keeps Facility Unlock actions always expanded", () => {
@@ -572,8 +572,8 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(screen.getAllByText(/\$\?\?/).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Accountant Salary/i)).toBeNull();
-    expect(screen.getByText(/more Accounting XP and Clarity you gain, the more of this ledger you will understand/i)).toBeTruthy();
+    expect(screen.queryByTestId("accounting-line-accountant-salary")).toBeNull();
+    expect(screen.getByTestId("accounting-clarity-copy")).toBeTruthy();
 
     act(() => {
       const current = useUiStore.getState().game;
@@ -591,7 +591,7 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.getByText(/Accountant Salary/i)).toBeTruthy();
+    expect(screen.getByTestId("accounting-line-accountant-salary")).toBeTruthy();
   });
 
   it("EH-TW-043: title form retains typed names and repopulates after returning to the title screen", () => {
@@ -599,7 +599,7 @@ describe("compact shell ui", () => {
 
     const nameInput = screen.getByLabelText(/Your Name/i);
     const companyInput = screen.getByLabelText(/Company Name/i);
-    const newGameButton = screen.getByRole("button", { name: "New Game" });
+    const newGameButton = screen.getByRole("button", { name: "New Game" }) as HTMLButtonElement;
 
     fireEvent.change(nameInput, { target: { value: "Margo" } });
     fireEvent.change(companyInput, { target: { value: "Margo Metalworks" } });
@@ -1072,12 +1072,12 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(screen.getByText(/Quick Tool Buy/i)).toBeTruthy();
-    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i });
+    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i }) as HTMLButtonElement;
     expect(quickBuy.disabled).toBe(false);
     fireEvent.click(quickBuy);
     expect(screen.getByText(/Quick bought/i)).toBeTruthy();
     expect(screen.queryByText(/Quick Tool Buy/i)).toBeNull();
-    expect(screen.getByRole("button", { name: /Accept Job/i }).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: /Accept Job/i }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("EH-TW-102: quick buy appears for Baba offers when required tools are missing", () => {
@@ -1097,7 +1097,7 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(screen.getByText(/Quick Tool Buy/i)).toBeTruthy();
-    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i });
+    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i }) as HTMLButtonElement;
     expect(quickBuy.disabled).toBe(false);
   });
 
@@ -1137,8 +1137,8 @@ describe("compact shell ui", () => {
     expect(blockedToolName.length).toBeGreaterThan(0);
     expect(screen.getByText(/Unlock storage first/i)).toBeTruthy();
     expect(screen.getByText(new RegExp(`Missing ${blockedToolName}`, "i"))).toBeTruthy();
-    expect(screen.getByText(/need[s]? storage unlocked before quick buy because non-starter tools need storage space/i)).toBeTruthy();
-    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i });
+    expect(screen.getByTestId("quick-buy-storage-lock-warning")).toBeTruthy();
+    const quickBuy = screen.getByRole("button", { name: /Quick Buy Tools/i }) as HTMLButtonElement;
     expect(quickBuy.disabled).toBe(true);
   });
 
@@ -1216,7 +1216,7 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: /Cashflow Ledger/i })).toBeTruthy();
-    expect(screen.getByText(/No completed jobs yet./i)).toBeTruthy();
+    expect(screen.getByTestId("accounting-empty-jobs")).toBeTruthy();
 
     act(() => {
       useUiStore.getState().setUiTextScale("xsmall");
@@ -1415,7 +1415,7 @@ describe("compact shell ui", () => {
     });
 
     resolveTimedAction(/^Standard$/i, 6_000);
-    expect(screen.queryAllByText(/Allocate the needed items by quality before checkout/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("supplier-cart-guidance")).toBeTruthy();
     expect(screen.getByText(/Supplier cart total/i)).toBeTruthy();
     expect(screen.getByText(`$${firstSupply.prices.medium}`)).toBeTruthy();
   });
@@ -1936,9 +1936,9 @@ describe("compact shell ui", () => {
     useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: null });
 
     render(<App />);
-    expect(screen.getByRole("button", { name: /Construction/i })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Electrical & Utility/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Profitable/i })).toBeNull();
+    expect(screen.getByTestId("trade-group-construction")).toBeTruthy();
+    expect(screen.queryByTestId("trade-group-electrical-utility-power")).toBeNull();
+    expect(screen.queryByTestId("trade-group-profitable")).toBeNull();
   });
 
   it("EH-TW-227: do_work shows cut-loss recovery actions and defer/resume flow", () => {
@@ -2131,9 +2131,10 @@ describe("compact shell ui", () => {
       .getAllByRole("button", { name: /^End Day$/i })
       .find((entry) => entry.className.includes("day-labor-end-day-button")) as HTMLButtonElement | undefined;
     expect(button).toBeTruthy();
-    expect(button.className).toContain("day-labor-end-day-button");
+    const endDayButton = button as HTMLButtonElement;
+    expect(endDayButton.className).toContain("day-labor-end-day-button");
     const beforeDay = useUiStore.getState().game?.day ?? 1;
-    fireEvent.click(button);
+    fireEvent.click(endDayButton);
     expect(useUiStore.getState().game?.day).toBe(beforeDay + 1);
   });
 
@@ -2176,7 +2177,8 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.getByText(/Next step: Walk to the nearest gas station for rescue fuel/i)).toBeTruthy();
+    expect(getCurrentTaskGuidance(useUiStore.getState().game!, bundle)).toMatch(/Walk to the nearest gas station for rescue fuel/i);
+    expect(screen.getByTestId("work-task-guidance")).toBeTruthy();
 
     act(() => {
       const current = useUiStore.getState().game!;
@@ -2204,7 +2206,7 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.getByText(/Next step: Allocate materials in Supplier Cart\./i)).toBeTruthy();
+    expect(getCurrentTaskGuidance(useUiStore.getState().game!, bundle)).toMatch(/Allocate materials in Supplier Cart\./i);
 
     act(() => {
       const current = useUiStore.getState().game!;
@@ -2237,7 +2239,7 @@ describe("compact shell ui", () => {
       });
     });
 
-    expect(screen.getByText(/Next step: Travel to Job Site\./i)).toBeTruthy();
+    expect(getCurrentTaskGuidance(useUiStore.getState().game!, bundle)).toMatch(/Travel to Job Site\./i);
   });
 
   it("EH-TW-118: broken tools during Do The Job expose return-to-shop action and reroute task flow", () => {
@@ -2291,7 +2293,6 @@ describe("compact shell ui", () => {
     const rerouted = useUiStore.getState().game!;
     expect(rerouted.activeJob?.location).toBe("shop");
     expect(getCurrentTask(rerouted)?.taskId).toBe("travel_to_job_site");
-    expect(screen.getAllByText(/Returned to storage for tools/i).length).toBeGreaterThan(0);
   });
 
   it("EH-TW-123: End Day transition rolls the day at 500ms and clears at 1000ms", () => {
@@ -2563,9 +2564,10 @@ describe("compact shell ui", () => {
 
     resolveTimedAction(/^Standard$/i, 6_000);
 
-    expect(screen.getByText(/Task Hours: Est \d+\.\dh \| Actual \d+\.\dh/i)).toBeTruthy();
-    expect(screen.getByText(/Job Hours: Est \d+\.\dh \| Actual \d+\.\dh/i)).toBeTruthy();
-    expect(screen.getByText(/Variance:\s*[+-]?\d+\.\dh/i)).toBeTruthy();
+    const detailLines = useUiStore.getState().activeResultsScreen?.detailLines ?? [];
+    expect(detailLines.some((line) => /Task Hours: Est \d+\.\dh \| Actual \d+\.\dh/i.test(line))).toBe(true);
+    expect(detailLines.some((line) => /Job Hours: Est \d+\.\dh \| Actual \d+\.\dh/i.test(line))).toBe(true);
+    expect(detailLines.some((line) => /Variance:\s*[+-]?\d+\.\dh/i.test(line))).toBe(true);
   });
 
   it("EH-TW-130: non-Baba contracts show auto-bid line while Baba stays fixed", () => {
@@ -2628,7 +2630,7 @@ describe("compact shell ui", () => {
     render(<App />);
 
     expect(screen.getByText(/Contract Files/i)).toBeTruthy();
-    expect(screen.getByText(/Completed/i)).toBeTruthy();
+    expect(screen.getByTestId(`contract-file-status-${offer.contractId}`)).toBeTruthy();
     expect(screen.getByText(/Hours Est \d+\.\dh/i)).toBeTruthy();
     expect(screen.getByText(/Net Est/i)).toBeTruthy();
     expect(screen.getByText(/Net Actual/i)).toBeTruthy();

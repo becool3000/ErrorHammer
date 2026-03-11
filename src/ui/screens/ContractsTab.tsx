@@ -132,6 +132,7 @@ export function ContractsTab() {
               key={group.id}
               className={group.id === activeGroup?.id ? "ghost-button active" : "ghost-button"}
               onClick={() => setActiveGroupId(group.id)}
+              data-testid={`trade-group-${group.id}`}
             >
               {group.label}
             </button>
@@ -195,7 +196,11 @@ export function ContractsTab() {
           <p className="eyebrow">Quick Tool Buy</p>
           <p className="muted-copy">Missing {quickBuyPlan.missingTools.map((line) => line.toolName).join(", ")}</p>
           <p className="muted-copy">{bundle.strings.quickBuyDescription}</p>
-          {storageLockedQuickBuyTools.length > 0 ? <p className="muted-copy tone-warning">{buildQuickBuyStorageLockCopy(storageLockedQuickBuyTools)}</p> : null}
+          {storageLockedQuickBuyTools.length > 0 ? (
+            <p className="muted-copy tone-warning" data-testid="quick-buy-storage-lock-warning">
+              {buildQuickBuyStorageLockCopy(storageLockedQuickBuyTools)}
+            </p>
+          ) : null}
           <div className="chip-grid">
             <span className="chip">{formatHours(quickBuyPlan.requiredTicks)}</span>
             <span className="chip">${quickBuyPlan.totalCost}</span>
@@ -209,6 +214,7 @@ export function ContractsTab() {
               className="ghost-button secondary-action-button wide-button"
               onClick={() => selectedContract && quickBuyTools(selectedContract.contractId)}
               disabled={!quickBuyEnabled}
+              data-testid="quick-buy-tools-button"
             >
               {bundle.strings.quickBuyButtonLabel} ({formatHours(quickBuyPlan.requiredTicks)} / ${quickBuyPlan.totalCost})
             </button>

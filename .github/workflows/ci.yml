@@ -27,6 +27,9 @@ jobs:
       - name: Compile Content
         run: npm run content:compile
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Test
         run: npm test
 

@@ -61,6 +61,8 @@ export function SettingsTab() {
           <div className="action-row">
             <button
               className="ghost-button"
+              aria-label="Tutorial"
+              data-testid="settings-tutorial-button"
               onClick={() => {
                 if (tutorialInProgress) {
                   resumeTutorial();
@@ -79,7 +81,7 @@ export function SettingsTab() {
                 <button className="primary-button" onClick={() => launchTutorial("fresh-guided")}>
                   Fresh guided run
                 </button>
-                <button className="ghost-button" onClick={() => launchTutorial("current-save")}>
+                <button className="ghost-button" data-testid="settings-tutorial-current-save" onClick={() => launchTutorial("current-save")}>
                   Use current save
                 </button>
               </div>

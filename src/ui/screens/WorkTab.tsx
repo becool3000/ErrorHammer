@@ -55,6 +55,7 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
   if (!game) {
     return null;
   }
+  const gameState = game;
 
   const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
   const eventCueRows = useMemo(
@@ -242,10 +243,16 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
 
     return (
       <div className="detail-block task-collapsible-section">
-        <button className="ghost-button task-collapsible-toggle" onClick={() => setGasStationOpen((open) => !open)} aria-expanded={gasStationOpen}>
+        <button
+          className="ghost-button task-collapsible-toggle"
+          onClick={() => setGasStationOpen((open) => !open)}
+          aria-expanded={gasStationOpen}
+          aria-label="Gas Station"
+          data-testid="gas-station-toggle"
+        >
           <strong>Gas Station</strong>
           <span className="task-collapsible-meta">
-            Fuel {game.player.fuel}/{game.player.fuelMax}
+            Fuel {gameState.player.fuel}/{gameState.player.fuelMax}
           </span>
         </button>
         {gasStationOpen ? (
@@ -573,7 +580,11 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
           </div>
         </div>
         {currentTask ? <TaskSummary task={currentTask} currentTaskId={currentTask.taskId} /> : <p className="muted-copy">No task remaining.</p>}
-        {taskGuidance ? <p className="task-guidance">{taskGuidance}</p> : null}
+        {taskGuidance ? (
+          <p className="task-guidance" data-testid="work-task-guidance">
+            {taskGuidance}
+          </p>
+        ) : null}
         {timedTaskAction ? (
           <div className="action-timer-card">
             <div className="section-label-row tight-row action-timer-meta">
@@ -661,7 +672,12 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
               <span>Time {formatHours(outOfGasRescuePlan.requiredTicks)}</span>
             </div>
             <div className="task-inline-actions">
-              <button className="ghost-button tone-warning secondary-action-button" onClick={() => runOutOfGasRescue()}>
+              <button
+                className="ghost-button tone-warning secondary-action-button"
+                onClick={() => runOutOfGasRescue()}
+                aria-label="Walk To Nearest Gas Station"
+                data-testid="out-of-gas-rescue-button"
+              >
                 Walk To Nearest Gas Station
               </button>
             </div>
@@ -713,10 +729,19 @@ export function WorkTab({ modalView, sheetOnly = false }: WorkTabProps) {
             </div>
           </div>
         ) : null}
-        {supplierCartNotice ? <p className="task-inline-notice">{supplierCartNotice}</p> : null}
+        {supplierCartNotice ? (
+          <p className="task-inline-notice" data-testid="supplier-cart-guidance">
+            {supplierCartNotice}
+          </p>
+        ) : null}
         {missingWorkTools ? (
           <div className="task-inline-actions">
-            <button className="primary-button tone-warning" onClick={() => returnToShopForTools()}>
+            <button
+              className="primary-button tone-warning"
+              onClick={() => returnToShopForTools()}
+              aria-label="Return To Storage For Tools"
+              data-testid="return-to-storage-tools-button"
+            >
               Return To Storage For Tools
             </button>
           </div>

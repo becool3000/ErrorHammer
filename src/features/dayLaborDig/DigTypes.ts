@@ -70,3 +70,5 @@ export function createInitialDigRuntimeState(): DigMinigameState {
 export function isTerminalDigPhase(phase: DigPhase): boolean {
   return phase === "complete" || phase === "failed";
 }
+
+export type { DigPhase };

@@ -9,7 +9,8 @@ import {
   getSupplyQuantity,
   performTaskUnit,
   quickBuyMissingTools,
-  runGasStationStop,
+  runManualGasStation,
+  runOutOfGasRescue,
   setSupplierCartQuantity
 } from "../src/core/playerFlow";
 import type { GameState, TaskStance } from "../src/core/types";
@@ -209,7 +210,14 @@ function runSeed(seed: number, policy: ProgressionPolicy): SimRow {
     const step = performTaskUnit(state, bundle, policy.stance, policy.allowOvertime);
 
     if (step.notice && /fuel/i.test(step.notice)) {
-      const fueled = runGasStationStop(state, bundle);
+      const rescued = runOutOfGasRescue(state, bundle);
+      if (rescued.nextState !== state) {
+        state = rescued.nextState;
+        interactions += 1;
+        gasRuns += 1;
+        continue;
+      }
+      const fueled = runManualGasStation(state, "single");
       if (fueled.nextState !== state) {
         state = fueled.nextState;
         interactions += 1;

@@ -20,12 +20,14 @@ export function YardTab() {
   }
 
   return (
-    <section className="tab-panel yard-tab">
+    <section className="tab-panel yard-tab" data-testid="yard-tab">
       <article className="hero-card chrome-card yard-card">
         <div className="section-label-row">
           <div>
             <p className="eyebrow">Yard</p>
-            <h2>Dumpster Management</h2>
+            <h2 data-testid="yard-dumpster-heading" aria-label="Dumpster Management">
+              Dumpster Management
+            </h2>
           </div>
           <span className="chip">{units}/{capacity} units</span>
         </div>
@@ -36,7 +38,13 @@ export function YardTab() {
           <span>Empties {game.yard.emptiesPerformed}</span>
           <span>Service ${serviceCost}</span>
         </div>
-        <button className="primary-button" disabled={units <= 0} onClick={() => emptyDumpster()}>
+        <button
+          className="primary-button"
+          disabled={units <= 0}
+          onClick={() => emptyDumpster()}
+          aria-label="Empty Dumpster"
+          data-testid="yard-empty-dumpster-button"
+        >
           {units <= 0 ? "Dumpster Empty" : `Empty Dumpster ($${serviceCost})`}
         </button>
         {units >= capacity ? <p className="notice-banner">Dumpster full. Non-day-labor contracts are blocked.</p> : null}

@@ -279,10 +279,14 @@ describe("competitor parity engine", () => {
     const forcedZeroFuel = accepted.nextState;
     forcedZeroFuel.player.fuel = 0;
     forcedZeroFuel.player.cash = 0;
+    const forcedActiveJob = forcedZeroFuel.activeJob;
+    if (!forcedActiveJob) {
+      throw new Error("Expected active job before forcing zero-fuel route.");
+    }
     forcedZeroFuel.activeJob = {
-      ...forcedZeroFuel.activeJob,
+      ...forcedActiveJob,
       location: "shop",
-      tasks: forcedZeroFuel.activeJob.tasks.map((task) =>
+      tasks: forcedActiveJob.tasks.map((task) =>
         task.taskId === "load_from_shop" || task.taskId === "refuel_at_station"
           ? { ...task, completedUnits: task.requiredUnits || 1 }
           : task.taskId === "travel_to_supplier"

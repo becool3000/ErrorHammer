@@ -76,6 +76,7 @@
 4. Continue archiving closed/superseded history outside the live board to maintain clean lane execution.
 
 ## Archive
-1. Closed-chain and verbose board history remains in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-2. `PLN-019` clean-slate reset archive is tracked in [Tasks-Lane-Board-Reset-2026-03-06.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
-3. Historical migration context remains in [Migration-Legacy-2026-02-27.md](/g:/ErrorHammer/obsidian_vault/archive/Migration-Legacy-2026-02-27.md).
+1. Closed-chain and verbose board history remains in [Tasks-Lane-Board-2026-03-01.md](/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
+2. `PLN-019` clean-slate reset archive is tracked in [Tasks-Lane-Board-Reset-2026-03-06.md](/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
+3. Historical migration context remains in [Migration-Legacy-2026-02-27.md](/obsidian_vault/archive/Migration-Legacy-2026-02-27.md).
+

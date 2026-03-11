@@ -69,6 +69,10 @@ describe("progression helpers", () => {
       },
       reworkAdded: 0,
       location: "job-site",
+      taskEstimatedTicksTotal: 4,
+      taskActualTicksTotal: 4,
+      jobEstimatedTicksTotal: 4,
+      jobActualTicksTotal: 4,
       logLines: ["Progress moved."],
       digest: "progress-seq"
     });

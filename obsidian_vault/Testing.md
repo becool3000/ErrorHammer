@@ -1,39 +1,37 @@
 # Testing
+
 ## Scope
 1. Runtime target is the Error Hammer web app across `src/main.tsx`, `src/ui/**`, and `src/core/**`.
-2. Canonical command checklist is:
-   1. `npm run content:validate`
-   2. `npm run content:compile`
-   3. `npm test`
-   4. `npm run build`
-3. Current automated baseline is `8` test files and `62` tests.
+2. Canonical verification checklist is:
+1. `npm run content:validate`
+2. `npm run content:compile`
+3. `npm run typecheck`
+4. `npm test`
+5. `npm run build`
 
-## Current Deterministic Contract
-1. `tests/tw_scenarios.test.ts`
-Coverage: `EH-TW-001..EH-TW-049`
-Focus: resolver behavior, quick-buy flows, crew gating, assignee stamina/lock behavior, and save-safe defaults.
-2. `tests/ui_shell.test.tsx`
-Coverage: `EH-TW-023..EH-TW-034`, `EH-TW-043`, `EH-TW-047..EH-TW-056`
-Focus: compact-shell routing, overlays, supplier cart flow, event/assignee cues, collapsed work panels, overtime-only action visibility, and persistent progression popups.
-3. `tests/progression.test.ts`
-Coverage: `EH-TW-057..EH-TW-061`
-Focus: level thresholds, progress math, Operator Level averaging, popup ordering, and readable skill labels.
-4. Supporting suites remain `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, `tests/bots.test.ts`, and `tests/vite_config.test.ts`.
+## Current Baseline (2026-03-10)
+1. `npm run content:validate` PASS
+Evidence: `[content:validate] OK tools=25 jobs=188 babaJobs=22 events=12 districts=3 bots=10 supplies=35`
+2. `npm run content:compile` PASS
+Evidence: generated bundle written to `src/generated/content.bundle.json`.
+3. `npm run typecheck` PASS
+Evidence: `tsc --noEmit` returns zero errors.
+4. `npm test` PASS
+Evidence: `40` test files and `279` tests passed.
+5. `npm run build` PASS
+Evidence: production bundle emitted; Vite still warns on large JS chunk and large rebarbob image asset.
 
-## Latest Verified Evidence
-1. `VF-008` PASS
-Evidence: final rolling-session UI contract is verified for collapsible work panels, inline supplier-cart guidance, and overtime-only visible actions.
-2. `VF-009` PASS
-Evidence: progression visibility is verified for visible levels, Operator Level, expanded readable labels, and manual-dismiss popup queue behavior.
-3. No validated defect was found in the latest `VF-008` or `VF-009` closeouts.
+## Coverage Notes
+1. `tests/ui_shell.test.tsx` is the primary compact-shell interaction suite and now validates obfuscated UI via selector-first assertions.
+2. `tests/tw_scenarios.test.ts` remains the deterministic scenario suite.
+3. Long-running pacing/stability suites are in default `npm test` and drive total test duration.
 
 ## Manual Smoke Baseline
-1. Start a new game, confirm trimmed player/company name gating, and verify compact-shell launch.
-2. Accept a contract, check `Work`, expand/collapse the workday and active-job panels, and verify state is preserved.
-3. Trigger a supplier-state path and confirm inline supplier-cart checkout guidance plus supplier overlay behavior.
-4. Force a near-end-of-day work step and confirm only `+ OT` action buttons remain when regular actions no longer fit.
-5. Trigger an XP-granting task and confirm popup order plus manual dismissal behavior.
+1. Start a new game and confirm title-gated name entry.
+2. Accept contract flow from Company -> Contracts into Work task execution.
+3. Verify out-of-gas rescue, manual gas station controls, and day-labor fallback.
+4. Verify Company -> Facilities unlock actions and Company -> Finance clarity masking behavior.
 
 ## Archive
-1. Detailed scenario map and historical contract text is archived in [Testing-Scenario-Map-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Testing-Scenario-Map-2026-03-01.md).
+1. Detailed scenario map and historical contract text is archived in [Testing-Scenario-Map-2026-03-01.md](/obsidian_vault/archive/Testing-Scenario-Map-2026-03-01.md).
 2. Historical evidence logs remain available in git history and prior archive notes.

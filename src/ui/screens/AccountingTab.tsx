@@ -31,11 +31,13 @@ export function AccountingTab() {
       <article className="hero-card chrome-card">
         <div className="section-label-row">
           <div>
-            <h2>Cashflow Ledger</h2>
+            <h2 data-testid="accounting-ledger-heading">Cashflow Ledger</h2>
           </div>
           <span className={`chip ${netClass}`}>Net {formatNumberByAccountingClarity(game, snapshot.netFromLogs, { currency: true, signed: true })}</span>
         </div>
-        <p className="muted-copy">The more Accounting XP and Clarity you gain, the more of this ledger you will understand.</p>
+        <p className="muted-copy" data-testid="accounting-clarity-copy">
+          The more Accounting XP and Clarity you gain, the more of this ledger you will understand.
+        </p>
         <div className="metric-grid two-up">
           <span>Accounting XP {Math.round(game.officeSkills.accountingXp)}</span>
           <span>Clarity {(accountingClarity * 100).toFixed(0)}%</span>
@@ -94,11 +96,21 @@ export function AccountingTab() {
           <span>Deferred Carry {formatNumberByAccountingClarity(game, snapshot.categories.deferredCarryExpense, { currency: true })}</span>
           {showDetailedFinance ? (
             <>
-              <span>Accountant Salary {formatNumberByAccountingClarity(game, snapshot.categories.accountantSalaryExpense, { currency: true })}</span>
-              <span>Accountant Hire {formatNumberByAccountingClarity(game, snapshot.categories.accountantHireExpense, { currency: true })}</span>
-              <span>Research {formatNumberByAccountingClarity(game, snapshot.categories.researchExpense, { currency: true })}</span>
-              <span>Dumpster Service {formatNumberByAccountingClarity(game, snapshot.categories.dumpsterServiceExpense, { currency: true })}</span>
-              <span>Premium Haul {formatNumberByAccountingClarity(game, snapshot.categories.premiumHaulExpense, { currency: true })}</span>
+              <span data-testid="accounting-line-accountant-salary">
+                Accountant Salary {formatNumberByAccountingClarity(game, snapshot.categories.accountantSalaryExpense, { currency: true })}
+              </span>
+              <span data-testid="accounting-line-accountant-hire">
+                Accountant Hire {formatNumberByAccountingClarity(game, snapshot.categories.accountantHireExpense, { currency: true })}
+              </span>
+              <span data-testid="accounting-line-research">
+                Research {formatNumberByAccountingClarity(game, snapshot.categories.researchExpense, { currency: true })}
+              </span>
+              <span data-testid="accounting-line-dumpster-service">
+                Dumpster Service {formatNumberByAccountingClarity(game, snapshot.categories.dumpsterServiceExpense, { currency: true })}
+              </span>
+              <span data-testid="accounting-line-premium-haul">
+                Premium Haul {formatNumberByAccountingClarity(game, snapshot.categories.premiumHaulExpense, { currency: true })}
+              </span>
             </>
           ) : null}
         </div>
@@ -109,7 +121,11 @@ export function AccountingTab() {
           <strong>Job Profit Breakdown</strong>
           <span className="chip">{snapshot.jobRows.length} rows</span>
         </div>
-        {snapshot.jobRows.length === 0 ? <p className="muted-copy">No completed jobs yet.</p> : null}
+        {snapshot.jobRows.length === 0 ? (
+          <p className="muted-copy" data-testid="accounting-empty-jobs">
+            No completed jobs yet.
+          </p>
+        ) : null}
         <div className="stack-list">
           {snapshot.jobRows.map((row, index) => {
             const profitClass = row.profit >= 0 ? "tone-success" : "tone-danger";
@@ -173,7 +189,9 @@ export function AccountingTab() {
               <article key={`${file.contractId}:${file.dayAccepted}`} className="task-summary">
                 <div className="section-label-row tight-row">
                   <strong>{file.jobName}</strong>
-                  <span className="chip">{formatContractFileStatus(file.status)}</span>
+                  <span className="chip" data-testid={`contract-file-status-${file.contractId}`}>
+                    {formatContractFileStatus(file.status)}
+                  </span>
                 </div>
                 <div className="material-need-meta">
                   <span>Payout {formatNumberByAccountingClarity(game, file.acceptedPayout, { currency: true })}</span>

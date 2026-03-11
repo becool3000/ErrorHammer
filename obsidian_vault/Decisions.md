@@ -25,9 +25,9 @@
 1. Premium haul-off charges per job when dumpster service is disabled.
 2. Dumpster service shifts cost to yard emptying and monthly base fees once enabled.
 14. Accountant hire is permanent staff with utility discount, monthly salary, and accounting clarity boost.
-15. Reading and Accounting clarity effects intentionally obfuscate non-critical copy/values at low skill, while critical action labels remain un-obfuscated.
+15. Reading and Accounting clarity effects intentionally obfuscate low-clarity copy/values in runtime; UI verification relies on stable selectors/attributes rather than literal rendered text.
 16. Core Perks are additive deterministic modifiers gated by perk-tree research and point spend.
-17. Save version is bumped to `SAVE_VERSION=6` for the economy/perk architecture migration.
+17. Save version is `SAVE_VERSION=7` (`src/core/save.ts`).
 18. `Tasks.md` remains the live lane-board source of truth and `Testing.md` remains the evidence summary source.
 19. Itch publishing uses versioned archives from `package.json` with format `error-hammer-v<version>-itch.zip`, produced by `npm run build:itch`.
 20. The title screen displays the same app version (`Version <version>`) so build identity is visible in-game and on itch uploads.
@@ -126,6 +126,6 @@ Decision: rescue is cash-only with explicit day-labor guidance on shortfall; bot
 Rationale: prevents hidden debt mechanics and keeps player/bot recovery economics aligned and deterministic.
 
 ## Archive
-1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-2. Planner reset supersession history is archived in [Tasks-Lane-Board-Reset-2026-03-06.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
-3. Earlier decision-history notes remain in [Decisions-History-2026-02-13.md](/g:/ErrorHammer/obsidian_vault/archive/Decisions-History-2026-02-13.md).
+1. Closed-chain and lane-board history is archived in [Tasks-Lane-Board-2026-03-01.md](/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
+2. Planner reset supersession history is archived in [Tasks-Lane-Board-Reset-2026-03-06.md](/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
+3. Earlier decision-history notes remain in [Decisions-History-2026-02-13.md](/obsidian_vault/archive/Decisions-History-2026-02-13.md).

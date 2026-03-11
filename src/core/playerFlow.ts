@@ -47,6 +47,9 @@ import { createRng, hashSeed } from "./rng";
 import {
   closeOfficeManually as closeOfficeManuallyOperation,
   closeYardManually as closeYardManuallyOperation,
+  createInitialOfficeSkillsState,
+  createInitialOperationsState,
+  createInitialYardState,
   enableDumpsterService as enableDumpsterServiceOperation,
   getPremiumHaulCost,
   openStorage as openStorageOperation,
@@ -60,12 +63,14 @@ import {
   resetOfficeSkillDailyCaps
 } from "./operations";
 import {
+  createResearchStateLocked,
   normalizeResearchState,
   startResearchProject
 } from "./research";
 import {
   awardPerkXp,
   consumeRerollToken,
+  createInitialPerksState,
   getTaskPerkModifiers,
   normalizePerksState,
   resetJobRerollTokens,
@@ -74,6 +79,7 @@ import {
 import { formatEncounterMarker, rollRebarBobEncounter } from "./encounters";
 import {
   CORE_TRADE_SKILLS,
+  createTradeProgressState,
   formatCoreTrackLabel,
   isCoreTrackUnlocked,
   mapSkillToCoreTrack,
@@ -852,7 +858,8 @@ export function getActiveJobSpendPreview(state: GameState, bundle: ContentBundle
     estimatedTotalCost,
     projectedNetOnSuccess: grossPayout - estimatedTotalCost,
     spentSoFar,
-    estimatedRemainingCost
+    estimatedRemainingCost,
+    biggestCostDriver: getLargestEstimatedCostDriver(materialsCost, fuelCost, trashCost)
   };
 }
 
@@ -1130,7 +1137,7 @@ export function setSupplierCartQuantity(
   };
 }
 
-export function acceptContract(state: GameState, bundle: ContentBundle, contractId: string): StateTransitionResult<ActiveJobState> {
+export function acceptContract(state: GameState, bundle: ContentBundle, contractId: string): StateTransitionResult<ActiveJobState | undefined> {
   if (contractId === DAY_LABOR_CONTRACT_ID) {
     return runDayLaborShift(state, bundle);
   }
@@ -1282,7 +1289,7 @@ export function acceptContract(state: GameState, bundle: ContentBundle, contract
 
   return {
     nextState,
-    payload: cloneActiveJob(nextState.activeJob),
+    payload: cloneActiveJob(nextState.activeJob) ?? undefined,
     digest: digestState(nextState)
   };
 }
@@ -2030,7 +2037,7 @@ export function setActiveJobAssignee(state: GameState, assignee: "self" | string
   }
   return {
     nextState: state,
-    payload: cloneActiveJob(state.activeJob),
+    payload: cloneActiveJob(state.activeJob) ?? undefined,
     notice: "Crew: Coming Soon",
     digest: digestState(state)
   };
@@ -2633,7 +2640,7 @@ export function performTaskUnit(
     taskActualTicksTotal,
     jobEstimatedTicksTotal,
     jobActualTicksTotal,
-    encounter,
+    encounter: encounter ?? undefined,
     logLines: taskLogLines,
     digest
   };
@@ -4030,7 +4037,9 @@ function cloneSupplyInventory(inventory: SupplyInventory | undefined): SupplyInv
     Object.entries(inventory ?? {}).map(([supplyId, stack]) => [
       supplyId,
       Object.fromEntries(
-        SUPPLY_QUALITIES.map((quality) => [quality, Math.max(0, stack?.[quality] ?? 0)]).filter(([, quantity]) => quantity > 0)
+        SUPPLY_QUALITIES.map((quality) => [quality, Math.max(0, Number(stack?.[quality] ?? 0))] as const).filter(
+          (entry): entry is readonly [typeof entry[0], number] => entry[1] > 0
+        )
       ) as SupplyStack
     ])
   );

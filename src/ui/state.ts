@@ -469,6 +469,15 @@ function toSummary(title: string, lines: string[], digest: string): ActionSummar
   };
 }
 
+function ensureSummary(
+  summary: ActionSummary | null | undefined,
+  fallbackTitle: string,
+  fallbackLines: string[],
+  digest: string
+): ActionSummary {
+  return summary ?? toSummary(fallbackTitle, fallbackLines, digest);
+}
+
 function formatAcceptedContractLine(jobId: string): string {
   const jobName = JOB_NAME_BY_ID.get(jobId) ?? "the selected job";
   return `Accepted ${jobName}.`;
@@ -1718,7 +1727,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         result.payload && result.payload.taskId === "collect_payment" && result.nextState.activeJob?.contractId
           ? getJobProfitRecap(result.nextState, result.nextState.activeJob.contractId)
           : null;
-      const completionFxState =
+      const completionFxState: JobCompletionFxState | null =
         shouldShowCompletionFx && result.nextState.activeJob?.outcome
           ? {
               startedAtMs: Date.now(),
@@ -2074,7 +2083,12 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
     const result = setActiveJobAssigneeFlow(current, assignee);
     const assigneeLabel = assignee === "self" ? current.player.name : assignee;
-    const nextActionSummary = result.nextState !== current ? toSummary("Assignment Updated", [`Assigned active job to ${assigneeLabel}.`], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Assignment Updated", [`Assigned active job to ${assigneeLabel}.`], result.digest) : get().lastAction,
+      "Assignment Updated",
+      [`Assigned active job to ${assigneeLabel}.`],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2109,7 +2123,12 @@ export const useUiStore = create<UiState>((set, get) => ({
         : action === "defer"
           ? "Deferred the active job for later."
           : "Abandoned the active job.";
-    const nextActionSummary = result.nextState !== current ? toSummary(actionLabel, [summaryLine], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary(actionLabel, [summaryLine], result.digest) : get().lastAction,
+      actionLabel,
+      [summaryLine],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2140,8 +2159,12 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
     const result = resumeDeferredJobFlow(current, deferredJobId);
     const resumedJobId = result.payload?.jobId ?? deferredJobId;
-    const nextActionSummary =
-      result.nextState !== current ? toSummary("Deferred Job Resumed", [`Resumed deferred contract ${resumedJobId}.`], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Deferred Job Resumed", [`Resumed deferred contract ${resumedJobId}.`], result.digest) : get().lastAction,
+      "Deferred Job Resumed",
+      [`Resumed deferred contract ${resumedJobId}.`],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2172,7 +2195,12 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
     const result = startResearchFlow(current, projectId);
     const projectLabel = result.payload?.label ?? projectId;
-    const nextActionSummary = result.nextState !== current ? toSummary("Research Started", [`Started research: ${projectLabel}.`], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Research Started", [`Started research: ${projectLabel}.`], result.digest) : get().lastAction,
+      "Research Started",
+      [`Started research: ${projectLabel}.`],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2199,7 +2227,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = spendPerkPointFlow(current, perkId);
-    const nextActionSummary = result.nextState !== current ? toSummary("Perk Purchased", [`Spent a perk point on ${perkId}.`], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Perk Purchased", [`Spent a perk point on ${perkId}.`], result.digest) : get().lastAction,
+      "Perk Purchased",
+      [`Spent a perk point on ${perkId}.`],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2226,7 +2259,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = upgradeBusinessTierFlow(current, target);
-    const nextActionSummary = result.nextState !== current ? toSummary("Business Tier", [`Business tier request: ${target}.`], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Business Tier", [`Business tier request: ${target}.`], result.digest) : get().lastAction,
+      "Business Tier",
+      [`Business tier request: ${target}.`],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2253,7 +2291,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = openStorageFlow(current, bundle);
-    const nextActionSummary = result.nextState !== current ? toSummary("Storage", ["Attempted to open storage."], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Storage", ["Attempted to open storage."], result.digest) : get().lastAction,
+      "Storage",
+      ["Attempted to open storage."],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2280,8 +2323,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = enableDumpsterServiceFlow(current);
-    const nextActionSummary =
-      result.nextState !== current ? toSummary("Dumpster Service", ["Toggled dumpster service state."], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Dumpster Service", ["Toggled dumpster service state."], result.digest) : get().lastAction,
+      "Dumpster Service",
+      ["Toggled dumpster service state."],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2308,8 +2355,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = closeOfficeManuallyFlow(current);
-    const nextActionSummary =
-      result.nextState !== current ? toSummary("Office Closed", ["Closed office lease manually."], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Office Closed", ["Closed office lease manually."], result.digest) : get().lastAction,
+      "Office Closed",
+      ["Closed office lease manually."],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2336,7 +2387,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = closeYardManuallyFlow(current);
-    const nextActionSummary = result.nextState !== current ? toSummary("Yard Closed", ["Closed yard lease manually."], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Yard Closed", ["Closed yard lease manually."], result.digest) : get().lastAction,
+      "Yard Closed",
+      ["Closed yard lease manually."],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,
@@ -2367,8 +2423,12 @@ export const useUiStore = create<UiState>((set, get) => ({
       return;
     }
     const result = emptyDumpsterAtYardFlow(current);
-    const nextActionSummary =
-      result.nextState !== current ? toSummary("Dumpster Emptied", ["Processed yard dumpster emptying."], result.digest) : get().lastAction;
+    const nextActionSummary = ensureSummary(
+      result.nextState !== current ? toSummary("Dumpster Emptied", ["Processed yard dumpster emptying."], result.digest) : get().lastAction,
+      "Dumpster Emptied",
+      ["Processed yard dumpster emptying."],
+      result.digest
+    );
     const resultsScreen = buildActionResults(current, result.nextState, {
       title: nextActionSummary.title,
       digest: nextActionSummary.digest,

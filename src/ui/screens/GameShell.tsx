@@ -17,6 +17,11 @@ interface EndDayTransitionState {
   durationMs: number;
 }
 
+type LegacyMediaQueryList = MediaQueryList & {
+  addListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => unknown) => void;
+  removeListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => unknown) => void;
+};
+
 const END_DAY_TRANSITION_MS = 1_000;
 const END_DAY_TRANSITION_MIDPOINT_MS = END_DAY_TRANSITION_MS / 2;
 const PHONE_SHEET_BREAKPOINT_PX = 759;
@@ -140,7 +145,8 @@ export function GameShell() {
     }
     const root = document.querySelector<HTMLElement>(".app-root");
     const shell = appShellRef.current;
-    const mediaQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    const mediaQuery: LegacyMediaQueryList | null =
+      typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 
     const setParallaxOffsets = (lightOffsetPx: number, strongOffsetPx: number) => {
       const lightValue = `${lightOffsetPx.toFixed(2)}px`;
@@ -182,10 +188,10 @@ export function GameShell() {
     window.addEventListener("scroll", queueParallaxUpdate, { passive: true });
     window.addEventListener("resize", queueParallaxUpdate);
     if (mediaQuery) {
-      if ("addEventListener" in mediaQuery) {
+      if (typeof mediaQuery.addEventListener === "function") {
         mediaQuery.addEventListener("change", handleMotionChange);
       } else {
-        mediaQuery.addListener(handleMotionChange);
+        mediaQuery.addListener?.(handleMotionChange);
       }
     }
 
@@ -193,10 +199,10 @@ export function GameShell() {
       window.removeEventListener("scroll", queueParallaxUpdate);
       window.removeEventListener("resize", queueParallaxUpdate);
       if (mediaQuery) {
-        if ("removeEventListener" in mediaQuery) {
+        if (typeof mediaQuery.removeEventListener === "function") {
           mediaQuery.removeEventListener("change", handleMotionChange);
         } else {
-          mediaQuery.removeListener(handleMotionChange);
+          mediaQuery.removeListener?.(handleMotionChange);
         }
       }
       if (parallaxRafRef.current !== null) {

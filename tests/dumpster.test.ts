@@ -53,10 +53,7 @@ describe("yard dumpster flow", () => {
         if (task.taskId === "collect_payment") {
           return { ...task, requiredUnits: 1, completedUnits: 0 };
         }
-        if (task.taskId !== "collect_payment") {
-          return { ...task, completedUnits: task.requiredUnits };
-        }
-        return task;
+        return { ...task, completedUnits: task.requiredUnits };
       })
     };
 

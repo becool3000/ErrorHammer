@@ -279,9 +279,10 @@ Exit Evidence: README and vault summaries capture encounter cadence cap, popup b
 3. UI/test/docs updates for storage-first surfaces, capacity behavior, and accounting storage-rent visibility.
 
 ## Archive
-1. `PLN-019` reset ledger is [Tasks-Lane-Board-Reset-2026-03-06.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
-2. Prior board history remains in [Tasks-Lane-Board-2026-03-01.md](/g:/ErrorHammer/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
-3. Earlier task-history notes remain under [archive](/g:/ErrorHammer/obsidian_vault/archive).
+1. `PLN-019` reset ledger is [Tasks-Lane-Board-Reset-2026-03-06.md](/obsidian_vault/archive/Tasks-Lane-Board-Reset-2026-03-06.md).
+2. Prior board history remains in [Tasks-Lane-Board-2026-03-01.md](/obsidian_vault/archive/Tasks-Lane-Board-2026-03-01.md).
+3. Earlier task-history notes remain under [archive](/obsidian_vault/archive).
 4. Supersession archive row (`2026-03-06`): `BLD-021 -> BLD-023`, `TW-021 -> TW-023`, `VF-021 -> VF-023`, `DOC-021 -> DOC-023`.
 5. Supersession archive row (`2026-03-06`): `BLD-023 -> BLD-024`, `TW-023 -> TW-024`, `VF-023 -> VF-024`, `DOC-023 -> DOC-024`.
 6. Supersession archive row (`2026-03-07`): `BLD-024 -> BLD-025`, `TW-024 -> TW-025`, `VF-024 -> VF-025`, `DOC-024 -> DOC-025`.
+

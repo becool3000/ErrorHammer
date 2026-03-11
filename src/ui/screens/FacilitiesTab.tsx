@@ -179,13 +179,21 @@ export function FacilitiesTab() {
         </div>
       </article>
 
-      <article className="chrome-card inset-card">
+      <article className="chrome-card inset-card" data-testid="facility-unlock-panel">
         <div className="section-label-row">
-          <h3>Facility Unlock</h3>
+          <h3 data-testid="facility-unlock-heading" aria-label="Facility Unlock">
+            Facility Unlock
+          </h3>
         </div>
         <div className="stack-list facilities-other-options">
           {actions.map((action) => (
-            <button key={action.id} className="ghost-button secondary-action-button" onClick={action.onClick} disabled={action.disabled}>
+            <button
+              key={action.id}
+              className="ghost-button secondary-action-button"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              data-testid={`facility-action-${action.id}`}
+            >
               {action.label}
             </button>
           ))}

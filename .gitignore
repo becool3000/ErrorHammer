@@ -35,3 +35,7 @@ Thumbs.db
 error-hammer-v*-itch.zip
 error-hammer-itch.zip
 
+# Local debug/temp artifacts
+.tmp_*
+.vitest-failures.json
+

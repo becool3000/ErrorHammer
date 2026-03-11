@@ -1,57 +1,53 @@
 # Error Hammer
-## Status (2026-03-02)
-1. Mobile compact shell chain `PLN-005 -> BLD-005 -> TW-005 -> VF-005 -> DOC-005` is complete on `main`.
-2. Verified command gate snapshot (2026-03-01): `npm run content:validate`, `npm run content:compile`, `npm test` (`8` files, `62` tests), and `npm run build`.
-3. Name + Hour flow chain `PLN-006 -> BLD-006 -> TW-006 -> VF-006 -> DOC-006` is complete on `main`.
-4. Crew + event depth chain `PLN-007 -> BLD-007 -> TW-007 -> VF-007 -> DOC-007` is complete on `main`.
-5. Rolling UI/UX session chain `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete on `main`.
-6. Progression visibility chain `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`.
-7. Deterministic replay, mobile-shell UI evidence, rolling-session closeout evidence, and progression verification evidence are recorded in `obsidian_vault/Testing.md`.
-8. Planner chain `PLN-010` is open for supplier quality tiers, explicit supplier checkout selection, and deterministic material-quality effects on completed jobs.
+
+## Status (2026-03-10)
+1. Quality-gate cleanup and UI migration cleanup are applied on `main`.
+2. UI readability obfuscation is unchanged in runtime; UI tests were stabilized with selector-first assertions and durable selectors.
+3. Legacy orphan screens were removed: `src/ui/screens/Main.tsx`, `Store.tsx`, `Company.tsx`, `ResearchTab.tsx`.
+4. Typecheck is now a first-class command and CI gate.
+5. Save schema version is `SAVE_VERSION=7` (`src/core/save.ts`).
 
 ## Run Instructions
 1. Install dependencies: `npm install`
 2. Validate content: `npm run content:validate`
 3. Compile generated bundle: `npm run content:compile`
-4. Run tests: `npm test`
-5. Build production bundle: `npm run build`
-6. Start local dev server: `npm run dev`
+4. Typecheck: `npm run typecheck`
+5. Run tests: `npm test`
+6. Build production bundle: `npm run build`
+7. Start local dev server: `npm run dev`
+
+## Current Verified Gate Snapshot (2026-03-10)
+1. `npm run content:validate` PASS
+2. `npm run content:compile` PASS
+3. `npm run typecheck` PASS
+4. `npm test` PASS (`40` files, `279` tests)
+5. `npm run build` PASS
+
+## Usage
+1. Start at title, enter both Player and Company names, then `New Game`.
+2. Bottom nav is `Work`, `Company`, `End Day`, and `Settings`.
+3. `Company` is internally the `office` tab and is split into `Contracts`, `Facilities`, and `Finance`.
+4. `Work` keeps active task flow, gas-station controls, out-of-gas rescue, overlays, and action carousel behavior.
+5. `Contracts` includes trade groups, Baba spotlight, quick-buy planning, likely-loss warning flow, and day-labor fallback.
+6. `Facilities` handles progression actions (`open-storage`, `open-office`, `open-yard`, dumpster enable, manual close actions).
+7. `Finance` renders accounting-ledger views with clarity-based masking/unmasking.
+8. Crew and assignment systems are intentionally frozen in UI as `Crew: Coming Soon`.
+9. Accountant hiring action is currently disabled in UI state (`src/ui/state.ts`).
+
+## Testing
+1. Deterministic scenario tests remain in `tests/tw_scenarios.test.ts`.
+2. Shell/UI interaction coverage remains in `tests/ui_shell.test.tsx`.
+3. Core/system suites include resolver, economy, progression, operations, contracts, bots, release, and readability tests.
+4. `npm test` currently takes several minutes because long-running pacing/stability suites are included in the default run.
 
 ## Itch.io Publish
 1. Run `npm run release:itch`.
-2. If release notes are not filled, the command scaffolds/points to `release/platforms/itch/releases/<releaseId>/CHANGELOG.md` and exits.
-3. Fill all required changelog sections, then run `npm run release:itch` again.
-4. Upload the generated artifact named `error-hammer-vX.Y.Z+itch.YYYYMMDD.NN-itch.zip`.
-5. Release manifests are written to `release/platforms/itch/releases/<releaseId>/release.json`.
-6. Vault release logs are appended in `obsidian_vault/Releases.md` and `obsidian_vault/releases/itch.md`.
-7. Do not commit zip artifacts; keep local only.
-
-## Usage
-1. Start at the title screen, fill both Player and Company name fields, and only then can `New Game` begin; the chosen names persist into the compact shell header, log, and quick-buy notices.
-2. After load, the app opens a compact bottom-tab shell with `Work`, `Contracts`, `Store`, and `Company`.
-3. `Work` keeps the active job, current task, assignee selection, active-event cues, operator summary, and primary task actions above the fold on mobile; `Job Details`, `Inventory`, `Skills`, `Field Log`, and supplier cart details open in overlays.
-4. Time is reported in half-hour units, the header and work cards call them “Hours,” and quick buys charge one hour (two ticks) per tool before any contract acceptance.
-5. `Contracts` shows a horizontal carousel, highlights missing tools, disables `Accept Job` until stocked, and offers a quick-buy step that summarizes hours plus cash before redirecting back to `Work`.
-6. `Company` keeps a hero ledger plus buttons for `District Access`, `Crew Status`, and `Competitor News`; the crew modal now shows a three-slot roster, level gating, and deterministic `Hire Crew` behavior once company level reaches 2.
-7. The `Skills` modal now shows each tracked skill with `Lv`, raw XP, and progress-to-next-level, while the operator card shows derived `Operator Lv` from average raw XP across the full skill pool.
-8. Progression popups appear in deterministic `XP Earned -> Skill Leveled Up -> Operator Leveled Up!` order and stay visible until the player closes them.
-9. The workday and active-job summaries start collapsed, supplier checkout guidance stays inline inside `Current Task`, and visible stance buttons collapse to `+ OT` actions only when regular-hour actions no longer fit.
-
-## Testing
-1. Deterministic scenario suite `EH-TW-001..EH-TW-049` remains in `tests/tw_scenarios.test.ts`, with `EH-TW-044..EH-TW-049` covering crew hire gating, assignee stamina/lock behavior, and save-safe assignee defaults.
-2. Packaging assertion `EH-TW-022` remains in `tests/vite_config.test.ts`.
-3. Compact-shell interaction scenarios `EH-TW-023..EH-TW-034` plus `EH-TW-043`, `EH-TW-047..EH-TW-056` are implemented in `tests/ui_shell.test.tsx` for title persistence, crew-modal hiring, event/assignee cues, collapsible work panels, supplier-cart guidance, overtime-only actions, visible skill labels, and persistent progression popups.
-4. Progression helper coverage `EH-TW-057..EH-TW-061` is in `tests/progression.test.ts` for threshold math, Operator Level averaging, popup ordering, and acronym-heavy skill labels.
-5. Supporting suites are `tests/resolver.test.ts`, `tests/economy.test.ts`, `tests/content_validation.test.ts`, and `tests/bots.test.ts`.
-6. Required verification commands are `npm run content:validate`, `npm run content:compile`, `npm test`, and `npm run build`.
-7. Current automated baseline is `8` test files and `62` tests after the latest progression and popup persistence additions.
-8. Latest rolling-session verifier closeout is `VF-008` on 2026-03-01, and the latest progression verifier closeout is `VF-009` on 2026-03-01; both are recorded in `obsidian_vault/Testing.md`.
+2. If release notes are incomplete, fill `release/platforms/itch/releases/<releaseId>/CHANGELOG.md` and rerun.
+3. Upload `error-hammer-vX.Y.Z+itch.YYYYMMDD.NN-itch.zip`.
+4. Release manifests are written under `release/platforms/itch/releases/<releaseId>/`.
 
 ## Workflow
 1. Lane order remains `Planner -> Builder -> TestWriter -> Verifier -> Documenter`.
-2. Handoff source of truth is `obsidian_vault/Tasks.md` under `Active Lane Board (Kanban)`.
+2. Handoff source of truth is `obsidian_vault/Tasks.md` (`Active Lane Board`).
 3. WIP limit remains one `IN_PROGRESS` card per lane.
-4. `PLN-008 -> BLD-008 -> TW-008 -> VF-008 -> DOC-008` is complete on `main`; it closed the rolling UI/UX session with verified collapsible work panels, inline supplier-cart guidance, and overtime-only action visibility.
-5. `PLN-009 -> BLD-009 -> TW-009 -> VF-009 -> DOC-009` is complete on `main`; it added visible skill levels, Operator Level, expanded skill labels, and persistent manual-dismiss progression popups.
-6. Planner has now defined `PLN-010`; the next pull should start with `BLD-010` from `obsidian_vault/Tasks.md`.
-7. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.
+4. Commit messages keep one lane tag prefix: `[Planner]`, `[Builder]`, `[TestWriter]`, `[Verifier]`, or `[Documenter]`.

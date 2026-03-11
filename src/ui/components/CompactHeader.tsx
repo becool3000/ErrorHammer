@@ -86,6 +86,8 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
               </button>
               <button
                 className="hud-link-button"
+                aria-label="Inventory"
+                data-testid="open-inventory-button"
                 onClick={() => {
                   setStoreSection("tools");
                   openModal("store");
