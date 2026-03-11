@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "docs:check": "tsx scripts/check_process_docs.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "content:validate": "tsx scripts/content_validate.ts",

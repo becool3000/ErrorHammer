@@ -27,6 +27,9 @@ jobs:
       - name: Compile Content
         run: npm run content:compile
 
+      - name: Check Canonical Docs
+        run: npm run docs:check
+
       - name: Typecheck
         run: npm run typecheck
 

@@ -5,6 +5,7 @@
 2. `VF-025` is blocked until `BLD-025` closes with deterministic evidence.
 3. `BLD-022` remains next Builder pull after 025 chain closeout unless reprioritized.
 4. Legacy non-`Plan/Build/Verify` cards are retired for new work and retained only in archive history.
+5. `PLN-026` process migration is closed with docs migration and full gate evidence recorded.
 
 ## Active Board (Kanban)
 Snapshot date: 2026-03-10.
@@ -15,28 +16,35 @@ Snapshot date: 2026-03-10.
 3. WIP limit is one `IN_PROGRESS` card per lane.
 
 ### Lane Cards
-1. `BLD-025`
+1. `PLN-026`
+Lane: `Plan`
+Status: `DONE`
+Priority: `P0`
+Depends On: `none`
+Exit Evidence: process/docs migration completed in `Agents.md`, `README.md`, and `docs/**`; vault active notes converted to archive pointers; full gate pass on 2026-03-10 (`content:validate`, `content:compile`, `typecheck`, `test` 40 files/279 tests, `build`).
+
+2. `BLD-025`
 Lane: `Build`
 Status: `IN_PROGRESS`
 Priority: `P0`
 Depends On: `PLN-025`
 Exit Evidence: out-of-gas rescue flow and OSHA can starter-kit gate are implemented in core/UI/tests with deterministic behavior and no mandatory refuel stop units.
 
-2. `VF-025`
+3. `VF-025`
 Lane: `Verify`
 Status: `BLOCKED`
 Priority: `P0`
 Depends On: `BLD-025`
 Exit Evidence: all five gates pass (`content:validate`, `content:compile`, `typecheck`, `test`, `build`) with no regressions in progression, accounting logs, or bot determinism.
 
-3. `BLD-022`
+4. `BLD-022`
 Lane: `Build`
 Status: `READY`
 Priority: `P2`
 Depends On: `PLN-022`
 Exit Evidence: deterministic Rebar Bob encounter continuation implemented with daily cap, task-line inclusion, and non-blocking shell popup behavior.
 
-4. `VF-022`
+5. `VF-022`
 Lane: `Verify`
 Status: `BLOCKED`
 Priority: `P2`
