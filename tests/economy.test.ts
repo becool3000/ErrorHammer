@@ -182,6 +182,15 @@ describe("economy", () => {
     expect(boardJobIds.has("job-2")).toBe(true);
   });
 
+  it("covers every explicitly requested unlocked skill when skillIds are provided", () => {
+    const board = generateContractBoard(bundle, 2, 1337, { skillIds: ["electrician", "plumber"] });
+    const boardJobIds = new Set(board.map((contract) => contract.jobId));
+
+    expect(board.length).toBe(2);
+    expect(boardJobIds.has("job-1")).toBe(true);
+    expect(boardJobIds.has("job-2")).toBe(true);
+  });
+
   it("keeps Baba G jobs at minimum 60% risk even with negative event modifiers", () => {
     const babaJob = bundle.babaJobs.find((job) => job.tags.includes("baba-g"))!;
     const calmingEvent: EventDef = {

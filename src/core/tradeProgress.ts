@@ -1,4 +1,4 @@
-import { CoreTradeSkillId, GameState, SkillId } from "./types";
+import { CoreTradeSkillId, GameState, SkillId, TRADE_SKILLS } from "./types";
 
 export const CORE_TRADE_SKILLS: CoreTradeSkillId[] = [
   "carpenter",
@@ -90,6 +90,13 @@ export function mapSkillToCoreTrack(skillId: SkillId): CoreTradeSkillId | null {
 
 export function isCoreTrackUnlocked(state: GameState, track: CoreTradeSkillId): boolean {
   return Boolean(state.tradeProgress.unlocked[track]);
+}
+
+export function getUnlockedTradeOfferSkills(state: Pick<GameState, "tradeProgress">): SkillId[] {
+  return TRADE_SKILLS.filter((skillId) => {
+    const track = mapSkillToCoreTrack(skillId);
+    return Boolean(track && state.tradeProgress.unlocked[track]);
+  });
 }
 
 export function unlockCoreTrack(state: GameState, track: CoreTradeSkillId): { unlockedNow: boolean; track: CoreTradeSkillId } {

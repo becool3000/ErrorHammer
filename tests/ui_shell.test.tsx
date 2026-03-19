@@ -939,10 +939,15 @@ describe("compact shell ui", () => {
     expect(screen.getByRole("heading", { name: "Storage Supplies" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Close Tools & Supplies/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /^Materials$/i }));
-    expect(screen.getByRole("dialog", { name: /Tools & Supplies/i })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Truck Supplies" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Storage Supplies" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^Supplies$/i }));
+    const suppliesDialog = screen.getByRole("dialog", { name: /^Supplies$/i });
+    expect(suppliesDialog).toBeTruthy();
+    expect(within(suppliesDialog).queryByRole("tab", { name: "Tools" })).toBeNull();
+    expect(within(suppliesDialog).queryByRole("tab", { name: "Supplies" })).toBeNull();
+    expect(within(suppliesDialog).queryByText(/Cash/i)).toBeNull();
+    expect(within(suppliesDialog).queryByRole("button", { name: /^Truck Tools$/i })).toBeNull();
+    expect(within(suppliesDialog).getByRole("heading", { name: "Truck Supplies" })).toBeTruthy();
+    expect(within(suppliesDialog).getByRole("heading", { name: "Storage Supplies" })).toBeTruthy();
   });
 
   it("EH-TW-272: each perk row exposes Explain toggle with boost details", () => {
@@ -1963,6 +1968,40 @@ describe("compact shell ui", () => {
     expect(screen.queryByTestId("trade-group-profitable")).toBeNull();
   });
 
+  it("EH-TW-279: contract board renders all unlocked trade offers at once", () => {
+    const game = buildAcceptableGame(7091);
+    for (const track of CORE_TRADE_SKILLS) {
+      game.tradeProgress.unlocked[track] = false;
+    }
+    game.tradeProgress.unlocked.carpenter = true;
+    game.tradeProgress.unlocked.electrician = true;
+    const carpenterJob = bundle.jobs.find((job) => job.primarySkill === "carpenter");
+    if (!carpenterJob) {
+      throw new Error("Expected carpenter job in bundle.");
+    }
+    game.contractBoard = [
+      { contractId: "only-construction", jobId: carpenterJob.id, districtId: carpenterJob.districtId, payoutMult: 1, expiresDay: game.day }
+    ];
+    const electricianOffer = getAvailableContractOffers(game, bundle).find((offer) => offer.job.primarySkill === "electrician");
+    if (!electricianOffer) {
+      throw new Error("Expected electrician supplement offer.");
+    }
+    useUiStore.setState({ screen: "game", game, activeTab: "office", officeSection: "contracts", selectedContractId: "only-construction" });
+
+    render(<App />);
+
+    expect(screen.getByTestId("trade-group-construction")).toBeTruthy();
+    expect(screen.getByTestId("trade-group-electrical-utility-power")).toBeTruthy();
+    expect(document.querySelectorAll(".trade-offer-chip")).toHaveLength(2);
+
+    const offerChips = Array.from(document.querySelectorAll(".trade-offer-chip"));
+    expect((offerChips[0] as HTMLElement).className).toContain("active");
+    fireEvent.click(offerChips[1] as HTMLElement);
+
+    expect(useUiStore.getState().selectedContractId).toBe(electricianOffer.contract.contractId);
+    expect((document.querySelectorAll(".trade-offer-chip")[1] as HTMLElement).className).toContain("active");
+  });
+
   it("EH-TW-227: do_work shows cut-loss recovery actions and defer/resume flow", () => {
     const game = buildAcceptableGame(7092);
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: game.contractBoard[0]?.contractId ?? null });
@@ -2623,12 +2662,12 @@ describe("compact shell ui", () => {
     useUiStore.setState({ screen: "game", game, activeTab: "contracts", selectedContractId: nonBaba.contract.contractId });
 
     render(<App />);
-    expect(screen.getByText(/Auto-Bid \$\d+ \(Estimating Lv \d+,/i)).toBeTruthy();
+    expect(screen.getByTestId("contract-auto-bid-preview")).toBeTruthy();
 
     act(() => {
       useUiStore.setState({ selectedContractId: baba.contract.contractId });
     });
-    expect(screen.queryByText(/Auto-Bid \$\d+ \(Estimating Lv \d+,/i)).toBeNull();
+    expect(screen.queryByTestId("contract-auto-bid-preview")).toBeNull();
   });
 
   it("EH-TW-131: Accounting shows Contract Files after a contract closes", () => {

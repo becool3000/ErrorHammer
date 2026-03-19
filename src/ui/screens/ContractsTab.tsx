@@ -36,7 +36,6 @@ export function ContractsTab() {
   const endDay = useUiStore((state) => state.endShift);
   const quickBuyTools = useUiStore((state) => state.quickBuyTools);
   const dayLaborCelebrationActive = useUiStore((state) => state.dayLaborCelebrationActive);
-  const [activeGroupId, setActiveGroupId] = useState<string>(GROUPS[0]!.id);
 
   const baseJobsById = useMemo(() => new Map(bundle.jobs.map((job) => [job.id, job])), []);
 
@@ -45,15 +44,6 @@ export function ContractsTab() {
     (offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && !offer.job.tags.includes("baba-g")
   );
   const unlockedGroups = GROUPS.filter((group) => tradeOffers.some((offer) => group.skills.includes(offer.job.primarySkill)));
-
-  useEffect(() => {
-    if (unlockedGroups.length === 0) {
-      return;
-    }
-    if (!unlockedGroups.some((group) => group.id === activeGroupId)) {
-      setActiveGroupId(unlockedGroups[0]!.id);
-    }
-  }, [activeGroupId, unlockedGroups]);
 
   if (!game) {
     return null;
@@ -70,17 +60,15 @@ export function ContractsTab() {
 
   const dayLaborOffer = allOffers.find((offer) => offer.contract.contractId === DAY_LABOR_CONTRACT_ID) ?? null;
   const babaOffer = allOffers.find((offer) => offer.contract.contractId !== DAY_LABOR_CONTRACT_ID && offer.job.tags.includes("baba-g")) ?? null;
-  const activeGroup = unlockedGroups.find((group) => group.id === activeGroupId) ?? unlockedGroups[0] ?? null;
-  const groupOffers = activeGroup ? tradeOffers.filter((offer) => activeGroup.skills.includes(offer.job.primarySkill)) : [];
   const bestPickContractId = getBestPickContractId(tradeOffers, economyPreviewByContractId, game);
   const effectiveSelected =
     allOffers.find((offer) => offer.contract.contractId === selectedContractId)?.contract.contractId ??
     babaOffer?.contract.contractId ??
     dayLaborOffer?.contract.contractId ??
-    groupOffers[0]?.contract.contractId ??
     tradeOffers[0]?.contract.contractId ??
     null;
   const selectedOffer = allOffers.find((offer) => offer.contract.contractId === effectiveSelected) ?? null;
+  const selectedGroupId = unlockedGroups.find((group) => selectedOffer && group.skills.includes(selectedOffer.job.primarySkill))?.id ?? null;
   const selectedContract = selectedOffer?.contract ?? null;
   const selectedJob = selectedOffer?.job ?? null;
   const activeEvents = bundle.events.filter((event) => game.activeEventIds.includes(event.id));
@@ -130,8 +118,13 @@ export function ContractsTab() {
           {unlockedGroups.map((group) => (
             <button
               key={group.id}
-              className={group.id === activeGroup?.id ? "ghost-button active" : "ghost-button"}
-              onClick={() => setActiveGroupId(group.id)}
+              className={group.id === selectedGroupId ? "ghost-button active" : "ghost-button"}
+              onClick={() => {
+                const firstGroupOffer = tradeOffers.find((offer) => group.skills.includes(offer.job.primarySkill));
+                if (firstGroupOffer) {
+                  selectContract(firstGroupOffer.contract.contractId);
+                }
+              }}
               data-testid={`trade-group-${group.id}`}
             >
               {group.label}
@@ -139,7 +132,7 @@ export function ContractsTab() {
           ))}
         </div>
         <div className="trade-chip-grid">
-          {groupOffers.map((offer) => {
+          {tradeOffers.map((offer) => {
             const isActive = offer.contract.contractId === effectiveSelected;
             const quoted = getOfferPayout(game, offer);
             const offerEconomyPreview = economyPreviewByContractId.get(offer.contract.contractId) ?? null;
@@ -351,7 +344,7 @@ function ContractDetails({
         </div>
       ) : null}
       {!isDayLabor && !job.tags.includes("baba-g") && autoBidPreview ? (
-        <p className="muted-copy">
+        <p className="muted-copy" data-testid="contract-auto-bid-preview">
           Auto-Bid ${autoBidPreview.acceptedPayout} (Estimating Lv {autoBidPreview.estimatingLevel}, Negotiation Lv{" "}
           {autoBidPreview.negotiationLevel})
         </p>

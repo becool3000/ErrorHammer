@@ -88,6 +88,7 @@ export type ActiveModalId =
   | "job-details"
   | "inventory"
   | "store"
+  | "supplies"
   | "skills"
   | "perks"
   | "field-log"

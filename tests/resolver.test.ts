@@ -18,6 +18,8 @@ describe("resolver", () => {
     expect(state.botCareers[0]?.actor.reputation).toBe(state.player.reputation);
     expect(Object.values(state.botCareers[0]?.actor.skills ?? {}).every((xp) => xp === 0)).toBe(true);
     expect(Object.keys(state.botCareers[0]?.actor.tools ?? {})).toHaveLength(0);
+    expect(Object.keys(state.shopSupplies)).toHaveLength(0);
+    expect(Object.keys(state.truckSupplies).length).toBeGreaterThan(0);
   });
 
   it("advances to the next day deterministically and syncs actor snapshots from careers", () => {

@@ -10,7 +10,7 @@ import { createInitialBotCareer, simulateBotCareerDay, syncBotSnapshotsFromCaree
 import { createRng, hashSeed } from "./rng";
 import { SAVE_VERSION } from "./save";
 import {
-  createInitialShopSupplies,
+  createInitialTruckSupplies,
   createInitialSkills,
   createInitialWorkday,
   digestState,
@@ -21,7 +21,7 @@ import {
 import { applyEndDayOperations, createInitialOfficeSkillsState, createInitialOperationsState, createInitialYardState } from "./operations";
 import { createInitialPerksState } from "./perks";
 import { createResearchStateLocked } from "./research";
-import { createTradeProgressState } from "./tradeProgress";
+import { createTradeProgressState, getUnlockedTradeOfferSkills } from "./tradeProgress";
 import {
   ActorState,
   AssignmentIntent,
@@ -68,13 +68,16 @@ export function createInitialGameState(
     tools: {},
     crews: []
   };
+  const tradeProgress = createTradeProgressState(true);
 
   const botCareers = bundle.bots.map((profile) => createInitialBotCareer(profile, bundle));
   const bots = syncBotSnapshotsFromCareers(botCareers);
   const activeEventIds = pickEventIds(bundle, 1, seed);
+  const unlockedSkills = getUnlockedTradeOfferSkills({ tradeProgress });
   const contractBoard = generateContractBoard(bundle, 1, hashSeed(seed, 1), {
     districtIds: player.districtUnlocks,
-    maxTier: player.companyLevel + 1
+    maxTier: player.companyLevel + 1,
+    ...(unlockedSkills.length > 0 ? { skillIds: unlockedSkills } : {})
   });
 
   return {
@@ -88,11 +91,11 @@ export function createInitialGameState(
     activeEventIds,
     log: [],
     activeJob: null,
-    shopSupplies: createInitialShopSupplies(),
-    truckSupplies: {},
+    shopSupplies: {},
+    truckSupplies: createInitialTruckSupplies(),
     workday: createInitialWorkday(1, 0),
     research: createResearchStateLocked(),
-    tradeProgress: createTradeProgressState(true),
+    tradeProgress,
     officeSkills: createInitialOfficeSkillsState(),
     yard: createInitialYardState(),
     operations: createInitialOperationsState(),
@@ -343,9 +346,11 @@ export function resolveDay(
   const nextEvents = nextEventIds
     .map((id) => bundle.events.find((event) => event.id === id))
     .filter((event): event is EventDef => Boolean(event));
+  const unlockedSkills = getUnlockedTradeOfferSkills({ tradeProgress: state.tradeProgress });
   const nextBoard = generateContractBoard(bundle, nextDay, hashSeed(state.seed, nextDay), {
     districtIds: resetPlayer.districtUnlocks,
-    maxTier: resetPlayer.companyLevel + 1
+    maxTier: resetPlayer.companyLevel + 1,
+    ...(unlockedSkills.length > 0 ? { skillIds: unlockedSkills } : {})
   });
   const purchasePhase = applyBotPurchasesForNextDay(
     resetBots,
@@ -502,7 +507,10 @@ export function endShift(state: GameState, bundle: ContentBundle): ResolverResul
     ? []
     : generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
         districtIds: nextState.player.districtUnlocks,
-        maxTier: nextState.player.companyLevel + 1
+        maxTier: nextState.player.companyLevel + 1,
+        ...(getUnlockedTradeOfferSkills({ tradeProgress: nextState.tradeProgress }).length > 0
+          ? { skillIds: getUnlockedTradeOfferSkills({ tradeProgress: nextState.tradeProgress }) }
+          : {})
       });
   nextState.log = [...nextState.log, ...dayLog].slice(-300);
 

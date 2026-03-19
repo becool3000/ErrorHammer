@@ -1,11 +1,12 @@
 import { createRng, hashSeed } from "./rng";
-import { ContentBundle, ContractInstance, EventDef, JobDef, TRADE_SKILLS } from "./types";
+import { ContentBundle, ContractInstance, EventDef, JobDef, SkillId, TRADE_SKILLS } from "./types";
 import { getResearchCategoryForSkill, TRADE_GROUPS } from "./research";
 
 export interface ContractBoardOptions {
   count?: number;
   districtIds?: string[];
   maxTier?: number;
+  skillIds?: SkillId[];
 }
 
 const BABA_G_MIN_RISK = 0.6;
@@ -90,33 +91,48 @@ export function generateContractBoard(
   options: ContractBoardOptions = {}
 ): ContractInstance[] {
   const defaultCompactCount = 8;
-  const count = Math.min(TRADE_SKILLS.length, Math.max(1, options.count ?? defaultCompactCount));
+  const requestedSkills = options.skillIds ? [...new Set(options.skillIds)] : [];
+  const count =
+    requestedSkills.length > 0
+      ? requestedSkills.length
+      : Math.min(TRADE_SKILLS.length, Math.max(1, options.count ?? defaultCompactCount));
   const districtAllowList = new Set(options.districtIds ?? bundle.districts.map((district) => district.id));
   const maxTier = options.maxTier ?? 3;
 
   const picked: JobDef[] = [];
-  const categoryOrder = TRADE_GROUPS.map((group) => group.id);
-  const categoryWindow = Math.min(count, categoryOrder.length);
-  const startIndex = Math.max(0, (day - 1) % categoryOrder.length);
-  const selectedCategories = Array.from({ length: categoryWindow }, (_, index) => categoryOrder[(startIndex + index) % categoryOrder.length]!);
-  const selectedSkills = new Set<string>();
+  const selectedSkills = new Set<SkillId>();
 
-  for (const categoryId of selectedCategories) {
-    const group = TRADE_GROUPS.find((entry) => entry.id === categoryId);
-    if (!group || group.skills.length === 0) {
-      continue;
+  if (requestedSkills.length > 0) {
+    for (const skillId of requestedSkills) {
+      selectedSkills.add(skillId);
+      const job = pickJobForSkill(bundle, skillId, districtAllowList, maxTier, daySeed, day);
+      if (job) {
+        picked.push(job);
+      }
     }
-    const rng = createRng(hashSeed(daySeed, "group", day, categoryId));
-    const bySkill = [...group.skills];
-    const skillId = bySkill[rng.nextInt(bySkill.length)]!;
-    selectedSkills.add(skillId);
-    const job = pickJobForSkill(bundle, skillId, districtAllowList, maxTier, daySeed, day);
-    if (job) {
-      picked.push(job);
+  } else {
+    const categoryOrder = TRADE_GROUPS.map((group) => group.id);
+    const categoryWindow = Math.min(count, categoryOrder.length);
+    const startIndex = Math.max(0, (day - 1) % categoryOrder.length);
+    const selectedCategories = Array.from({ length: categoryWindow }, (_, index) => categoryOrder[(startIndex + index) % categoryOrder.length]!);
+
+    for (const categoryId of selectedCategories) {
+      const group = TRADE_GROUPS.find((entry) => entry.id === categoryId);
+      if (!group || group.skills.length === 0) {
+        continue;
+      }
+      const rng = createRng(hashSeed(daySeed, "group", day, categoryId));
+      const bySkill = [...group.skills];
+      const skillId = bySkill[rng.nextInt(bySkill.length)]!;
+      selectedSkills.add(skillId);
+      const job = pickJobForSkill(bundle, skillId, districtAllowList, maxTier, daySeed, day);
+      if (job) {
+        picked.push(job);
+      }
     }
   }
 
-  if (picked.length < count) {
+  if (requestedSkills.length === 0 && picked.length < count) {
     const remainingSkills = TRADE_SKILLS.filter((skillId) => !selectedSkills.has(skillId));
     const fillRng = createRng(hashSeed(daySeed, "fill", day));
     while (picked.length < count && remainingSkills.length > 0) {

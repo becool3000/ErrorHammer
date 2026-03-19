@@ -35,3 +35,46 @@ Original prompt: show reading and accounting skills first, make sure all skill s
   - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-126` PASS
   - `npm.cmd test -- tests/ui_shell.test.tsx -t EH-TW-127` PASS
 - TODO next: run full gate sequence under `VF-022` once BLD-022 board status is closed to DONE.
+- Updated Work HUD action buttons: renamed `Materials` to `Supplies` and wired it to a dedicated `supplies` modal surface.
+- Added `supplies` to `ActiveModalId` and `GameShell` modal routing/title/body so it renders as a routine modal/sheet with `StoreTab suppliesOnly`.
+- Updated `StoreTab` with `suppliesOnly` mode that forces stock view and hides cash chip + section tabs/tools UI.
+- Updated `tests/ui_shell.test.tsx` EH-TW-054 assertions to check `Supplies` button and verify supplies-only modal has no Tools tab, no Supplies tab control, no cash text, and no truck-tools controls.
+- Verification complete for this slice:
+  - `npm.cmd run typecheck` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t "EH-TW-054"` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t "EH-TW-030 and EH-TW-031"` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx` PASS (86/86)
+- Note: attempted skill-recommended `web_game_playwright_client` loop, but background process launch (`Start-Process`) was blocked by policy in this environment; used full UI test suite as verification fallback.
+- Updated new-player start inventory defaults: storage now starts empty and truck starts with a small starter loadout (`board-pack x1`, `fastener-box x1`, `wire-spool x1`).
+- Added `createInitialTruckSupplies()` in `src/core/playerFlow.ts` and wired `createInitialGameState()` to use `shopSupplies: {}` + `truckSupplies: createInitialTruckSupplies()`.
+- Added resolver test coverage asserting initial player storage is empty and truck inventory is non-empty.
+- Stabilized deterministic scenario tests under new global defaults by seeding legacy inventory baseline inside `acceptJob()` test helper in `tests/tw_scenarios.test.ts`.
+- Verification complete for this slice:
+  - `npm.cmd run typecheck` PASS
+  - `npm.cmd test -- tests/resolver.test.ts` PASS (6/6)
+  - `npm.cmd test -- tests/tw_scenarios.test.ts` PASS (57/57)
+  - `npm.cmd test -- tests/ui_shell.test.tsx -t "EH-TW-054"` PASS
+- Implemented unlocked-skill contract board expansion: board generation now accepts explicit `skillIds` and refresh paths pass every unlocked trade-offer skill so the board can surface one offer per unlocked skill instead of rotating a single trade family.
+- Updated Contracts tab to render all unlocked trade offers at once; group chips now act as selection shortcuts instead of filtering the visible list down to one active group.
+- Added deterministic coverage in `tests/economy.test.ts`, `tests/core_trade_progress.test.ts`, and `tests/ui_shell.test.tsx` for explicit skill coverage and multi-offer board rendering.
+- Patched `EH-TW-130` to use a stable `contract-auto-bid-preview` test hook after the full UI suite exposed a brittle text assertion against the updated Estimating + Negotiation copy.
+- Verification complete for contract-board slice (2026-03-12):
+  - `npm.cmd run content:validate` PASS
+  - `npm.cmd run content:compile` PASS
+  - `npm.cmd run typecheck` PASS
+  - `npm.cmd test` PASS (40 files, 285 tests)
+  - `npm.cmd run build` PASS
+- Note: jsdom still logs the existing `HTMLCanvasElement.getContext()` not-implemented warning in two UI tests; it remains non-failing and predates this slice.
+- Implemented visible-trade contract supplements in `src/core/playerFlow.ts`: the Contracts board now preserves stored board offers, hides stale locked trades, and deterministically appends one supplemental non-Baba offer for each visible/unlocked trade skill missing from `state.contractBoard`.
+- Replaced the old single `unlocked-fallback` dynamic contract path with resolvable `visible-trade-supplement` ids so preview/estimate/accept flows work for stale-board supplements without mutating save state.
+- Added core coverage for stale-board supplementation, same-day unlock visibility, no-duplicate visible coverage, and accepting supplemental contract ids in `tests/core_trade_progress.test.ts`.
+- Updated UI coverage (`EH-TW-279`) so the Contracts screen is validated against a stale stored board containing only one visible trade while the supplemental trade still renders and can be selected.
+- Verification complete for visible-trade supplement slice (2026-03-12):
+  - `npm.cmd run typecheck` PASS
+  - `npm.cmd test -- tests/core_trade_progress.test.ts` PASS
+  - `npm.cmd test -- tests/ui_shell.test.tsx` PASS
+  - `npm.cmd run content:validate` PASS
+  - `npm.cmd run content:compile` PASS
+  - `npm.cmd test` PASS (40 files, 288 tests)
+  - `npm.cmd run build` PASS
+- Note: existing jsdom `HTMLCanvasElement.getContext()` warnings still appear in two UI tests and remain non-failing.

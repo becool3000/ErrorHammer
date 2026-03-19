@@ -78,9 +78,9 @@ import {
 } from "./perks";
 import { formatEncounterMarker, rollRebarBobEncounter } from "./encounters";
 import {
-  CORE_TRADE_SKILLS,
   createTradeProgressState,
   formatCoreTrackLabel,
+  getUnlockedTradeOfferSkills,
   isCoreTrackUnlocked,
   mapSkillToCoreTrack,
   normalizeTradeProgressState,
@@ -309,7 +309,7 @@ export const STARTER_TOOL_IDS = ["work-boots", "tool-belt", "hammer", "level", "
 export const STARTER_OSHA_CAN_ID = "osha-can";
 export const STARTER_OSHA_CAN_LABEL = "OSHA Gas Can";
 const BABA_G_ROTATING_CONTRACT_PREFIX = "baba-g-rotating-contract";
-const UNLOCKED_FALLBACK_CONTRACT_PREFIX = "unlocked-fallback-contract";
+const VISIBLE_TRADE_SUPPLEMENT_CONTRACT_PREFIX = "visible-trade-supplement-contract";
 const STARTER_TOOL_ID_SET = new Set<string>(STARTER_TOOL_IDS);
 
 const QUALITY_LABELS: Record<SupplyQuality, string> = {
@@ -510,6 +510,14 @@ export function createInitialShopSupplies(): SupplyInventory {
     "concrete-mix": { medium: 1 },
     "trim-kit": { medium: 1 },
     "anchor-set": { medium: 1 }
+  };
+}
+
+export function createInitialTruckSupplies(): SupplyInventory {
+  return {
+    "board-pack": { medium: 1 },
+    "fastener-box": { medium: 1 },
+    "wire-spool": { medium: 1 }
   };
 }
 
@@ -1020,12 +1028,12 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
     }
     return rotatingOffer;
   }
-  if (isUnlockedFallbackContractId(contractId)) {
-    const fallbackOffer = getUnlockedFallbackTradeOffer(state, bundle);
-    if (!fallbackOffer || fallbackOffer.contract.contractId !== contractId) {
+  if (isVisibleTradeSupplementContractId(contractId)) {
+    const supplementOffer = getVisibleTradeSupplementOffers(state, bundle).find((offer) => offer.contract.contractId === contractId);
+    if (!supplementOffer) {
       return null;
     }
-    return fallbackOffer;
+    return supplementOffer;
   }
   const contract = state.contractBoard.find((entry) => entry.contractId === contractId);
   if (!contract) {
@@ -1039,23 +1047,14 @@ export function getJobByContract(state: GameState, bundle: ContentBundle, contra
 }
 
 export function getAvailableContractOffers(state: GameState, bundle: ContentBundle): ContractOffer[] {
-  const boardOffers = state.contractBoard
-    .map((contract) => getJobByContract(state, bundle, contract.contractId))
-    .filter((offer): offer is ContractOffer => Boolean(offer));
-  const standardOffers = boardOffers.filter((offer) => {
-    if (offer.job.tags.includes("baba-g")) {
-      return false;
-    }
-    const track = mapSkillToCoreTrack(offer.job.primarySkill);
-    return Boolean(track && isCoreTrackUnlocked(state, track));
-  });
+  const standardOffers = getStoredVisibleTradeOffers(state, bundle);
   const rotatingBabaOffer = getRotatingBabaOffer(state, bundle);
-  const unlockedFallbackOffer = !state.activeJob && standardOffers.length === 0 ? getUnlockedFallbackTradeOffer(state, bundle) : null;
+  const visibleTradeSupplements = getVisibleTradeSupplementOffers(state, bundle, standardOffers);
   return [
     ...(state.dayLaborHiddenUntilEndDay ? [] : [getDayLaborOffer(state, bundle)]),
     ...(rotatingBabaOffer ? [rotatingBabaOffer] : []),
     ...standardOffers,
-    ...(unlockedFallbackOffer ? [unlockedFallbackOffer] : [])
+    ...visibleTradeSupplements
   ];
 }
 
@@ -1792,42 +1791,62 @@ function isBabaRotatingContractId(contractId: string): boolean {
   return contractId.startsWith(BABA_G_ROTATING_CONTRACT_PREFIX);
 }
 
-function getUnlockedFallbackTradeOffer(state: GameState, bundle: ContentBundle): ContractOffer | null {
-  const unlockedTracks = CORE_TRADE_SKILLS.filter((track) => isCoreTrackUnlocked(state, track));
-  if (unlockedTracks.length === 0) {
+function getStoredVisibleTradeOffers(state: GameState, bundle: ContentBundle): ContractOffer[] {
+  return state.contractBoard
+    .map((contract) => {
+      const job = findJobInBundle(bundle, contract.jobId);
+      if (!job || job.tags.includes("baba-g")) {
+        return null;
+      }
+      const track = mapSkillToCoreTrack(job.primarySkill);
+      if (!track || !isCoreTrackUnlocked(state, track)) {
+        return null;
+      }
+      return { contract, job };
+    })
+    .filter((offer): offer is ContractOffer => Boolean(offer));
+}
+
+function buildVisibleTradeSupplementContractId(day: number, skillId: SkillId, jobId: string): string {
+  return `${VISIBLE_TRADE_SUPPLEMENT_CONTRACT_PREFIX}-D${day}-${skillId}-${jobId}`;
+}
+
+function getVisibleTradeSupplementOffer(state: GameState, bundle: ContentBundle, skillId: SkillId): ContractOffer | null {
+  const supplementContract = generateContractBoard(bundle, state.day, hashSeed(state.seed, state.day, "visible-trade-supplement", skillId), {
+    districtIds: state.player.districtUnlocks,
+    maxTier: state.player.companyLevel + 1,
+    skillIds: [skillId]
+  })[0];
+  if (!supplementContract) {
     return null;
   }
-
-  const rng = createRng(hashSeed(state.seed, state.day, "unlocked-fallback"));
-  const selectedTrack = unlockedTracks[rng.nextInt(unlockedTracks.length)]!;
-  const maxTier = state.player.companyLevel + 1;
-  const districtAllowList = new Set(state.player.districtUnlocks);
-  const bySkill = bundle.jobs
-    .filter((job) => mapSkillToCoreTrack(job.primarySkill) === selectedTrack)
-    .sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id));
-  if (bySkill.length === 0) {
+  const job = findJobInBundle(bundle, supplementContract.jobId);
+  if (!job || job.tags.includes("baba-g")) {
     return null;
   }
-
-  const eligible = bySkill.filter((job) => districtAllowList.has(job.districtId) && job.tier <= maxTier);
-  const pool = eligible.length > 0 ? eligible : bySkill;
-  const job = pool[rng.nextInt(pool.length)]!;
-  const payoutMult = Number((0.95 + rng.next() * 0.2).toFixed(2));
-
   return {
     contract: {
-      contractId: `${UNLOCKED_FALLBACK_CONTRACT_PREFIX}-D${state.day}-${job.id}`,
-      jobId: job.id,
-      districtId: job.districtId,
-      payoutMult,
-      expiresDay: state.day
+      ...supplementContract,
+      contractId: buildVisibleTradeSupplementContractId(state.day, skillId, supplementContract.jobId)
     },
     job
   };
 }
 
-function isUnlockedFallbackContractId(contractId: string): boolean {
-  return contractId.startsWith(UNLOCKED_FALLBACK_CONTRACT_PREFIX);
+function getVisibleTradeSupplementOffers(
+  state: GameState,
+  bundle: ContentBundle,
+  standardOffers: ContractOffer[] = getStoredVisibleTradeOffers(state, bundle)
+): ContractOffer[] {
+  const representedSkills = new Set(standardOffers.map((offer) => offer.job.primarySkill));
+  return getUnlockedTradeOfferSkills(state)
+    .filter((skillId) => !representedSkills.has(skillId))
+    .map((skillId) => getVisibleTradeSupplementOffer(state, bundle, skillId))
+    .filter((offer): offer is ContractOffer => Boolean(offer));
+}
+
+function isVisibleTradeSupplementContractId(contractId: string): boolean {
+  return contractId.startsWith(VISIBLE_TRADE_SUPPLEMENT_CONTRACT_PREFIX);
 }
 
 export function startResearch(state: GameState, projectId: string): StateTransitionResult<ResearchProjectState> {
@@ -2828,9 +2847,11 @@ export function runRecoveryAction(
       outcome: null
     });
     nextState.activeJob = null;
+    const unlockedSkills = getUnlockedTradeOfferSkills(nextState);
     nextState.contractBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
       districtIds: nextState.player.districtUnlocks,
-      maxTier: nextState.player.companyLevel + 1
+      maxTier: nextState.player.companyLevel + 1,
+      ...(unlockedSkills.length > 0 ? { skillIds: unlockedSkills } : {})
     });
     appendLog(nextState, {
       day: nextState.day,
@@ -2879,9 +2900,11 @@ export function runRecoveryAction(
   });
   applySelfEsteemDelta(nextState, -10);
   nextState.activeJob = null;
+  const unlockedSkills = getUnlockedTradeOfferSkills(nextState);
   nextState.contractBoard = generateContractBoard(bundle, nextState.day, hashSeed(nextState.seed, nextState.day), {
     districtIds: nextState.player.districtUnlocks,
-    maxTier: nextState.player.companyLevel + 1
+    maxTier: nextState.player.companyLevel + 1,
+    ...(unlockedSkills.length > 0 ? { skillIds: unlockedSkills } : {})
   });
   return {
     nextState,

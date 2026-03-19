@@ -4,6 +4,7 @@ import {
   buyFuel,
   DAY_LABOR_CONTRACT_ID,
   MINIMUM_WAGE_PER_HOUR,
+  createInitialShopSupplies,
   createInitialWorkday,
   formatSupplyQuality,
   getManualGasStationPlan,
@@ -57,6 +58,8 @@ function acceptJob(seed: number, contractId: string, options?: { storageOwned?: 
   state.player.tools.drill = { toolId: "drill", durability: 8 };
   state.player.tools.saw = { toolId: "saw", durability: 7 };
   state.player.cash = 500;
+  state.shopSupplies = createInitialShopSupplies();
+  state.truckSupplies = {};
   const bidPreview = getContractAutoBidPreview(state, bundle, contractId);
   const accepted = acceptContract(state, bundle, contractId);
   if (!accepted.nextState.activeJob) {

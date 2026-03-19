@@ -9,7 +9,11 @@ const storeSections: Array<{ id: StoreSectionId; label: string }> = [
   { id: "stock", label: "Supplies" }
 ];
 
-export function StoreTab() {
+interface StoreTabProps {
+  suppliesOnly?: boolean;
+}
+
+export function StoreTab({ suppliesOnly = false }: StoreTabProps) {
   const game = useUiStore((state) => state.game);
   const storeSection = useUiStore((state) => state.storeSection);
   const setStoreSection = useUiStore((state) => state.setStoreSection);
@@ -31,21 +35,24 @@ export function StoreTab() {
   const storageTools = bundle.tools.filter((tool) => !isStarterToolId(tool.id));
   const ownedTruckTools = truckTools.filter((tool) => Boolean(game.player.tools[tool.id])).length;
   const ownedStorageTools = storageTools.filter((tool) => Boolean(game.player.tools[tool.id])).length;
+  const activeSection: StoreSectionId = suppliesOnly ? "stock" : storeSection;
 
   return (
     <section className="tab-panel store-tab store-visibility-boost">
-      {!canUseToolBench ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
-      {starterGateActive ? (
+      {!suppliesOnly && !canUseToolBench ? <p className="notice-banner">Return to storage before using the tool bench.</p> : null}
+      {!suppliesOnly && starterGateActive ? (
         <p className="notice-banner">Truck-only mode: buy all starter tools, then open storage to unlock full tool access.</p>
       ) : null}
-      <article className="chrome-card inset-card">
-        <div className="section-label-row store-tab-header">
-          <span className="chip">Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true })}</span>
-        </div>
-        <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Store sections" />
-      </article>
+      {!suppliesOnly ? (
+        <article className="chrome-card inset-card">
+          <div className="section-label-row store-tab-header">
+            <span className="chip">Cash {formatNumberByAccountingClarity(game, game.player.cash, { currency: true })}</span>
+          </div>
+          <SegmentedControl value={storeSection} options={storeSections} onChange={setStoreSection} label="Store sections" />
+        </article>
+      ) : null}
 
-      {storeSection === "tools" ? (
+      {activeSection === "tools" ? (
         <div className="stack-list">
           <article className="chrome-card inset-card tool-group-shell">
             <button
@@ -168,7 +175,7 @@ export function StoreTab() {
         </div>
       ) : null}
 
-      {storeSection === "stock" ? (
+      {activeSection === "stock" ? (
         <section className="stack-list">
           <article className="hero-card chrome-card">
             <h3>Truck Supplies</h3>

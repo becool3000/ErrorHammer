@@ -35,6 +35,7 @@ const ROUTINE_MODAL_IDS = new Set<Exclude<ActiveModalId, null>>([
   "job-details",
   "inventory",
   "store",
+  "supplies",
   "skills",
   "perks",
   "field-log",
@@ -330,6 +331,9 @@ export function GameShell() {
           </Modal>
           <Modal open={activeModal === "store"} title="Tools & Supplies" onClose={closeModal} shellClassName="store-supplies-modal">
             <StoreTab />
+          </Modal>
+          <Modal open={activeModal === "supplies"} title="Supplies" onClose={closeModal} shellClassName="store-supplies-modal">
+            <StoreTab suppliesOnly />
           </Modal>
           <Modal open={activeModal === "skills"} title="Skills" onClose={closeModal} shellClassName="skills-modal">
             <WorkTab modalView="skills" />
@@ -737,6 +741,9 @@ function getRoutineSurfaceTitle(modalId: Exclude<ActiveModalId, null>): string {
   if (modalId === "store") {
     return "Tools & Supplies";
   }
+  if (modalId === "supplies") {
+    return "Supplies";
+  }
   if (modalId === "skills") {
     return "Skills";
   }
@@ -768,6 +775,9 @@ function getRoutineSurfaceShellClass(modalId: Exclude<ActiveModalId, null>): str
   if (modalId === "store") {
     return "store-supplies-modal";
   }
+  if (modalId === "supplies") {
+    return "store-supplies-modal";
+  }
   if (modalId === "skills" || modalId === "perks") {
     return "skills-modal";
   }
@@ -783,6 +793,9 @@ function renderRoutineSurfaceBody(modalId: Exclude<ActiveModalId, null>) {
   }
   if (modalId === "store") {
     return <StoreTab />;
+  }
+  if (modalId === "supplies") {
+    return <StoreTab suppliesOnly />;
   }
   if (modalId === "skills") {
     return <WorkTab modalView="skills" />;

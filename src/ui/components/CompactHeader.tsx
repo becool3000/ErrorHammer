@@ -99,14 +99,14 @@ export function CompactHeader({ game, activeTab }: CompactHeaderProps) {
               </button>
               <button
                 className="hud-link-button"
-                aria-label="Materials"
-                data-testid="open-materials-button"
+                aria-label="Supplies"
+                data-testid="open-supplies-button"
                 onClick={() => {
                   setStoreSection("stock");
-                  openModal("store");
+                  openModal("supplies");
                 }}
               >
-                Materials
+                Supplies
               </button>
             </div>
           ) : null}

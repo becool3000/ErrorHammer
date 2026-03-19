@@ -31,7 +31,7 @@ import {
 import { CORE_PERK_IDS, createInitialPerksState } from "./perks";
 import { getResearchProjectsWithStatus, createResearchStateLocked } from "./research";
 import { createRng, hashSeed } from "./rng";
-import { createTradeProgressState } from "./tradeProgress";
+import { createTradeProgressState, getUnlockedTradeOfferSkills } from "./tradeProgress";
 import {
   ActiveJobState,
   ActorState,
@@ -533,12 +533,14 @@ function refreshCareerBoard(state: GameState, bundle: ContentBundle, actorId: st
       contractBoard: []
     };
   }
+  const unlockedSkills = getUnlockedTradeOfferSkills(state);
 
   return {
     ...state,
     contractBoard: generateContractBoard(bundle, state.day, hashSeed(state.seed, "bot-board", state.day, actorId), {
       districtIds: state.player.districtUnlocks,
-      maxTier: state.player.companyLevel + 1
+      maxTier: state.player.companyLevel + 1,
+      ...(unlockedSkills.length > 0 ? { skillIds: unlockedSkills } : {})
     })
   };
 }
