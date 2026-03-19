@@ -39,3 +39,4 @@
 2. If release notes are incomplete, fill `release/platforms/itch/releases/<releaseId>/CHANGELOG.md` and rerun.
 3. Upload `error-hammer-vX.Y.Z+itch.YYYYMMDD.NN-itch.zip`.
 4. Release manifests are written under `release/platforms/itch/releases/<releaseId>/`.
+5. For your itch page, run `npm run itch` or use `npm run publish:itch -- --target-url https://becool3000.itch.io/error-hammer --channel web` for an explicit URL override.

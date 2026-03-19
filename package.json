@@ -14,6 +14,8 @@
     "content:compile": "tsx scripts/content_compile.ts",
     "benchmark:progression": "tsx scripts/benchmark_progression.ts",
     "itch:zip": "tsx scripts/package_itch.ts",
+    "itch": "tsx scripts/publish_itch.ts",
+    "publish:itch": "tsx scripts/publish_itch.ts",
     "build:itch": "npm run content:compile && npm run build && npm run itch:zip",
     "release:prepare": "tsx scripts/release_prepare.ts",
     "release:verify": "tsx scripts/release_verify.ts",
